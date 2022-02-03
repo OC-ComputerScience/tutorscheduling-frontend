@@ -1,60 +1,64 @@
 <template>
   <v-app>
+    <v-card class="overflow-hidden">
     <v-app-bar
       app
       color="primary"
       dark
     >
-      <div class="d-flex align-center">
-        <v-img
-          alt="Vuetify Logo"
-          class="shrink mr-2"
-          contain
-          src="https://cdn.vuetifyjs.com/images/logos/vuetify-logo-dark.png"
-          transition="scale-transition"
-          width="40"
-        />
+      <v-app-bar-title class="title">
+        <div>Tutoring</div>    
+      </v-app-bar-title>
 
-        <v-img
-          alt="Vuetify Name"
-          class="shrink mt-1 hidden-sm-and-down"
-          contain
-          min-width="100"
-          src="https://cdn.vuetifyjs.com/images/logos/vuetify-name-dark.png"
-          width="100"
-        />
-      </div>
+      <template v-slot:extension v-if="this.$store.state.loginUser === null">
+        <v-tabs align-with-title>
+          <v-tab @click="navLogin">Login</v-tab>
+        </v-tabs>
+      </template>
 
-      <v-spacer></v-spacer>
+      <template v-slot:extension v-else>
+        <v-tabs align-with-title>
+          <v-tab @click="navAdvHome">Home</v-tab>
+          <v-tab @click="navGroups">Groups</v-tab>
+          <v-tab @click="logout">Logout</v-tab>
+        </v-tabs>
+      </template>
 
-      <v-btn
-        href="https://github.com/vuetifyjs/vuetify/releases/latest"
-        target="_blank"
-        text
-      >
-        <span class="mr-2">Latest Release</span>
-        <v-icon>mdi-open-in-new</v-icon>
-      </v-btn>
     </v-app-bar>
-
-    <v-main>
-      <HelloWorld/>
-    </v-main>
+  </v-card>
+  <v-main>
+      <router-view />
+  </v-main>
   </v-app>
 </template>
 
 <script>
-import HelloWorld from './components/HelloWorld';
+import router from '@/router'
 
 export default {
   name: 'App',
 
   components: {
-    HelloWorld,
   },
-
-  data: () => ({
-    //
-  }),
+  data() {
+      return {
+      }
+  },
+  created() {
+  },
+  methods: {
+            navHome() {
+              this.$router.push({ name: "home"});
+            },
+            navLogin() {
+              this.$router.push({ name: "login"});
+            },
+            navGroups() {
+              this.$router.push({ name: "groupList"});
+            },
+            logout () {
+              router.push('/login')
+            }
+  },
 };
 </script>
