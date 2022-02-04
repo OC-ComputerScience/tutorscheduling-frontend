@@ -4,7 +4,7 @@ export default {
   
     ///Groups CRUD commands
     getAllGroups() {
-      return apiClient.get("groups");
+      return apiClient.get("api/group");
     },
     getGroups(start, length) {
       return apiClient.get(`groups?start=${start}&length=${length}`);
