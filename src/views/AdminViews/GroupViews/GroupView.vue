@@ -2,7 +2,7 @@
   <div style="">
     <v-container>
       <v-toolbar>
-        <v-toolbar-title>{{ this.group.fName }} {{ this.group.lName }}</v-toolbar-title>
+        <v-toolbar-title>{{ this.group.name }}</v-toolbar-title>
       </v-toolbar>
       <br>
       <v-btn
@@ -16,7 +16,7 @@
     <v-btn
         color="error"
         class="mr-4"
-        @click="deleteGroup(group.groupID, group.fName)"
+        @click="deleteGroup(group.id, group.name)"
       >
         Delete
     </v-btn>
@@ -31,7 +31,7 @@
     <br><br>
 
     <v-text-field
-        v-model="group.fName"
+        v-model="group.name"
         id="name"
         :counter="50"
         label="Group Name"
@@ -39,7 +39,7 @@
       ></v-text-field>
 
       <v-text-field
-        v-model="group.lName"
+        v-model="group.description"
         id="description"
         :counter="500"
         label="Description"
@@ -87,7 +87,7 @@ export default {
       this.$router.go(-1);
     },
     toEdit() {
-      this.$router.push({ name: "groupEdit", params: { id: this.group.groupID } });
+      this.$router.push({ name: "groupEdit", params: { id: this.group.id } });
     },
   },
 };

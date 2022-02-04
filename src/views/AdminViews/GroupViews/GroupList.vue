@@ -52,7 +52,7 @@
       return {
         search: '',
         groups: [],
-        headers: [{text: 'ID', value: 'groupID'}, 
+        headers: [{text: 'ID', value: 'id'}, 
                   {text: 'Name', value: 'name'},
                   {text: 'Description', value: 'description'}]
       }
@@ -96,7 +96,7 @@
       },
       rowClick: function (item, row) {      
         row.select(true);
-        this.$router.push({ name: 'groupView', params: { id: item.groupID } });
+        this.$router.push({ name: 'groupView', params: { id: item.id } });
       },
       addGroup() {
         this.$router.push({ name: 'groupAdd'});

@@ -10,15 +10,15 @@ export default {
       return apiClient.get(`groups?start=${start}&length=${length}`);
     },
     getGroup(id) {
-      return apiClient.get("groups/" + id);
+      return apiClient.get("api/group/" + id);
     },
     addGroup(group) {
-      return apiClient.post("groups", group);
+      return apiClient.post("api/group", group);
     },
     updateGroup(groupId, group) {
-      return apiClient.put("groups/" + groupId, group);
+      return apiClient.put("api/group/" + groupId, group);
     },
     deleteGroup(groupId) {
-      return apiClient.delete("groups/" + groupId);
+      return apiClient.delete("api/group/" + groupId);
     }
   };
