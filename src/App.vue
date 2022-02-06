@@ -13,6 +13,17 @@
       <template v-slot:extension v-if="this.$store.state.loginUser === null">
         <v-tabs align-with-title>
           <v-tab @click="navLogin">Login</v-tab>
+          <v-tab @click="navGroups">Groups</v-tab>
+          <v-tab @click="navPeople">People</v-tab>
+        </v-tabs>
+      </template>
+
+      <template v-slot:extension v-else>
+        <v-tabs align-with-title>
+          <v-tab @click="navAdvHome">Home</v-tab>
+          <v-tab @click="navGroups">Groups</v-tab>
+          <v-tab @click="navPeople">People</v-tab>
+          <v-tab @click="logout">Logout</v-tab>
         </v-tabs>
       </template>
 
@@ -40,11 +51,19 @@ export default {
   created() {
   },
   methods: {
+            navHome() {
+              this.$router.push({ name: "home"});
+            },
             navLogin() {
               this.$router.push({ name: "login"});
             },
-            logout() {
-              Utils.removeItem('user')
+            navGroups() {
+              this.$router.push({ name: "groupList"});
+            },
+            navPeople() {
+              this.$router.push({ name: "personList"});
+            },
+            logout () {
               router.push('/login')
             }
   },

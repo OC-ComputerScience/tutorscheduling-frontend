@@ -4,21 +4,21 @@ export default {
   
     ///Groups CRUD commands
     getAllGroups() {
-      return apiClient.get("groups");
+      return apiClient.get("group");
     },
     getGroups(start, length) {
       return apiClient.get(`groups?start=${start}&length=${length}`);
     },
     getGroup(id) {
-      return apiClient.get("groups/" + id);
+      return apiClient.get("group/" + id);
     },
     addGroup(group) {
-      return apiClient.post("groups", group);
+      return apiClient.post("group", group);
     },
     updateGroup(groupId, group) {
-      return apiClient.put("groups/" + groupId, group);
+      return apiClient.put("group/" + groupId, group);
     },
     deleteGroup(groupId) {
-      return apiClient.delete("groups/" + groupId);
+      return apiClient.delete("group/" + groupId);
     }
   };

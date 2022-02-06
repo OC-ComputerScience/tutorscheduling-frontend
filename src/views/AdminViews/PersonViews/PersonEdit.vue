@@ -1,8 +1,9 @@
+
 <template>
   <div>
     <v-container>
       <v-toolbar>
-        <v-toolbar-title>{{ this.group.name }}</v-toolbar-title>
+        <v-toolbar-title>{{ this.person.fName }} {{ this.person.lName }}</v-toolbar-title>
       </v-toolbar>
       <br>
     <v-form
@@ -11,18 +12,38 @@
       lazy validation
     >
       <v-text-field
-        v-model="group.name"
-        id="name"
-        :counter="50"
-        label="Name"
+        v-model="person.fName"
+        id="fname"
+        :counter="25"
+        label="First Name"
+        required
+      ></v-text-field>
+      
+      <v-text-field
+        v-model="person.lName"
+        id="lname"
+        :counter="25"
+        label="Last Name"
         required
       ></v-text-field>
 
       <v-text-field
-        v-model="group.description"
-        id="description"
-        :counter="500"
-        label="Description..."
+        v-model="person.email"
+        id="email"
+        :counter="25"
+        label="email"
+        hint="you@email.com"
+        persistent-hint
+        required
+      ></v-text-field>
+
+      <v-text-field
+        v-model="person.phoneNum"
+        id="phoneNum"
+        :counter="13"
+        label="phoneNum"
+        hint="111-222-3333"
+        persistent-hint
         required
       ></v-text-field>
 
@@ -30,7 +51,7 @@
         :disabled="!valid"
         color="success"
         class="mr-4"
-        @click="updateGroup"
+        @click="updatePerson"
       >
         Save
       </v-btn>
@@ -48,24 +69,24 @@
 </template>
 
 <script>
-import GroupServices from "@/services/groupServices.js";
+import PersonServices from "@/services/personServices.js";
 
 export default {
   props: ["id"],
 
   data() {
     return {
-      group: {},
-      message: "Make updates to the Group",
+      person: {},
+      message: "Make updates to the Person",
         roles: [
         'admin'
       ],
     };
   },
   created() {
-    GroupServices.getGroup(this.id)
+    PersonServices.getPerson(this.id)
       .then((response) => {
-        this.group = response.data;
+        this.person = response.data;
         console.log(response.data);
       })
       .catch((error) => {
@@ -74,8 +95,8 @@ export default {
   },
 
   methods: {
-    updateGroup() {
-      GroupServices.updateGroup(this.id, this.group)
+    updatePerson() {
+      PersonServices.updatePerson(this.id, this.person)
         .then(() => {
           this.$router.go(-1);
         })

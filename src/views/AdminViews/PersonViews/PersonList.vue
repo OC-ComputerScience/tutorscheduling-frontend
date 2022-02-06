@@ -1,8 +1,9 @@
+
 <template>
   <div>
     <v-container>
       <v-toolbar>
-        <v-toolbar-title>Groups</v-toolbar-title>
+        <v-toolbar-title>People</v-toolbar-title>
       </v-toolbar>
       <br><br>
     <v-card>
@@ -18,7 +19,7 @@
         <v-btn
         color="accent"
         elevation="2"
-        @click="addGroup"
+        @click="addPerson"
       >
         Add
     </v-btn>
@@ -33,7 +34,7 @@
       <v-data-table
         :headers="headers"
         :search="search"
-        :items="groups"
+        :items="persons"
         :items-per-page="50"
         @click:row="rowClick"
       ></v-data-table>
@@ -43,7 +44,7 @@
 </template>
 
 <script>
-  import GroupServices from '@/services/groupServices.js'
+  import PersonServices from '@/services/personServices.js'
   export default {
     name: 'App',
     components: {
@@ -51,31 +52,32 @@
     data() {
       return {
         search: '',
-        groups: [],
+        persons: [],
         headers: [{text: 'ID', value: 'id'}, 
-                  {text: 'Name', value: 'name'},
-                  {text: 'Description', value: 'description'}]
+                  {text: 'First Name', value: 'fName'},
+                  {text: 'Last Name', value: 'lName'},
+                  {text: 'Email Address', value: 'email'}]
       }
     },
     created() {
-      this.getGroups();
+      this.getPersons();
     },
     methods: {
-      getGroups() {
-        GroupServices.getAllGroups()
+      getPersons() {
+        PersonServices.getAllPersons()
         .then(response => {
-          this.groups = response.data;
+          this.persons = response.data;
         })
         .catch(error => {
           console.log("There was an error:", error.response)
         });
       },
-      deleteGroup(id, name) {
-        let confirmed = confirm(`Are you sure you want to delete ${name}`);
+      deletePerson(id, fName) {
+        let confirmed = confirm(`Are you sure you want to delete ${fName}`);
         if(confirmed) {
-          GroupServices.deleteGroup(id)
+          PersonServices.deletePerson(id)
           .then(() => {
-            this.getGroups(this.start, this.length);
+            this.getPersons(this.start, this.length);
           })
           .catch(error => {
             console.log("There was an error:", error.response)
@@ -85,21 +87,21 @@
       getPrevious() {
         if(this.start >= this.length) {
           this.start -= this.length;
-          this.getGroups(this.start, this.length);
+          this.getPersons(this.start, this.length);
         }
       },
       getNext() {
         if(this.courses.length === this.length) {
           this.start += this.length;
-          this.getGroups(this.start, this.length);
+          this.getPersons(this.start, this.length);
         }
       },
       rowClick: function (item, row) {      
         row.select(true);
-        this.$router.push({ name: 'groupView', params: { id: item.id } });
+        this.$router.push({ name: 'personView', params: { id: item.id } });
       },
-      addGroup() {
-        this.$router.push({ name: 'groupAdd'});
+      addPerson() {
+        this.$router.push({ name: 'personAdd'});
       },
       cancel() {
         this.$router.go(-1);
