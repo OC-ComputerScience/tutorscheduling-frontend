@@ -35,7 +35,7 @@
         v-model="topic.groupId"
         :items="groups"
         item-text="name"
-        item-value="groupid"
+        item-value="id"
         label="Group"
         required
       >

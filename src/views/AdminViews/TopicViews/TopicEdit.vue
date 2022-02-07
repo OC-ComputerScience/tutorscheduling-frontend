@@ -27,13 +27,15 @@
         required
       ></v-text-field>
 
-      <v-text-field
-        v-model="group.name"
-        id="name"
-        :counter="25"
-        label="Group Name"
-        readonly
-      ></v-text-field>
+      <v-select
+        v-model="topic.groupId"
+        :items="groups"
+        item-text="name"
+        item-value="id"
+        label="Group"
+        required
+      >
+      </v-select>
 
       <v-btn
         :disabled="!valid"
@@ -67,6 +69,7 @@ export default {
     return {
       topic: {},
       group: {},
+      groups: {},
       message: "Make updates to the Topic",
         roles: [
         'admin'
@@ -89,6 +92,13 @@ export default {
       })
       .catch((error) => {
         console.log("There was an error:", error.response);
+      }),
+    GroupServices.getAllGroups()
+        .then((response) => {
+          this.groups = response.data;
+        })
+        .catch((error) => {
+          console.log("There was an error:", error.response);
       });
   },
 

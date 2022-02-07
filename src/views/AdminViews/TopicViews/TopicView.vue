@@ -79,16 +79,16 @@ export default {
     TopicServices.getTopic(this.id)
       .then((response) => {
         this.topic = response.data;
-        console.log(response.data);
-      })
-      .catch((error) => {
-        console.log("There was an error:", error.response);
-      }),
-    GroupServices.getGroup(this.groupid)
-      .then((response) => {
-        this.group = response.data;
-        console.log(response.data);
-      })
+        GroupServices.getGroup(this.topic.groupId)
+          .then((response) => {
+            this.group = response.data;
+            console.log(response.data);
+          })
+          .catch((error) => {
+            console.log("There was an error:", error.response);
+          });
+          console.log(response.data);
+        })
       .catch((error) => {
         console.log("There was an error:", error.response);
       });
