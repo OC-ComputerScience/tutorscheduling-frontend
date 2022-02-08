@@ -3,7 +3,7 @@
   <div>
     <v-container>
       <v-toolbar>
-        <v-toolbar-title>Add Topic</v-toolbar-title>
+        <v-toolbar-title>{{ this.role.type }}</v-toolbar-title>
       </v-toolbar>
       <br>
     <v-form
@@ -12,27 +12,15 @@
       lazy validation
     >
       <v-text-field
-        v-model="topic.name"
-        id="name"
+        v-model="role.type"
+        id="type"
         :counter="50"
         label="Name"
-        hint="Name"
-        persistent-hint
         required
       ></v-text-field>
-      
-      <v-text-field
-        v-model="topic.abbr"
-        id="abbr"
-        :counter="25"
-        label="Abbreviation"
-        hint="Abbreviation"
-        persistent-hint
-        required
-      ></v-text-field>
-
+    
       <v-select
-        v-model="topic.groupId"
+        v-model="role.groupId"
         :items="groups"
         item-text="name"
         item-value="id"
@@ -45,7 +33,7 @@
         :disabled="!valid"
         color="success"
         class="mr-4"
-        @click="addTopic"
+        @click="updateRole"
       >
         Save
       </v-btn>
@@ -63,47 +51,62 @@
 </template>
 
 <script>
-import TopicServices from "@/services/topicServices.js";
+import RoleServices from "@/services/roleServices.js";
 import GroupServices from "@/services/groupServices.js";
 
 export default {
-  components: {
-  },
+  props: ["id"],
+
   data() {
     return {
-      topic: {},
-      groups: [],
-      roles: [
+      role: {},
+      group: {},
+      groups: {},
+      message: "Make updates to the Role",
+        roles: [
         'admin'
       ],
     };
   },
   created() {
-    this.getAllGroups();
-  },
-  methods: {
-    getAllGroups() {
-      GroupServices.getAllGroups()
+    RoleServices.getRole(this.id)
+      .then((response) => {
+        this.role = response.data;
+        console.log(response.data);
+      })
+      .catch((error) => {
+        console.log("There was an error:", error.response);
+      }),
+    GroupServices.getGroup(this.groupid)
+      .then((response) => {
+        this.group = response.data;
+        console.log(response.data);
+      })
+      .catch((error) => {
+        console.log("There was an error:", error.response);
+      }),
+    GroupServices.getAllGroups()
         .then((response) => {
           this.groups = response.data;
         })
         .catch((error) => {
           console.log("There was an error:", error.response);
-        });
-    },
-    addTopic() {
-      TopicServices.addTopic(this.topic)
+      });
+  },
+
+  methods: {
+    updateRole() {
+      RoleServices.updateRole(this.id, this.role)
         .then(() => {
-          this.$router.push({ name: "topicList" });
+          this.$router.go(-1);
         })
         .catch((error) => {
           console.log(error);
-
         });
     },
     cancel() {
-      this.$router.push({ name: "topicList" });
-    }
+      this.$router.go(-1);
+    },
   },
 };
 </script>
