@@ -29,6 +29,10 @@ import RoleEdit    from './views/AdminViews/RoleViews/RoleEdit.vue';
 import RoleAdd     from './views/AdminViews/RoleViews/RoleAdd.vue';
 import RoleView    from './views/AdminViews/RoleViews/RoleView.vue';
 
+// Request
+import RequestList    from './views/AdminViews/RequestViews/RequestList.vue';
+import RequestAdd     from './views/StudentViews/RequestAdd.vue';
+
 Vue.use(Router)
 
 const router =  new Router({
@@ -130,6 +134,17 @@ const router =  new Router({
       path: '/roleView/:id',
       name: 'roleView',
       component:RoleView,
+      props: true
+    },
+    {
+      path: '/requestList',
+      name: 'requestList',
+      component: RequestList
+    },
+    {
+      path: '/requestAdd',
+      name: 'requestAdd',
+      component: RequestAdd,
       props: true
     },
     /*

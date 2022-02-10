@@ -17,6 +17,7 @@
           <v-tab @click="navPeople">People</v-tab>
           <v-tab @click="navTopic">Topics</v-tab>
           <v-tab @click="navRole">Roles</v-tab>
+          <v-tab @click="navRequest">Request</v-tab>
 
         </v-tabs>
       </template>
@@ -28,6 +29,7 @@
           <v-tab @click="navPeople">People</v-tab>
           <v-tab @click="navTopic">Topics</v-tab>
           <v-tab @click="navRole">Roles</v-tab>
+          <v-tab @click="navRequest">Request</v-tab>
           <v-tab @click="logout">Logout</v-tab>
         </v-tabs>
       </template>
@@ -72,6 +74,9 @@ export default {
             },
             navRole() {
               this.$router.push({ name: "roleList"});
+            },
+            navRequest() {
+              this.$router.push({ name: "requestList"});
             },
             logout () {
               router.push('/login')
