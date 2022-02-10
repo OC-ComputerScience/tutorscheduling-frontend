@@ -23,6 +23,12 @@ import TopicEdit    from './views/AdminViews/TopicViews/TopicEdit.vue';
 import TopicAdd     from './views/AdminViews/TopicViews/TopicAdd.vue';
 import TopicView    from './views/AdminViews/TopicViews/TopicView.vue';
 
+// Location
+import LocationList    from './views/AdminViews/LocationViews/LocationList.vue';
+import LocationEdit    from './views/AdminViews/LocationViews/LocationEdit.vue';
+import LocationAdd     from './views/AdminViews/LocationViews/LocationAdd.vue';
+import LocationView    from './views/AdminViews/LocationViews/LocationView.vue';
+
 Vue.use(Router)
 
 const router =  new Router({
@@ -101,6 +107,29 @@ const router =  new Router({
       path: '/topicView/:id',
       name: 'topicView',
       component:TopicView,
+      props: true
+    },
+    {
+      path: '/locationList',
+      name: 'locationList',
+      component: LocationList
+    },
+    {
+      path: '/locationEdit/:id',
+      name: 'locationEdit',
+      component: LocationEdit,
+      props: true
+    },
+    {
+      path: '/locationAdd',
+      name: 'locationAdd',
+      component: LocationAdd,
+      props: true
+    },
+    {
+      path: '/locationView/:id',
+      name: 'locationView',
+      component:LocationView,
       props: true
     },
     /*

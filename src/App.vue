@@ -16,7 +16,7 @@
           <v-tab @click="navGroups">Groups</v-tab>
           <v-tab @click="navPeople">People</v-tab>
           <v-tab @click="navTopic">Topics</v-tab>
-
+          <v-tab @click="navLocation">Locations</v-tab>
         </v-tabs>
       </template>
 
@@ -26,6 +26,7 @@
           <v-tab @click="navGroups">Groups</v-tab>
           <v-tab @click="navPeople">People</v-tab>
           <v-tab @click="navTopic">Topics</v-tab>
+          <v-tab @click="navLocation">Locations</v-tab>
           <v-tab @click="logout">Logout</v-tab>
         </v-tabs>
       </template>
@@ -67,6 +68,9 @@ export default {
             },
             navTopic() {
               this.$router.push({ name: "topicList"});
+            },
+            navLocation() {
+              this.$router.push({ name: "locationList"});
             },
             logout () {
               router.push('/login')
