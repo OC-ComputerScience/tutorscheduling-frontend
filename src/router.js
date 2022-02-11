@@ -29,6 +29,13 @@ import LocationEdit    from './views/AdminViews/LocationViews/LocationEdit.vue';
 import LocationAdd     from './views/AdminViews/LocationViews/LocationAdd.vue';
 import LocationView    from './views/AdminViews/LocationViews/LocationView.vue';
 
+// Role
+import RoleList    from './views/AdminViews/RoleViews/RoleList.vue';
+import RoleEdit    from './views/AdminViews/RoleViews/RoleEdit.vue';
+import RoleAdd     from './views/AdminViews/RoleViews/RoleAdd.vue';
+import RoleView    from './views/AdminViews/RoleViews/RoleView.vue';
+
+
 Vue.use(Router)
 
 const router =  new Router({
@@ -130,6 +137,28 @@ const router =  new Router({
       path: '/locationView/:id',
       name: 'locationView',
       component:LocationView,
+    },
+    {
+      path: '/roleList',
+      name: 'roleList',
+      component: RoleList
+    },
+    {
+      path: '/roleEdit/:id',
+      name: 'roleEdit',
+      component: RoleEdit,
+      props: true
+    },
+    {
+      path: '/roleAdd',
+      name: 'roleAdd',
+      component: RoleAdd,
+      props: true
+    },
+    {
+      path: '/roleView/:id',
+      name: 'roleView',
+      component:RoleView,
       props: true
     },
     /*
