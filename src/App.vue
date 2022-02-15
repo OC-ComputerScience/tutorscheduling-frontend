@@ -13,6 +13,11 @@
       <template v-slot:extension v-if="this.$store.state.loginUser === null">
         <v-tabs align-with-title>
           <v-tab @click="navLogin">Login</v-tab>
+          <v-tab @click="navGroups">Groups</v-tab>
+          <v-tab @click="navPeople">People</v-tab>
+          <v-tab @click="navTopic">Topics</v-tab>
+          <v-tab @click="navRole">Roles</v-tab>
+
         </v-tabs>
       </template>
 
@@ -20,6 +25,8 @@
         <v-tabs align-with-title>
           <v-tab @click="navGroups">Groups</v-tab>
           <v-tab @click="navPeople">People</v-tab>
+          <v-tab @click="navTopic">Topics</v-tab>
+          <v-tab @click="navRole">Roles</v-tab>
           <v-tab @click="logout">Logout</v-tab>
         </v-tabs>
       </template>
@@ -59,6 +66,12 @@ export default {
             },
             navPeople() {
               this.$router.push({ name: "personList"});
+            },
+            navTopic() {
+              this.$router.push({ name: "topicList"});
+            },
+            navRole() {
+              this.$router.push({ name: "roleList"});
             },
             logout () {
               router.push('/login')

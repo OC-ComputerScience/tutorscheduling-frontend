@@ -17,6 +17,18 @@ import PersonEdit    from './views/AdminViews/PersonViews/PersonEdit.vue';
 import PersonAdd     from './views/AdminViews/PersonViews/PersonAdd.vue';
 import PersonView    from './views/AdminViews/PersonViews/PersonView.vue';
 
+// Topic
+import TopicList    from './views/AdminViews/TopicViews/TopicList.vue';
+import TopicEdit    from './views/AdminViews/TopicViews/TopicEdit.vue';
+import TopicAdd     from './views/AdminViews/TopicViews/TopicAdd.vue';
+import TopicView    from './views/AdminViews/TopicViews/TopicView.vue';
+
+// Role
+import RoleList    from './views/AdminViews/RoleViews/RoleList.vue';
+import RoleEdit    from './views/AdminViews/RoleViews/RoleEdit.vue';
+import RoleAdd     from './views/AdminViews/RoleViews/RoleAdd.vue';
+import RoleView    from './views/AdminViews/RoleViews/RoleView.vue';
+
 Vue.use(Router)
 
 const router =  new Router({
@@ -72,6 +84,52 @@ const router =  new Router({
       path: '/personView/:id',
       name: 'personView',
       component: PersonView,
+      props: true
+    },
+    {
+      path: '/topicList',
+      name: 'topicList',
+      component: TopicList
+    },
+    {
+      path: '/topicEdit/:id',
+      name: 'topicEdit',
+      component: TopicEdit,
+      props: true
+    },
+    {
+      path: '/topicAdd',
+      name: 'topicAdd',
+      component: TopicAdd,
+      props: true
+    },
+    {
+      path: '/topicView/:id',
+      name: 'topicView',
+      component:TopicView,
+      props: true
+    },
+    {
+      path: '/roleList',
+      name: 'roleList',
+      component: RoleList
+    },
+    {
+      path: '/roleEdit/:id',
+      name: 'roleEdit',
+      component: RoleEdit,
+      props: true
+    },
+    {
+      path: '/roleAdd',
+      name: 'roleAdd',
+      component: RoleAdd,
+      props: true
+    },
+    {
+      path: '/roleView/:id',
+      name: 'roleView',
+      component:RoleView,
       props: true
     },
     /*
