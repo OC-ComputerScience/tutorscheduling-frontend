@@ -23,11 +23,18 @@ import TopicEdit    from './views/AdminViews/TopicViews/TopicEdit.vue';
 import TopicAdd     from './views/AdminViews/TopicViews/TopicAdd.vue';
 import TopicView    from './views/AdminViews/TopicViews/TopicView.vue';
 
+// Location
+import LocationList    from './views/AdminViews/LocationViews/LocationList.vue';
+import LocationEdit    from './views/AdminViews/LocationViews/LocationEdit.vue';
+import LocationAdd     from './views/AdminViews/LocationViews/LocationAdd.vue';
+import LocationView    from './views/AdminViews/LocationViews/LocationView.vue';
+
 // Role
 import RoleList    from './views/AdminViews/RoleViews/RoleList.vue';
 import RoleEdit    from './views/AdminViews/RoleViews/RoleEdit.vue';
 import RoleAdd     from './views/AdminViews/RoleViews/RoleAdd.vue';
 import RoleView    from './views/AdminViews/RoleViews/RoleView.vue';
+
 
 Vue.use(Router)
 
@@ -108,6 +115,28 @@ const router =  new Router({
       name: 'topicView',
       component:TopicView,
       props: true
+    },
+    {
+      path: '/locationList',
+      name: 'locationList',
+      component: LocationList
+    },
+    {
+      path: '/locationEdit/:id',
+      name: 'locationEdit',
+      component: LocationEdit,
+      props: true
+    },
+    {
+      path: '/locationAdd',
+      name: 'locationAdd',
+      component: LocationAdd,
+      props: true
+    },
+    {
+      path: '/locationView/:id',
+      name: 'locationView',
+      component:LocationView,
     },
     {
       path: '/roleList',
