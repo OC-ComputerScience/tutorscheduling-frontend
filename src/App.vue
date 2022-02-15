@@ -13,14 +13,11 @@
       <template v-slot:extension v-if="this.$store.state.loginUser === null">
         <v-tabs align-with-title>
           <v-tab @click="navLogin">Login</v-tab>
-          <v-tab @click="navGroups">Groups</v-tab>
-          <v-tab @click="navPeople">People</v-tab>
         </v-tabs>
       </template>
 
       <template v-slot:extension v-else>
         <v-tabs align-with-title>
-          <v-tab @click="navAdvHome">Home</v-tab>
           <v-tab @click="navGroups">Groups</v-tab>
           <v-tab @click="navPeople">People</v-tab>
           <v-tab @click="logout">Logout</v-tab>
@@ -37,7 +34,7 @@
 
 <script>
 import router from '@/router'
-import Utils from '@/config/utils'
+//import Utils from '@/config/utils'
 
 export default {
   name: 'App',

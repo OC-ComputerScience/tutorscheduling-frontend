@@ -47,9 +47,9 @@ const router =  new Router({
       component: GroupAdd
     },
     {
-      path: '/groupDelete/:id',
-      name: 'groupDelete',
-      component: GroupDelete,
+      path: '/GroupView/:id',
+      name: 'GroupView',
+      component: GroupView,
       props: true
     },
     {
@@ -82,7 +82,7 @@ const router =  new Router({
     */
   ]
 })
-/*
+
 router.beforeEach((to, from, next) => {
   // redirect to login page if not logged in and trying to access a restricted page
   const publicPages = ['/login']
@@ -93,6 +93,6 @@ router.beforeEach((to, from, next) => {
   }
   next()
 })
-*/
+
 
 export default router;

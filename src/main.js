@@ -4,8 +4,6 @@ import App from './App.vue'
 import router from './router'
 import store from './store/store'
 import vuetify from './plugins/vuetify'
-import router from '@/router.js'
-import store from '@/store/store.js'
 
 import GoogleAuth from '@/config/google.js'
 const gauthOption = {
