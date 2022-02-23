@@ -107,8 +107,8 @@ export default {
       });
   },
   methods: {
-    deleteLocation(id, fName) {
-      let confirmed = confirm(`Are you sure you want to delete ${fName}`);
+    deleteLocation(id, name) {
+      let confirmed = confirm(`Are you sure you want to delete ${name}`);
       if (confirmed) {
         LocationServices.deleteLocation(id)
           .then(() => {
