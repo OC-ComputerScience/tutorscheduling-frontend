@@ -14,19 +14,19 @@
         >
           <v-card tile>
             <v-card-title>
-              <span class="text-h5">Enter Phone Number</span>
+              <span class="text-h5">Hello {{this.$store.state.loginUser.fName}}! Complete your account below:</span>
             </v-card-title>
             <v-card-text>
               <v-container>
                 <v-row>
                   <v-text-field
-                      v-model="phoneNum"
-                      id="phoneNum"
-                      :counter="50"
-                      label="phoneNum"
-                      hint="(123) 456-7890"
-                      persistent-hint
-                      required
+                    v-model="phoneNum"
+                    id="phoneNum"
+                    :counter="50"
+                    label="Phone Number"
+                    hint="123-456-7890"
+                    persistent-hint
+                    required
                   ></v-text-field>
                 </v-row>
               </v-container>
@@ -50,39 +50,56 @@
           max-width="600px"
         >
           <v-card tile>
-            <!-- <v-card-title>
-              <span class="text-h5">Select:</span>
-            </v-card-title> -->
-            <v-subheader>Choose your role:</v-subheader>
-            <v-spacer></v-spacer>
-            <v-list>
-              <v-list-item>
-                <v-checkbox
-                  v-model="student"
-                  :label="`Student`"
-                  @change="tutor=!student"
-                ></v-checkbox>
-              </v-list-item>
-              <v-list-item>
-                <v-checkbox
-                  v-model="tutor"
-                  :label="`Tutor`"
-                  @change="student=!tutor"
-                ></v-checkbox>
-              </v-list-item>
-            </v-list>
-            <v-subheader>Choose your group(s):</v-subheader>
-            <v-list>
-              <v-list-item
-                v-for="(group, i) in groups"
-                :key="i"
+            <v-card-title>
+              <span class="text-h5">Select below:</span>
+            </v-card-title>
+            <v-container>
+              <v-subheader>Choose your action:</v-subheader>
+              <v-list>
+                <v-list-item>
+                  <v-checkbox
+                    v-model="student"
+                    :label="`Sign up for tutoring`"
+                    :rules="validateRoleCheckbox"
+                    @change="tutor=!student"
+                  ></v-checkbox>
+                </v-list-item>
+                <v-list-item>
+                  <v-checkbox
+                    v-model="tutor"
+                    :label="`Apply to be a tutor`"
+                    :rules="validateRoleCheckbox"
+                    @change="student=!tutor"
+                  ></v-checkbox>
+                </v-list-item>
+              </v-list>
+            </v-container>
+            <v-container>
+              <v-subheader>Choose your group(s):</v-subheader>
+              <v-list>
+                <v-list-item
+                  v-for="(group, i) in groups"
+                  :key="i"
+                >
+                  <v-checkbox
+                    v-model="group.id"
+                    :label="group.name"
+                    unchecked
+                    @click="addGroup(group.id, $event)"
+                  ></v-checkbox>
+                </v-list-item>
+              </v-list>
+            </v-container>
+            <v-card-actions>
+              <v-spacer></v-spacer>
+              <v-btn
+                color="blue darken-1"
+                text
+                @click="goToPage(); savePersonRoles()"
               >
-                <v-checkbox
-                  v-model="model"
-                  :label="group.name"
-                ></v-checkbox>
-              </v-list-item>
-            </v-list>
+                Continue
+              </v-btn>
+            </v-card-actions>
           </v-card>
         </v-dialog>
       </v-row>
@@ -93,6 +110,9 @@
 //import router from '@/router'
 import AuthServices from '@/services/authServices'
 import GroupServices from '@/services/groupServices'
+import RoleServices from '@/services/roleServices'
+import PersonServices from '@/services/personServices'
+import PersonRoleServices from '@/services/personRoleServices'
 import Utils from '@/config/utils.js'
 export default {
   name: 'login_signup_social',
@@ -100,18 +120,38 @@ export default {
     return {
       dialog: false,
       dialog2: false,
-      student: false,
+      student: true,
       tutor: false, 
+      model: false,
       groups: [],
-      phoneNum: ''
+      phoneNum: '',
+      person: {},
+      roles: [],
+      personrole: {},
+      checkedGroups: []
     }
   },
   created () {
     this.getGroups();
+    this.getPerson();
+  },
+  computed: {
+    validateRoleCheckbox() {
+      return [this.student || this.tutor];
+    }
   },
   methods: {
+    getPerson() {
+      PersonServices.getPerson(this.$store.state.loginUser.userID)
+        .then(response => {
+          this.person = response.data;
+        })
+        .catch(error => {
+          console.log("There was an error:", error.response)
+        });
+    },
     getGroups() {
-        GroupServices.getAllGroups()
+      GroupServices.getAllGroups()
         .then(response => {
           this.groups = response.data;
         })
@@ -119,8 +159,57 @@ export default {
           console.log("There was an error:", error.response)
         });
     },
+    getGroupRoles(id) {
+      RoleServices.getAllForGroup(id)
+      .then(response => {
+          response.data.forEach(data => {
+            this.roles.push(data);
+          })
+        })
+        .catch(error => {
+          console.log("There was an error:", error.response)
+        });
+    },
     savePhoneNum() {
+      this.person.phoneNum = this.phoneNum;
+      PersonServices.updatePerson(this.person.id, this.person);
+    },
+    goToPage() {
 
+    },
+    addGroup : function(id, event) {
+      if (event.target.checked) {
+        console.log(id);
+        this.checkedGroups.push(id);
+        console.log(this.checkedGroups);
+      }
+      else {
+        if(this.checkedGroups.includes(id)) {
+          if (this.checkedGroups.indexOf(id) !== -1) {
+            this.checkedGroups.splice(this.checkedGroups.indexOf(id), 1);
+          }
+        }
+      }
+    },
+    savePersonRoles() {
+      this.checkedGroups.forEach(id => {
+        this.getGroupRoles(id); 
+      })
+      console.log(this.roles);
+      this.roles.forEach(role => {
+          console.log(role);
+          if((this.student && role.type === 'Student') ||
+              (this.tutor && role.type === 'Tutor')) {
+              this.personrole = {
+                status: "applied",
+                agree: false,
+                dateSigned: Date(),
+                personId: this.person.id,
+                roleId: role.id 
+              };
+            PersonRoleServices.addPersonRole(this.personrole);
+          }
+      }) 
     },
     loginWithGoogle() {
       this.$gAuth
@@ -140,12 +229,14 @@ export default {
           .then(response => {
             var user = response.data
             Utils.setStore("user", user)
-            // console.log(this.$store.state.loginUser.fName + " " + this.$store.state.loginUser.phoneNum)
+            console.log(this.$store.state.loginUser)
             // if this is a brand new user, do this
-            if(this.$store.state.loginUser.phoneNum === '')
-              this.dialog = true
-            else if(this.$store.state.loginUser.role === '')
-              this.dialog2 = true
+            if(this.$store.state.loginUser.admin !== true) {
+              if(this.$store.state.loginUser.phoneNum === '')
+                this.dialog = true
+              else
+                this.dialog2 = true;
+            }
           })
           
         })
