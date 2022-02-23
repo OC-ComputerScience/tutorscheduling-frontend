@@ -68,7 +68,6 @@
         v-model="menu2"
         :close-on-content-click="false"
         :nudge-right="40"
-        :return-value.sync="startTime"
         transition="scale-transition"
         offset-y
         max-width="290px"
@@ -94,8 +93,6 @@
         
       </v-menu>
     </v-col>
-    <v-spacer></v-spacer>
-
     <v-col
       cols="11"
       sm="5"
@@ -105,7 +102,6 @@
         v-model="menu3"
         :close-on-content-click="false"
         :nudge-right="40"
-        :return-value.sync="endTime"
         transition="scale-transition"
         offset-y
         max-width="290px"
@@ -149,9 +145,9 @@ import AvailabilityServices from "@/services/availabilityServices.js";
     data: () => ({
       availability: {},
       dates: [],
-      menu: false,
       startTime: null,
       endTime: null,
+      menu: false,
       menu2: false,
       menu3: false,
     }),
