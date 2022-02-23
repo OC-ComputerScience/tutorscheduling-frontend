@@ -35,6 +35,8 @@ import RoleEdit    from './views/AdminViews/RoleViews/RoleEdit.vue';
 import RoleAdd     from './views/AdminViews/RoleViews/RoleAdd.vue';
 import RoleView    from './views/AdminViews/RoleViews/RoleView.vue';
 
+// Availability
+import AvailabilityAdd    from './views/AdminViews/AvailabilityViews/AvailabilityAdd.vue';
 //Calendar
 import MainCalendar    from './views/CalendarViews/MainCalendar.vue';
 
@@ -163,6 +165,11 @@ const router =  new Router({
       name: 'roleView',
       component:RoleView,
       props: true
+    },
+    {
+      path: '/availabilityAdd',
+      name: 'availabilityAdd',
+      component: AvailabilityAdd
     },
     {
       path: '/calendar',

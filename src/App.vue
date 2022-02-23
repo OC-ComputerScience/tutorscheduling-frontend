@@ -18,6 +18,7 @@
           <v-tab @click="navTopic">Topics</v-tab>
           <v-tab @click="navLocation">Locations</v-tab>
           <v-tab @click="navRole">Roles</v-tab>
+          <v-tab @click="navAvailability">Availability</v-tab>
           <v-tab @click="navCalendar">Calendar</v-tab>
         </v-tabs>
       </template>
@@ -30,11 +31,10 @@
           <v-tab @click="navTopic">Topics</v-tab>
           <v-tab @click="navLocation">Locations</v-tab>
           <v-tab @click="navRole">Roles</v-tab>
+          <v-tab @click="navAvailability">Availability</v-tab>
           <v-tab @click="navCalendar">Calendar</v-tab>
-          <v-tab @click="logout">Logout</v-tab>
         </v-tabs>
       </template>
-
     </v-app-bar>
   </v-card>
   <v-main>
@@ -78,6 +78,9 @@ export default {
             },
             navRole() {
               this.$router.push({ name: "roleList"});
+            },
+            navAvailability() {
+              this.$router.push({ name: "availabilityAdd"});
             },
             navCalendar() {
               this.$router.push({ name: "mainCalendar"});
