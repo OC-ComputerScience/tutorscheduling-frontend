@@ -167,7 +167,7 @@ import AvailabilityServices from "@/services/availabilityServices.js";
             });
         });
 
-        this.$router.push({ name: "topicList" });
+        this.$router.push({ name: "mainCalendar" });
 
       
     },
