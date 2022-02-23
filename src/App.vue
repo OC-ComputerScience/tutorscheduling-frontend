@@ -18,6 +18,7 @@
           <v-tab @click="navTopic">Topics</v-tab>
           <v-tab @click="navLocation">Locations</v-tab>
           <v-tab @click="navRole">Roles</v-tab>
+          <v-tab @click="navAvailability">Availability</v-tab>
         </v-tabs>
       </template>
 
@@ -29,6 +30,7 @@
           <v-tab @click="navTopic">Topics</v-tab>
           <v-tab @click="navLocation">Locations</v-tab>
           <v-tab @click="navRole">Roles</v-tab>
+          <v-tab @click="navAvailability">Availability</v-tab>
           <v-tab @click="logout">Logout</v-tab>
         </v-tabs>
       </template>
@@ -73,8 +75,12 @@ export default {
             },
             navLocation() {
               this.$router.push({ name: "locationList"});
+            },
             navRole() {
               this.$router.push({ name: "roleList"});
+            },
+            navAvailability() {
+              this.$router.push({ name: "availabilityAdd"});
             },
             logout () {
               router.push('/login')
