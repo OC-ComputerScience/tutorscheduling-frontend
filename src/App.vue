@@ -16,9 +16,12 @@
           <v-tab @click="navGroups">Groups</v-tab>
           <v-tab @click="navPeople">People</v-tab>
           <v-tab @click="navTopic">Topics</v-tab>
+          <v-tab @click="navLocation">Locations</v-tab>
           <v-tab @click="navRole">Roles</v-tab>
           <v-tab @click="navRequest">Request</v-tab>
 
+          <v-tab @click="navAvailability">Availability</v-tab>
+          <v-tab @click="navCalendar">Calendar</v-tab>
         </v-tabs>
       </template>
 
@@ -28,12 +31,14 @@
           <v-tab @click="navGroups">Groups</v-tab>
           <v-tab @click="navPeople">People</v-tab>
           <v-tab @click="navTopic">Topics</v-tab>
+          <v-tab @click="navLocation">Locations</v-tab>
           <v-tab @click="navRole">Roles</v-tab>
           <v-tab @click="navRequest">Request</v-tab>
           <v-tab @click="logout">Logout</v-tab>
+          <v-tab @click="navAvailability">Availability</v-tab>
+          <v-tab @click="navCalendar">Calendar</v-tab>
         </v-tabs>
       </template>
-
     </v-app-bar>
   </v-card>
   <v-main>
@@ -72,14 +77,23 @@ export default {
             navTopic() {
               this.$router.push({ name: "topicList"});
             },
+            navLocation() {
+              this.$router.push({ name: "locationList"});
+            },
             navRole() {
               this.$router.push({ name: "roleList"});
             },
             navRequest() {
               this.$router.push({ name: "requestList"});
             },
+            navAvailability() {
+              this.$router.push({ name: "availabilityAdd"});
+            },
+            navCalendar() {
+              this.$router.push({ name: "mainCalendar"});
+            },
             logout () {
-              router.push('/login')
+              router.push('/login');
             }
   },
 };
