@@ -3,6 +3,6 @@ module.exports = {
     host: 'localhost',
     port: 8081
   },
-  publicPath: process.env.NODE_ENV === 'development' ? '/' : '/tutoring-api/',
+  publicPath: process.env.NODE_ENV === 'development' ? '/' : '/tutorScheduling/',
   transpileDependencies: ['vuetify'],
 }
