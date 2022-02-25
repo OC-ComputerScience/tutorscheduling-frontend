@@ -23,11 +23,22 @@ import TopicEdit    from './views/AdminViews/TopicViews/TopicEdit.vue';
 import TopicAdd     from './views/AdminViews/TopicViews/TopicAdd.vue';
 import TopicView    from './views/AdminViews/TopicViews/TopicView.vue';
 
+// Location
+import LocationList    from './views/AdminViews/LocationViews/LocationList.vue';
+import LocationEdit    from './views/AdminViews/LocationViews/LocationEdit.vue';
+import LocationAdd     from './views/AdminViews/LocationViews/LocationAdd.vue';
+import LocationView    from './views/AdminViews/LocationViews/LocationView.vue';
+
 // Role
 import RoleList    from './views/AdminViews/RoleViews/RoleList.vue';
 import RoleEdit    from './views/AdminViews/RoleViews/RoleEdit.vue';
 import RoleAdd     from './views/AdminViews/RoleViews/RoleAdd.vue';
 import RoleView    from './views/AdminViews/RoleViews/RoleView.vue';
+
+// Availability
+import AvailabilityAdd    from './views/AdminViews/AvailabilityViews/AvailabilityAdd.vue';
+//Calendar
+import MainCalendar    from './views/CalendarViews/MainCalendar.vue';
 
 Vue.use(Router)
 
@@ -110,6 +121,29 @@ const router =  new Router({
       props: true
     },
     {
+      path: '/locationList',
+      name: 'locationList',
+      component: LocationList
+    },
+    {
+      path: '/locationEdit/:id',
+      name: 'locationEdit',
+      component: LocationEdit,
+      props: true
+    },
+    {
+      path: '/locationAdd',
+      name: 'locationAdd',
+      component: LocationAdd,
+      props: true
+    },
+    {
+      path: '/locationView/:id',
+      name: 'locationView',
+      component:LocationView,
+      props: true
+    },
+    {
       path: '/roleList',
       name: 'roleList',
       component: RoleList
@@ -130,6 +164,17 @@ const router =  new Router({
       path: '/roleView/:id',
       name: 'roleView',
       component:RoleView,
+      props: true
+    },
+    {
+      path: '/availabilityAdd',
+      name: 'availabilityAdd',
+      component: AvailabilityAdd
+    },
+    {
+      path: '/calendar',
+      name: 'mainCalendar',
+      component:MainCalendar,
       props: true
     },
     /*
