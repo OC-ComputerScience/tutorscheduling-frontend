@@ -142,13 +142,15 @@ export default {
   },
   methods: {
     getPerson() {
-      PersonServices.getPerson(this.$store.state.loginUser.userID)
-        .then(response => {
-          this.person = response.data;
-        })
-        .catch(error => {
-          console.log("There was an error:", error.response)
-        });
+      if (this.$store.state.loginUser !== null) {
+        PersonServices.getPerson(this.$store.state.loginUser.userID)
+          .then(response => {
+            this.person = response.data;
+          })
+          .catch(error => {
+            console.log("There was an error:", error.response)
+          });
+      }
     },
     getGroups() {
       GroupServices.getAllGroups()
@@ -229,6 +231,7 @@ export default {
           .then(response => {
             var user = response.data
             Utils.setStore("user", user)
+            this.getPerson();
             console.log(this.$store.state.loginUser)
             // if this is a brand new user, do this
             if(this.$store.state.loginUser.admin !== true) {
