@@ -14,7 +14,7 @@
         >
           <v-card tile>
             <v-card-title>
-              <span class="text-h5">Hello {{this.$store.state.loginUser.fName}}! Complete your account below:</span>
+              <span class="text-h5">Hello {{this.name}}! Complete your account below:</span>
             </v-card-title>
             <v-card-text>
               <v-container>
@@ -128,7 +128,8 @@ export default {
       person: {},
       roles: [],
       personrole: {},
-      checkedGroups: []
+      checkedGroups: [],
+      name: ''
     }
   },
   created () {
@@ -142,7 +143,7 @@ export default {
   },
   methods: {
     getPerson() {
-      if (this.$store.state.loginUser !== null) {
+      if (this.$store.state.loginUser.userID !== null) {
         PersonServices.getPerson(this.$store.state.loginUser.userID)
           .then(response => {
             this.person = response.data;
@@ -232,7 +233,8 @@ export default {
             var user = response.data
             Utils.setStore("user", user)
             this.getPerson();
-            console.log(this.$store.state.loginUser)
+            this.name = this.person.fName;
+            console.log(user)
             // if this is a brand new user, do this
             if(this.$store.state.loginUser.admin !== true) {
               if(this.$store.state.loginUser.phoneNum === '')
