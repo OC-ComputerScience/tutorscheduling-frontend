@@ -1,7 +1,8 @@
 import Vue from 'vue'
 import Router from 'vue-router'
 
-import Login from './views/Login.vue'
+import Login from './views/Login.vue';
+import Contract from './views/Contract.vue';
 
 // Admin Views. Views are sorted into sections for this project, so check that the path is correct below.
 
@@ -52,6 +53,11 @@ const router =  new Router({
       path: '/login',
       name: 'login',
       component: Login
+    },
+    {
+      path: '/contract',
+      name: 'contract',
+      component: Contract
     },
     {
       path: '/groupList',
