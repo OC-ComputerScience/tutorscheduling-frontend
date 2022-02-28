@@ -9,6 +9,9 @@ export default {
     getRoles(start, length) {
       return apiClient.get(`roles?start=${start}&length=${length}`);
     },
+    getAllForGroup(id) {
+      return apiClient.get("role/group/" + id);
+    },
     getRole(id) {
       return apiClient.get("role/" + id);
     },

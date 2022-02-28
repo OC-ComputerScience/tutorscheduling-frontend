@@ -44,10 +44,10 @@ import MainCalendar    from './views/CalendarViews/MainCalendar.vue';
 Vue.use(Router)
 
 const router =  new Router({
-  mode: 'history',
+  mode: 'hash',
   linkExactActiveClass: 'active',
   base:
-    process.env.NODE_ENV === 'development'? "/" : "/tutoring-api/",
+    process.env.NODE_ENV === 'development'? "/" : "/tutorScheduling/",
   routes: [
     {
       path: '/login',
@@ -76,8 +76,8 @@ const router =  new Router({
       component: GroupAdd
     },
     {
-      path: '/groupView/:id',
-      name: 'groupView',
+      path: '/GroupView/:id',
+      name: 'GroupView',
       component: GroupView,
       props: true
     },
@@ -191,7 +191,7 @@ const router =  new Router({
     */
   ]
 })
-/*
+
 router.beforeEach((to, from, next) => {
   // redirect to login page if not logged in and trying to access a restricted page
   const publicPages = ['/login']
@@ -202,6 +202,6 @@ router.beforeEach((to, from, next) => {
   }
   next()
 })
-*/
+
 
 export default router;
