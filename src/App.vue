@@ -7,7 +7,7 @@
       dark
     >
       <v-app-bar-title class="title">
-        <div>Tutoring</div>    
+        <div>OC Tutoring</div>    
       </v-app-bar-title>
 
       <template v-slot:extension v-if="this.$store.state.loginUser === null">
@@ -25,7 +25,6 @@
 
       <template v-slot:extension v-else>
         <v-tabs align-with-title>
-          <v-tab @click="navAdvHome">Home</v-tab>
           <v-tab @click="navGroups">Groups</v-tab>
           <v-tab @click="navPeople">People</v-tab>
           <v-tab @click="navTopic">Topics</v-tab>
@@ -45,6 +44,7 @@
 
 <script>
 import router from '@/router'
+//import Utils from '@/config/utils'
 
 export default {
   name: 'App',
