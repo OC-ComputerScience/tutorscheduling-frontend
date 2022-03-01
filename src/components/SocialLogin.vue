@@ -144,7 +144,7 @@ export default {
     }
   },
   methods: {
-    async getPerson() {
+    getPerson() {
       if (this.$store.state.loginUser !== null) {
         PersonServices.getPerson(this.$store.state.loginUser.userID)
           .then(response => {
@@ -192,14 +192,13 @@ export default {
       }
       console.log(this.checkedGroups);
     },
-    async getPersonRoles() {
+    getPersonRoles() {
         PersonRoleServices.getAllForPerson(this.person.id)
         .then((response) => {
           // this only sets the number of roles the person has
           console.log(response.data);
           console.log(response.data.length);
           this.roleCounter = response.data.length;
-          return;
         })
         .catch((error) => {
           console.log("There was an error:", error.response);
@@ -277,6 +276,7 @@ export default {
             var user = response.data
             Utils.setStore("user", user)
             console.log(user);
+            console.log(this.$store.state)
             this.getPersonInfoInOrder();
           })
           
