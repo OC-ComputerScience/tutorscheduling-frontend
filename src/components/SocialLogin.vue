@@ -78,14 +78,14 @@
               <v-subheader>Choose your group(s):</v-subheader>
               <v-list>
                 <v-list-item
-                  v-for="(group, i) in groups"
-                  :key="i"
+                  v-for="(group) in groups"
+                  :key="group.id"
                 >
                   <v-checkbox
-                    v-model="group.id"
+                    v-model="checkedGroups"
+                    :value="group"
                     :label="group.name"
-                    unchecked
-                    @click="addGroup(group.id, $event)"
+                    @click="() => {addGroup(group.id)}"
                   ></v-checkbox>
                 </v-list-item>
               </v-list>
@@ -107,13 +107,14 @@
 </template>
 
 <script>
-//import router from '@/router'
 import AuthServices from '@/services/authServices'
 import GroupServices from '@/services/groupServices'
 import RoleServices from '@/services/roleServices'
 import PersonServices from '@/services/personServices'
 import PersonRoleServices from '@/services/personRoleServices'
 import Utils from '@/config/utils.js'
+import {_} from 'vue-underscore';
+
 export default {
   name: 'login_signup_social',
   data () {
@@ -129,7 +130,8 @@ export default {
       roles: [],
       personrole: {},
       checkedGroups: [],
-      name: ''
+      name: '',
+      roleCounter: 0
     }
   },
   created () {
@@ -143,10 +145,11 @@ export default {
   },
   methods: {
     getPerson() {
-      if (this.$store.state.loginUser.userID !== null) {
+      if (this.$store.state.loginUser !== null) {
         PersonServices.getPerson(this.$store.state.loginUser.userID)
           .then(response => {
             this.person = response.data;
+            return;
           })
           .catch(error => {
             console.log("There was an error:", error.response)
@@ -178,22 +181,29 @@ export default {
       PersonServices.updatePerson(this.person.id, this.person);
     },
     goToPage() {
-
+      this.$router.push({ name: "mainCalendar" });
     },
-    addGroup : function(id, event) {
-      if (event.target.checked) {
-        console.log(id);
-        this.checkedGroups.push(id);
-        console.log(this.checkedGroups);
+    addGroup(id) {
+      if(this.checkedGroups.includes(id)){
+        this.checkedGroups = _.without(this.checkedGroups,id)
       }
       else {
-        if(this.checkedGroups.includes(id)) {
-          if (this.checkedGroups.indexOf(id) !== -1) {
-            this.checkedGroups.splice(this.checkedGroups.indexOf(id), 1);
-          }
-        }
+        this.checkedGroups.push(id)
       }
+      console.log(this.checkedGroups);
     },
+    getPersonRoles() {
+        PersonRoleServices.getAllForPerson(this.person.id)
+        .then((response) => {
+          // this only sets the number of roles the person has
+          console.log(response.data);
+          console.log(response.data.length);
+          this.roleCounter = response.data.length;
+        })
+        .catch((error) => {
+          console.log("There was an error:", error.response);
+        });
+      },
     savePersonRoles() {
       this.checkedGroups.forEach(id => {
         this.getGroupRoles(id); 
@@ -201,8 +211,8 @@ export default {
       console.log(this.roles);
       this.roles.forEach(role => {
           console.log(role);
-          if((this.student && role.type === 'Student') ||
-              (this.tutor && role.type === 'Tutor')) {
+          if((this.student && role.type.toLowerCase() === 'student') ||
+              (this.tutor && role.type.toLowerCase() === 'tutor')) {
               this.personrole = {
                 status: "applied",
                 agree: false,
@@ -213,6 +223,39 @@ export default {
             PersonRoleServices.addPersonRole(this.personrole);
           }
       }) 
+    },
+    getPersonInfoInOrder() {
+      PersonServices.getPerson(this.$store.state.loginUser.userID)
+      .then(response => {
+        this.person = response.data;
+        PersonRoleServices.getAllForPerson(this.person.id)
+        .then((response) => {
+          // this only sets the number of roles the person has
+          console.log(response.data);
+          console.log(response.data.length);
+          this.roleCounter = response.data.length;
+          this.openDialogs();
+        })
+        .catch((error) => {
+          console.log("There was an error:", error.response);
+        });
+      })
+      .catch(error => {
+        console.log("There was an error:", error.response)
+      });
+    },
+    openDialogs() {
+      // if this person doesn't have any roles, do this
+      console.log(this.roleCounter)
+      if(this.roleCounter === 0) {
+        if(this.person.phoneNum === '')
+          this.dialog = true
+        else
+          this.dialog2 = true;
+      }
+      else
+        this.goToPage();
+      return;
     },
     loginWithGoogle() {
       this.$gAuth
@@ -232,16 +275,9 @@ export default {
           .then(response => {
             var user = response.data
             Utils.setStore("user", user)
-            this.getPerson();
-            this.name = this.person.fName;
-            console.log(user)
-            // if this is a brand new user, do this
-            if(this.$store.state.loginUser.admin !== true) {
-              if(this.$store.state.loginUser.phoneNum === '')
-                this.dialog = true
-              else
-                this.dialog2 = true;
-            }
+            console.log(user);
+            console.log(this.$store.state)
+            this.getPersonInfoInOrder();
           })
           
         })
