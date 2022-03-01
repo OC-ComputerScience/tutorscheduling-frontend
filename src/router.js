@@ -71,7 +71,7 @@ const router =  new Router({
     },
     {
       path: '/GroupView/:id',
-      name: 'GroupView',
+      name: 'groupView',
       component: GroupView,
       props: true
     },
