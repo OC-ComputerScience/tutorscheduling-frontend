@@ -144,11 +144,12 @@ export default {
     }
   },
   methods: {
-    getPerson() {
+    async getPerson() {
       if (this.$store.state.loginUser !== null) {
         PersonServices.getPerson(this.$store.state.loginUser.userID)
           .then(response => {
             this.person = response.data;
+            return;
           })
           .catch(error => {
             console.log("There was an error:", error.response)
@@ -191,11 +192,14 @@ export default {
       }
       console.log(this.checkedGroups);
     },
-    getPersonRoles() {
+    async getPersonRoles() {
         PersonRoleServices.getAllForPerson(this.person.id)
         .then((response) => {
           // this only sets the number of roles the person has
+          console.log(response.data);
+          console.log(response.data.length);
           this.roleCounter = response.data.length;
+          return;
         })
         .catch((error) => {
           console.log("There was an error:", error.response);
@@ -208,8 +212,8 @@ export default {
       console.log(this.roles);
       this.roles.forEach(role => {
           console.log(role);
-          if((this.student && role.type === 'Student') ||
-              (this.tutor && role.type === 'Tutor')) {
+          if((this.student && role.type.toLowerCase() === 'student') ||
+              (this.tutor && role.type.toLowerCase() === 'tutor')) {
               this.personrole = {
                 status: "applied",
                 agree: false,
@@ -220,6 +224,39 @@ export default {
             PersonRoleServices.addPersonRole(this.personrole);
           }
       }) 
+    },
+    getPersonInfoInOrder() {
+      PersonServices.getPerson(this.$store.state.loginUser.userID)
+      .then(response => {
+        this.person = response.data;
+        PersonRoleServices.getAllForPerson(this.person.id)
+        .then((response) => {
+          // this only sets the number of roles the person has
+          console.log(response.data);
+          console.log(response.data.length);
+          this.roleCounter = response.data.length;
+          this.openDialogs();
+        })
+        .catch((error) => {
+          console.log("There was an error:", error.response);
+        });
+      })
+      .catch(error => {
+        console.log("There was an error:", error.response)
+      });
+    },
+    openDialogs() {
+      // if this person doesn't have any roles, do this
+      console.log(this.roleCounter)
+      if(this.roleCounter === 0) {
+        if(this.person.phoneNum === '')
+          this.dialog = true
+        else
+          this.dialog2 = true;
+      }
+      else
+        this.goToPage();
+      return;
     },
     loginWithGoogle() {
       this.$gAuth
@@ -239,17 +276,8 @@ export default {
           .then(response => {
             var user = response.data
             Utils.setStore("user", user)
-            this.getPerson();
-            this.getPersonRoles();
-            this.name = this.person.fName;
-            // if this person doesn't have any roles, do this
-            console.log(this.roleCounter)
-            if(this.roleCounter === 0) {
-              if(this.person.phoneNum === '')
-                this.dialog = true
-              else
-                this.dialog2 = true;
-            }
+            console.log(user);
+            this.getPersonInfoInOrder();
           })
           
         })
