@@ -136,7 +136,7 @@ export default {
   },
   created () {
     this.getGroups();
-    this.getPerson();
+    //this.getPerson();
   },
   computed: {
     validateRoleCheckbox() {
@@ -144,8 +144,38 @@ export default {
     }
   },
   methods: {
+    loginWithGoogle() {
+      var user = {};
+      this.$gAuth
+      .signIn()
+      .then(GoogleUser => {
+        // on success do something
+        console.log('GoogleUser', GoogleUser);
+        console.log('getId', GoogleUser.getId());
+        console.log('basicprofile', GoogleUser.getBasicProfile().getName());
+        console.log('getBasicProfile', GoogleUser.getBasicProfile());
+        console.log('getAuthResponse', GoogleUser.getAuthResponse());
+        var userInfo = {
+          email: GoogleUser.getBasicProfile().getEmail(),
+          accessToken: GoogleUser.getAuthResponse().id_token
+        }
+        AuthServices.loginUser(userInfo)
+        .then(response => {
+          user = response.data;
+          Utils.setStore("user", user);
+          console.log(user);
+          this.getPersonInfoInOrder(user.userID);
+        })
+        .catch(error => {
+          console.log('error', error);
+        })
+      })
+      .catch(error => {
+        console.log('error', error);
+      })
+    },
     getPerson() {
-      if (this.$store.state.loginUser !== null) {
+      if (this.$store.state.loginUser.userID !== undefined && this.$store.state.loginUser !== null) {
         PersonServices.getPerson(this.$store.state.loginUser.userID)
           .then(response => {
             this.person = response.data;
@@ -224,10 +254,11 @@ export default {
           }
       }) 
     },
-    getPersonInfoInOrder() {
-      PersonServices.getPerson(this.$store.state.loginUser.userID)
+    getPersonInfoInOrder(id) {
+      PersonServices.getPerson(id)
       .then(response => {
         this.person = response.data;
+        this.name = this.person.fName;
         PersonRoleServices.getAllForPerson(this.person.id)
         .then((response) => {
           // this only sets the number of roles the person has
@@ -256,34 +287,6 @@ export default {
       else
         this.goToPage();
       return;
-    },
-    loginWithGoogle() {
-      this.$gAuth
-        .signIn()
-        .then(GoogleUser => {
-          // on success do something
-          console.log('GoogleUser', GoogleUser)
-          console.log('getId', GoogleUser.getId())
-          console.log('basicprofile', GoogleUser.getBasicProfile().getName())
-          console.log('getBasicProfile', GoogleUser.getBasicProfile())
-          console.log('getAuthResponse', GoogleUser.getAuthResponse())
-          var userInfo = {
-            email: GoogleUser.getBasicProfile().getEmail(),
-            accessToken: GoogleUser.getAuthResponse().id_token
-          }
-          AuthServices.loginUser(userInfo)
-          .then(response => {
-            var user = response.data
-            Utils.setStore("user", user)
-            console.log(user);
-            console.log(this.$store.state)
-            this.getPersonInfoInOrder();
-          })
-          
-        })
-        .catch(error => {
-          console.log('error', error)
-        })
     }
   }
 }
