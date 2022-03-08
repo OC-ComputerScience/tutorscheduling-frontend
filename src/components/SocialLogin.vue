@@ -218,7 +218,7 @@ export default {
       PersonServices.updatePerson(this.person.id, this.person);
     },
     goToPage() {
-      if(this.$store.state.loginUser.admin)
+      if(this.$store.state.loginUser.admin !== null && this.$store.state.loginUser.admin)
         this.$router.push({ name: "mainCalendar" });
       else  
         this.$router.push({ name: "contract" });
