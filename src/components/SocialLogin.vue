@@ -51,7 +51,7 @@
         >
           <v-card tile>
             <v-card-title>
-              <span class="text-h5">Select below:</span>
+              <span class="text-h5">Hello {{this.name}}! Select below:</span>
             </v-card-title>
             <v-container>
               <v-subheader>Choose your action:</v-subheader>
@@ -85,7 +85,7 @@
                     v-model="checkedGroups"
                     :value="group"
                     :label="group.name"
-                    @click="() => {addGroup(group.id)}"
+                    
                   ></v-checkbox>
                 </v-list-item>
               </v-list>
@@ -113,7 +113,6 @@ import RoleServices from '@/services/roleServices'
 import PersonServices from '@/services/personServices'
 import PersonRoleServices from '@/services/personRoleServices'
 import Utils from '@/config/utils.js'
-import {_} from 'vue-underscore';
 
 export default {
   name: 'login_signup_social',
@@ -186,6 +185,18 @@ export default {
           });
       }
     },
+    getPersonRoles() {
+      PersonRoleServices.getAllForPerson(this.person.id)
+      .then((response) => {
+        // this only sets the number of roles the person has
+        // console.log(response.data);
+        // console.log(response.data.length);
+        this.roleCounter = response.data.length;
+      })
+      .catch((error) => {
+        console.log("There was an error:", error.response);
+      });
+    },
     getGroups() {
       GroupServices.getAllGroups()
         .then(response => {
@@ -195,51 +206,41 @@ export default {
           console.log("There was an error:", error.response)
         });
     },
-    getGroupRoles(id) {
-      RoleServices.getAllForGroup(id)
-      .then(response => {
-          response.data.forEach(data => {
-            this.roles.push(data);
-          })
-        })
-        .catch(error => {
-          console.log("There was an error:", error.response)
-        });
+    async getGroupRoles() {
+      //console.log(this.checkedGroups);
+      for (let i = 0; i < this.checkedGroups.length; i++) {
+        const group = this.checkedGroups[i];
+        await this.addGroupRoles(group.id);
+      }
     },
     savePhoneNum() {
       this.person.phoneNum = this.phoneNum;
       PersonServices.updatePerson(this.person.id, this.person);
     },
     goToPage() {
-      this.$router.push({ name: "mainCalendar" });
+      if(this.$store.state.loginUser.admin)
+        this.$router.push({ name: "mainCalendar" });
+      else  
+        this.$router.push({ name: "contract" });
     },
-    addGroup(id) {
-      if(this.checkedGroups.includes(id)){
-        this.checkedGroups = _.without(this.checkedGroups,id)
-      }
-      else {
-        this.checkedGroups.push(id)
-      }
-      console.log(this.checkedGroups);
-    },
-    getPersonRoles() {
-        PersonRoleServices.getAllForPerson(this.person.id)
-        .then((response) => {
-          // this only sets the number of roles the person has
-          console.log(response.data);
-          console.log(response.data.length);
-          this.roleCounter = response.data.length;
+    async addGroupRoles(id) {
+      await RoleServices.getAllForGroup(id)
+      .then(response => {
+        response.data.forEach(data => {
+          this.roles.push(data);
+          console.log(data);
         })
-        .catch((error) => {
-          console.log("There was an error:", error.response);
-        });
-      },
-    savePersonRoles() {
-      this.checkedGroups.forEach(id => {
-        this.getGroupRoles(id); 
       })
-      console.log(this.roles);
-      this.roles.forEach(role => {
+      .catch(error => {
+        console.log("There was an error:", error.response)
+      });
+    },
+    savePersonRoles() {
+      this.getGroupRoles()
+      .then(() => {
+        console.log(this.roles);
+        for (let i = 0; i < this.roles.length; i++) {
+          const role = this.roles[i];
           console.log(role);
           if((this.student && role.type.toLowerCase() === 'student') ||
               (this.tutor && role.type.toLowerCase() === 'tutor')) {
@@ -252,7 +253,8 @@ export default {
               };
             PersonRoleServices.addPersonRole(this.personrole);
           }
-      }) 
+        }
+      })
     },
     getPersonInfoInOrder(id) {
       PersonServices.getPerson(id)
@@ -262,8 +264,8 @@ export default {
         PersonRoleServices.getAllForPerson(this.person.id)
         .then((response) => {
           // this only sets the number of roles the person has
-          console.log(response.data);
-          console.log(response.data.length);
+          // console.log(response.data);
+          // console.log(response.data.length);
           this.roleCounter = response.data.length;
           this.openDialogs();
         })
@@ -277,7 +279,7 @@ export default {
     },
     openDialogs() {
       // if this person doesn't have any roles, do this
-      console.log(this.roleCounter)
+      // console.log(this.roleCounter)
       if(this.roleCounter === 0) {
         if(this.person.phoneNum === '')
           this.dialog = true
@@ -286,7 +288,6 @@ export default {
       }
       else
         this.goToPage();
-      return;
     }
   }
 }

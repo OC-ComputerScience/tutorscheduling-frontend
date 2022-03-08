@@ -34,6 +34,7 @@
 <script>
   import pdf from 'vue-pdf'
   import vueSignature from 'vue-signature'
+  import RoleServices from "@/services/roleServices.js";
   import PersonServices from "@/services/personServices.js";
   import PersonRoleServices from "@/services/personRoleServices.js";
 
@@ -54,20 +55,25 @@
         roles: []
       };
     },
-    created() {
-      this.getPerson();
-      this.getPersonRoles();
+    async created() {
+      await this.getPerson()
+      .then(() => {
+        this.getPersonRoles();
+      })
     },
     methods: {
-      save(){
-        var png = this.$refs.signature.save();
-        var jpeg = this.$refs.signature.save('image/jpeg');
-        var svg = this.$refs.signature.save('image/svg+xml');
-        console.log(png);
-        console.log(jpeg);
-        console.log(svg);
-        this.updatePersonRole();
-        this.$router.push({ name: "mainCalendar" });
+      async save() {
+        // var png = this.$refs.signature.save();
+        // var jpeg = this.$refs.signature.save('image/jpeg');
+        // var svg = this.$refs.signature.save('image/svg+xml');
+        // console.log(png);
+        // console.log(jpeg);
+        // console.log(svg);
+        // this.getPersonRoles();
+        await this.updatePersonRole()
+        .then(() => {
+          this.$router.push({ name: "mainCalendar" });
+        })
       },
       clear(){
         this.$refs.signature.clear();
@@ -78,20 +84,21 @@
       handleDisabled(){
         this.disabled  = !this.disabled
       },
-      getPerson() {
-        PersonServices.getPerson(this.$store.state.userInfo.id)
+      async getPerson() {
+        await PersonServices.getPerson(this.$store.state.loginUser.userID)
         .then((response) => {
           this.person = response.data;
-          console.log(response.data);
+          //console.log(response.data);
         })
         .catch((error) => {
           console.log("There was an error:", error.response);
         });
       },
-      getPersonRoles() {
-        PersonRoleServices.getAllForPerson(this.person.id)
+      async getPersonRoles() {
+        await RoleServices.getRoleForPerson(this.person.id)
         .then((response) => {
           response.data.forEach(data => {
+            console.log(data);
              this.roles.push(data);
            })
         })
@@ -99,15 +106,15 @@
           console.log("There was an error:", error.response);
         });
       },
-      updatePersonRole() {
-        this.roles.forEach(role => {
-          // only students can self approve
-          if (role.type === 'Student')
+      async updatePersonRole() {
+        for (let i = 0; i < this.roles.length; i++) {
+          let role = this.roles[i];
+          if (role.type.toLowercase() === 'student')
             role.status = 'approved';
           role.agree = true;
           role.dateSigned = Date();
-          PersonRoleServices.updatePersonRole(role.id, role);
-        })
+          await PersonRoleServices.updatePersonRole(role.id, role);
+        }
       }
     }
   }
