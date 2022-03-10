@@ -38,8 +38,12 @@ import RoleView    from './views/AdminViews/RoleViews/RoleView.vue';
 
 // Availability
 import AvailabilityAdd    from './views/AdminViews/AvailabilityViews/AvailabilityAdd.vue';
-//Calendar
+
+// Calendar
 import MainCalendar    from './views/CalendarViews/MainCalendar.vue';
+
+// Tutor Pages
+import TutorHome from './views/TutorHome.vue'
 
 Vue.use(Router)
 
@@ -180,8 +184,13 @@ const router =  new Router({
     {
       path: '/calendar',
       name: 'mainCalendar',
-      component:MainCalendar,
+      component: MainCalendar,
       props: true
+    },
+    {
+      path: '/tutorHome',
+      name: 'tutorHome',
+      component: TutorHome
     },
     /*
     {

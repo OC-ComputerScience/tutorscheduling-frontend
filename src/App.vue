@@ -1,6 +1,7 @@
 <template>
   <v-app>
-    <v-card class="overflow-hidden">
+    <MenuBar/>
+    <!-- <v-card class="overflow-hidden">
     <v-app-bar
       app
       color="primary"
@@ -17,7 +18,7 @@
         </v-tabs>
       </template>
 
-      <template v-slot:extension v-else>
+      <template v-slot:extension v-else-if="this.admin">
         <v-tabs align-with-title>
           <v-tab @click="navGroups">Groups</v-tab>
           <v-tab @click="navPeople">People</v-tab>
@@ -30,8 +31,23 @@
         </v-tabs>
       </template>
 
+      <template v-slot:extension v-else-if="this.student">
+        <v-tabs align-with-title>
+          <v-tab @click="navCalendar">Calendar</v-tab>
+          <v-tab @click="logout">Logout</v-tab>
+        </v-tabs>
+      </template>
+
+      <template v-slot:extension v-else-if="this.tutor">
+        <v-tabs align-with-title>
+          <v-tab @click="navAvailability">Availability</v-tab>
+          <v-tab @click="navCalendar">Calendar</v-tab>
+          <v-tab @click="logout">Logout</v-tab>
+        </v-tabs>
+      </template>
+
     </v-app-bar>
-  </v-card>
+  </v-card> -->
   <v-main>
       <router-view />
   </v-main>
@@ -40,53 +56,71 @@
 
 <script>
 import Utils from '@/config/utils'
+import MenuBar from '@/components/MenuBar.vue'
+import PersonServices from '@/services/personServices.js'
+import RoleServices from '@/services/roleServices.js'
 
 export default {
   name: 'App',
-
   components: {
+    MenuBar
   },
   data() {
       return {
-        // person: {},
-        // roles: [],
-        // admin: false
+        person: {},
+        roles: [],
+        admin: false,
+        student: false,
+        tutor: false
       }
   },
   created() {
-    //this.getPerson();
+
+  },
+  async mounted() {
+    await this.getPerson()
+    .then(() => {
+      this.getPersonRoles();
+    })
+    .catch(error => {
+      console.log("There was an error:", error.response)
+    });
   },
   methods: {
-    // getPerson() {
-    //   if (this.$store.state.loginUser !== null) {
-    //     PersonServices.getPerson(this.$store.state.loginUser.userID)
-    //       .then(response => {
-    //         this.person = response.data;
-    //         this.getPersonRoles();
-    //       })
-    //       .catch(error => {
-    //         console.log("There was an error:", error.response)
-    //       });
-    //   }
-    // },
-    // getPersonRoles() {
-    //   PersonRoleServices.getAllForPerson(this.person.id)
-    //     .then((response) => {
-    //       // this only sets the number of roles the person has
-    //       this.roles = response.data;
-    //       this.findAdminRole();
-    //     })
-    //     .catch((error) => {
-    //       console.log("There was an error:", error.response);
-    //     });
-    // },
-    // findAdminRole() {
-    //   this.roles.forEach(role => {
-    //     if(role.type.toLowerCase() === "admin")
-    //       this.admin = true;
-    //     console.log(this.admin);
-    //   })
-    // },
+    async getPerson() {
+      if (this.$store.state.loginUser !== null) {
+        await PersonServices.getPerson(this.$store.state.loginUser.userID)
+          .then(response => {
+            this.person = response.data;
+            console.log(this.person);
+          })
+          .catch(error => {
+            console.log("There was an error:", error.response)
+          });
+      }
+    },
+    async getPersonRoles() {
+      await RoleServices.getRoleForPerson(this.person.id)
+      .then((response) => {
+        console.log(response.data);
+        for (let i = 0; i < response.data.length; i++) {
+          let role = response.data[i];
+          console.log(role);
+          this.roles.push(role);
+          // sets what the nav bar will show
+          if(role.type.toLowerCase() === "admin")
+            this.admin = true;
+          else if(role.type.toLowerCase() === "student")
+            this.student = true;
+          else if(role.type.toLowerCase() === "tutor")
+            this.tutor = true;
+        }
+      })
+      .catch((error) => {
+        console.log("There was an error:", error.response);
+      });
+      console.log(this.roles)
+    },
     navHome() {
       this.$router.push({ name: "home"});
     },
