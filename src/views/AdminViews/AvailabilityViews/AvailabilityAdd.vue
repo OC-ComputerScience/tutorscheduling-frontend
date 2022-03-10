@@ -1,4 +1,10 @@
 <template>
+<div>
+<div>
+  <v-toolbar>
+    <v-toolbar-title>Add Availability</v-toolbar-title>
+  </v-toolbar>
+  <br><br>
   <v-row>
     <v-col
       cols="12"
@@ -135,41 +141,97 @@
         Save
       </v-btn>
   </v-row>
-  
+  </div>
+  <div>
+    <br><br>
+  <v-toolbar>
+      <v-toolbar-title>Your Availabilities</v-toolbar-title>
+    </v-toolbar>
+  <v-data-table
+        :headers="headers"
+        :items="availabilities"
+        :items-per-page="50"
+      ></v-data-table>
+  </div>
+</div>
 </template>
 
 <script>
 import AvailabilityServices from "@/services/availabilityServices.js";
+import PersonServices from "@/services/personServices.js";
 
   export default {
+    name: 'App',
+    components: {
+    },
     data: () => ({
       availability: {},
+      availabilities: [],
       dates: [],
       startTime: null,
       endTime: null,
       menu: false,
       menu2: false,
       menu3: false,
+      person: {},
+      headers: [{text: 'ID', value: 'id'},                   
+                  {text: 'Date', value: 'date'},
+                  {text: 'Start Time', value: 'startTime'},
+                  {text: 'End Time', value: 'endTime'}]
+
     }),
+    async created() {
+      this.getPerson()
+      .then(() => {
+        console.log(this.person);
+        this.getAvailabilities();
+      })
+      // console.log(this.person);
+      // this.getAvailabilities();
+
+    },
     methods: {
-    addAvailability() {
-        this.dates.forEach(element => {
-          this.availability.date = element;
-          this.availability.startTime = this.startTime;
-          this.availability.endTime = this.endTime;
-
-          AvailabilityServices.addAvailability(this.availability)
-            .then(() => {
-            })
-            .catch((error) => {
-            console.log(error);
-            console.log(this.endTime);
-            });
+    async addAvailability() {
+      for (var i = 0; i < this.dates.length; i++) {
+        let element = this.dates[i];
+        this.availability.date = element;
+        this.availability.startTime = this.startTime;
+        this.availability.endTime = this.endTime;
+        this.availability.personId = this.person.id;
+        await AvailabilityServices.addAvailability(this.availability)
+        .then(() => {
+        })
+        .catch((error) => {
+          console.log(error);
+          console.log(this.endTime);
         });
+      }
 
-        this.$router.push({ name: "mainCalendar" });
-
+      this.$router.go();
       
+    },
+    getAvailabilities() {
+        AvailabilityServices.getPersonAvailability(this.person.id)
+        .then(response => {
+          this.availabilities = response.data;
+          console.log(this.availabilities);
+        })
+        .catch(error => {
+          console.log("There was an error:", error.response)
+        });
+      },
+    async getPerson() {
+      if (this.$store.state.loginUser.userID !== undefined && this.$store.state.loginUser !== null) {
+        await PersonServices.getPerson(this.$store.state.loginUser.userID)
+          .then(response => {
+            this.person = response.data;
+  
+            return;
+          })
+          .catch(error => {
+            console.log("There was an error:", error.response)
+          });
+      }
     },
   },
   }
