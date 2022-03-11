@@ -43,7 +43,9 @@ import AvailabilityAdd    from './views/AdminViews/AvailabilityViews/Availabilit
 import MainCalendar    from './views/CalendarViews/MainCalendar.vue';
 
 // Tutor Pages
-import TutorHome from './views/TutorHome.vue'
+import TutorHome from './views/TutorViews/TutorHome.vue'
+import TutorInfo from './views/TutorViews/TutorInfo.vue'
+import TutorTopics from './views/TutorViews/TutorTopics.vue'
 
 Vue.use(Router)
 
@@ -173,7 +175,7 @@ const router =  new Router({
     {
       path: '/roleView/:id',
       name: 'roleView',
-      component:RoleView,
+      component: RoleView,
       props: true
     },
     {
@@ -191,6 +193,16 @@ const router =  new Router({
       path: '/tutorHome',
       name: 'tutorHome',
       component: TutorHome
+    },
+    {
+      path: '/tutorInfo',
+      name: 'tutorInfo',
+      component: TutorInfo
+    },
+    {
+      path: '/tutorTopics',
+      name: 'tutorTopics',
+      component: TutorTopics
     },
     /*
     {

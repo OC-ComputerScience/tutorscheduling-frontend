@@ -2,7 +2,7 @@
   <div>
     <v-container>
       <v-toolbar>
-        <v-toolbar-title>Hello, {{ this.$store.state.loginUser.fName }}!</v-toolbar-title>
+        <v-toolbar-title>Hello, {{ this.user.fName }}!</v-toolbar-title>
       </v-toolbar>
       <v-card 
         :to="{ name: 'mainCalendar' }"
@@ -10,9 +10,9 @@
         max-width="400"
         height="100"
         elevation="10"
-        color="secondary"
+        color="#196CA2"
       >
-        <v-card-title class="justify-center">
+        <v-card-title class="justify-center white--text">
               View Calendar
         </v-card-title>
       </v-card>
@@ -22,9 +22,9 @@
         max-width="400"
         height="100"
         elevation="10"
-        color="secondary"
+        color="#63BAC0"
       >
-        <v-card-title class="justify-center">
+        <v-card-title class="justify-center white--text">
               Manage Availability
         </v-card-title>
       </v-card>
@@ -53,6 +53,7 @@
 </template>
 
 <script>
+import Utils from '@/config/utils.js'
 
   export default {
     name: 'App',
@@ -61,6 +62,7 @@
     data() {
       return {
         search: '',
+        user: {},
         appointments: [],
         headers: [{text: 'Date', value: 'date'}, 
                   {text: 'Start Time', value: 'startTime'},
@@ -69,6 +71,7 @@
       };
     },
     created() {
+      this.user = Utils.getStore('user');
     },
     methods: {
       rowClick: function (item, row) {      

@@ -97,7 +97,7 @@
                   :key="group.id"
                 >
                   <v-checkbox
-                    v-model="checkedGroups"
+                    v-model="selected"
                     :value="group"
                     :label="group.name"
                     
@@ -137,15 +137,19 @@ export default {
       dialog2: false,
       student: true,
       tutor: false, 
+      admin: false,
       model: false,
       groups: [],
       phoneNum: '',
       person: {},
       roles: [],
+      personroles: [],
       personrole: {},
+      selected: [],
       checkedGroups: [],
       name: '',
-      roleCounter: 0
+      roleCounter: 0,
+      user: {}
     }
   },
   created () {
@@ -159,7 +163,6 @@ export default {
   },
   methods: {
     loginWithGoogle() {
-      var user = {};
       this.$gAuth
       .signIn()
       .then(GoogleUser => {
@@ -175,10 +178,10 @@ export default {
         }
         AuthServices.loginUser(userInfo)
         .then(response => {
-          user = response.data;
-          Utils.setStore("user", user);
-          console.log(user);
-          this.getPersonInfoInOrder(user.userID);
+          this.user = response.data;
+          Utils.setStore("user", this.user);
+          console.log(this.user);
+          this.openDialogs();
         })
         .catch(error => {
           console.log('error', error);
@@ -200,18 +203,18 @@ export default {
           });
       }
     },
-    getPersonRoles() {
-      PersonRoleServices.getAllForPerson(this.person.id)
-      .then((response) => {
-        // this only sets the number of roles the person has
-        // console.log(response.data);
-        // console.log(response.data.length);
-        this.roleCounter = response.data.length;
-      })
-      .catch((error) => {
-        console.log("There was an error:", error.response);
-      });
-    },
+    async getPersonRoles() {
+        await RoleServices.getRoleForPerson(this.user.userID)
+        .then((response) => {
+          for (let i = 0; i < response.data.length; i++) {
+            let role = response.data[i];
+            this.personroles.push(role);
+          }
+        })
+        .catch((error) => {
+          console.log("There was an error:", error.response);
+        });
+      },
     getGroups() {
       GroupServices.getAllGroups()
         .then(response => {
@@ -222,21 +225,20 @@ export default {
         });
     },
     async getGroupRoles() {
-      //console.log(this.checkedGroups);
-      for (let i = 0; i < this.checkedGroups.length; i++) {
-        const group = this.checkedGroups[i];
-        await this.addGroupRoles(group.id);
+      for (let i = 0; i < this.groups.length; i++) {
+        for (let j = 0; j < this.selected.length; j++) {
+          if(this.selected[j] === i) {
+              this.checkedGroups.push(this.groups[i]);
+              const group = this.groups[i];
+              await this.addGroupRoles(group.id);
+          }
+        }
       }
+      console.log(this.checkedGroups)
     },
     savePhoneNum() {
       this.person.phoneNum = this.phoneNum;
       PersonServices.updatePerson(this.person.id, this.person);
-    },
-    goToPage() {
-      if(this.$store.state.loginUser.admin)
-        this.$router.push({ name: "mainCalendar" });
-      else  
-        this.$router.push({ name: "contract" });
     },
     async addGroupRoles(id) {
       await RoleServices.getAllForGroup(id)
@@ -271,38 +273,45 @@ export default {
         }
       })
     },
-    getPersonInfoInOrder(id) {
-      PersonServices.getPerson(id)
-      .then(response => {
-        this.person = response.data;
-        this.name = this.person.fName;
-        PersonRoleServices.getAllForPerson(this.person.id)
-        .then((response) => {
-          // this only sets the number of roles the person has
-          // console.log(response.data);
-          // console.log(response.data.length);
-          this.roleCounter = response.data.length;
-          this.openDialogs();
-        })
-        .catch((error) => {
-          console.log("There was an error:", error.response);
-        });
-      })
-      .catch(error => {
-        console.log("There was an error:", error.response)
-      });
-    },
     openDialogs() {
       // if this person doesn't have any roles, do this
       // console.log(this.roleCounter)
-      if(this.roleCounter === 0) {
+      if(this.user.access.length === 0) {
         if(this.person.phoneNum === '')
           this.dialog = true
         else
-          this.dialog2 = true;
+          this.dialog2 = true;      
       }
-      else
-        this.goToPage();
+      this.goToPage();
+    },
+    async goToPage() {
+      await this.getPersonRoles();
+      for (let i = 0; i < this.personroles.length; i++) {
+        let role = this.personroles[i];
+        console.log(role);
+        for (let j = 0; j < role.personrole.length; i++) {
+          let pRole = role.personrole[j];
+          console.log(pRole);
+          if(role.type.includes("Admin")) {
+            this.$router.push({ name: "mainCalendar" });
+          }
+          else if((role.type.includes("Student") && !pRole.status.includes("approved")) ||
+              ((role.type.includes("Tutor") && !pRole.agree))) {
+            this.$router.push({ name: "contract" });
+          }
+          else if(role.type.includes("Student") && pRole.status.includes("approved")) {
+            this.$router.push({ name: "mainCalendar" });
+          }
+          // make a tutor sign up for topics if they haven't been approved yet
+          else if(role.type.includes("Tutor") && pRole.status.includes("applied")) {
+            this.$router.push({ name: "tutorTopics" });
+          }
+          else if(role.type.includes("Tutor") && pRole.status.includes("approved") && pRole.agree) {
+            this.$router.push({ name: "tutorHome" });
+          }
+          break;
+        }
+      } 
     }
   }
 }
