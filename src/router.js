@@ -1,7 +1,8 @@
 import Vue from 'vue'
 import Router from 'vue-router'
 
-import Login from './views/Login.vue'
+import Login from './views/Login.vue';
+import Contract from './views/Contract.vue';
 
 // Admin Views. Views are sorted into sections for this project, so check that the path is correct below.
 
@@ -46,15 +47,20 @@ import MainCalendar    from './views/CalendarViews/MainCalendar.vue';
 Vue.use(Router)
 
 const router =  new Router({
-  mode: 'history',
+  mode: 'hash',
   linkExactActiveClass: 'active',
   base:
-    process.env.NODE_ENV === 'development'? "/" : "/tutoring-api/",
+    process.env.NODE_ENV === 'development'? "/" : "/tutorScheduling/",
   routes: [
     {
       path: '/login',
       name: 'login',
       component: Login
+    },
+    {
+      path: '/contract',
+      name: 'contract',
+      component: Contract
     },
     {
       path: '/groupList',
@@ -73,7 +79,7 @@ const router =  new Router({
       component: GroupAdd
     },
     {
-      path: '/groupView/:id',
+      path: '/GroupView/:id',
       name: 'groupView',
       component: GroupView,
       props: true
@@ -196,7 +202,7 @@ const router =  new Router({
     */
   ]
 })
-/*
+
 router.beforeEach((to, from, next) => {
   // redirect to login page if not logged in and trying to access a restricted page
   const publicPages = ['/login']
@@ -207,6 +213,6 @@ router.beforeEach((to, from, next) => {
   }
   next()
 })
-*/
+
 
 export default router;
