@@ -39,6 +39,7 @@ import RoleView    from './views/AdminViews/RoleViews/RoleView.vue';
 // Request
 import RequestList    from './views/AdminViews/RequestViews/RequestList.vue';
 import RequestAdd     from './views/StudentViews/RequestAdd.vue';
+
 // Availability
 import AvailabilityAdd    from './views/AdminViews/AvailabilityViews/AvailabilityAdd.vue';
 //Calendar
@@ -184,6 +185,8 @@ const router =  new Router({
       path: '/requestAdd',
       name: 'requestAdd',
       component: RequestAdd,
+    },
+    {
       path: '/availabilityAdd',
       name: 'availabilityAdd',
       component: AvailabilityAdd

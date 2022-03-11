@@ -4,6 +4,7 @@
     :items="requests"
     sort-by="status"
     class="elevation-1"
+    :single-expand="singleExpand"
     :expanded.sync="expanded"
     show-expand
   >
@@ -78,6 +79,10 @@
             </v-card-actions>
           </v-card>
         </v-dialog>
+      </v-toolbar>
+      <v-toolbar flat>
+              <v-spacer></v-spacer>
+              <v-switch v-model="singleExpand" label="Single expand"></v-switch>
       </v-toolbar>
     </template>
    

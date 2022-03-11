@@ -10,6 +10,8 @@
       v-model="valid"
       lazy validation
     >
+
+
       <v-text-field
         v-model="request.courseNum"
         id="courseNum"
@@ -64,6 +66,7 @@
 <script>
 import RequestServices from "@/services/requestServices.js";
 import TopicServices from "@/services/topicServices.js";
+import PersonServices from "@/services/personServices.js";
 
 export default {
   data() {
@@ -71,13 +74,20 @@ export default {
       request: {
         status: "Recieved"
       },
+      person: {},
       topics: [],
       roles: [
         'admin'
       ],
     };
   },
-  created() {
+  
+  async created() {
+    this.getPerson()
+      .then(() => {
+        console.log(this.person);
+        this.getRequests();
+      });
     this.getAllTopics();
   },
   methods: {
@@ -90,7 +100,8 @@ export default {
           console.log("There was an error:", error.response);
         });
     },
-    addRequest() {
+    async addRequest() {
+      this.request.personId = this.person.id
       RequestServices.addRequest(this.request)
         .then(() => {
           this.$router.push({ name: "requestList" });
@@ -101,7 +112,20 @@ export default {
     },
     cancel() {
       this.$router.push({ name: "requestList" });
-    }
+    },
+    async getPerson() {
+      if (this.$store.state.loginUser.userID !== undefined && this.$store.state.loginUser !== null) {
+        await PersonServices.getPerson(this.$store.state.loginUser.userID)
+          .then(response => {
+            this.person = response.data;
+  
+            return;
+          })
+          .catch(error => {
+            console.log("There was an error:", error.response)
+          });
+      }
+    },
   },
 };
 </script>
