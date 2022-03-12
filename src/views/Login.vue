@@ -1,7 +1,7 @@
 <template>
   <v-container>
       <v-toolbar>
-        <v-toolbar-title>Log In</v-toolbar-title>
+        <v-toolbar-title>Welcome to OC Tutoring!</v-toolbar-title>
       </v-toolbar>
       <br><br>
       <SocialLogin />

@@ -9,6 +9,12 @@ export default {
     getTopics(start, length) {
       return apiClient.get(`topics?start=${start}&length=${length}`);
     },
+    getAllForGroup(id) {
+      return apiClient.get("topic/group/" + id);
+    },
+    getTopicForPerson(id) {
+      return apiClient.get("topic/person/" + id)
+    },
     getTopic(id) {
       return apiClient.get("topic/" + id);
     },
