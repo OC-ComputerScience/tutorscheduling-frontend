@@ -37,6 +37,10 @@ import RoleEdit    from './views/AdminViews/RoleViews/RoleEdit.vue';
 import RoleAdd     from './views/AdminViews/RoleViews/RoleAdd.vue';
 import RoleView    from './views/AdminViews/RoleViews/RoleView.vue';
 
+// Request
+import RequestList    from './views/AdminViews/RequestViews/RequestList.vue';
+import RequestAdd     from './views/StudentViews/RequestAdd.vue';
+
 // Availability
 import AvailabilityAdd    from './views/AdminViews/AvailabilityViews/AvailabilityAdd.vue';
 
@@ -187,6 +191,16 @@ const router =  new Router({
       name: 'roleView',
       component: RoleView,
       props: true
+    },
+    {
+      path: '/requestList',
+      name: 'requestList',
+      component: RequestList
+    },
+    {
+      path: '/requestAdd',
+      name: 'requestAdd',
+      component: RequestAdd,
     },
     {
       path: '/availabilityAdd',
