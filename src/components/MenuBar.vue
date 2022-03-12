@@ -20,19 +20,11 @@
                 v-for="item in activeMenus"
                 :key="item.link"
             >
-                <v-btn v-if="item.name !== 'logout'"
+                <v-btn
                     exact                    
                     :ref="item.link"
                     link
                     :to="{ name: item.name, params: { id: user.userId } }"
-                    :color="item.color"
-                    text
-                >
-                    {{ item.text }}
-                </v-btn>
-                <v-btn v-else
-                    exact                    
-                    @click="logout"
                     :color="item.color"
                     text
                 >
@@ -61,9 +53,71 @@
                     </v-list-item>
                 </v-list>
             </v-menu>
-            <v-avatar v-if="this.user != null" color="secondary">
-                    <span class="accent--text font-weight-bold" >{{ this.initials }}</span>
-            </v-avatar>
+            <v-menu
+                bottom
+                min-width="200px"
+                rounded
+                offset-y
+                v-if="user != null"
+            >
+                <template v-slot:activator="{ on, attrs }">
+                    <v-btn
+                        icon
+                        x-large
+                        v-on="on"
+                        v-bind="attrs"
+                    >
+                        <v-avatar v-if="user != null"
+                            color="secondary"
+                        >
+                            <span class="accent--text font-weight-bold">{{ initials }}</span>
+                        </v-avatar>
+                    </v-btn>
+                </template>
+                <v-card>
+                    <v-list-item-content class="justify-center">
+                        <div class="mx-auto text-center">
+                            <v-avatar
+                                color="secondary"
+                                class="mt-2 mb-2"
+                            >
+                                <span class="accent--text font-weight-bold">{{ initials }}</span>
+                            </v-avatar>
+                            <h3>{{ name }}</h3>
+                            <p class="text-caption mt-1">
+                                {{ user.email }}
+                            </p>
+                            <v-divider class="my-3"></v-divider>
+                            <v-btn
+                                depressed
+                                rounded
+                                text
+                                @click="goToRightInfo()"
+                            >
+                                Edit Account
+                            </v-btn>
+                            <v-divider class="my-3"></v-divider>
+                            <v-btn
+                                depressed
+                                rounded
+                                text
+                                :to="{ name: 'apply' }"
+                            >
+                                Apply
+                            </v-btn>
+                            <v-divider class="my-3"></v-divider>
+                            <v-btn
+                                depressed
+                                rounded
+                                text
+                                @click="logout()"
+                            >
+                                Logout
+                            </v-btn>
+                        </div>
+                    </v-list-item-content>
+                </v-card>
+            </v-menu>
         </v-app-bar>
 
         <!-- <v-app-bar dark color="#811429" class="hidden-lg-and-up">
@@ -109,6 +163,11 @@ export default {
         user: {},
         title: '',
         initials: '',
+        name: '',
+        groups: [],
+        selectedGroup: '',
+        selectedRoles: '',
+        activeMenus: [],
         menus: [
             {
                 link: 'login',
@@ -125,11 +184,11 @@ export default {
                 roles: 'Tutor'
             },
             {
-                link: 'tutorInfo',
-                name: 'tutorInfo',
+                link: 'studentHome',
+                name: 'studentHome',
                 color: 'white',
-                text: 'My Info',
-                roles: 'Tutor'
+                text: 'Home',
+                roles: 'Student'
             },
             {
                 link: 'groupList',
@@ -181,30 +240,17 @@ export default {
                 roles: 'HeadAdmin,Admin,Tutor'
             },
             {
-                link: 'logout',
-                name: 'logout',
+                link: 'requestAdd',
+                name: '',
                 color: 'white',
-                text: 'Logout',
-                roles: 'HeadAdmin,Admin,Tutor,Student'
+                text: 'Request',
+                roles: 'Student'
             },
         ],
-        groups: [],
-        selectedGroup: '',
-        selectedRoles: '',
-        activeMenus: [],
     }),
     async created() {
         await this.setGroupsAndRoles()
         .then(() => {
-            console.log(this.user);
-            this.selectedGroup = this.groups[0];
-            this.resetMenu();
-        })
-    },
-    async computed() {
-        await this.setGroupsAndRoles()
-        .then(() => {
-            console.log(this.user);
             this.selectedGroup = this.groups[0];
             this.resetMenu();
         })
@@ -217,7 +263,10 @@ export default {
             this.user = Utils.getStore('user');
             if (this.user != null) {
                 this.title = 'OC Tutoring';
+                console.log(this.initials)
                 this.initials = this.user.fName[0] + this.user.lName[0];
+                console.log(this.initials)
+                this.name = this.user.fName + ' ' + this.user.lName;
                 this.groups = [];
                 this.user.access.forEach(element => {
                     this.groups.push(element.name);
@@ -252,6 +301,12 @@ export default {
                 );
             } 
             this.menuAction(this.activeMenus[0].name);
+        },
+        goToRightInfo() {
+            if (this.selectedRoles.includes("Student"))
+                this.$router.push({ name: "studentInfo"});
+            else if (this.selectedRoles.includes("Tutor"))
+                this.$router.push({ name: "tutorInfo"});
         },
         logout() {
             console.log("in logout function")

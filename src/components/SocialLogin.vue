@@ -1,123 +1,129 @@
 <template>
     <div class="signup-buttons">
-      <v-row
-        justify="center"
-      >
-        <v-btn
-          x-large
-          block
-          class="mr-4"
-          color="primary"
-          @click.prevent="loginWithGoogle"
-        >
-          Register
-        </v-btn>
-        <br><br>
-        <v-btn
-          x-large
-          block
-          class="mr-4"
-          color="primary"
-          @click.prevent="loginWithGoogle"
-        >
-          Log In
-        </v-btn>
-        <v-dialog
-          v-model="dialog"
-          persistent
-          max-width="600px"
-        >
-          <v-card tile>
-            <v-card-title>
-              <span class="text-h5">Hello {{this.name}}! Finish setting up your account below:</span>
+      <v-row>
+        <v-col>
+          <v-card 
+            @click.prevent="loginWithGoogle"
+            height="100"
+            elevation="10"
+            color="primary"
+            class="d-flex justify-center"
+          >
+            <v-card-title class="justify-center white--text">
+              Register
             </v-card-title>
-            <v-card-text>
-              <v-container>
-                <v-row>
-                  <v-text-field
-                    v-model="phoneNum"
-                    id="phoneNum"
-                    :counter="50"
-                    label="Phone Number"
-                    hint="123-456-7890"
-                    persistent-hint
-                    required
-                  ></v-text-field>
-                </v-row>
-              </v-container>
-            </v-card-text>
-            <v-card-actions>
-              <v-spacer></v-spacer>
-              <v-btn
-                color="blue darken-1"
-                text
-                @click="dialog = false; dialog2 = true; savePhoneNum()"
-              >
-                Continue
-              </v-btn>
-            </v-card-actions>
           </v-card>
-        </v-dialog>
-
-        <v-dialog
-          v-model="dialog2"
-          persistent
-          max-width="600px"
-        >
-          <v-card tile>
-            <v-card-title>
-              <span class="text-h5">Hello {{this.name}}! Select below:</span>
+        </v-col>
+        <v-col>
+          <v-card 
+            @click.prevent="loginWithGoogle"
+            height="100"
+            elevation="10"
+            color="primary"
+            class="d-flex justify-center"
+          >
+            <v-card-title class="justify-center white--text">
+              Login
             </v-card-title>
-            <v-container>
-              <v-subheader>Choose your action:</v-subheader>
-              <v-list>
-                <v-list-item>
-                  <v-checkbox
-                    v-model="student"
-                    :label="`Sign up for tutoring`"
-                    :rules="validateRoleCheckbox"
-                    @change="tutor=!student"
-                  ></v-checkbox>
-                </v-list-item>
-                <v-list-item>
-                  <v-checkbox
-                    v-model="tutor"
-                    :label="`Apply to be a tutor`"
-                    :rules="validateRoleCheckbox"
-                    @change="student=!tutor"
-                  ></v-checkbox>
-                </v-list-item>
-              </v-list>
-            </v-container>
-            <v-container>
-              <v-subheader>Choose your organization(s):</v-subheader>
-              <v-list>
-                <v-list-item
-                  v-for="(group) in groups"
-                  :key="group.id"
-                >
-                  <v-checkbox
-                    v-model="selected"
-                    :value="group"
-                    :label="group.name"
-                    
-                  ></v-checkbox>
-                </v-list-item>
-              </v-list>
-            </v-container>
-            <v-card-actions>
-              <v-spacer></v-spacer>
-              <v-btn
-                color="blue darken-1"
-                text
-                @click="goToPage(); savePersonRoles()"
-              >
-                Continue
-              </v-btn>
-            </v-card-actions>
           </v-card>
-        </v-dialog>
+        </v-col>
       </v-row>
+      
+      <v-dialog
+        v-model="dialog"
+        persistent
+        max-width="600px"
+      >
+        <v-card tile>
+          <v-card-title>
+            <span class="text-h5">Hello {{this.name}}! Finish setting up your account below:</span>
+          </v-card-title>
+          <v-card-text>
+            <v-container>
+              <v-row>
+                <v-text-field
+                  v-model="phoneNum"
+                  id="phoneNum"
+                  :counter="50"
+                  label="Phone Number"
+                  hint="123-456-7890"
+                  persistent-hint
+                  required
+                ></v-text-field>
+              </v-row>
+            </v-container>
+          </v-card-text>
+          <v-card-actions>
+            <v-spacer></v-spacer>
+            <v-btn
+              color="blue darken-1"
+              text
+              @click="dialog = false; dialog2 = true; savePhoneNum()"
+            >
+              Continue
+            </v-btn>
+          </v-card-actions>
+        </v-card>
+      </v-dialog>
+
+      <v-dialog
+        v-model="dialog2"
+        persistent
+        max-width="600px"
+      >
+        <v-card tile>
+          <v-card-title>
+            <span class="text-h5">Hello {{this.name}}! Select below:</span>
+          </v-card-title>
+          <v-container>
+            <v-subheader>Choose your action:</v-subheader>
+            <v-list>
+              <v-list-item>
+                <v-checkbox
+                  v-model="student"
+                  :label="`Sign up for tutoring`"
+                  :rules="validateRoleCheckbox"
+                  @change="tutor=!student"
+                ></v-checkbox>
+              </v-list-item>
+              <v-list-item>
+                <v-checkbox
+                  v-model="tutor"
+                  :label="`Apply to be a tutor`"
+                  :rules="validateRoleCheckbox"
+                  @change="student=!tutor"
+                ></v-checkbox>
+              </v-list-item>
+            </v-list>
+          </v-container>
+          <v-container>
+            <v-subheader>Choose your organization(s):</v-subheader>
+            <v-list>
+              <v-list-item
+                v-for="(group) in groups"
+                :key="group.id"
+              >
+                <v-checkbox
+                  v-model="selected"
+                  :value="group"
+                  :label="group.name"
+                  
+                ></v-checkbox>
+              </v-list-item>
+            </v-list>
+          </v-container>
+          <v-card-actions>
+            <v-spacer></v-spacer>
+            <v-btn
+              color="blue darken-1"
+              text
+              @click="goToPage(); savePersonRoles()"
+            >
+              Continue
+            </v-btn>
+          </v-card-actions>
+        </v-card>
+      </v-dialog>
     </div>
 </template>
 

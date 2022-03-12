@@ -2,7 +2,7 @@
   <div>
     <v-container>
       <v-toolbar>
-        <v-toolbar-title>Edit Tutor Account</v-toolbar-title>
+        <v-toolbar-title>Edit Student Account</v-toolbar-title>
       </v-toolbar>
       <br><br>
       <v-text-field
@@ -36,27 +36,6 @@
       >
         Update Phone Number
       </v-btn>
-
-      <br><br>
-      <v-card>
-        <v-card-title>
-          Current Topics
-          <v-spacer></v-spacer>
-          <v-text-field
-              v-model="search"
-              append-icon="mdi-magnify"
-              label="Search"
-              single-line
-              hide-details
-          ></v-text-field>
-        </v-card-title>
-        <v-data-table
-          :headers="headers"
-          :search="search"
-          :items="topics"
-          :items-per-page="50"
-        ></v-data-table>
-      </v-card>
       <br><br>
       <v-row>
         <v-col>
@@ -86,14 +65,12 @@
           </v-card>
         </v-col>
       </v-row>
-      <br><br>
     </v-container>
   </div>
 </template>
 
 <script>
 import PersonServices from '@/services/personServices'
-import TopicServices from '@/services/topicServices'
 import Utils from '@/config/utils.js'
 
   export default {
@@ -102,20 +79,13 @@ import Utils from '@/config/utils.js'
     },
     data() {
       return {
-        search: '',
         person: {},
-        fullName: '',
-        topics: [],
-        headers: [{text: 'Topic', value: 'name'}, 
-                  {text: 'Skill Level', value: 'persontopic[0].skillLevel'}]
+        fullName: ''
       };
     },
-    async created() {
+    created() {
       this.user = Utils.getStore('user');
-      await this.getPerson()
-      .then(() => {
-        this.getTopics();
-      })
+      this.getPerson();
     },
     methods: {
       async getPerson() {
@@ -127,18 +97,6 @@ import Utils from '@/config/utils.js'
           .catch(error => {
             console.log("There was an error:", error.response)
           });
-      },
-      async getTopics() {
-        await TopicServices.getTopicForPerson(this.user.userID)
-        .then(response => {
-          response.data.forEach(data => {
-            this.topics.push(data);
-            console.log(data);
-          })
-        })
-        .catch(error => {
-          console.log("There was an error:", error.response)
-        });
       },
       savePhoneNum() {
         PersonServices.updatePerson(this.person.id, this.person);

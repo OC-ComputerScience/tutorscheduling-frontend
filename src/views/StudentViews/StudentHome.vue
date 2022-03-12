@@ -4,7 +4,7 @@
       <v-toolbar>
         <v-toolbar-title>Hello, {{ this.user.fName }}!</v-toolbar-title>
         <v-spacer></v-spacer>
-        <v-toolbar-title>Tutor</v-toolbar-title>
+        <v-toolbar-title>Student</v-toolbar-title>
       </v-toolbar>
       <v-row>
         <v-col>
@@ -14,7 +14,7 @@
             max-width="400"
             height="100"
             elevation="10"
-            color="#196CA2"
+            color="#EE5044"
           >
             <v-card-title class="justify-center white--text">
                   View Calendar
@@ -23,15 +23,15 @@
         </v-col>
         <v-col>
           <v-card 
-            :to="{ name: 'availabilityAdd' }"
+            :to="{ name: 'mainCalendar' }"
             class="mx-auto my-12 d-flex justify-center"
             max-width="400"
             height="100"
             elevation="10"
-            color="#63BAC0"
+            color="#F8C545"
           >
             <v-card-title class="justify-center white--text">
-                  Manage Availability
+                  Make A Request
             </v-card-title>
           </v-card>
         </v-col>

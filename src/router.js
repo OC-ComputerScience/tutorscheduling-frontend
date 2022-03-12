@@ -3,6 +3,7 @@ import Router from 'vue-router'
 
 import Login from './views/Login.vue';
 import Contract from './views/Contract.vue';
+import Apply from './views/Apply.vue';
 
 // Admin Views. Views are sorted into sections for this project, so check that the path is correct below.
 
@@ -47,6 +48,10 @@ import TutorHome from './views/TutorViews/TutorHome.vue'
 import TutorInfo from './views/TutorViews/TutorInfo.vue'
 import TutorTopics from './views/TutorViews/TutorTopics.vue'
 
+// Student Pages
+import StudentHome from './views/StudentViews/StudentHome.vue'
+import StudentInfo from './views/StudentViews/StudentInfo.vue'
+
 Vue.use(Router)
 
 const router =  new Router({
@@ -64,6 +69,11 @@ const router =  new Router({
       path: '/contract',
       name: 'contract',
       component: Contract
+    },
+    {
+      path: '/apply',
+      name: 'apply',
+      component: Apply
     },
     {
       path: '/groupList',
@@ -203,6 +213,16 @@ const router =  new Router({
       path: '/tutorTopics',
       name: 'tutorTopics',
       component: TutorTopics
+    },
+    {
+      path: '/studentHome',
+      name: 'studentHome',
+      component: StudentHome
+    },
+    {
+      path: '/studentInfo',
+      name: 'studentInfo',
+      component: StudentInfo
     },
     /*
     {
