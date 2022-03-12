@@ -3,10 +3,25 @@
       <v-row
         justify="center"
       >
-        <a href="#" class="google-signup" @click.prevent="loginWithGoogle">
-        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><title>Google</title><g fill="none" fill-rule="evenodd"><path fill="#4285F4" d="M17.64 9.2045c0-.6381-.0573-1.2518-.1636-1.8409H9v3.4814h4.8436c-.2086 1.125-.8427 2.0782-1.7959 2.7164v2.2581h2.9087c1.7018-1.5668 2.6836-3.874 2.6836-6.615z"></path><path fill="#34A853" d="M9 18c2.43 0 4.4673-.806 5.9564-2.1805l-2.9087-2.2581c-.8059.54-1.8368.859-3.0477.859-2.344 0-4.3282-1.5831-5.036-3.7104H.9574v2.3318C2.4382 15.9832 5.4818 18 9 18z"></path><path fill="#FBBC05" d="M3.964 10.71c-.18-.54-.2822-1.1168-.2822-1.71s.1023-1.17.2823-1.71V4.9582H.9573A8.9965 8.9965 0 0 0 0 9c0 1.4523.3477 2.8268.9573 4.0418L3.964 10.71z"></path><path fill="#EA4335" d="M9 3.5795c1.3214 0 2.5077.4541 3.4405 1.346l2.5813-2.5814C13.4632.8918 11.426 0 9 0 5.4818 0 2.4382 2.0168.9573 4.9582L3.964 7.29C4.6718 5.1627 6.6559 3.5795 9 3.5795z"></path></g></svg>
-            Google
-        </a>
+        <v-btn
+          x-large
+          block
+          class="mr-4"
+          color="primary"
+          @click.prevent="loginWithGoogle"
+        >
+          Register
+        </v-btn>
+        <br><br>
+        <v-btn
+          x-large
+          block
+          class="mr-4"
+          color="primary"
+          @click.prevent="loginWithGoogle"
+        >
+          Log In
+        </v-btn>
         <v-dialog
           v-model="dialog"
           persistent
@@ -14,7 +29,7 @@
         >
           <v-card tile>
             <v-card-title>
-              <span class="text-h5">Hello {{this.name}}! Complete your account below:</span>
+              <span class="text-h5">Hello {{this.name}}! Finish setting up your account below:</span>
             </v-card-title>
             <v-card-text>
               <v-container>
@@ -75,14 +90,14 @@
               </v-list>
             </v-container>
             <v-container>
-              <v-subheader>Choose your group(s):</v-subheader>
+              <v-subheader>Choose your organization(s):</v-subheader>
               <v-list>
                 <v-list-item
                   v-for="(group) in groups"
                   :key="group.id"
                 >
                   <v-checkbox
-                    v-model="checkedGroups"
+                    v-model="selected"
                     :value="group"
                     :label="group.name"
                     
@@ -122,15 +137,19 @@ export default {
       dialog2: false,
       student: true,
       tutor: false, 
+      admin: false,
       model: false,
       groups: [],
       phoneNum: '',
       person: {},
       roles: [],
+      personroles: [],
       personrole: {},
+      selected: [],
       checkedGroups: [],
       name: '',
-      roleCounter: 0
+      roleCounter: 0,
+      user: {}
     }
   },
   created () {
@@ -144,7 +163,6 @@ export default {
   },
   methods: {
     loginWithGoogle() {
-      var user = {};
       this.$gAuth
       .signIn()
       .then(GoogleUser => {
@@ -160,10 +178,10 @@ export default {
         }
         AuthServices.loginUser(userInfo)
         .then(response => {
-          user = response.data;
-          Utils.setStore("user", user);
-          console.log(user);
-          this.getPersonInfoInOrder(user.userID);
+          this.user = response.data;
+          Utils.setStore("user", this.user);
+          console.log(this.user);
+          this.openDialogs();
         })
         .catch(error => {
           console.log('error', error);
@@ -185,18 +203,18 @@ export default {
           });
       }
     },
-    getPersonRoles() {
-      PersonRoleServices.getAllForPerson(this.person.id)
-      .then((response) => {
-        // this only sets the number of roles the person has
-        // console.log(response.data);
-        // console.log(response.data.length);
-        this.roleCounter = response.data.length;
-      })
-      .catch((error) => {
-        console.log("There was an error:", error.response);
-      });
-    },
+    async getPersonRoles() {
+        await RoleServices.getRoleForPerson(this.user.userID)
+        .then((response) => {
+          for (let i = 0; i < response.data.length; i++) {
+            let role = response.data[i];
+            this.personroles.push(role);
+          }
+        })
+        .catch((error) => {
+          console.log("There was an error:", error.response);
+        });
+      },
     getGroups() {
       GroupServices.getAllGroups()
         .then(response => {
@@ -207,21 +225,20 @@ export default {
         });
     },
     async getGroupRoles() {
-      //console.log(this.checkedGroups);
-      for (let i = 0; i < this.checkedGroups.length; i++) {
-        const group = this.checkedGroups[i];
-        await this.addGroupRoles(group.id);
+      for (let i = 0; i < this.groups.length; i++) {
+        for (let j = 0; j < this.selected.length; j++) {
+          if(this.selected[j] === i) {
+              this.checkedGroups.push(this.groups[i]);
+              const group = this.groups[i];
+              await this.addGroupRoles(group.id);
+          }
+        }
       }
+      console.log(this.checkedGroups)
     },
     savePhoneNum() {
       this.person.phoneNum = this.phoneNum;
       PersonServices.updatePerson(this.person.id, this.person);
-    },
-    goToPage() {
-      if(this.$store.state.loginUser.admin !== null && this.$store.state.loginUser.admin)
-        this.$router.push({ name: "mainCalendar" });
-      else  
-        this.$router.push({ name: "contract" });
     },
     async addGroupRoles(id) {
       await RoleServices.getAllForGroup(id)
@@ -256,38 +273,45 @@ export default {
         }
       })
     },
-    getPersonInfoInOrder(id) {
-      PersonServices.getPerson(id)
-      .then(response => {
-        this.person = response.data;
-        this.name = this.person.fName;
-        PersonRoleServices.getAllForPerson(this.person.id)
-        .then((response) => {
-          // this only sets the number of roles the person has
-          // console.log(response.data);
-          // console.log(response.data.length);
-          this.roleCounter = response.data.length;
-          this.openDialogs();
-        })
-        .catch((error) => {
-          console.log("There was an error:", error.response);
-        });
-      })
-      .catch(error => {
-        console.log("There was an error:", error.response)
-      });
-    },
     openDialogs() {
       // if this person doesn't have any roles, do this
       // console.log(this.roleCounter)
-      if(this.roleCounter === 0) {
+      if(this.user.access.length === 0) {
         if(this.person.phoneNum === '')
           this.dialog = true
         else
-          this.dialog2 = true;
+          this.dialog2 = true;      
       }
-      else
-        this.goToPage();
+      this.goToPage();
+    },
+    async goToPage() {
+      await this.getPersonRoles();
+      for (let i = 0; i < this.personroles.length; i++) {
+        let role = this.personroles[i];
+        console.log(role);
+        for (let j = 0; j < role.personrole.length; i++) {
+          let pRole = role.personrole[j];
+          console.log(pRole);
+          if(role.type.includes("Admin")) {
+            this.$router.push({ name: "mainCalendar" });
+          }
+          else if((role.type.includes("Student") && !pRole.status.includes("approved")) ||
+              ((role.type.includes("Tutor") && !pRole.agree))) {
+            this.$router.push({ name: "contract" });
+          }
+          else if(role.type.includes("Student") && pRole.status.includes("approved")) {
+            this.$router.push({ name: "mainCalendar" });
+          }
+          // make a tutor sign up for topics if they haven't been approved yet
+          else if(role.type.includes("Tutor") && pRole.status.includes("applied")) {
+            this.$router.push({ name: "tutorTopics" });
+          }
+          else if(role.type.includes("Tutor") && pRole.status.includes("approved") && pRole.agree) {
+            this.$router.push({ name: "tutorHome" });
+          }
+          break;
+        }
+      } 
     }
   }
 }
