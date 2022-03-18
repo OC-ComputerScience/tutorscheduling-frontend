@@ -4,6 +4,7 @@ import Router from 'vue-router'
 import Login from './views/Login.vue';
 import Contract from './views/Contract.vue';
 import Apply from './views/Apply.vue';
+import Help from './views/Help.vue';
 
 // Admin Views. Views are sorted into sections for this project, so check that the path is correct below.
 
@@ -78,6 +79,11 @@ const router =  new Router({
       path: '/apply',
       name: 'apply',
       component: Apply
+    },
+    {
+      path: '/help',
+      name: 'help',
+      component: Help
     },
     {
       path: '/groupList',
@@ -214,9 +220,10 @@ const router =  new Router({
       props: true
     },
     {
-      path: '/tutorHome',
+      path: '/tutorHome/:id',
       name: 'tutorHome',
-      component: TutorHome
+      component: TutorHome,
+      props: true
     },
     {
       path: '/tutorInfo',
@@ -229,7 +236,7 @@ const router =  new Router({
       component: TutorTopics
     },
     {
-      path: '/studentHome',
+      path: '/studentHome/:id',
       name: 'studentHome',
       component: StudentHome
     },

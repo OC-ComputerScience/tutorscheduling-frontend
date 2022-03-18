@@ -64,7 +64,13 @@
 import Utils from '@/config/utils.js'
 
   export default {
+    props: ["id"],
     name: 'App',
+    watch: {
+      id: function () {
+        console.log(this.id);
+      },
+    },
     components: {
     },
     data() {

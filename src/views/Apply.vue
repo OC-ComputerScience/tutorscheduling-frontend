@@ -71,7 +71,7 @@
                     <v-btn
                     color="blue darken-1"
                     text
-                    @click="goToPage(); savePersonRoles()"
+                    @click="savePersonRoles()"
                     >
                     Continue
                     </v-btn>
@@ -117,8 +117,9 @@ export default {
   },
   methods: {
     async getPersonRoles() {
-        await RoleServices.getRoleForPerson(this.user.userID)
+        await RoleServices.getIncompleteRoleForPerson(this.user.userID)
         .then((response) => {
+          console.log(response);
           for (let i = 0; i < response.data.length; i++) {
             let role = response.data[i];
             this.personroles.push(role);
@@ -127,6 +128,20 @@ export default {
         .catch((error) => {
           console.log("There was an error:", error.response);
         });
+
+        // if the user doesn't have any incomplete roles, get normal roles
+        if(this.personroles.length === 0) {
+          await RoleServices.getRoleForPerson(this.user.userID)
+          .then((response) => {
+            for (let i = 0; i < response.data.length; i++) {
+              let role = response.data[i];
+              this.personroles.push(role);
+            }
+          })
+          .catch((error) => {
+            console.log("There was an error:", error.response);
+          });
+        }
       },
     getGroups() {
       GroupServices.getAllGroups()
@@ -138,16 +153,20 @@ export default {
         });
     },
     async getGroupRoles() {
-      for (let i = 0; i < this.groups.length; i++) {
-        for (let j = 0; j < this.selected.length; j++) {
-          if(this.selected[j] === i) {
-              this.checkedGroups.push(this.groups[i]);
-              const group = this.groups[i];
-              await this.addGroupRoles(group.id);
-          }
-        }
+      this.roles = [];
+      for (let i = 0; i < this.selected.length; i++) {
+        await this.addGroupRoles(this.selected[i].id);
       }
-      console.log(this.checkedGroups)
+      // for (let i = 0; i < this.groups.length; i++) {
+      //   for (let j = 0; j < this.selected.length; j++) {
+      //     if(this.selected[j] === i) {
+      //         this.checkedGroups.push(this.groups[i]);
+      //         const group = this.groups[i];
+      //         await this.addGroupRoles(group.id);
+      //     }
+      //   }
+      // }
+      // console.log(this.checkedGroups)
     },
     async addGroupRoles(id) {
       await RoleServices.getAllForGroup(id)
@@ -161,9 +180,9 @@ export default {
         console.log("There was an error:", error.response)
       });
     },
-    savePersonRoles() {
-      this.getGroupRoles()
-      .then(() => {
+    async savePersonRoles() {
+      await this.getGroupRoles()
+      .then(async () => {
         console.log(this.roles);
         for (let i = 0; i < this.roles.length; i++) {
           const role = this.roles[i];
@@ -174,42 +193,75 @@ export default {
                 status: "applied",
                 agree: false,
                 dateSigned: Date(),
-                personId: this.user.userId,
+                personId: this.user.userID,
                 roleId: role.id 
               };
-            PersonRoleServices.addPersonRole(this.personrole);
+            await PersonRoleServices.addPersonRole(this.personrole);
           }
         }
+        this.setAccess();
       })
     },
-    async goToPage() {
-      await this.getPersonRoles();
-      for (let i = 0; i < this.personroles.length; i++) {
-        let role = this.personroles[i];
-        console.log(role);
-        for (let j = 0; j < role.personrole.length; i++) {
-          let pRole = role.personrole[j];
-          console.log(pRole);
-          if(role.type.includes("Admin")) {
-            this.$router.push({ name: "mainCalendar" });
-          }
-          else if((role.type.includes("Student") && !pRole.status.includes("approved")) ||
-              ((role.type.includes("Tutor") && !pRole.agree))) {
-            this.$router.push({ name: "contract" });
-          }
-          else if(role.type.includes("Student") && pRole.status.includes("approved")) {
-            this.$router.push({ name: "mainCalendar" });
-          }
-          // make a tutor sign up for topics if they haven't been approved yet
-          else if(role.type.includes("Tutor") && pRole.status.includes("applied")) {
-            this.$router.push({ name: "tutorTopics" });
-          }
-          else if(role.type.includes("Tutor") && pRole.status.includes("approved") && pRole.agree) {
-            this.$router.push({ name: "tutorHome" });
-          }
-          break;
+    async setAccess() {
+      // reset the access after a new role is added to a person
+      await GroupServices.getGroupsForPerson(this.user.userID)
+      .then(response => {
+        // console.log(response);
+        this.user.access = [];
+        for (let i = 0; i < response.data.length; i++) {
+            let element = response.data[i];
+            let roles = [];
+            //console.log(element)
+            for (let j = 0; j < element.role.length; j++) {
+                let item = element.role[j];
+                //console.log(item)
+                let role = item.type;
+                roles.push(role);
+            }
+            let group = {
+                name: element.name,
+                roles: roles
+            }
+            this.user.access.push(group);
         }
-      } 
+        console.log(this.user.access);
+        // resave user in store
+        Utils.setStore("user", this.user);
+        this.goToPage();
+      })
+      .catch(error => {
+        console.log("There was an error:", error.response)
+      });
+    },
+    async goToPage() {
+      await this.getPersonRoles()
+      .then(() => {
+        for (let i = 0; i < this.personroles.length; i++) {
+          let role = this.personroles[i];
+          console.log(role);
+          for (let j = 0; j < role.personrole.length; j++) {
+            let pRole = role.personrole[j];
+            //console.log(pRole);
+            if(role.type.includes("Admin")) {
+              this.$router.push({ name: "mainCalendar" });
+            }
+            else if((role.type.includes("Student") && !pRole.status.includes("approved")) ||
+                ((role.type.includes("Tutor") && !pRole.agree))) {
+              this.$router.push({ name: "contract" });
+            }
+            // make a tutor sign up for topics if they haven't been approved yet
+            else if(role.type.includes("Tutor") && pRole.status.includes("applied")) {
+              this.$router.push({ name: "tutorTopics" });
+            }
+            else if(role.type.includes("Student") && pRole.status.includes("approved")) {
+              this.$router.push({ name: "mainCalendar" });
+            }
+            else if(role.type.includes("Tutor") && pRole.status.includes("approved") && pRole.agree) {
+              this.$router.push({ name: "tutorHome" });
+            }
+          }
+        } 
+      })
     }
   }
 }

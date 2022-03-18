@@ -24,7 +24,7 @@
                     exact                    
                     :ref="item.link"
                     link
-                    :to="{ name: item.name, params: { id: user.userId } }"
+                    :to="{ name: item.name, params: { id: currentPersonRoleID } }"
                     :color="item.color"
                     text
                 >
@@ -110,6 +110,15 @@
                                 depressed
                                 rounded
                                 text
+                                :to="{ name: 'help' }"
+                            >
+                                Help
+                            </v-btn>
+                            <v-divider class="my-3"></v-divider>
+                            <v-btn
+                                depressed
+                                rounded
+                                text
                                 @click="logout()"
                             >
                                 Logout
@@ -156,6 +165,7 @@
 <script>
 import Utils from '@/config/utils.js';
 import AuthServices from '@/services/authServices.js'
+import GroupServices from '@/services/groupServices.js'
 
 export default {
     name: 'App',
@@ -168,14 +178,8 @@ export default {
         selectedGroup: '',
         selectedRoles: '',
         activeMenus: [],
+        currentPersonRoleID: 0,
         menus: [
-            {
-                link: 'login',
-                name: 'login',
-                color: 'white',
-                text: 'Login',
-                roles: 'None'
-            },
             {
                 link: 'tutorHome',
                 name: 'tutorHome',
@@ -226,6 +230,13 @@ export default {
                 roles: 'HeadAdmin,Admin'
             },
             {
+                link: 'requestList',
+                name: 'requestList',
+                color: 'white',
+                text: 'Requests',
+                roles: 'HeadAdmin,Admin'
+            },
+            {
                 link: 'mainCalendar',
                 name: 'mainCalendar',
                 color: 'white',
@@ -241,7 +252,7 @@ export default {
             },
             {
                 link: 'requestAdd',
-                name: '',
+                name: 'requestAdd',
                 color: 'white',
                 text: 'Request',
                 roles: 'Student'
@@ -251,21 +262,25 @@ export default {
     async created() {
         await this.setGroupsAndRoles()
         .then(() => {
-            this.selectedGroup = this.groups[0];
+            if (this.selectedGroup === '' && this.user.selectedGroup === null)
+                this.selectedGroup = this.groups[0];
+            else if (this.selectedGroup === '')
+                this.selectedGroup = this.user.selectedGroup;
             this.resetMenu();
         })
     },
     methods: {
         menuAction(route) {
-            this.$router.push({ name: route });
+            console.log(this.currentPersonRoleID);
+            this.$router.push({ name: route, params: { id: this.currentPersonRoleID }  });
         },
         async setGroupsAndRoles() {
             this.user = Utils.getStore('user');
             if (this.user != null) {
                 this.title = 'OC Tutoring';
-                console.log(this.initials)
+                //console.log(this.initials)
                 this.initials = this.user.fName[0] + this.user.lName[0];
-                console.log(this.initials)
+                //console.log(this.initials)
                 this.name = this.user.fName + ' ' + this.user.lName;
                 this.groups = [];
                 this.user.access.forEach(element => {
@@ -274,12 +289,16 @@ export default {
                 for (let i = 0; i < this.user.access.length; i++) {
                     let group = this.user.access[i];
                     if (group.name.toString() === this.selectedGroup.toString()) {
+                        // save selected group
+                        this.user.selectedGroup = group.name;
+                        Utils.setStore("user", this.user);
+
                         this.selectedRoles = '';
-                        console.log("in if statement")
                         for (let j = 0; j < group.roles.length; j++) {
                             this.selectedRoles += group.roles[j];
-                            console.log(this.selectedRoles)
+                            //console.log(this.user.access)
                         }
+                        await this.getPersonRoles();
                     }
                 }
             }
@@ -301,6 +320,25 @@ export default {
                 );
             } 
             this.menuAction(this.activeMenus[0].name);
+        },
+        async getPersonRoles() {
+            await GroupServices.getGroupsForPerson(this.user.userID)
+            .then((response) => {
+                for (let i = 0; i < response.data.length; i++) {
+                    let group = response.data[i];
+                    if (this.selectedGroup.includes(group.name)) {
+                        for (let j = 0; j < group.role.length; j++) {
+                            let role = group.role[j];
+                            if(this.selectedRoles.includes(role.type)) {
+                                this.currentPersonRoleID = role.personrole[0].id;
+                            }
+                        }
+                    }
+                }
+            })
+            .catch((error) => {
+                console.log("There was an error:", error.response);
+            });
         },
         goToRightInfo() {
             if (this.selectedRoles.includes("Student"))

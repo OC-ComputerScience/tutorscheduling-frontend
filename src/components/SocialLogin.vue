@@ -36,7 +36,7 @@
       >
         <v-card tile>
           <v-card-title>
-            <span class="text-h5">Hello {{this.name}}! Finish setting up your account below:</span>
+            <span class="text-h5">Hello, {{this.name}}! Finish setting up your account below:</span>
           </v-card-title>
           <v-card-text>
             <v-container>
@@ -73,7 +73,7 @@
       >
         <v-card tile>
           <v-card-title>
-            <span class="text-h5">Hello {{this.name}}! Select below:</span>
+            <span class="text-h5">Hello, {{this.name}}! Select below:</span>
           </v-card-title>
           <v-container>
             <v-subheader>Choose your action:</v-subheader>
@@ -117,7 +117,7 @@
             <v-btn
               color="blue darken-1"
               text
-              @click="goToPage(); savePersonRoles()"
+              @click="savePersonRoles()"
             >
               Continue
             </v-btn>
@@ -160,7 +160,6 @@ export default {
   },
   created () {
     this.getGroups();
-    //this.getPerson();
   },
   computed: {
     validateRoleCheckbox() {
@@ -186,6 +185,7 @@ export default {
         .then(response => {
           this.user = response.data;
           Utils.setStore("user", this.user);
+          this.name = this.user.fName;
           console.log(this.user);
           this.openDialogs();
         })
@@ -197,20 +197,18 @@ export default {
         console.log('error', error);
       })
     },
-    getPerson() {
-      if (this.$store.state.loginUser.userID !== undefined && this.$store.state.loginUser !== null) {
-        PersonServices.getPerson(this.$store.state.loginUser.userID)
-          .then(response => {
-            this.person = response.data;
-            return;
-          })
-          .catch(error => {
-            console.log("There was an error:", error.response)
-          });
-      }
+    async getPerson() {
+      await PersonServices.getPerson(this.user.userID)
+        .then(response => {
+          this.person = response.data;
+          return;
+        })
+        .catch(error => {
+          console.log("There was an error:", error.response)
+        });
     },
     async getPersonRoles() {
-        await RoleServices.getRoleForPerson(this.user.userID)
+        await RoleServices.getIncompleteRoleForPerson(this.user.userID)
         .then((response) => {
           for (let i = 0; i < response.data.length; i++) {
             let role = response.data[i];
@@ -220,6 +218,21 @@ export default {
         .catch((error) => {
           console.log("There was an error:", error.response);
         });
+
+        console.log(this.personroles)
+        // if the user doesn't have any incomplete roles, get normal roles
+        if(this.personroles.length === 0) {
+          await RoleServices.getRoleForPerson(this.user.userID)
+          .then((response) => {
+            for (let i = 0; i < response.data.length; i++) {
+              let role = response.data[i];
+              this.personroles.push(role);
+            }
+          })
+          .catch((error) => {
+            console.log("There was an error:", error.response);
+          });
+        }
       },
     getGroups() {
       GroupServices.getAllGroups()
@@ -231,20 +244,29 @@ export default {
         });
     },
     async getGroupRoles() {
-      for (let i = 0; i < this.groups.length; i++) {
-        for (let j = 0; j < this.selected.length; j++) {
-          if(this.selected[j] === i) {
-              this.checkedGroups.push(this.groups[i]);
-              const group = this.groups[i];
-              await this.addGroupRoles(group.id);
-          }
-        }
+      for (let i = 0; i < this.selected.length; i++) {
+        await this.addGroupRoles(this.selected[i].id);
       }
-      console.log(this.checkedGroups)
+      // for (let i = 0; i < this.groups.length; i++) {
+      //   for (let j = 0; j < this.selected.length; j++) {
+      //     if(this.selected[j] === i) {
+      //         this.checkedGroups.push(this.groups[i]);
+      //         const group = this.groups[i];
+      //         await this.addGroupRoles(group.id);
+      //     }
+      //   }
+      // }
+      // console.log(this.checkedGroups)
     },
-    savePhoneNum() {
-      this.person.phoneNum = this.phoneNum;
-      PersonServices.updatePerson(this.person.id, this.person);
+    async savePhoneNum() {
+      await this.getPerson()
+      .then(() => {
+        this.person.phoneNum = this.phoneNum;
+        // save phone number locally and to database
+        this.user.phoneNum = this.phoneNum;
+        Utils.setStore("user", this.user);
+        PersonServices.updatePerson(this.person.id, this.person);
+      })
     },
     async addGroupRoles(id) {
       await RoleServices.getAllForGroup(id)
@@ -258,8 +280,8 @@ export default {
         console.log("There was an error:", error.response)
       });
     },
-    savePersonRoles() {
-      this.getGroupRoles()
+    async savePersonRoles() {
+      await this.getGroupRoles()
       .then(() => {
         console.log(this.roles);
         for (let i = 0; i < this.roles.length; i++) {
@@ -271,19 +293,51 @@ export default {
                 status: "applied",
                 agree: false,
                 dateSigned: Date(),
-                personId: this.person.id,
+                personId: this.user.userID,
                 roleId: role.id 
               };
             PersonRoleServices.addPersonRole(this.personrole);
           }
         }
       })
+      this.setAccess();
+    },
+    async setAccess() {
+      // reset the access after a new role is added to a person
+      await GroupServices.getGroupsForPerson(this.user.userID)
+      .then(response => {
+        //console.log(response);
+        this.user.access = [];
+        for (let i = 0; i < response.data.length; i++) {
+            let element = response.data[i];
+            let roles = [];
+            //console.log(element)
+            for (let j = 0; j < element.role.length; j++) {
+                let item = element.role[j];
+                //console.log(item)
+                let role = item.type;
+                roles.push(role);
+            }
+            let group = {
+                name: element.name,
+                roles: roles
+            }
+            this.user.access.push(group);
+        }
+        console.log(this.user.access);
+        // resave user in store
+        Utils.setStore("user", this.user);
+        this.goToPage();
+      })
+      .catch(error => {
+        console.log("There was an error:", error.response)
+      });
     },
     openDialogs() {
       // if this person doesn't have any roles, do this
       // console.log(this.roleCounter)
       if(this.user.access.length === 0) {
-        if(this.person.phoneNum === '')
+        if(this.user.phoneNum === '')
           this.dialog = true
         else
           this.dialog2 = true;      
@@ -295,7 +349,7 @@ export default {
       for (let i = 0; i < this.personroles.length; i++) {
         let role = this.personroles[i];
         console.log(role);
-        for (let j = 0; j < role.personrole.length; i++) {
+        for (let j = 0; j < role.personrole.length; j++) {
           let pRole = role.personrole[j];
           console.log(pRole);
           if(role.type.includes("Admin")) {
@@ -305,15 +359,15 @@ export default {
               ((role.type.includes("Tutor") && !pRole.agree))) {
             this.$router.push({ name: "contract" });
           }
-          else if(role.type.includes("Student") && pRole.status.includes("approved")) {
-            this.$router.push({ name: "mainCalendar" });
-          }
           // make a tutor sign up for topics if they haven't been approved yet
           else if(role.type.includes("Tutor") && pRole.status.includes("applied")) {
             this.$router.push({ name: "tutorTopics" });
           }
+          else if(role.type.includes("Student") && pRole.status.includes("approved")) {
+            this.$router.push({ name: "mainCalendar" });
+          }
           else if(role.type.includes("Tutor") && pRole.status.includes("approved") && pRole.agree) {
-            this.$router.push({ name: "tutorHome" });
+            this.$router.push({ name: "tutorHome", params: { id: pRole.id } });
           }
           break;
         }

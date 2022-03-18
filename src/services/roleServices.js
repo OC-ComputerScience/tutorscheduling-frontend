@@ -15,6 +15,9 @@ export default {
     getRoleForPerson(id) {
       return apiClient.get("role/person/" + id)
     },
+    getIncompleteRoleForPerson(id) {
+      return apiClient.get("role/personIn/" + id)
+    },
     getRole(id) {
       return apiClient.get("role/" + id);
     },

@@ -107,9 +107,23 @@ import PersonTopicServices from '@/services/personTopicServices'
     async created () {
         this.user = Utils.getStore('user');
 
-        await this.getGroups();
-        await this.getGroupTopics();
-        console.log(this.groups);
+        await this.getGroups()
+        .then(async () => {
+            await this.getGroupTopics()
+            .then(async () => {
+                console.log(this.groups)
+                await this.existingPersonTopics()
+                .then(async () => {
+                    await this.getGroupTopics()
+                    .then(() => {
+                        if (this.groups.length === 0) {
+                            this.goToPage();
+                        }
+                        console.log(this.groups);
+                    })
+                })
+            })
+        })
     },
     methods: {
         async getGroups() {
@@ -127,6 +141,33 @@ import PersonTopicServices from '@/services/personTopicServices'
                                     this.groups.push(group);
                             }
                         }
+                    }
+                }
+            })
+            .catch(error => {
+                console.log("There was an error:", error.response)
+            });
+        },
+        async existingPersonTopics() {
+            await PersonTopicServices.getAllForPerson(this.user.userID)
+            .then(response => {
+                console.log(response);
+                for (let i = 0; i < response.data.length; i++) {
+                    let topic = response.data[i];
+                    for (let j = 0; j < this.groups.length; j++) {
+                        let group = this.groups[j];
+                        console.log(group);
+                        for (let k = 0; k < group.topics.length; k++) {
+                            if(topic.topicId === group.topics[k].id) {
+                                // if there is a person topic for some of the groups then remove that group from the list
+                                break;
+                            }
+                        }
+                        console.log(this.groups);
+                        this.groups = this.groups.filter(function(item) {
+                            return item.id !== group.id;
+                        })
+                        console.log(this.groups);
                     }
                 }
             })
