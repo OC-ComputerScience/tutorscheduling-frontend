@@ -7,6 +7,7 @@ import Apply from './views/Apply.vue';
 import Help from './views/Help.vue';
 
 // Admin Views. Views are sorted into sections for this project, so check that the path is correct below.
+import AdminHome from './views/AdminViews/AdminHome.vue'
 
 //Groups
 import GroupList    from './views/AdminViews/GroupViews/GroupList.vue';
@@ -244,6 +245,11 @@ const router =  new Router({
       path: '/studentInfo',
       name: 'studentInfo',
       component: StudentInfo
+    },
+    {
+      path: '/adminHome/:id',
+      name: 'adminHome',
+      component: AdminHome
     },
     /*
     {

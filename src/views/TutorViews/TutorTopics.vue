@@ -19,8 +19,8 @@
                 <v-item v-slot="{ active, toggle }">
                     <v-card 
                         @click="toggle"
-                        class="text-right pa-2"
-                        max-width="200"
+                        class="mx-auto my-12 d-flex justify-center"
+                        max-width="400"
                         height="100"
                         elevation="10"
                         :style="{ 'background-color' : topic.color}"

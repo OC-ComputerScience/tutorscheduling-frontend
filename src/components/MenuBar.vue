@@ -195,60 +195,67 @@ export default {
                 roles: 'Student'
             },
             {
+                link: 'adminHome',
+                name: 'adminHome',
+                color: 'white',
+                text: 'Home',
+                roles: 'HeadAdmin,Admin,Supervisor'
+            },
+            {
                 link: 'groupList',
                 name: 'groupList',
                 color: 'white',
                 text: 'Groups',
-                roles: 'HeadAdmin,Admin'
+                roles: 'HeadAdmin,Admin,Supervisor'
             },
             {
                 link: 'personList',
                 name: 'personList',
                 color: 'white',
                 text: 'People',
-                roles: 'HeadAdmin,Admin'
+                roles: 'HeadAdmin,Admin,Supervisor'
             },
             {
                 link: 'topicList',
                 name: 'topicList',
                 color: 'white',
                 text: 'Topics',
-                roles: 'HeadAdmin,Admin'
+                roles: 'HeadAdmin,Admin,Supervisor'
             },
             {
                 link: 'locationList',
                 name: 'locationList',
                 color: 'white',
                 text: 'Locations',
-                roles: 'HeadAdmin,Admin'
+                roles: 'HeadAdmin,Admin,Supervisor'
             },
             {
                 link: 'roleList',
                 name: 'roleList',
                 color: 'white',
                 text: 'Roles',
-                roles: 'HeadAdmin,Admin'
+                roles: 'HeadAdmin,Admin,Supervisor'
             },
             {
                 link: 'requestList',
                 name: 'requestList',
                 color: 'white',
                 text: 'Requests',
-                roles: 'HeadAdmin,Admin'
+                roles: 'HeadAdmin,Admin,Supervisor'
             },
             {
                 link: 'mainCalendar',
                 name: 'mainCalendar',
                 color: 'white',
                 text: 'Calendar',
-                roles: 'HeadAdmin,Admin,Tutor,Student'
+                roles: 'HeadAdmin,Admin,Supervisor,Tutor,Student'
             },
             {
                 link: 'availabilityAdd',
                 name: 'availabilityAdd',
                 color: 'white',
                 text: 'Availability',
-                roles: 'HeadAdmin,Admin,Tutor'
+                roles: 'HeadAdmin,Admin,Supervisor,Tutor'
             },
             {
                 link: 'requestAdd',
@@ -262,7 +269,7 @@ export default {
     async created() {
         await this.setGroupsAndRoles()
         .then(() => {
-            if (this.selectedGroup === '' && this.user.selectedGroup === null)
+            if (this.selectedGroup === '' && this.user.selectedGroup === undefined)
                 this.selectedGroup = this.groups[0];
             else if (this.selectedGroup === '')
                 this.selectedGroup = this.user.selectedGroup;
@@ -352,6 +359,7 @@ export default {
             .then(response => {
                 console.log(response);
                 Utils.removeItem('user')
+                this.$router.go();
                 this.$router.push({ name: "login"})
             })
             .catch(error => {

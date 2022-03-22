@@ -353,9 +353,9 @@ export default {
           let pRole = role.personrole[j];
           console.log(pRole);
           if(role.type.includes("Admin")) {
-            this.$router.push({ name: "mainCalendar" });
+            this.$router.push({ name: "adminHome", params: { id: pRole.id } });
           }
-          else if((role.type.includes("Student") && !pRole.status.includes("approved")) ||
+          else if((role.type.includes("Student") && !pRole.status.includes("approved") && !pRole.agree) ||
               ((role.type.includes("Tutor") && !pRole.agree))) {
             this.$router.push({ name: "contract" });
           }
@@ -364,11 +364,12 @@ export default {
             this.$router.push({ name: "tutorTopics" });
           }
           else if(role.type.includes("Student") && pRole.status.includes("approved")) {
-            this.$router.push({ name: "mainCalendar" });
+            this.$router.push({ name: "studentHome", params: { id: pRole.id } });
           }
           else if(role.type.includes("Tutor") && pRole.status.includes("approved") && pRole.agree) {
             this.$router.push({ name: "tutorHome", params: { id: pRole.id } });
           }
+          this.$router.go();
           break;
         }
       } 

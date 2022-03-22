@@ -4,34 +4,92 @@
       <v-toolbar>
         <v-toolbar-title>Hello, {{ this.user.fName }}!</v-toolbar-title>
         <v-spacer></v-spacer>
-        <v-toolbar-title>Student</v-toolbar-title>
+        <v-toolbar-title>Admin</v-toolbar-title>
       </v-toolbar>
       <v-row>
         <v-col>
           <v-card 
-            :to="{ name: 'mainCalendar' }"
+            :to="{ name: 'personList' }"
             class="mx-auto my-12 d-flex justify-center"
             max-width="400"
             height="100"
             elevation="10"
-            color="#EE5044"
+            color="accent"
           >
             <v-card-title class="justify-center white--text">
-                  View Calendar
+                  View Appointments
             </v-card-title>
           </v-card>
         </v-col>
         <v-col>
           <v-card 
-            :to="{ name: 'requestAdd' }"
+            :to="{ name: 'requestList' }"
             class="mx-auto my-12 d-flex justify-center"
             max-width="400"
             height="100"
             elevation="10"
-            color="#F8C545"
+            color="accent"
           >
             <v-card-title class="justify-center white--text">
-                  Make A Request
+                  View Requests
+            </v-card-title>
+          </v-card>
+        </v-col>
+        <v-col>
+          <v-card 
+            :to="{ name: 'personList' }"
+            class="mx-auto my-12 d-flex justify-center"
+            max-width="400"
+            height="100"
+            elevation="10"
+            color="accent"
+          >
+            <v-card-title class="justify-center white--text">
+                  View People
+            </v-card-title>
+          </v-card>
+        </v-col>
+      </v-row>
+      <v-row>
+        <v-col>
+          <v-card 
+            :to="{ name: 'topicList' }"
+            class="mx-auto my-12 d-flex justify-center"
+            max-width="400"
+            height="100"
+            elevation="10"
+            color="accent"
+          >
+            <v-card-title class="justify-center white--text">
+                  View Topics
+            </v-card-title>
+          </v-card>
+        </v-col>
+        <v-col>
+          <v-card 
+            :to="{ name: 'roleList' }"
+            class="mx-auto my-12 d-flex justify-center"
+            max-width="400"
+            height="100"
+            elevation="10"
+            color="accent"
+          >
+            <v-card-title class="justify-center white--text">
+                  View Roles
+            </v-card-title>
+          </v-card>
+        </v-col>
+        <v-col>
+          <v-card 
+            :to="{ name: 'locationList' }"
+            class="mx-auto my-12 d-flex justify-center"
+            max-width="400"
+            height="100"
+            elevation="10"
+            color="accent"
+          >
+            <v-card-title class="justify-center white--text">
+                  View Locations
             </v-card-title>
           </v-card>
         </v-col>
