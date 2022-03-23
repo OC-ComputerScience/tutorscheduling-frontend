@@ -10,8 +10,6 @@
       v-model="valid"
       lazy validation
     >
-
-
       <v-text-field
         v-model="request.courseNum"
         id="courseNum"
@@ -42,6 +40,7 @@
         required
       ></v-text-field>
 
+      <br><br>
       <v-btn
         :disabled="!valid"
         color="success"

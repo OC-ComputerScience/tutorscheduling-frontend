@@ -20,19 +20,11 @@
                 v-for="item in activeMenus"
                 :key="item.link"
             >
-                <v-btn v-if="item.name !== 'logout'"
+                <v-btn
                     exact                    
                     :ref="item.link"
                     link
-                    :to="{ name: item.name, params: { id: user.userId } }"
-                    :color="item.color"
-                    text
-                >
-                    {{ item.text }}
-                </v-btn>
-                <v-btn v-else
-                    exact                    
-                    @click="logout"
+                    :to="{ name: item.name, params: { id: currentPersonRoleID } }"
                     :color="item.color"
                     text
                 >
@@ -61,9 +53,80 @@
                     </v-list-item>
                 </v-list>
             </v-menu>
-            <v-avatar v-if="this.user != null" color="secondary">
-                    <span class="accent--text font-weight-bold" >{{ this.initials }}</span>
-            </v-avatar>
+            <v-menu
+                bottom
+                min-width="200px"
+                rounded
+                offset-y
+                v-if="user != null"
+            >
+                <template v-slot:activator="{ on, attrs }">
+                    <v-btn
+                        icon
+                        x-large
+                        v-on="on"
+                        v-bind="attrs"
+                    >
+                        <v-avatar v-if="user != null"
+                            color="secondary"
+                        >
+                            <span class="accent--text font-weight-bold">{{ initials }}</span>
+                        </v-avatar>
+                    </v-btn>
+                </template>
+                <v-card>
+                    <v-list-item-content class="justify-center">
+                        <div class="mx-auto text-center">
+                            <v-avatar
+                                color="secondary"
+                                class="mt-2 mb-2"
+                            >
+                                <span class="accent--text font-weight-bold">{{ initials }}</span>
+                            </v-avatar>
+                            <h3>{{ name }}</h3>
+                            <p class="text-caption mt-1">
+                                {{ user.email }}
+                            </p>
+                            <v-divider class="my-3"></v-divider>
+                            <v-btn
+                                depressed
+                                rounded
+                                text
+                                @click="goToRightInfo()"
+                            >
+                                Edit Account
+                            </v-btn>
+                            <v-divider class="my-3"></v-divider>
+                            <v-btn
+                                depressed
+                                rounded
+                                text
+                                :to="{ name: 'apply' }"
+                            >
+                                Apply
+                            </v-btn>
+                            <v-divider class="my-3"></v-divider>
+                            <v-btn
+                                depressed
+                                rounded
+                                text
+                                :to="{ name: 'help' }"
+                            >
+                                Help
+                            </v-btn>
+                            <v-divider class="my-3"></v-divider>
+                            <v-btn
+                                depressed
+                                rounded
+                                text
+                                @click="logout()"
+                            >
+                                Logout
+                            </v-btn>
+                        </div>
+                    </v-list-item-content>
+                </v-card>
+            </v-menu>
         </v-app-bar>
 
         <!-- <v-app-bar dark color="#811429" class="hidden-lg-and-up">
@@ -102,6 +165,7 @@
 <script>
 import Utils from '@/config/utils.js';
 import AuthServices from '@/services/authServices.js'
+import GroupServices from '@/services/groupServices.js'
 
 export default {
     name: 'App',
@@ -109,14 +173,13 @@ export default {
         user: {},
         title: '',
         initials: '',
+        name: '',
+        groups: [],
+        selectedGroup: '',
+        selectedRoles: '',
+        activeMenus: [],
+        currentPersonRoleID: 0,
         menus: [
-            {
-                link: 'login',
-                name: 'login',
-                color: 'white',
-                text: 'Login',
-                roles: 'None'
-            },
             {
                 link: 'tutorHome',
                 name: 'tutorHome',
@@ -125,99 +188,107 @@ export default {
                 roles: 'Tutor'
             },
             {
-                link: 'tutorInfo',
-                name: 'tutorInfo',
+                link: 'studentHome',
+                name: 'studentHome',
                 color: 'white',
-                text: 'My Info',
-                roles: 'Tutor'
+                text: 'Home',
+                roles: 'Student'
+            },
+            {
+                link: 'adminHome',
+                name: 'adminHome',
+                color: 'white',
+                text: 'Home',
+                roles: 'HeadAdmin,Admin,Supervisor'
             },
             {
                 link: 'groupList',
                 name: 'groupList',
                 color: 'white',
                 text: 'Groups',
-                roles: 'HeadAdmin,Admin'
+                roles: 'HeadAdmin,Admin,Supervisor'
             },
             {
                 link: 'personList',
                 name: 'personList',
                 color: 'white',
                 text: 'People',
-                roles: 'HeadAdmin,Admin'
+                roles: 'HeadAdmin,Admin,Supervisor'
             },
             {
                 link: 'topicList',
                 name: 'topicList',
                 color: 'white',
                 text: 'Topics',
-                roles: 'HeadAdmin,Admin'
+                roles: 'HeadAdmin,Admin,Supervisor'
             },
             {
                 link: 'locationList',
                 name: 'locationList',
                 color: 'white',
                 text: 'Locations',
-                roles: 'HeadAdmin,Admin'
+                roles: 'HeadAdmin,Admin,Supervisor'
             },
             {
                 link: 'roleList',
                 name: 'roleList',
                 color: 'white',
                 text: 'Roles',
-                roles: 'HeadAdmin,Admin'
+                roles: 'HeadAdmin,Admin,Supervisor'
+            },
+            {
+                link: 'requestList',
+                name: 'requestList',
+                color: 'white',
+                text: 'Requests',
+                roles: 'HeadAdmin,Admin,Supervisor'
             },
             {
                 link: 'mainCalendar',
                 name: 'mainCalendar',
                 color: 'white',
                 text: 'Calendar',
-                roles: 'HeadAdmin,Admin,Tutor,Student'
+                roles: 'HeadAdmin,Admin,Supervisor,Tutor,Student'
             },
             {
                 link: 'availabilityAdd',
                 name: 'availabilityAdd',
                 color: 'white',
                 text: 'Availability',
-                roles: 'HeadAdmin,Admin,Tutor'
+                roles: 'HeadAdmin,Admin,Supervisor,Tutor'
             },
             {
-                link: 'logout',
-                name: 'logout',
+                link: 'requestAdd',
+                name: 'requestAdd',
                 color: 'white',
-                text: 'Logout',
-                roles: 'HeadAdmin,Admin,Tutor,Student'
+                text: 'Request',
+                roles: 'Student'
             },
         ],
-        groups: [],
-        selectedGroup: '',
-        selectedRoles: '',
-        activeMenus: [],
     }),
     async created() {
         await this.setGroupsAndRoles()
         .then(() => {
-            console.log(this.user);
-            this.selectedGroup = this.groups[0];
-            this.resetMenu();
-        })
-    },
-    async computed() {
-        await this.setGroupsAndRoles()
-        .then(() => {
-            console.log(this.user);
-            this.selectedGroup = this.groups[0];
+            if (this.selectedGroup === '' && this.user.selectedGroup === undefined)
+                this.selectedGroup = this.groups[0];
+            else if (this.selectedGroup === '')
+                this.selectedGroup = this.user.selectedGroup;
             this.resetMenu();
         })
     },
     methods: {
         menuAction(route) {
-            this.$router.push({ name: route });
+            console.log(this.currentPersonRoleID);
+            this.$router.push({ name: route, params: { id: this.currentPersonRoleID }  });
         },
         async setGroupsAndRoles() {
             this.user = Utils.getStore('user');
             if (this.user != null) {
                 this.title = 'OC Tutoring';
+                //console.log(this.initials)
                 this.initials = this.user.fName[0] + this.user.lName[0];
+                //console.log(this.initials)
+                this.name = this.user.fName + ' ' + this.user.lName;
                 this.groups = [];
                 this.user.access.forEach(element => {
                     this.groups.push(element.name);
@@ -225,12 +296,16 @@ export default {
                 for (let i = 0; i < this.user.access.length; i++) {
                     let group = this.user.access[i];
                     if (group.name.toString() === this.selectedGroup.toString()) {
+                        // save selected group
+                        this.user.selectedGroup = group.name;
+                        Utils.setStore("user", this.user);
+
                         this.selectedRoles = '';
-                        console.log("in if statement")
                         for (let j = 0; j < group.roles.length; j++) {
                             this.selectedRoles += group.roles[j];
-                            console.log(this.selectedRoles)
+                            //console.log(this.user.access)
                         }
+                        await this.getPersonRoles();
                     }
                 }
             }
@@ -253,12 +328,38 @@ export default {
             } 
             this.menuAction(this.activeMenus[0].name);
         },
+        async getPersonRoles() {
+            await GroupServices.getGroupsForPerson(this.user.userID)
+            .then((response) => {
+                for (let i = 0; i < response.data.length; i++) {
+                    let group = response.data[i];
+                    if (this.selectedGroup.includes(group.name)) {
+                        for (let j = 0; j < group.role.length; j++) {
+                            let role = group.role[j];
+                            if(this.selectedRoles.includes(role.type)) {
+                                this.currentPersonRoleID = role.personrole[0].id;
+                            }
+                        }
+                    }
+                }
+            })
+            .catch((error) => {
+                console.log("There was an error:", error.response);
+            });
+        },
+        goToRightInfo() {
+            if (this.selectedRoles.includes("Student"))
+                this.$router.push({ name: "studentInfo"});
+            else if (this.selectedRoles.includes("Tutor"))
+                this.$router.push({ name: "tutorInfo"});
+        },
         logout() {
             console.log("in logout function")
             AuthServices.logoutUser(this.user)
             .then(response => {
                 console.log(response);
                 Utils.removeItem('user')
+                this.$router.go();
                 this.$router.push({ name: "login"})
             })
             .catch(error => {
