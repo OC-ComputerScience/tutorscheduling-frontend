@@ -12,7 +12,7 @@ export default {
         }
       });
     },
-    logoutUser() {
-      return apiClient.post("logout");
+    logoutUser(token) {
+      return apiClient.post("logout", token);
     }
   };

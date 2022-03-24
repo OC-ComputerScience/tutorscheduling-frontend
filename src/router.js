@@ -3,8 +3,11 @@ import Router from 'vue-router'
 
 import Login from './views/Login.vue';
 import Contract from './views/Contract.vue';
+import Apply from './views/Apply.vue';
+import Help from './views/Help.vue';
 
 // Admin Views. Views are sorted into sections for this project, so check that the path is correct below.
+import AdminHome from './views/AdminViews/AdminHome.vue'
 
 //Groups
 import GroupList    from './views/AdminViews/GroupViews/GroupList.vue';
@@ -36,10 +39,24 @@ import RoleEdit    from './views/AdminViews/RoleViews/RoleEdit.vue';
 import RoleAdd     from './views/AdminViews/RoleViews/RoleAdd.vue';
 import RoleView    from './views/AdminViews/RoleViews/RoleView.vue';
 
+// Request
+import RequestList    from './views/AdminViews/RequestViews/RequestList.vue';
+import RequestAdd     from './views/StudentViews/RequestAdd.vue';
+
 // Availability
 import AvailabilityAdd    from './views/AdminViews/AvailabilityViews/AvailabilityAdd.vue';
-//Calendar
+
+// Calendar
 import MainCalendar    from './views/CalendarViews/MainCalendar.vue';
+
+// Tutor Pages
+import TutorHome from './views/TutorViews/TutorHome.vue'
+import TutorInfo from './views/TutorViews/TutorInfo.vue'
+import TutorTopics from './views/TutorViews/TutorTopics.vue'
+
+// Student Pages
+import StudentHome from './views/StudentViews/StudentHome.vue'
+import StudentInfo from './views/StudentViews/StudentInfo.vue'
 
 Vue.use(Router)
 
@@ -58,6 +75,16 @@ const router =  new Router({
       path: '/contract',
       name: 'contract',
       component: Contract
+    },
+    {
+      path: '/apply',
+      name: 'apply',
+      component: Apply
+    },
+    {
+      path: '/help',
+      name: 'help',
+      component: Help
     },
     {
       path: '/groupList',
@@ -169,8 +196,18 @@ const router =  new Router({
     {
       path: '/roleView/:id',
       name: 'roleView',
-      component:RoleView,
+      component: RoleView,
       props: true
+    },
+    {
+      path: '/requestList',
+      name: 'requestList',
+      component: RequestList
+    },
+    {
+      path: '/requestAdd',
+      name: 'requestAdd',
+      component: RequestAdd,
     },
     {
       path: '/availabilityAdd',
@@ -180,8 +217,39 @@ const router =  new Router({
     {
       path: '/calendar',
       name: 'mainCalendar',
-      component:MainCalendar,
+      component: MainCalendar,
       props: true
+    },
+    {
+      path: '/tutorHome/:id',
+      name: 'tutorHome',
+      component: TutorHome,
+      props: true
+    },
+    {
+      path: '/tutorInfo',
+      name: 'tutorInfo',
+      component: TutorInfo
+    },
+    {
+      path: '/tutorTopics',
+      name: 'tutorTopics',
+      component: TutorTopics
+    },
+    {
+      path: '/studentHome/:id',
+      name: 'studentHome',
+      component: StudentHome
+    },
+    {
+      path: '/studentInfo',
+      name: 'studentInfo',
+      component: StudentInfo
+    },
+    {
+      path: '/adminHome/:id',
+      name: 'adminHome',
+      component: AdminHome
     },
     /*
     {

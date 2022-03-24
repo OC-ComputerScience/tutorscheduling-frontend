@@ -10,8 +10,10 @@
   "dependencies": {
     "axios": "^0.25.0",
     "core-js": "^3.6.5",
+    "pdfvuer": "^2.0.1",
     "underscore": "^1.13.2",
     "vue": "^2.6.14",
+    "vue-doc-preview": "^0.3.2",
     "vue-pdf": "^4.3.0",
     "vue-router": "^3.5.3",
     "vue-signature": "^2.5.4",
@@ -20,6 +22,8 @@
     "vuex": "^3.6.2"
   },
   "devDependencies": {
+    "@mdi/font": "^6.5.95",
+    "@mdi/js": "^6.5.95",
     "@vue/cli-plugin-babel": "~4.5.0",
     "@vue/cli-plugin-eslint": "~4.5.0",
     "@vue/cli-service": "~4.5.0",
