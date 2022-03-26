@@ -40,7 +40,7 @@
       <br><br>
       <v-card>
         <v-card-title>
-          Current Topics
+          Current Topics for {{this.user.selectedGroup}}
           <v-spacer></v-spacer>
           <v-text-field
               v-model="search"
@@ -68,7 +68,7 @@
             class="d-flex justify-center"
           >
             <v-card-title class="justify-center white--text">
-              Sign Up For More Help
+              Apply For Tutoring
             </v-card-title>
           </v-card>
         </v-col>
@@ -102,6 +102,7 @@ import Utils from '@/config/utils.js'
     },
     data() {
       return {
+        user: {},
         search: '',
         person: {},
         fullName: '',
