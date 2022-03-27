@@ -98,7 +98,6 @@
             @click:event="showEvent"
             @click:more="viewDay"
             @click:date="viewDay"
-            @change="updateRange"
             ></v-calendar>
 
             <!--Pop-up that appears when an event is selected -->
@@ -152,8 +151,10 @@
 </template>
 
 <script>
+import AppointmentServices from '@/services/appointmentServices.js'
   export default {
     data: () => ({
+      appointments: [],
       focus: '',
       type: 'month',
       typeToLabel: {
@@ -166,13 +167,21 @@
       selectedElement: null,
       selectedOpen: false,
       events: [],
-      colors: ['blue', 'indigo', 'deep-purple', 'cyan', 'green', 'orange', 'grey darken-1'],
-      names: ['Meeting', 'Holiday', 'PTO', 'Travel', 'Event', 'Birthday', 'Conference', 'Party'],
     }),
-    mounted () {
-      this.$refs.calendar.checkChange()
+    created() {
+      this.getAppointments();
     },
     methods: {
+      getAppointments() {
+        AppointmentServices.getAllAppointments()
+        .then(response => {
+          this.appointments = response.data;
+          this.loadAppointments();
+        })
+        .catch(error => {
+          console.log("There was an error:", error.response)
+        });
+      },
       //Views day when the date or more... options are clicked on
       viewDay ({ date }) {
         this.focus = date
@@ -206,34 +215,52 @@
         }
         nativeEvent.stopPropagation()
       },
-      //Randomly generates a bunch of events
-      //Will be replaced with loading data from the backend
-      updateRange ({ start, end }) {
+      //Load all appointments in backend into calendar events
+      loadAppointments () {
         const events = []
-        const min = new Date(`${start.date}T00:00:00`)
-        const max = new Date(`${end.date}T23:59:59`)
-        const days = (max.getTime() - min.getTime()) / 86400000
-        const eventCount = this.rnd(days, days + 20)
-        //For loop will instead loop through list of events taken from backend
-        for (let i = 0; i < eventCount; i++) {
-          const allDay = this.rnd(0, 3) === 0
-          const firstTimestamp = this.rnd(min.getTime(), max.getTime())
-          const first = new Date(firstTimestamp - (firstTimestamp % 900000))
-          const secondTimestamp = this.rnd(2, allDay ? 288 : 8) * 900000
-          const second = new Date(first.getTime() + secondTimestamp)
+        console.log(this.appointments.length);
+        for(let i = 0; i < this.appointments.length; i++) {
+          //Figure out how these work??
+          // const firstTimestamp = this.rnd(min.getTime(), max.getTime())
+          // const first = new Date(firstTimestamp - (firstTimestamp % 900000))
+          // const secondTimestamp = this.rnd(2, allDay ? 288 : 8) * 900000
+          // const second = new Date(first.getTime() + secondTimestamp)
+          console.log(this.appointments[i]);
+
+          let color = 'grey darken-1'
+          switch (this.appointments[i].status) {
+            case "pending":
+              color = 'yellow'
+              break
+            case "cancelled":
+              color = 'red'
+              break
+            case "booked":
+              color = 'blue'
+              break
+            case "complete":
+              color = 'green'
+              break
+            default:
+              color = 'grey darken-1'
+              break
+          }
+          let startTime = new Date(this.appointments[i].date)
+          let startTimes = this.appointments[i].startTime.split(":");
+          startTime.setHours(startTime.getHours() + parseInt(startTimes[0]))
+          let endTime = new Date(this.appointments[i].date)
+          let endTimes = this.appointments[i].endTime.split(":");
+          endTime.setHours(endTime.getHours() + parseInt(endTimes[0]))
           //Note the format of each event, what data is associated with it
           events.push({
-            name: this.names[this.rnd(0, this.names.length - 1)],
-            start: first,
-            end: second,
-            color: this.colors[this.rnd(0, this.colors.length - 1)],
-            timed: !allDay,
+            name: this.appointments[i].type,
+            start: startTime,
+            end: endTime,
+            color: color,
+            timed: true,
           })
         }
         this.events = events
-      },
-      rnd (a, b) {
-        return Math.floor((b - a + 1) * Math.random()) + a
       },
     },
   }
