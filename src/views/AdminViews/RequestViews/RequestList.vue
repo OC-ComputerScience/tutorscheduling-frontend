@@ -150,15 +150,15 @@ import RequestServices from "@/services/requestServices.js";
       this.getRequests();
     },
     methods: {
-        getRequests() {
-            RequestServices.getAllRequests()
-                .then((response) => {
-                this.requests = response.data;
-                })
-                .catch((error) => {
-                console.log("There was an error:", error.response);
-                });
-            },
+      getRequests() {
+        RequestServices.getAllRequests()
+            .then((response) => {
+            this.requests = response.data;
+            })
+            .catch((error) => {
+            console.log("There was an error:", error.response);
+            });
+        },
       editItem (item) {
         this.editedIndex = this.requests.indexOf(item.id)
         this.editedItem = Object.assign({}, item)
@@ -208,9 +208,6 @@ import RequestServices from "@/services/requestServices.js";
             console.log(error);
           });
           Object.assign(this.requests[this.editedIndex], this.editedItem)
-
-        
-    
       },
     },
   }
