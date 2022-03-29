@@ -172,13 +172,13 @@
                   for (let h = 1; h < this.contracts.length; h++) {
                     if(this.contracts[h].includes(group.name.replace(/\s/g, ''))) {
                       personrole.pdfName = this.contracts[h];
-                      personrole.groupName = group.name;
-                      personrole.dialog = false;
-                      personrole.color = this.colors[k % this.colors.length];
-                      personrole.type = role.type;
                     }
                   }
                 }
+                personrole.groupName = group.name;
+                personrole.dialog = false;
+                personrole.color = this.colors[k % this.colors.length];
+                personrole.type = role.type;
                 this.roles.push(personrole);
               }
             }
