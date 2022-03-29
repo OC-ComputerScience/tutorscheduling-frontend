@@ -158,103 +158,7 @@
       <v-toolbar
         flat
       >
-      <v-dialog
-          v-model="dialog"
-          max-width="500px"
-        >       
-          <v-card>
-            <v-card-text>
-              <v-container>
-                <v-row>
-                  <v-col
-                    cols="11"
-                    sm="5"
-                  >
-                    <v-menu
-                      ref="menu"
-                      v-model="menu4"
-                      :close-on-content-click="false"
-                      :nudge-right="40"
-                      transition="scale-transition"
-                      offset-y
-                      max-width="290px"
-                      min-width="290px"
-                    >
-                      <template v-slot:activator="{ on, attrs }">
-                        <v-text-field
-                          v-model="editedItem.startTime"
-                          label="Start Time"
-                          prepend-icon="mdi-clock-time-four-outline"
-                          readonly
-                          v-bind="attrs"
-                          v-on="on"
-                        ></v-text-field>
-                      </template>
-                      <v-time-picker
-                        v-if="menu4"
-                        v-model="editedItem.startTime"
-                        full-width
-                      ></v-time-picker>
 
-                      
-                    </v-menu>
-                  </v-col>
-                  <v-col
-                    cols="11"
-                    sm="5"
-                  >
-                    <v-menu
-                      ref="menu"
-                      v-model="menu5"
-                      :close-on-content-click="false"
-                      :nudge-right="40"
-                      transition="scale-transition"
-                      offset-y
-                      max-width="290px"
-                      min-width="290px"
-                    >
-                      <template v-slot:activator="{ on, attrs }">
-                        <v-text-field
-                          v-model="editedItem.endTime"
-                          label="End Time"
-                          prepend-icon="mdi-clock-time-four-outline"
-                          readonly
-                          v-bind="attrs"
-                          v-on="on"
-                        ></v-text-field>
-                      </template>
-                      <v-time-picker
-                        v-if="menu5"
-                        v-model="editedItem.endTime"
-                        full-width
-                      ></v-time-picker>
-
-                      
-                    </v-menu>
-                  </v-col>
-                </v-row>
-              </v-container>
-            </v-card-text>
-
-            <v-card-actions>
-              <v-spacer></v-spacer>
-              <v-btn
-                color="blue darken-1"
-                text
-                @click="close"
-              >
-                Cancel
-              </v-btn>
-              <v-btn
-                color="blue darken-1"
-                text
-                @click="save"
-              >
-                Save
-              </v-btn>
-            </v-card-actions>
-          </v-card>
-        </v-dialog>
 
         <!--  popup for deleting an availability  -->
         <v-dialog v-model="dialogDelete" max-width="500px">
@@ -271,14 +175,7 @@
       </v-toolbar>
     </template>
 
-        <template v-slot:[`item.actions`]="{ item }">      
-            <v-icon
-            small
-            class="mr-2"
-            @click="editItem(item)"
-          >
-            mdi-pencil
-          </v-icon>
+        <template v-slot:[`item.actions`]="{ item }">
           <v-icon
             small
             @click="deleteItem(item)"
@@ -319,12 +216,7 @@ import PersonServices from "@/services/personServices.js";
                   {text: 'Date', value: 'date',},
                   {text: 'Start Time', value: 'startTime'},
                   {text: 'End Time', value: 'endTime'},
-                  { text: 'Actions', value: 'actions', sortable: false },
-],
-      editedIndex: -1,
-      editedItem: {
-        status: '',
-      },
+                  { text: 'Actions', value: 'actions', sortable: false }],
       defaultItem: {
         status: '',
       },
@@ -433,12 +325,6 @@ import PersonServices from "@/services/personServices.js";
     },
 
     // popup functions
-    editItem (item) {
-      this.editedIndex = this.availabilities.indexOf(item.id)
-      this.editedItem = Object.assign({}, item)
-      console.log(this.editedItem);
-      this.dialog = true
-    },
     deleteItem (item) {
       this.editedIndex = this.availabilities.indexOf(item.id)
       this.editedItem = Object.assign({}, item)
