@@ -133,13 +133,13 @@
             console.log(this.roles);
             if (this.roles.length !== 0)
               role.dialog = false;
-            else {
-              if(role.type.includes("Student"))
-                this.$router.push({ name: "studentHome", params: { id: role.personrole[0].id } });
-              else if(role.type.includes("Tutor"))
-                this.$router.push({ name: "tutorHome", params: { id: role.personrole[0].id } });
-              else if(role.type.includes("Admin"))
-                this.$router.push({ name: "mainCalendar" });
+            else if (this.roles.length === 0 && this.completeRole !== null) {
+              if(this.completeRole.type.includes("Student"))
+                this.$router.push({ name: "studentHome", params: { id: this.completeRole.personrole[0].id } });
+              else if(this.completeRole.type.includes("Tutor"))
+                this.$router.push({ name: "tutorHome", params: { id: this.completeRole.personrole[0].id } });
+              else if(this.completeRole.type.includes("Admin"))
+                this.$router.push({ name: "adminHome" });
             }
           })
           

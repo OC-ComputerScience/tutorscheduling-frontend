@@ -345,34 +345,36 @@ export default {
       this.goToPage();
     },
     async goToPage() {
-      await this.getPersonRoles();
-      for (let i = 0; i < this.personroles.length; i++) {
-        let role = this.personroles[i];
-        console.log(role);
-        for (let j = 0; j < role.personrole.length; j++) {
-          let pRole = role.personrole[j];
-          console.log(pRole);
-          if(role.type.includes("Admin")) {
-            this.$router.push({ name: "adminHome", params: { id: pRole.id } });
+      await this.getPersonRoles()
+      .then(() => {
+        for (let i = 0; i < this.personroles.length; i++) {
+          let role = this.personroles[i];
+          console.log(role);
+          for (let j = 0; j < role.personrole.length; j++) {
+            let pRole = role.personrole[j];
+            console.log(pRole);
+            if(role.type.includes("Admin")) {
+              this.$router.push({ name: "adminHome", params: { id: pRole.id } });
+            }
+            else if((role.type.includes("Student") && !pRole.status.includes("approved") && !pRole.agree) ||
+                ((role.type.includes("Tutor") && !pRole.agree))) {
+              this.$router.push({ name: "contract" });
+            }
+            // make a tutor sign up for topics if they haven't been approved yet
+            else if(role.type.includes("Tutor") && pRole.status.includes("applied")) {
+              this.$router.push({ name: "tutorTopics" });
+            }
+            else if(role.type.includes("Student") && pRole.status.includes("approved")) {
+              this.$router.push({ name: "studentHome", params: { id: pRole.id } });
+            }
+            else if(role.type.includes("Tutor") && pRole.status.includes("approved") && pRole.agree) {
+              this.$router.push({ name: "tutorHome", params: { id: pRole.id } });
+            }
+            this.$router.go();
+            break;
           }
-          else if((role.type.includes("Student") && !pRole.status.includes("approved") && !pRole.agree) ||
-              ((role.type.includes("Tutor") && !pRole.agree))) {
-            this.$router.push({ name: "contract" });
-          }
-          // make a tutor sign up for topics if they haven't been approved yet
-          else if(role.type.includes("Tutor") && pRole.status.includes("applied")) {
-            this.$router.push({ name: "tutorTopics" });
-          }
-          else if(role.type.includes("Student") && pRole.status.includes("approved")) {
-            this.$router.push({ name: "studentHome", params: { id: pRole.id } });
-          }
-          else if(role.type.includes("Tutor") && pRole.status.includes("approved") && pRole.agree) {
-            this.$router.push({ name: "tutorHome", params: { id: pRole.id } });
-          }
-          this.$router.go();
-          break;
-        }
-      } 
+        } 
+      })
     }
   }
 }
