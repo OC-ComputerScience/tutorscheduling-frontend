@@ -18,6 +18,9 @@ export default {
     getIncompleteGroupsForPerson(id) {
       return apiClient.get("group/personIn/" + id);
     },
+    getGroupTopicsForTutor(id) {
+      return apiClient.get("group/personT/" + id);
+    },
     addGroup(group) {
       return apiClient.post("group", group);
     },
