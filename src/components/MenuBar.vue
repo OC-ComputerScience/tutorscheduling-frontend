@@ -31,7 +31,7 @@
                     {{ item.text }}
                 </v-btn>
             </v-toolbar-items>
-            <v-menu v-if="this.user != null" offset-y>
+            <v-menu v-if="this.user != null && selectedGroup != ''" offset-y>
                 <template v-slot:activator="{ on, attrs }">
                     <v-btn
                     color="accent"
@@ -67,7 +67,8 @@
                         v-on="on"
                         v-bind="attrs"
                     >
-                        <v-avatar v-if="user != null"
+                        <v-avatar 
+                            v-if="user != null"
                             color="secondary"
                         >
                             <span class="accent--text font-weight-bold">{{ initials }}</span>
@@ -96,21 +97,23 @@
                             >
                                 Edit Account
                             </v-btn>
-                            <v-divider class="my-3"></v-divider>
+                            <v-divider class="my-3" v-if="!selectedRoles.includes('Admin')"></v-divider>
                             <v-btn
                                 depressed
                                 rounded
                                 text
                                 :to="{ name: 'apply' }"
+                                v-if="!selectedRoles.includes('Admin')"
                             >
                                 Apply
                             </v-btn>
-                            <v-divider class="my-3"></v-divider>
+                            <v-divider class="my-3" v-if="!selectedRoles.includes('Admin')"></v-divider>
                             <v-btn
                                 depressed
                                 rounded
                                 text
                                 :to="{ name: 'help' }"
+                                v-if="!selectedRoles.includes('Admin')"
                             >
                                 Help
                             </v-btn>
@@ -174,7 +177,10 @@ export default {
         title: '',
         initials: '',
         name: '',
+        roles: [],
         groups: [],
+        incompleteGroups: [],
+        hasTopics: true,
         selectedGroup: '',
         selectedRoles: '',
         activeMenus: [],
@@ -202,10 +208,17 @@ export default {
                 roles: 'HeadAdmin,Admin,Supervisor'
             },
             {
-                link: 'groupList',
-                name: 'groupList',
+                link: 'mainCalendar',
+                name: 'mainCalendar',
                 color: 'white',
-                text: 'Groups',
+                text: 'Calendar',
+                roles: 'HeadAdmin,Admin,Supervisor,Tutor,Student'
+            },
+            {
+                link: 'requestList',
+                name: 'requestList',
+                color: 'white',
+                text: 'Requests',
                 roles: 'HeadAdmin,Admin,Supervisor'
             },
             {
@@ -223,13 +236,6 @@ export default {
                 roles: 'HeadAdmin,Admin,Supervisor'
             },
             {
-                link: 'locationList',
-                name: 'locationList',
-                color: 'white',
-                text: 'Locations',
-                roles: 'HeadAdmin,Admin,Supervisor'
-            },
-            {
                 link: 'roleList',
                 name: 'roleList',
                 color: 'white',
@@ -237,25 +243,25 @@ export default {
                 roles: 'HeadAdmin,Admin,Supervisor'
             },
             {
-                link: 'requestList',
-                name: 'requestList',
+                link: 'locationList',
+                name: 'locationList',
                 color: 'white',
-                text: 'Requests',
+                text: 'Locations',
                 roles: 'HeadAdmin,Admin,Supervisor'
             },
             {
-                link: 'mainCalendar',
-                name: 'mainCalendar',
+                link: 'groupList',
+                name: 'groupList',
                 color: 'white',
-                text: 'Calendar',
-                roles: 'HeadAdmin,Admin,Supervisor,Tutor,Student'
+                text: 'Groups',
+                roles: 'HeadAdmin'
             },
             {
                 link: 'availabilityAdd',
                 name: 'availabilityAdd',
                 color: 'white',
                 text: 'Availability',
-                roles: 'HeadAdmin,Admin,Supervisor,Tutor'
+                roles: 'Tutor'
             },
             {
                 link: 'requestAdd',
@@ -267,14 +273,10 @@ export default {
         ],
     }),
     async created() {
-        await this.setGroupsAndRoles()
-        .then(() => {
-            if (this.selectedGroup === '' && this.user.selectedGroup === undefined)
-                this.selectedGroup = this.groups[0];
-            else if (this.selectedGroup === '')
-                this.selectedGroup = this.user.selectedGroup;
-            this.resetMenu();
-        })
+        await this.resetMenu();
+    },
+    async mounted() {
+        await this.resetMenu();
     },
     methods: {
         menuAction(route) {
@@ -312,21 +314,90 @@ export default {
             else this.title = '';
         },
         async resetMenu() {
-            await this.setGroupsAndRoles();
-            if (this.user != null) {
-                this.activeMenus = this.menus;
-                this.activeMenus = this.menus.filter(menu =>
-                    menu.roles.includes(this.selectedRoles),
-                );
-                console.log(this.selectedRoles);
-                console.log(this.activeMenus);
-            } 
-            else {
-                this.activeMenus = this.menus.filter(menu =>
-                    menu.roles.includes('None'),
-                );
-            } 
-            this.menuAction(this.activeMenus[0].name);
+            this.user = Utils.getStore('user');
+            await this.getIncompletePersonRoles()
+            .then(async () => {
+                if(this.incompleteGroups.length === 0) {
+                    await this.getIncompleteTopics()
+                    .then(async () => {
+                        if (this.hasTopics) {
+                            await this.setGroupsAndRoles()
+                            .then(() => {
+                                
+                                if (this.selectedGroup === '' && this.user.selectedGroup === undefined)
+                                    this.selectedGroup = this.groups[0];
+                                else if (this.selectedGroup === '')
+                                    this.selectedGroup = this.user.selectedGroup;
+                                if (this.user != null) {
+                                    this.activeMenus = this.menus;
+                                    this.activeMenus = this.menus.filter(menu =>
+                                        menu.roles.includes(this.selectedRoles),
+                                    );
+                                    console.log(this.selectedRoles);
+                                    console.log(this.activeMenus);
+                                } 
+                                else {
+                                    this.activeMenus = this.menus.filter(menu =>
+                                        menu.roles.includes('None'),
+                                    );
+                                } 
+                                this.menuAction(this.activeMenus[0].name);
+                            })
+                        }
+                        else {
+                            if (this.user != null) {
+                                this.title = 'OC Tutoring';
+                                //console.log(this.initials)
+                                this.initials = this.user.fName[0] + this.user.lName[0];
+                                //console.log(this.initials)
+                                this.name = this.user.fName + ' ' + this.user.lName;
+                            }
+                            this.$router.push({ name: "tutorTopics" });
+                        }
+                    })
+                }
+                else if(this.incompleteGroups.length !== 0) {
+                    if (this.user != null) {
+                        this.title = 'OC Tutoring';
+                        //console.log(this.initials)
+                        this.initials = this.user.fName[0] + this.user.lName[0];
+                        //console.log(this.initials)
+                        this.name = this.user.fName + ' ' + this.user.lName;
+                    }
+                    this.$router.push({ name: "contract" });
+                }
+            })
+        },
+        async getIncompletePersonRoles() {
+            await GroupServices.getIncompleteGroupsForPerson(this.user.userID)
+            .then((response) => {
+                this.incompleteGroups = [];
+                console.log(response)
+                for (let i = 0; i < response.data.length; i++) {
+                    let group = response.data[i];
+                    console.log(group);
+                    this.incompleteGroups.push(group);
+                }
+            })
+            .catch((error) => {
+                console.log("There was an error:", error.response);
+            });
+        },
+        async getIncompleteTopics() {
+            await GroupServices.getGroupTopicsForTutor(this.user.userID)
+            .then(response => {
+                this.hasTopics = true;
+                for (let i = 0; i < response.data.length && this.hasTopics; i++) {
+                    let group = response.data[i];
+                    console.log(group.topic)
+                    if (group.topic.length === 0) {
+                        this.hasTopics = false;
+                    }
+                }
+            })
+            .catch(error => {
+                console.log("There was an error:", error.response)
+            });
         },
         async getPersonRoles() {
             await GroupServices.getGroupsForPerson(this.user.userID)
@@ -352,6 +423,8 @@ export default {
                 this.$router.push({ name: "studentInfo"});
             else if (this.selectedRoles.includes("Tutor"))
                 this.$router.push({ name: "tutorInfo"});
+            else if (this.selectedRoles.includes("Admin"))
+                this.$router.push({ name: "adminInfo"});
         },
         logout() {
             console.log("in logout function")
