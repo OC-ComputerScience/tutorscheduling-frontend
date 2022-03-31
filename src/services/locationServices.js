@@ -9,6 +9,9 @@ export default {
     getLocations(start, length) {
       return apiClient.get(`locations?start=${start}&length=${length}`);
     },
+    getAllForGroup(id) {
+      return apiClient.get("location/group/" + id);
+    },
     getLocation(id) {
       return apiClient.get("location/" + id);
     },

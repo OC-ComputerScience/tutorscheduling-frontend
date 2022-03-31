@@ -150,7 +150,7 @@ import AppointmentServices from '@/services/appointmentServices.js'
     },
     methods: {
       async getAppointments() {
-        await AppointmentServices.getAppointments()
+        await AppointmentServices.getAllAppointments()
           .then(response => {
             this.appointments = response.data;
             console.log(response);

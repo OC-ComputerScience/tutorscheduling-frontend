@@ -12,6 +12,9 @@ export default {
     getGroup(id) {
       return apiClient.get("group/" + id);
     },
+    getGroupByName(name) {
+      return apiClient.get("group/name/" + name);
+    },
     getGroupsForPerson(id) {
       return apiClient.get("group/person/" + id);
     },

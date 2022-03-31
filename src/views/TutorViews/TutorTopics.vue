@@ -38,7 +38,7 @@
         </v-item-group>
         <br><br>
         <v-btn
-            color="blue darken-1"
+            color="accent"
             @click="dialog = true; getSelectedGroupTopics()"
             class="justify-center white--text"
         >

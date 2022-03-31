@@ -29,7 +29,7 @@
 
       <br>
       <v-btn
-        color="blue darken-1"
+        color="accent"
         @click="savePhoneNum()"
         class="justify-center white--text"
       >
