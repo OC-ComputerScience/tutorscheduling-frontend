@@ -10,7 +10,7 @@
             v-model="group.selected"
             multiple
         >
-            <v-subheader>{{ group.name }}</v-subheader>
+            <h3>{{ group.name }}</h3>
             <v-row justify="center">
             <v-col
                 v-for="topic in group.topics"
@@ -39,9 +39,8 @@
         <br><br>
         <v-btn
             color="blue darken-1"
-            text
             @click="dialog = true; getSelectedGroupTopics()"
-            class="justify-center"
+            class="justify-center white--text"
         >
             Continue
         </v-btn>
@@ -57,11 +56,12 @@
             <v-card-title>
               <span class="text-h5">Select your skill level for {{ group.name }} topics:</span>
             </v-card-title> 
+                <br>
                 <v-card-text
                     v-for="topic in group.selectedTopics"
                     :key="topic.id"
                 >
-                    <v-card-subtitle>{{ topic.name }}</v-card-subtitle>
+                    <h3>{{ topic.name }}</h3>
                         <v-select
                             v-model="topic.skillLevel"
                             :items="levels"

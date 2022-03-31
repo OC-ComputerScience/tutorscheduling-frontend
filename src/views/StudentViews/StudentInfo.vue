@@ -30,9 +30,8 @@
       <br>
       <v-btn
         color="blue darken-1"
-        text
         @click="savePhoneNum()"
-        class="justify-center"
+        class="justify-center white--text"
       >
         Update Phone Number
       </v-btn>
