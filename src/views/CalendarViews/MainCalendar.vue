@@ -122,10 +122,10 @@
           <v-toolbar-title v-html="selectedEvent.name"></v-toolbar-title>
           </v-toolbar>
           <!--TODO: Clean this up, allow signing up for timeslot -->
-          <v-card-text>
+          <!-- How to show tutor? -->
+          <v-card-text v-if="selectedAppointment != null">
             <b>Time slot:</b>
-            <!-- Needs formatted better -->
-            {{selectedAppointment.startTime}}-{{selectedAppointment.endTime}}
+            {{calcTime(selectedAppointment.startTime)}}-{{calcTime(selectedAppointment.endTime)}}
             <br>
             <b>Pre-session Info:</b>
             {{selectedAppointment.preSessionInfo}}
@@ -133,12 +133,45 @@
             <b>Type:</b>
             {{selectedAppointment.type}}
             <br>
-            <b>GroupID:</b>
-            {{selectedAppointment.groupId}}
-            <b>LocationID:</b>
-            {{selectedAppointment.locationId}}
-            <b>topicID:</b>
-            {{selectedAppointment.topicId}}
+            <b>Group:</b>
+            {{group.name}}
+            <br>
+            <b>Location:</b>
+            {{location.name}}
+            <br>
+            <b>Topic:</b>
+            {{topic.name}}
+            <br>
+
+            <v-select
+              v-model="newStart"
+              :items="startTimes"
+              item-text="timeText"
+              item-value="time"
+              label="Booked Start"
+              required
+              @change="updateTimes()"
+            >
+            </v-select>
+            <v-select
+              v-model="newEnd"
+              :items="endTimes"
+              item-text="timeText"
+              item-value="time"
+              label="Booked End"
+              required
+              @change="updateTimes()"
+            >
+            </v-select>
+            <!-- User sign up here -->
+            <v-btn
+              text
+              color="primary"
+              @click="bookAppointment()"
+            >
+              Book
+            </v-btn>
+
           </v-card-text>
           <v-card-actions>
             <v-btn
@@ -160,10 +193,25 @@
 
 <script>
 import AppointmentServices from '@/services/appointmentServices.js'
+import GroupServices from "@/services/groupServices.js"
+import LocationServices from "@/services/locationServices.js"
+import TopicServices from "@/services/topicServices.js"
+
   export default {
   data: () => ({
+    //appointment info
     appointments: [],
     selectedAppointment: {},
+    //info related to current appointment
+    group: {},
+    location: {},
+    topic: {},
+    //used for generating time slots
+    startTimes: [],
+    endTimes: [],
+    newStart: null,
+    newEnd: null,
+    //data for calendar function
     focus: '',
     type: 'month',
     typeToLabel: {
@@ -172,6 +220,7 @@ import AppointmentServices from '@/services/appointmentServices.js'
       day: 'Day',
       '4day': '4 Days',
     },
+    //event data for calendar events
     selectedEvent: {},
     selectedElement: null,
     selectedOpen: false,
@@ -191,7 +240,145 @@ import AppointmentServices from '@/services/appointmentServices.js'
         console.log("There was an error:", error.response)
       });
     },
-    //Views day when the date or more... options are clicked on
+
+    bookAppointment() {
+      this.splitAppointment().then(() => {
+        this.getAppointments();
+        this.loadAppointments();
+        this.selectedEvent.color = 'yellow'
+      })
+    },
+
+    //Split appointments into more availablity slots when part of slot is booked
+    async splitAppointment() {
+      if(this.selectedAppointment.status != "available") {
+        return;
+      }
+      if(this.selectedAppointment.startTime < this.newStart) {
+        let temp = {
+          date: this.selectedAppointment.date,
+          startTime: this.selectedAppointment.startTime,
+          endTime: this.newStart,
+          type: this.selectedAppointment.type,
+          status: this.selectedAppointment.status,
+          preSessionInfo: this.selectedAppointment.preSessionInfo,
+          groupId: this.selectedAppointment.groupId,
+          locationId: this.selectedAppointment.locationId,
+          topicId: this.selectedAppointment.topicId,
+        }
+        console.log(temp)
+        AppointmentServices.addAppointment(temp)
+      }
+      if(this.selectedAppointment.endTime > this.newEnd) {
+        let temp = {
+          date: this.selectedAppointment.date,
+          startTime: this.newEnd,
+          endTime: this.selectedAppointment.endTime,
+          type: this.selectedAppointment.type,
+          status: this.selectedAppointment.status,
+          preSessionInfo: this.selectedAppointment.preSessionInfo,
+          groupId: this.selectedAppointment.groupId,
+          locationId: this.selectedAppointment.locationId,
+          topicId: this.selectedAppointment.topicId,
+        }
+        console.log(temp)
+        AppointmentServices.addAppointment(temp)
+      }
+
+      this.selectedAppointment.status = "pending"
+      this.selectedAppointment.endTime = this.newEnd
+      this.selectedAppointment.startTime = this.newStart
+      console.log(this.selectedAppointment.status)
+      await AppointmentServices.updateAppointment(this.selectedAppointment.id, this.selectedAppointment)
+    },
+
+    //Formats time to be more user friendly
+    calcTime(time) {
+      if(time == null)
+      {
+        return null;
+      }
+      let temp = time.split(":")
+      let milHours = parseInt(temp[0])
+      let minutes = temp[1]
+      let hours = milHours % 12
+      if (hours == 0) {
+        hours = 12
+      }
+      let dayTime = ((milHours / 12) > 0 ? "PM":"AM")
+      return "" + hours + ":" + minutes + " " + dayTime
+    },
+
+    generateTimes(start, end) {
+      let startInfo = start.split(":")
+      let endInfo = end.split(":")
+      let loop = (parseInt(endInfo[0]) - parseInt(startInfo[0])) * 2 + 1
+      let hours = parseInt(startInfo[0])
+      let minutes = startInfo[1]
+      let seconds = "00"
+
+      let newTime = startInfo
+      let newTimeText = ""
+      let j = 0
+
+      let times = []
+
+      if(startInfo[1] == "30") {
+        loop -= 1
+        j = 1
+      }
+      if(endInfo[1] == "30") {
+        loop += 1
+      }
+      for(let i = 0; i < loop; i++) {
+        newTime = (hours + Math.floor((i + j)/2)) + ":" + minutes + ":" + seconds
+        newTimeText = this.calcTime(newTime)
+        minutes = (minutes == "00" ? "30":"00")
+        times.push({
+          time: newTime,
+          timeText: newTimeText
+        })
+      }
+      return times
+    },
+    updateTimes() {
+      this.startTimes = this.generateTimes(this.selectedAppointment.startTime, this.newEnd)
+      this.endTimes = this.generateTimes(this.newStart, this.selectedAppointment.endTime)
+    },
+
+    //Load data for info associated with events
+    getGroup(groupId) {
+      GroupServices.getGroup(groupId)
+        .then((response) => {
+          this.group = response.data;
+          console.log(response.data);
+        })
+        .catch((error) => {
+          console.log("There was an error:", error.response);
+        });
+    },
+    getTopic(topicId) {
+      TopicServices.getTopic(topicId)
+        .then((response) => {
+          this.topic = response.data;
+          console.log(response.data);
+        })
+        .catch((error) => {
+          console.log("There was an error:", error.response);
+        });
+    },
+    getLocation(locationId) {
+      LocationServices.getLocation(locationId)
+        .then((response) => {
+          this.location = response.data;
+          console.log(response.data);
+        })
+        .catch((error) => {
+          console.log("There was an error:", error.response);
+        });
+    },
+    
+    //Functions that run calendar functionality
     viewDay ({ date }) {
       this.focus = date
       this.type = 'day'
@@ -199,7 +386,6 @@ import AppointmentServices from '@/services/appointmentServices.js'
     getEventColor (event) {
       return event.color
     },
-    //Defaults the focus to the current date
     setToday () {
       this.focus = ''
     },
@@ -209,12 +395,19 @@ import AppointmentServices from '@/services/appointmentServices.js'
     next () {
       this.$refs.calendar.next()
     },
+
     //Animates Event card popping up
     showEvent ({ nativeEvent, event }) {
       const open = () => {
         this.selectedEvent = event
         AppointmentServices.getAppointment(event.appointmentId).then(response => {
           this.selectedAppointment = response.data
+          this.getGroup(this.selectedAppointment.groupId)
+          this.getLocation(this.selectedAppointment.locationId)
+          this.getTopic(this.selectedAppointment.topicId)
+          this.newStart = this.selectedAppointment.startTime
+          this.newEnd = this.selectedAppointment.endTime
+          this.updateTimes()
           this.selectedElement = nativeEvent.target
           requestAnimationFrame(() => requestAnimationFrame(() => this.selectedOpen = true))
         });
@@ -227,8 +420,9 @@ import AppointmentServices from '@/services/appointmentServices.js'
       }
       nativeEvent.stopPropagation()
     },
+
     //Load all appointments in backend into calendar events
-    loadAppointments () {
+    async loadAppointments () {
       const events = []
       console.log(this.appointments.length);
       //TODO - add filtering options
