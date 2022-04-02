@@ -1,4 +1,5 @@
 <template>
+<v-container>
   <v-data-table
     :headers="headers"
     :items="requests"
@@ -24,9 +25,6 @@
         >
             
           <v-card>
-            <v-card-title>
-              <span class="text-h5">{{ formTitle }}</span>
-            </v-card-title>
 
             <v-card-text>
               <v-container>
@@ -80,12 +78,7 @@
         </v-dialog>
       </v-toolbar>
     </template>
-   
-    <template v-slot:expanded-item="{ headers, item }">
-            <td :colspan="headers.length">
-              {{ item.description }}
-            </td>
-    </template>
+  
     <template v-slot:[`item.actions`]="{ item }">      
         <v-icon
         small
@@ -101,6 +94,14 @@
         mdi-delete
       </v-icon>
     </template>
+
+    <template v-slot:expanded-item="{ headers, item }">
+            <td :colspan="headers.length">
+              Topic: {{ getTopicName(item.topic) }} <br>
+              Description: {{ item.description }}
+            </td>
+    </template>
+
     <template v-slot:no-data>
       <v-btn
         color="primary"
@@ -110,6 +111,7 @@
       </v-btn>
     </template>
   </v-data-table>
+</v-container>
 </template>
 
 <script>
@@ -121,9 +123,8 @@ import RequestServices from "@/services/requestServices.js";
       dialog: false,
       dialogDelete: false,
       headers: [
-        { text: "ID", value: "id" },
-        { text: "Person Name", value: "personId" },
-        { text: "Topic Name", value: "topicId" },
+        { text: "Person Name", value: "person.lName" },
+        { text: "Problem", value: "problem" },
         { text: "Status", value: "status" },
         { text: 'Actions', value: 'actions', sortable: false },
       ],
@@ -146,19 +147,23 @@ import RequestServices from "@/services/requestServices.js";
         val || this.closeDelete()
       },
     },
-    created () {
+    async created () {
       this.getRequests();
     },
     methods: {
-        getRequests() {
-            RequestServices.getAllRequests()
-                .then((response) => {
-                this.requests = response.data;
-                })
-                .catch((error) => {
-                console.log("There was an error:", error.response);
-                });
-            },
+      getRequests() {
+        RequestServices.getAllRequests()
+          .then((response) => {
+          this.requests = response.data;
+          })
+          .catch((error) => {
+          console.log("There was an error:", error.response);
+          });
+      },
+      getTopicName(item) {
+        let temp = item;
+        return temp.name;
+      },
       editItem (item) {
         this.editedIndex = this.requests.indexOf(item.id)
         this.editedItem = Object.assign({}, item)

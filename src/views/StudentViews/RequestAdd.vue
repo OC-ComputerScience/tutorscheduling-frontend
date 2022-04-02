@@ -10,12 +10,19 @@
       v-model="valid"
       lazy validation
     >
+      <v-select
+          v-model="request.problem"
+          :items="Problems"
+          label="Why are you making this request?"
+          required
+      >
+      </v-select>
       <v-text-field
         v-model="request.courseNum"
         id="courseNum"
         :counter="50"
-        label="courseNum"
-        hint="Course Number and Course Title"
+        label="Course Number"
+        hint="Enter n/a if non applicable"
         persistent-hint
         required
       ></v-text-field>
@@ -34,7 +41,7 @@
         v-model="request.description"
         id="description"
         :counter="500"
-        label="description"
+        label="Description"
         hint="Description..."
         persistent-hint
         required
@@ -70,6 +77,7 @@ import PersonServices from "@/services/personServices.js";
 export default {
   data() {
     return {
+      Problems: ["No times work for me", "The topic I am looking for is not here", "Report an Issue", "Other"],
       request: {
         status: "Recieved"
       },
@@ -84,7 +92,6 @@ export default {
   async created() {
     this.getPerson()
       .then(() => {
-        console.log(this.person);
         this.getRequests();
       });
     this.getAllTopics();
@@ -94,6 +101,7 @@ export default {
       TopicServices.getAllTopics()
         .then((response) => {
           this.topics = response.data;
+
         })
         .catch((error) => {
           console.log("There was an error:", error.response);
