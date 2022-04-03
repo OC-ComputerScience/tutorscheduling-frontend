@@ -98,6 +98,7 @@
     <template v-slot:expanded-item="{ headers, item }">
             <td :colspan="headers.length">
               Topic: {{ getTopicName(item.topic) }} <br>
+              Class Num: {{ item.courseNum }} <br>
               Description: {{ item.description }}
             </td>
     </template>

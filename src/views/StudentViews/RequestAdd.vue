@@ -90,10 +90,7 @@ export default {
   },
   
   async created() {
-    this.getPerson()
-      .then(() => {
-        this.getRequests();
-      });
+    this.getPerson();
     this.getAllTopics();
   },
   methods: {
