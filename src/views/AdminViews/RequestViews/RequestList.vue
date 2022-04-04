@@ -113,13 +113,16 @@
 </template>
 
 <script>
-import RequestServices from "@/services/requestServices.js";
+  import Utils from '@/config/utils.js'
+  import GroupServices from "@/services/groupServices.js";
+  import RequestServices from "@/services/requestServices.js";
 
   export default {
     data: () => ({
       StatusSelect: ['Recieved', 'In-Progress', 'Completed'],
       dialog: false,
       dialogDelete: false,
+      user: {},
       headers: [
         { text: "ID", value: "id" },
         { text: "Person Name", value: "personId" },
@@ -146,19 +149,42 @@ import RequestServices from "@/services/requestServices.js";
         val || this.closeDelete()
       },
     },
-    created () {
-      this.getRequests();
+    async created () {
+      this.user = Utils.getStore('user');
+      await this.getGroup(this.user.selectedGroup.replace(/%20/g, " "))
+      .then(() => {
+        this.getRequestsForGroup();
+      })
+      // this.getRequests();
     },
     methods: {
-        getRequests() {
-            RequestServices.getAllRequests()
-                .then((response) => {
-                this.requests = response.data;
-                })
-                .catch((error) => {
-                console.log("There was an error:", error.response);
-                });
-            },
+      async getGroup(name) {
+        await GroupServices.getGroupByName(name)
+        .then((response) => {
+          this.group = response.data[0];
+        })
+        .catch((error) => {
+          console.log("There was an error:", error.response);
+        });
+      },
+      getRequestsForGroup() {
+        RequestServices.getAllForGroup(this.group.id)
+        .then(response => {
+          this.locations = response.data;
+        })
+        .catch(error => {
+          console.log("There was an error:", error.response)
+        });
+      },
+        // getRequests() {
+        //     RequestServices.getAllRequests()
+        //         .then((response) => {
+        //         this.requests = response.data;
+        //         })
+        //         .catch((error) => {
+        //         console.log("There was an error:", error.response);
+        //         });
+        //     },
       editItem (item) {
         this.editedIndex = this.requests.indexOf(item.id)
         this.editedItem = Object.assign({}, item)

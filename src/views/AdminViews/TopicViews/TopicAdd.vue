@@ -31,7 +31,15 @@
         required
       ></v-text-field>
 
-      <v-select
+      <!-- group should be readonly -->
+      <v-text-field
+        v-model="this.user.selectedGroup"
+        id="this.group.id"
+        label="Group"
+        readonly
+      ></v-text-field>
+
+      <!-- <v-select
         v-model="topic.groupId"
         :items="groups"
         item-text="name"
@@ -39,7 +47,7 @@
         label="Group"
         required
       >
-      </v-select>
+      </v-select> -->
 
       <v-btn
         :disabled="!valid"
@@ -63,6 +71,7 @@
 </template>
 
 <script>
+import Utils from '@/config/utils.js'
 import TopicServices from "@/services/topicServices.js";
 import GroupServices from "@/services/groupServices.js";
 
@@ -71,27 +80,41 @@ export default {
   },
   data() {
     return {
+      valid: true,
       topic: {},
-      groups: [],
+      group: {},
+      user: {},
       roles: [
         'admin'
       ],
     };
   },
   created() {
-    this.getAllGroups();
+    // this.getAllGroups();
+    this.user = Utils.getStore('user');
+    this.getGroup(this.user.selectedGroup.replace(/%20/g, " "));
   },
   methods: {
-    getAllGroups() {
-      GroupServices.getAllGroups()
-        .then((response) => {
-          this.groups = response.data;
-        })
-        .catch((error) => {
-          console.log("There was an error:", error.response);
-        });
+    getGroup(name) {
+      GroupServices.getGroupByName(name)
+      .then((response) => {
+        this.group = response.data[0];
+      })
+      .catch((error) => {
+        console.log("There was an error:", error.response);
+      });
     },
+    // getAllGroups() {
+    //   GroupServices.getAllGroups()
+    //     .then((response) => {
+    //       this.groups = response.data;
+    //     })
+    //     .catch((error) => {
+    //       console.log("There was an error:", error.response);
+    //     });
+    // },
     addTopic() {
+      this.topic.groupId = this.group.id;
       TopicServices.addTopic(this.topic)
         .then(() => {
           this.$router.push({ name: "topicList" });

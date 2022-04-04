@@ -18,6 +18,7 @@
         <v-spacer></v-spacer>
         <v-btn
         color="accent"
+        class="mr-4"
         elevation="2"
         @click="addRole"
       >
@@ -44,7 +45,9 @@
 </template>
 
 <script>
+import Utils from '@/config/utils.js'
   import RoleServices from '@/services/roleServices.js'
+  import GroupServices from "@/services/groupServices.js";
 
   export default {
     name: 'App',
@@ -55,17 +58,33 @@
         search: '',
         roles: [],
         group: {},
-        headers: [{text: 'ID', value: 'id'}, 
-                  {text: 'Type', value: 'type'},
-                  {text: 'Group', value: 'groupId'}]
+        user: {},
+        headers: [{text: 'ID', value: 'id'},
+                  {text: 'Type', value: 'type'}]
+        // headers: [{text: 'ID', value: 'id'}, 
+        //           {text: 'Type', value: 'type'},
+        //           {text: 'Group', value: 'groupId'}]
       }
     },
-    created() {
-      this.getRoles();
+    async created() {
+      this.user = Utils.getStore('user');
+      await this.getGroup(this.user.selectedGroup.replace(/%20/g, " "))
+      .then(() => {
+        this.getRolesForGroup();
+      })
     },
     methods: {
-      getRoles() {
-        RoleServices.getAllRoles()
+      async getGroup(name) {
+        await GroupServices.getGroupByName(name)
+        .then((response) => {
+          this.group = response.data[0];
+        })
+        .catch((error) => {
+          console.log("There was an error:", error.response);
+        });
+      },
+      getRolesForGroup() {
+        RoleServices.getAllForGroup(this.group.id)
         .then(response => {
           this.roles = response.data;
         })
@@ -73,6 +92,15 @@
           console.log("There was an error:", error.response)
         });
       },
+      // getRoles() {
+      //   RoleServices.getAllRoles()
+      //   .then(response => {
+      //     this.roles = response.data;
+      //   })
+      //   .catch(error => {
+      //     console.log("There was an error:", error.response)
+      //   });
+      // },
       deleteRole(id, name) {
         let confirmed = confirm(`Are you sure you want to delete ${name}`);
         if(confirmed) {

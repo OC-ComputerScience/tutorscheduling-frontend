@@ -18,6 +18,7 @@
         <v-btn
         color="accent"
         elevation="2"
+        class="mr-4"
         @click="addGroup"
       >
         Add

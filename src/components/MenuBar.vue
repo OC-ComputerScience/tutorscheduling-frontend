@@ -301,7 +301,7 @@ export default {
                         // save selected group
                         this.user.selectedGroup = group.name;
                         Utils.setStore("user", this.user);
-
+                        //console.log(this.user)
                         this.selectedRoles = '';
                         for (let j = 0; j < group.roles.length; j++) {
                             this.selectedRoles += group.roles[j];
@@ -315,58 +315,60 @@ export default {
         },
         async resetMenu() {
             this.user = Utils.getStore('user');
-            await this.getIncompletePersonRoles()
-            .then(async () => {
-                if(this.incompleteGroups.length === 0) {
-                    await this.getIncompleteTopics()
-                    .then(async () => {
-                        if (this.hasTopics) {
-                            await this.setGroupsAndRoles()
-                            .then(() => {
-                                
-                                if (this.selectedGroup === '' && this.user.selectedGroup === undefined)
-                                    this.selectedGroup = this.groups[0];
-                                else if (this.selectedGroup === '')
-                                    this.selectedGroup = this.user.selectedGroup;
-                                if (this.user != null) {
-                                    this.activeMenus = this.menus;
-                                    this.activeMenus = this.menus.filter(menu =>
-                                        menu.roles.includes(this.selectedRoles),
-                                    );
-                                    console.log(this.selectedRoles);
-                                    console.log(this.activeMenus);
-                                } 
-                                else {
-                                    this.activeMenus = this.menus.filter(menu =>
-                                        menu.roles.includes('None'),
-                                    );
-                                } 
-                                this.menuAction(this.activeMenus[0].name);
-                            })
-                        }
-                        else {
-                            if (this.user != null) {
-                                this.title = 'OC Tutoring';
-                                //console.log(this.initials)
-                                this.initials = this.user.fName[0] + this.user.lName[0];
-                                //console.log(this.initials)
-                                this.name = this.user.fName + ' ' + this.user.lName;
+            if (this.user !== null) {
+                await this.getIncompletePersonRoles()
+                .then(async () => {
+                    if(this.incompleteGroups.length === 0) {
+                        await this.getIncompleteTopics()
+                        .then(async () => {
+                            if (this.hasTopics) {
+                                await this.setGroupsAndRoles()
+                                .then(() => {
+                                    
+                                    if (this.selectedGroup === '' && this.user.selectedGroup === undefined)
+                                        this.selectedGroup = this.groups[0];
+                                    else if (this.selectedGroup === '')
+                                        this.selectedGroup = this.user.selectedGroup;
+                                    if (this.user != null) {
+                                        this.activeMenus = this.menus;
+                                        this.activeMenus = this.menus.filter(menu =>
+                                            menu.roles.includes(this.selectedRoles),
+                                        );
+                                        console.log(this.selectedRoles);
+                                        console.log(this.activeMenus);
+                                    } 
+                                    else {
+                                        this.activeMenus = this.menus.filter(menu =>
+                                            menu.roles.includes('None'),
+                                        );
+                                    } 
+                                    this.menuAction(this.activeMenus[0].name);
+                                })
                             }
-                            this.$router.push({ name: "tutorTopics" });
-                        }
-                    })
-                }
-                else if(this.incompleteGroups.length !== 0) {
-                    if (this.user != null) {
-                        this.title = 'OC Tutoring';
-                        //console.log(this.initials)
-                        this.initials = this.user.fName[0] + this.user.lName[0];
-                        //console.log(this.initials)
-                        this.name = this.user.fName + ' ' + this.user.lName;
+                            else {
+                                if (this.user != null) {
+                                    this.title = 'OC Tutoring';
+                                    //console.log(this.initials)
+                                    this.initials = this.user.fName[0] + this.user.lName[0];
+                                    //console.log(this.initials)
+                                    this.name = this.user.fName + ' ' + this.user.lName;
+                                }
+                                this.$router.push({ name: "tutorTopics" });
+                            }
+                        })
                     }
-                    this.$router.push({ name: "contract" });
-                }
-            })
+                    else if(this.incompleteGroups.length !== 0) {
+                        if (this.user != null) {
+                            this.title = 'OC Tutoring';
+                            //console.log(this.initials)
+                            this.initials = this.user.fName[0] + this.user.lName[0];
+                            //console.log(this.initials)
+                            this.name = this.user.fName + ' ' + this.user.lName;
+                        }
+                        this.$router.push({ name: "contract" });
+                    }
+                })
+            }
         },
         async getIncompletePersonRoles() {
             await GroupServices.getIncompleteGroupsForPerson(this.user.userID)
@@ -387,6 +389,7 @@ export default {
             await GroupServices.getGroupTopicsForTutor(this.user.userID)
             .then(response => {
                 this.hasTopics = true;
+                //console.log(response)
                 for (let i = 0; i < response.data.length && this.hasTopics; i++) {
                     let group = response.data[i];
                     console.log(group.topic)
