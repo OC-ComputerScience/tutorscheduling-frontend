@@ -57,7 +57,7 @@
         group: {},
         headers: [{text: 'ID', value: 'id'}, 
                   {text: 'Type', value: 'type'},
-                  {text: 'Group', value: 'groupId'}]
+                  {text: 'Group', value: 'group.name'}]
       }
     },
     created() {
