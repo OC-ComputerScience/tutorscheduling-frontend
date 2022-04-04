@@ -240,9 +240,6 @@
             console.log(error);
           });
           Object.assign(this.requests[this.editedIndex], this.editedItem)
-
-        
-    
       },
     },
   }
