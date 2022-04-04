@@ -20,8 +20,16 @@
         persistent-hint
         required
       ></v-text-field>
+
+      <!-- group should be readonly -->
+      <v-text-field
+        v-model="this.user.selectedGroup"
+        id="this.group.id"
+        label="Group"
+        readonly
+      ></v-text-field>
       
-      <v-select
+      <!-- <v-select
         v-model="role.groupId"
         :items="groups"
         item-text="name"
@@ -29,7 +37,7 @@
         label="Group"
         required
       >
-      </v-select>
+      </v-select> -->
 
       <v-btn
         :disabled="!valid"
@@ -53,6 +61,7 @@
 </template>
 
 <script>
+import Utils from '@/config/utils.js'
 import RoleServices from "@/services/roleServices.js";
 import GroupServices from "@/services/groupServices.js";
 
@@ -61,27 +70,42 @@ export default {
   },
   data() {
     return {
+      valid: true,
       role: {},
-      groups: [],
+      group: {},
+      user: {},
       roles: [
         'admin'
       ],
     };
   },
   created() {
-    this.getAllGroups();
+    this.user = Utils.getStore('user');
+    this.getGroup(this.user.selectedGroup.replace(/%20/g, " "));
+    //this.getAllGroups();
   },
   methods: {
-    getAllGroups() {
-      GroupServices.getAllGroups()
-        .then((response) => {
-          this.groups = response.data;
-        })
-        .catch((error) => {
-          console.log("There was an error:", error.response);
-        });
+    getGroup(name) {
+      GroupServices.getGroupByName(name)
+      .then((response) => {
+        this.group = response.data[0];
+      })
+      .catch((error) => {
+        console.log("There was an error:", error.response);
+      });
     },
+    // getAllGroups() {
+    //   GroupServices.getAllGroups()
+    //     .then((response) => {
+    //       this.groups = response.data;
+    //     })
+    //     .catch((error) => {
+    //       console.log("There was an error:", error.response);
+    //     });
+    // },
     addRole() {
+      console.log(this.group);
+      this.role.groupId = this.group.id;
       RoleServices.addRole(this.role)
         .then(() => {
           this.$router.push({ name: "roleList" });

@@ -18,6 +18,7 @@
         <v-spacer></v-spacer>
         <v-btn
         color="accent"
+        class="mr-4"
         elevation="2"
         @click="addLocation"
       >
@@ -44,7 +45,10 @@
 </template>
 
 <script>
+  import Utils from '@/config/utils.js'
+  import GroupServices from "@/services/groupServices.js";
   import LocationServices from '@/services/locationServices.js'
+  
   export default {
     name: 'App',
     components: {
@@ -53,18 +57,32 @@
       return {
         search: '',
         locations: [],
+        user: {},
         headers: [{text: 'ID', value: 'id'}, 
                   {text: 'Name', value: 'name'},
                   {text: 'Type', value: 'type'},
                   {text: 'Building', value: 'building'}]
       }
     },
-    created() {
-      this.getLocations();
+    async created() {
+      this.user = Utils.getStore('user');
+      await this.getGroup(this.user.selectedGroup.replace(/%20/g, " "))
+      .then(() => {
+        this.getLocationsForGroup();
+      })
     },
     methods: {
-      getLocations() {
-        LocationServices.getAllLocations()
+      async getGroup(name) {
+        await GroupServices.getGroupByName(name)
+        .then((response) => {
+          this.group = response.data[0];
+        })
+        .catch((error) => {
+          console.log("There was an error:", error.response);
+        });
+      },
+      getLocationsForGroup() {
+        LocationServices.getAllForGroup(this.group.id)
         .then(response => {
           this.locations = response.data;
         })
@@ -72,6 +90,15 @@
           console.log("There was an error:", error.response)
         });
       },
+      // getLocations() {
+      //   LocationServices.getAllLocations()
+      //   .then(response => {
+      //     this.locations = response.data;
+      //   })
+      //   .catch(error => {
+      //     console.log("There was an error:", error.response)
+      //   });
+      // },
       deleteLocation(id, name) {
         let confirmed = confirm(`Are you sure you want to delete ${name}`);
         if(confirmed) {
@@ -82,18 +109,6 @@
           .catch(error => {
             console.log("There was an error:", error.response)
           });
-        }
-      },
-      getPrevious() {
-        if(this.start >= this.length) {
-          this.start -= this.length;
-          this.getLocations(this.start, this.length);
-        }
-      },
-      getNext() {
-        if(this.courses.length === this.length) {
-          this.start += this.length;
-          this.getLocations(this.start, this.length);
         }
       },
       rowClick: function (item, row) {      

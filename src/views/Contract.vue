@@ -38,29 +38,21 @@
                 </v-card-title> 
                 <pdf :src="role.pdfName"></pdf>
                 <v-container>
-                  <vueSignature ref="signature" :sigOption="option" :w="'800px'" :h="'400px'" :disabled="disabled"></vueSignature> 
+                  <v-text-field
+                    label="Digital Signature"
+                    hint="Jane Doe"
+                    persistent-hint
+                    required
+                  ></v-text-field>
                   <br><br>
                   <v-btn 
                     class="mr-4"
                     color="success"
                     @click="save(role)"
                   >
-                    Save
+                    Agree
                   </v-btn>
-                  <v-btn
-                    class="mr-4" 
-                    color="error"
-                    @click="clear()"
-                  >
-                    Clear
-                  </v-btn>
-                  <v-btn 
-                    class="mr-4"
-                    color="secondary"
-                    @click="undo()"
-                  >
-                    Undo
-                  </v-btn>
+                  <br><br>
                   <br><br>
                 </v-container>
               </v-card>
@@ -73,7 +65,6 @@
 
 <script>
   import pdf from 'vue-pdf';
-  import vueSignature from 'vue-signature';
   import GroupServices from "@/services/groupServices.js";
   import RoleServices from "@/services/roleServices.js";
   import PersonRoleServices from "@/services/personRoleServices.js";
@@ -82,16 +73,10 @@
   export default {
     name: 'App',
     components: {
-        pdf,
-        vueSignature
+        pdf
     },
     data() {
       return {
-        option:{
-          penColor:"rgb(0, 0, 0)",
-          backgroundColor:"rgb(200, 200, 200)"
-        },
-        disabled: false,
         //dialog: [],
         roles: [],
         completeRole: {},
@@ -119,13 +104,6 @@
     methods: {
       // check that if there are multiple contracts to sign, some of the buttons go away
       async save(role) {
-        // var png = this.$refs.signature.save();
-        // var jpeg = this.$refs.signature.save('image/jpeg');
-        // var svg = this.$refs.signature.save('image/svg+xml');
-        // console.log(png);
-        // console.log(jpeg);
-        // console.log(svg);
-        // this.getPersonRoles();
         await this.updatePersonRole(role)
         .then(async () => {
           await this.getPersonRoles()
@@ -140,19 +118,11 @@
                 this.$router.push({ name: "tutorHome", params: { id: this.completeRole.personrole[0].id } });
               else if(this.completeRole.type.includes("Admin"))
                 this.$router.push({ name: "adminHome" });
+              //this.$router.go();
             }
           })
           
         })
-      },
-      clear(){
-        this.$refs.signature.clear();
-      },
-      undo(){
-        this.$refs.signature.undo();
-      },
-      handleDisabled(){
-        this.disabled  = !this.disabled
       },
       async getPersonRoles() {
         this.roles = [];
@@ -172,13 +142,13 @@
                   for (let h = 1; h < this.contracts.length; h++) {
                     if(this.contracts[h].includes(group.name.replace(/\s/g, ''))) {
                       personrole.pdfName = this.contracts[h];
-                      personrole.groupName = group.name;
-                      personrole.dialog = false;
-                      personrole.color = this.colors[k % this.colors.length];
-                      personrole.type = role.type;
                     }
                   }
                 }
+                personrole.groupName = group.name;
+                personrole.dialog = false;
+                personrole.color = this.colors[k % this.colors.length];
+                personrole.type = role.type;
                 this.roles.push(personrole);
               }
             }
