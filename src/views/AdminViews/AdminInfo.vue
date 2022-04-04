@@ -2,7 +2,7 @@
   <div>
     <v-container>
       <v-toolbar>
-        <v-toolbar-title>Edit Student Account</v-toolbar-title>
+        <v-toolbar-title>Edit Admin Account</v-toolbar-title>
       </v-toolbar>
       <br><br>
       <v-text-field
@@ -35,35 +35,8 @@
       >
         Update Phone Number
       </v-btn>
+
       <br><br>
-      <v-row>
-        <v-col>
-          <v-card 
-            :to="{ name: 'signUp' }"
-            height="100"
-            elevation="10"
-            color="yellow"
-            class="d-flex justify-center"
-          >
-            <v-card-title class="justify-center white--text">
-              Apply For Tutoring
-            </v-card-title>
-          </v-card>
-        </v-col>
-        <v-col>
-          <v-card 
-            :to="{ name: 'signUp' }"
-            height="100"
-            elevation="10"
-            color="teal"
-            class="d-flex justify-center"
-          >
-            <v-card-title class="justify-center white--text">
-              Apply To Be A Tutor
-            </v-card-title>
-          </v-card>
-        </v-col>
-      </v-row>
     </v-container>
   </div>
 </template>
@@ -78,13 +51,14 @@ import Utils from '@/config/utils.js'
     },
     data() {
       return {
+        search: '',
         person: {},
         fullName: ''
       };
     },
-    created() {
+    async created() {
       this.user = Utils.getStore('user');
-      this.getPerson();
+      await this.getPerson();
     },
     methods: {
       async getPerson() {

@@ -18,6 +18,7 @@
         <v-spacer></v-spacer>
         <v-btn
         color="accent"
+        class="mr-4"
         elevation="2"
         @click="addPerson"
       >
