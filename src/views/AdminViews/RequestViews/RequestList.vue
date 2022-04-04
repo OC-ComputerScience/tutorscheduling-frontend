@@ -1,4 +1,5 @@
 <template>
+<v-container>
   <v-data-table
     :headers="headers"
     :items="requests"
@@ -24,9 +25,6 @@
         >
             
           <v-card>
-            <v-card-title>
-              <span class="text-h5">{{ formTitle }}</span>
-            </v-card-title>
 
             <v-card-text>
               <v-container>
@@ -80,12 +78,7 @@
         </v-dialog>
       </v-toolbar>
     </template>
-   
-    <template v-slot:expanded-item="{ headers, item }">
-            <td :colspan="headers.length">
-              {{ item.description }}
-            </td>
-    </template>
+  
     <template v-slot:[`item.actions`]="{ item }">      
         <v-icon
         small
@@ -101,6 +94,15 @@
         mdi-delete
       </v-icon>
     </template>
+
+    <template v-slot:expanded-item="{ headers, item }">
+            <td :colspan="headers.length">
+              Topic: {{ getTopicName(item.topic) }} <br>
+              Class Num: {{ item.courseNum }} <br>
+              Description: {{ item.description }}
+            </td>
+    </template>
+
     <template v-slot:no-data>
       <v-btn
         color="primary"
@@ -110,6 +112,7 @@
       </v-btn>
     </template>
   </v-data-table>
+</v-container>
 </template>
 
 <script>
@@ -124,9 +127,8 @@
       dialogDelete: false,
       user: {},
       headers: [
-        { text: "ID", value: "id" },
-        { text: "Person Name", value: "personId" },
-        { text: "Topic Name", value: "topicId" },
+        { text: "Person Name", value: "person.lName" },
+        { text: "Problem", value: "problem" },
         { text: "Status", value: "status" },
         { text: 'Actions', value: 'actions', sortable: false },
       ],
@@ -158,6 +160,10 @@
       // this.getRequests();
     },
     methods: {
+      getTopicName(item) {
+        let temp = item;
+        return temp.name;
+      },
       async getGroup(name) {
         await GroupServices.getGroupByName(name)
         .then((response) => {
