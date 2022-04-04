@@ -3,12 +3,13 @@
   <div style="">
     <v-container>
       <v-toolbar>
-        <v-toolbar-title>{{ this.role.name }}</v-toolbar-title>
+        <v-toolbar-title>{{ this.role.type }}</v-toolbar-title>
       </v-toolbar>
       <br>
       <v-btn
         color="accent"
         elevation="2"
+        class="mr-4"
         @click="toEdit"
       >
         Edit
