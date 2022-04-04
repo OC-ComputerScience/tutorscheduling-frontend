@@ -123,7 +123,8 @@ import PersonRoleServices from "@/services/personRoleServices.js";
       dialog: false,
       dialogDelete: false,
       headers: [
-        { text: "Name", value: "person.lName" },
+        { text: "First Name", value: "person.fName" },
+        { text: "Last Name", value: "person.lName" },
         { text: "Status", value: "status" },
         { text: "Signature", value: "agree" },
         { text: 'Actions', value: 'actions', sortable: false },
