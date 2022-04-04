@@ -9,6 +9,9 @@ export default {
     getRequests(start, length) {
       return apiClient.get(`requests?start=${start}&length=${length}`);
     },
+    getAllForGroup(id) {
+      return apiClient.get("request/group/" + id);
+    },
     getRequest(id) {
       return apiClient.get("request/" + id);
     },

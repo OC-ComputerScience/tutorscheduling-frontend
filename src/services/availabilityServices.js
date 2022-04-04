@@ -12,6 +12,9 @@ export default {
     getAvailability(id) {
       return apiClient.get("availability/" + id);
     },
+    getPersonAvailability(id){
+      return apiClient.get("availability/person/" + id);
+    },
     addAvailability(availability) {
       return apiClient.post("availability", availability);
     },

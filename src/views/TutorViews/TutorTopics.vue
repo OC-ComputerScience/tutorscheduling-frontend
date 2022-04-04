@@ -10,7 +10,7 @@
             v-model="group.selected"
             multiple
         >
-            <v-subheader>{{ group.name }}</v-subheader>
+            <h3>{{ group.name }}</h3>
             <v-row justify="center">
             <v-col
                 v-for="topic in group.topics"
@@ -38,10 +38,9 @@
         </v-item-group>
         <br><br>
         <v-btn
-            color="blue darken-1"
-            text
+            color="accent"
             @click="dialog = true; getSelectedGroupTopics()"
-            class="justify-center"
+            class="justify-center white--text"
         >
             Continue
         </v-btn>
@@ -57,11 +56,12 @@
             <v-card-title>
               <span class="text-h5">Select your skill level for {{ group.name }} topics:</span>
             </v-card-title> 
+                <br>
                 <v-card-text
                     v-for="topic in group.selectedTopics"
                     :key="topic.id"
                 >
-                    <v-card-subtitle>{{ topic.name }}</v-card-subtitle>
+                    <h3>{{ topic.name }}</h3>
                         <v-select
                             v-model="topic.skillLevel"
                             :items="levels"
@@ -111,7 +111,7 @@ import PersonTopicServices from '@/services/personTopicServices'
         .then(async () => {
             await this.getGroupTopics()
             .then(async () => {
-                console.log(this.groups)
+                console.log(this.groups);
                 await this.existingPersonTopics()
                 .then(async () => {
                     await this.getGroupTopics()
@@ -130,6 +130,7 @@ import PersonTopicServices from '@/services/personTopicServices'
             // this must filter groups to only get groups where they have applied to be a tutor
             await GroupServices.getAllGroups()
             .then(response => {
+                this.groups = [];
                 for (let i = 0; i < response.data.length; i++) {
                     let group = response.data[i];
                     group.selected = [];
@@ -156,18 +157,17 @@ import PersonTopicServices from '@/services/personTopicServices'
                     let topic = response.data[i];
                     for (let j = 0; j < this.groups.length; j++) {
                         let group = this.groups[j];
-                        console.log(group);
                         for (let k = 0; k < group.topics.length; k++) {
                             if(topic.topicId === group.topics[k].id) {
-                                // if there is a person topic for some of the groups then remove that group from the list
+                                console.log(this.groups);
+                                this.groups = this.groups.filter(function(item) {
+                                    console.log(item);
+                                    return item.id !== group.id;
+                                })
+                                console.log(this.groups);
                                 break;
                             }
-                        }
-                        console.log(this.groups);
-                        this.groups = this.groups.filter(function(item) {
-                            return item.id !== group.id;
-                        })
-                        console.log(this.groups);
+                        }   
                     }
                 }
             })
@@ -178,6 +178,7 @@ import PersonTopicServices from '@/services/personTopicServices'
         async getGroupTopics() {
             for (let i = 0; i < this.groups.length; i++) {
                 const group = this.groups[i];
+                this.groups[i].topics = [];
                 await TopicServices.getAllForGroup(group.id)
                 .then(response => {
                     for (let j = 0; j < response.data.length; j++) {
@@ -204,11 +205,8 @@ import PersonTopicServices from '@/services/personTopicServices'
                 }
             }
 
-            for (let i = 0; i < this.selectedGroupTopics.length; i++) {
-                this.selectedGroupTopics[i].selectedTopics = [];
-            }
-
             for (let k = 0; k < this.selectedGroupTopics.length; k++) {
+                this.selectedGroupTopics[k].selectedTopics = [];
                 for (let i = 0; i < this.selectedGroupTopics[k].topics.length; i++) {
                     for (let j = 0; j < this.selectedGroupTopics[k].selected.length; j++) {
                         if(this.selectedGroupTopics[k].selected[j] === i) {
@@ -222,6 +220,7 @@ import PersonTopicServices from '@/services/personTopicServices'
         },
         goToPage() {
             this.$router.push({ name: "contract" });
+            this.$router.go();
         },
         savePersonTopics() {
             console.log(this.selectedGroupTopics);

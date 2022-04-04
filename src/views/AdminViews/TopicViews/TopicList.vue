@@ -18,6 +18,7 @@
         <v-spacer></v-spacer>
         <v-btn
         color="accent"
+        class="mr-4"
         elevation="2"
         @click="addTopic"
       >
@@ -44,6 +45,8 @@
 </template>
 
 <script>
+  import Utils from '@/config/utils.js'
+  import GroupServices from "@/services/groupServices.js";
   import TopicServices from '@/services/topicServices.js'
   export default {
     name: 'App',
@@ -53,17 +56,32 @@
       return {
         search: '',
         topics: [],
+        user: {},
         headers: [{text: 'ID', value: 'id'}, 
                   {text: 'Name', value: 'name'},
                   {text: 'Abbreviation', value: 'abbr'}]
       }
     },
-    created() {
-      this.getTopics();
+    async created() {
+      // this.getTopics();
+      this.user = Utils.getStore('user');
+      await this.getGroup(this.user.selectedGroup.replace(/%20/g, " "))
+      .then(() => {
+        this.getTopicsForGroup();
+      })
     },
     methods: {
-      getTopics() {
-        TopicServices.getAllTopics()
+      async getGroup(name) {
+        await GroupServices.getGroupByName(name)
+        .then((response) => {
+          this.group = response.data[0];
+        })
+        .catch((error) => {
+          console.log("There was an error:", error.response);
+        });
+      },
+      getTopicsForGroup() {
+        TopicServices.getAllForGroup(this.group.id)
         .then(response => {
           this.topics = response.data;
         })
@@ -71,6 +89,15 @@
           console.log("There was an error:", error.response)
         });
       },
+      // getTopics() {
+      //   TopicServices.getAllTopics()
+      //   .then(response => {
+      //     this.topics = response.data;
+      //   })
+      //   .catch(error => {
+      //     console.log("There was an error:", error.response)
+      //   });
+      // },
       deleteTopic(id, name) {
         let confirmed = confirm(`Are you sure you want to delete ${name}`);
         if(confirmed) {
