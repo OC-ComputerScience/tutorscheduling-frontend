@@ -44,6 +44,11 @@ import RoleView    from './views/AdminViews/RoleViews/RoleView.vue';
 import RequestList    from './views/AdminViews/RequestViews/RequestList.vue';
 import RequestAdd     from './views/StudentViews/RequestAdd.vue';
 
+
+// Approvals
+import PendingList    from './views/AdminViews/ApprovalViews/PendingList.vue';
+import PendingView    from './views/AdminViews/ApprovalViews/PendingView.vue';
+
 // Availability
 import AvailabilityAdd    from './views/AdminViews/AvailabilityViews/AvailabilityAdd.vue';
 
@@ -198,6 +203,18 @@ const router =  new Router({
       path: '/roleView/:id',
       name: 'roleView',
       component: RoleView,
+      props: true
+    },
+    {
+      path: '/pendingView/:id',
+      name: 'pendingView',
+      component: PendingView,
+      props: true
+    },
+    {
+      path: '/pendingList',
+      name: 'pendingList',
+      component: PendingList,
       props: true
     },
     {

@@ -59,11 +59,9 @@ import Utils from '@/config/utils.js'
         roles: [],
         group: {},
         user: {},
-        headers: [{text: 'ID', value: 'id'},
-                  {text: 'Type', value: 'type'}]
-        // headers: [{text: 'ID', value: 'id'}, 
-        //           {text: 'Type', value: 'type'},
-        //           {text: 'Group', value: 'groupId'}]
+        headers: [{text: 'ID', value: 'id'}, 
+                  {text: 'Type', value: 'type'},
+                  {text: 'Group', value: 'group.name'}]
       }
     },
     async created() {
