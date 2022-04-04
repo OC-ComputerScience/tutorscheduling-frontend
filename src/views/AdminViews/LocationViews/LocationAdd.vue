@@ -49,7 +49,15 @@
       >
       </v-select>
 
-      <v-select
+      <!-- group should be readonly -->
+      <v-text-field
+        v-model="this.user.selectedGroup"
+        id="this.group.id"
+        label="Group"
+        readonly
+      ></v-text-field>
+
+      <!-- <v-select
         v-model="location.groupId"
         :items="groups"
         item-text="name"
@@ -57,7 +65,7 @@
         label="Group"
         required
       >
-      </v-select>
+      </v-select> -->
 
       <v-btn
         :disabled="!valid"
@@ -81,14 +89,17 @@
 </template>
 
 <script>
+import Utils from '@/config/utils.js'
 import LocationServices from "@/services/locationServices.js";
 import GroupServices from "@/services/groupServices.js";
 
 export default {
   data() {
     return {
+      valid: true,
       location: {},
-      groups: [],
+      group: {},
+      user: {},
       types: ["Online", "In-Person"],
       roles: [
         'admin'
@@ -96,19 +107,31 @@ export default {
     };
   },
   created() {
-    this.getAllGroups();
+    this.user = Utils.getStore('user');
+    this.getGroup(this.user.selectedGroup.replace(/%20/g, " "));
+    //this.getAllGroups();
   },
   methods: {
-    getAllGroups() {
-      GroupServices.getAllGroups()
-        .then((response) => {
-          this.groups = response.data;
-        })
-        .catch((error) => {
-          console.log("There was an error:", error.response);
-        });
+    getGroup(name) {
+      GroupServices.getGroupByName(name)
+      .then((response) => {
+        this.group = response.data[0];
+      })
+      .catch((error) => {
+        console.log("There was an error:", error.response);
+      });
     },
+    // getAllGroups() {
+    //   GroupServices.getAllGroups()
+    //     .then((response) => {
+    //       this.groups = response.data;
+    //     })
+    //     .catch((error) => {
+    //       console.log("There was an error:", error.response);
+    //     });
+    // },
     addLocation() {
+      this.location.groupId = this.group.id;
       LocationServices.addLocation(this.location)
         .then(() => {
           this.$router.push({ name: "locationList" });
