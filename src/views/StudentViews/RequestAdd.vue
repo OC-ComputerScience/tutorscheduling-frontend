@@ -73,15 +73,19 @@
 import RequestServices from "@/services/requestServices.js";
 import TopicServices from "@/services/topicServices.js";
 import PersonServices from "@/services/personServices.js";
+import Utils from '@/config/utils.js'
+import GroupServices from "@/services/groupServices.js";
 
 export default {
   data() {
     return {
-      Problems: ["No times work for me", "The topic I am looking for is not here", "Report an Issue", "Other"],
+      Problems: ["No times work for me.", "The topic I am looking for is not here.", "Report an issue", "Other"],
       request: {
         status: "Recieved"
       },
       person: {},
+      user: {},
+      group: {},
       topics: [],
       roles: [
         'admin'
@@ -90,32 +94,56 @@ export default {
   },
   
   async created() {
+    this.user = Utils.getStore('user');
+    await this.getGroup(this.user.selectedGroup.replace(/%20/g, " "))
+      .then(() => {
+        this.getTopicsForGroup();
+      })
     this.getPerson();
     this.getAllTopics();
   },
   methods: {
-    getAllTopics() {
-      TopicServices.getAllTopics()
-        .then((response) => {
-          this.topics = response.data;
+    // getAllTopics() {
+    //   TopicServices.getAllTopics()
+    //     .then((response) => {
+    //       this.topics = response.data;
 
+    //     })
+    //     .catch((error) => {
+    //       console.log("There was an error:", error.response);
+    //     });
+    // },
+    getTopicsForGroup() {
+        TopicServices.getAllForGroup(this.group.id)
+        .then(response => {
+          this.topics = response.data;
         })
-        .catch((error) => {
-          console.log("There was an error:", error.response);
+        .catch(error => {
+          console.log("There was an error:", error.response)
         });
+      },
+    async getGroup(name) {
+      await GroupServices.getGroupByName(name)
+      .then((response) => {
+        this.group = response.data[0];
+      })
+      .catch((error) => {
+        console.log("There was an error:", error.response);
+      });
     },
     async addRequest() {
-      this.request.personId = this.person.id
+      this.request.personId = this.person.id;
+      this.request.groupId = this.group.id;
       RequestServices.addRequest(this.request)
         .then(() => {
-          this.$router.push({ name: "requestList" });
+          this.$router.go(-1);
         })
         .catch((error) => {
           console.log(error);
         });
     },
     cancel() {
-      this.$router.push({ name: "requestList" });
+      this.$router.go(-1);
     },
     async getPerson() {
       if (this.$store.state.loginUser.userID !== undefined && this.$store.state.loginUser !== null) {
