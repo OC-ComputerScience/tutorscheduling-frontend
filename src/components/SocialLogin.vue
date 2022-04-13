@@ -32,7 +32,7 @@
       <v-dialog
         v-model="dialog"
         persistent
-        max-width="600px"
+        max-width="800"
       >
         <v-card tile>
           <v-card-title>
@@ -56,7 +56,7 @@
           <v-card-actions>
             <v-spacer></v-spacer>
             <v-btn
-              color="blue darken-1"
+              color="accent"
               text
               @click="dialog = false; dialog2 = true; savePhoneNum()"
             >
@@ -115,7 +115,7 @@
           <v-card-actions>
             <v-spacer></v-spacer>
             <v-btn
-              color="blue darken-1"
+              color="accent"
               text
               @click="savePersonRoles()"
             >

@@ -118,7 +118,7 @@
                 this.$router.push({ name: "tutorHome", params: { id: this.completeRole.personrole[0].id } });
               else if(this.completeRole.type.includes("Admin"))
                 this.$router.push({ name: "adminHome" });
-              //this.$router.go();
+              this.$router.go();
             }
           })
           
@@ -182,7 +182,7 @@
         updatedRole.roleId = role.roleId;
         updatedRole.createdAt = role.createdAt;
         updatedRole.updatedAt = role.updatedAt;
-        PersonRoleServices.updatePersonRole(role.id, updatedRole);
+        await PersonRoleServices.updatePersonRole(role.id, updatedRole);
       }
     }
   }
