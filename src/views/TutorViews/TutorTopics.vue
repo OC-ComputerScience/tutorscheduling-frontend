@@ -15,6 +15,7 @@
             <v-col
                 v-for="topic in group.topics"
                 :key="topic.id"
+                md="4"
             >
                 <v-item v-slot="{ active, toggle }">
                     <v-card 
@@ -46,12 +47,13 @@
         </v-btn>
         <v-dialog
           v-model="dialog"
-          persistent
-          max-width="600px"
-          v-for="group in selectedGroupTopics"
-          :key="group.id"
+          max-width="800"
         >
           <v-card
+            v-for="group in selectedGroupTopics"
+            :key="group.id"
+            flat
+            rounded="0"
           >
             <v-card-title>
               <span class="text-h5">Select your skill level for {{ group.name }} topics:</span>
@@ -74,15 +76,15 @@
                 </v-card-text>
             <v-card-actions>
               <v-spacer></v-spacer>
-              <v-btn
-                color="accent"
-                text
-                @click="goToPage(); savePersonTopics()"
-              >
-                Continue
-              </v-btn>
+              
             </v-card-actions>
           </v-card>
+          <v-btn
+            color="accent"
+            @click="goToPage(); savePersonTopics()"
+          >
+            Continue
+          </v-btn>
         </v-dialog>
     </v-container>
 </template>
@@ -106,7 +108,7 @@ import PersonTopicServices from '@/services/personTopicServices'
     }),
     async created () {
         this.user = Utils.getStore('user');
-
+        console.log(this.user.access)
         await this.getGroups()
         .then(async () => {
             await this.getGroupTopics()
@@ -183,7 +185,7 @@ import PersonTopicServices from '@/services/personTopicServices'
                 .then(response => {
                     for (let j = 0; j < response.data.length; j++) {
                         let topic = response.data[j];
-                        topic.color = this.colors[j % this.colors.length]
+                        topic.color = this.colors[Math.floor(Math.random() * this.colors.length)]
                         this.groups[i].topics.push(topic);
                     }
                 })

@@ -9,7 +9,6 @@
                 <v-col justify="center">
                     <v-card 
                         @click="dialog = true"
-                        max-width="300"
                         height="100"
                         elevation="10"
                         color="primary"
@@ -69,9 +68,9 @@
                 <v-card-actions>
                     <v-spacer></v-spacer>
                     <v-btn
-                    color="blue darken-1"
-                    text
-                    @click="savePersonRoles()"
+                      color="accent"
+                      text
+                      @click="savePersonRoles()"
                     >
                     Continue
                     </v-btn>
