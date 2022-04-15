@@ -19,6 +19,7 @@
             <v-toolbar-items
                 v-for="item in activeMenus"
                 :key="item.link"
+                class="hidden-md-and-down"
             >
                 <v-btn
                     exact                    
@@ -130,38 +131,56 @@
                     </v-list-item-content>
                 </v-card>
             </v-menu>
+            <v-app-bar-nav-icon
+                dark
+                class="hidden-lg-and-up"
+                @click="drawer = !drawer"
+            ></v-app-bar-nav-icon>
         </v-app-bar>
 
-        <!-- <v-app-bar dark color="#811429" class="hidden-lg-and-up">
+        <!-- <v-app-bar color="primary" dark class="hidden-lg-and-up">
             <v-img
                 class="mx-2"
+                src="../assets/oc_logo_social.png"
                 max-height="40"
                 max-width="40"
                 contain
             ></v-img>
-            <v-toolbar-title ref="toolbar-title">{{ title }}</v-toolbar-title>
+            <v-toolbar-title class="title">
+                <div>{{ this.title }}</div>    
+            </v-toolbar-title>
             <v-spacer></v-spacer>
             <v-app-bar-nav-icon
                 dark
                 @click="drawer = !drawer"
             ></v-app-bar-nav-icon>
-        </v-app-bar>
-        <v-list>
+        </v-app-bar> -->
+        <v-navigation-drawer
+            v-if="drawer"
+            class="hidden-lg-and-up"
+            v-model="drawer"
+            app
+            right
+            :mini-variant.sync="$vuetify.breakpoint.smAndDown"
+            color="primary"
+        >
+            <v-list>
                 <v-list-item
                     exact
-                    v-for="menu in activeMenus"
-                    :to="{ name: menu.name, params: { id: user.userId } }"
-                    :color="menu.color"
-                    :key="menu.text"
+                    v-for="item in activeMenus"
+                    :to="{ name: item.name, params: { id: currentPersonRoleID } }"
+                    :color="item.color"
+                    :key="item.text"
                 >
                     <v-list-item-action>
-                        <v-icon v-if="menu.icon">{{ menu.icon }}</v-icon>
+                        <v-icon color="white" v-if="item.icon">{{ item.icon }}</v-icon>
                     </v-list-item-action>
                     <v-list-item-content>
-                        <v-list-item-title>{{ menu.text }} </v-list-item-title>
+                        <v-list-item-title class="white--text">{{ item.text }} </v-list-item-title>
                     </v-list-item-content>
                 </v-list-item>
-            </v-list> -->
+            </v-list>
+        </v-navigation-drawer>
     </div>
 </template>
 
@@ -174,6 +193,7 @@ export default {
     name: 'App',
     data: () => ({
         user: {},
+        drawer: false,
         title: '',
         initials: '',
         name: '',
@@ -239,6 +259,7 @@ export default {
                 name: 'pendingList',
                 color: 'white',
                 text: 'Applications',
+                icon: 'mdi-text-account',
                 roles: 'HeadAdmin,Admin,Supervisor'
             },
             {
@@ -270,13 +291,14 @@ export default {
                 name: 'groupList',
                 color: 'white',
                 text: 'Groups',
-                roles: 'HeadAdmin'
+                roles: 'Headdmin'
             },
             {
                 link: 'availabilityAdd',
                 name: 'availabilityAdd',
                 color: 'white',
                 text: 'Availability',
+                icon: 'mdi-clipboard-text-clock',
                 roles: 'Tutor'
             },
             {
@@ -284,6 +306,7 @@ export default {
                 name: 'requestAdd',
                 color: 'white',
                 text: 'Request',
+                icon: 'mdi-alert',
                 roles: 'Student'
             },
         ],
