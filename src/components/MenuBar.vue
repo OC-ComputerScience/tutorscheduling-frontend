@@ -191,6 +191,7 @@ export default {
                 name: 'tutorHome',
                 color: 'white',
                 text: 'Home',
+                icon: 'mdi-home',
                 roles: 'Tutor'
             },
             {
@@ -198,6 +199,7 @@ export default {
                 name: 'studentHome',
                 color: 'white',
                 text: 'Home',
+                icon: 'mdi-home',
                 roles: 'Student'
             },
             {
@@ -205,6 +207,7 @@ export default {
                 name: 'adminHome',
                 color: 'white',
                 text: 'Home',
+                icon: 'mdi-home',
                 roles: 'HeadAdmin,Admin,Supervisor'
             },
             {
@@ -212,6 +215,7 @@ export default {
                 name: 'mainCalendar',
                 color: 'white',
                 text: 'Calendar',
+                icon: 'mdi-calendar',
                 roles: 'HeadAdmin,Admin,Supervisor,Tutor,Student'
             },
             {
@@ -219,6 +223,7 @@ export default {
                 name: 'requestList',
                 color: 'white',
                 text: 'Requests',
+                icon: 'mdi-alert',
                 roles: 'HeadAdmin,Admin,Supervisor'
             },
             {
@@ -226,6 +231,7 @@ export default {
                 name: 'personList',
                 color: 'white',
                 text: 'People',
+                icon: 'mdi-account-multiple',
                 roles: 'HeadAdmin,Admin,Supervisor'
             },
             {
@@ -233,6 +239,7 @@ export default {
                 name: 'topicList',
                 color: 'white',
                 text: 'Topics',
+                icon: 'mdi-bookshelf',
                 roles: 'HeadAdmin,Admin,Supervisor'
             },
             {
@@ -240,6 +247,7 @@ export default {
                 name: 'roleList',
                 color: 'white',
                 text: 'Roles',
+                icon: 'mdi-folder-account',
                 roles: 'HeadAdmin,Admin,Supervisor'
             },
             {
@@ -247,6 +255,7 @@ export default {
                 name: 'locationList',
                 color: 'white',
                 text: 'Locations',
+                icon: 'mdi-map-marker',
                 roles: 'HeadAdmin,Admin,Supervisor'
             },
             {
