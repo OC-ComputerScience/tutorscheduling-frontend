@@ -45,6 +45,8 @@
 </template>
 
 <script>
+  import Utils from '@/config/utils.js'
+  import GroupServices from "@/services/groupServices.js";
   import PersonServices from '@/services/personServices.js'
   export default {
     name: 'App',
@@ -55,24 +57,49 @@
         search: '',
         persons: [],
         headers: [{text: 'ID', value: 'id'}, 
-                  {text: 'First Name', value: 'fName'},
-                  {text: 'Last Name', value: 'lName'},
+                  {text: 'Name', value: 'fullName'},
                   {text: 'Email Address', value: 'email'}]
       }
     },
-    created() {
-      this.getPersons();
+    async created() {
+      this.user = Utils.getStore('user');
+      await this.getGroup(this.user.selectedGroup.replace(/%20/g, " "))
+      .then(() => {
+        this.getPeopleForGroup();
+      })
     },
     methods: {
-      getPersons() {
-        PersonServices.getAllPersons()
+      async getGroup(name) {
+        await GroupServices.getGroupByName(name)
+        .then((response) => {
+          this.group = response.data[0];
+        })
+        .catch((error) => {
+          console.log("There was an error:", error.response);
+        });
+      },
+      getPeopleForGroup() {
+        PersonServices.getAllForGroup(this.group.id)
         .then(response => {
+          console.log(response)
           this.persons = response.data;
+          for(let i = 0; i < this.persons.length; i++) {
+            this.persons[i].fullName = this.persons[i].fName + " " + this.persons[i].lName;
+          }
         })
         .catch(error => {
           console.log("There was an error:", error.response)
         });
       },
+      // getPersons() {
+      //   PersonServices.getAllPersons()
+      //   .then(response => {
+      //     this.persons = response.data;
+      //   })
+      //   .catch(error => {
+      //     console.log("There was an error:", error.response)
+      //   });
+      // },
       deletePerson(id, fName) {
         let confirmed = confirm(`Are you sure you want to delete ${fName}`);
         if(confirmed) {

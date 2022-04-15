@@ -9,7 +9,7 @@
       <v-row>
         <v-col>
           <v-card 
-            :to="{ name: 'personList' }"
+            :to="{ name: 'mainCalendar' }"
             class="mx-auto my-12 d-flex justify-center"
             max-width="400"
             height="100"
@@ -90,6 +90,22 @@
           >
             <v-card-title class="justify-center white--text">
                   View Locations
+            </v-card-title>
+          </v-card>
+        </v-col>
+      </v-row>
+      <v-row>
+        <v-col>
+          <v-card 
+            :to="{ name: 'pendingList' }"
+            class="mx-auto my-12 d-flex justify-center"
+            max-width="400"
+            height="100"
+            elevation="10"
+            color="accent"
+          >
+            <v-card-title class="justify-center white--text">
+                  View Applications
             </v-card-title>
           </v-card>
         </v-col>

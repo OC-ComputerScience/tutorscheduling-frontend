@@ -18,7 +18,6 @@ import GroupView    from './views/AdminViews/GroupViews/GroupView.vue';
 
 // People
 import PersonList    from './views/AdminViews/PersonViews/PersonList.vue';
-import PersonEdit    from './views/AdminViews/PersonViews/PersonEdit.vue';
 import PersonAdd     from './views/AdminViews/PersonViews/PersonAdd.vue';
 import PersonView    from './views/AdminViews/PersonViews/PersonView.vue';
 
@@ -118,12 +117,6 @@ const router =  new Router({
       path: '/personList',
       name: 'personList',
       component: PersonList
-    },
-    {
-      path: '/personEdit/:id',
-      name: 'personEdit',
-      component: PersonEdit,
-      props: true
     },
     {
       path: '/personAdd',

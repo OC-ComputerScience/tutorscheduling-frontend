@@ -12,6 +12,12 @@ export default {
     getPerson(id) {
       return apiClient.get("person/" + id);
     },
+    getAllForGroup(groupId) {
+      return apiClient.get("person/group/" + groupId);
+    },
+    getPendingTutorsForGroup(groupId) {
+      return apiClient.get("person/tutor/" + groupId);
+    },
     addPerson(person) {
       return apiClient.post("person", person);
     },

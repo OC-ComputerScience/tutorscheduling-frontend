@@ -58,6 +58,7 @@
         search: '',
         locations: [],
         user: {},
+        group: {},
         headers: [{text: 'ID', value: 'id'}, 
                   {text: 'Name', value: 'name'},
                   {text: 'Type', value: 'type'},

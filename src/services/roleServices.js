@@ -15,6 +15,9 @@ export default {
     getRoleForPerson(id) {
       return apiClient.get("role/person/" + id)
     },
+    getRoleByGroupForPerson(groupId, personId) {
+      return apiClient.get("role/group/" + groupId + "/person/" + personId)
+    },
     getIncompleteRoleForPerson(id) {
       return apiClient.get("role/personIn/" + id)
     },
