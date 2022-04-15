@@ -229,6 +229,13 @@ export default {
                 roles: 'HeadAdmin,Admin,Supervisor'
             },
             {
+                link: 'pendingList',
+                name: 'pendingList',
+                color: 'white',
+                text: 'Applications',
+                roles: 'HeadAdmin,Admin,Supervisor'
+            },
+            {
                 link: 'topicList',
                 name: 'topicList',
                 color: 'white',
