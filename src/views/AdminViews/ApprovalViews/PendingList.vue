@@ -1,4 +1,5 @@
 <template>
+  <v-container>
   <v-data-table
     :headers="headers"
     :items="personroles"
@@ -11,7 +12,7 @@
       <v-toolbar
         flat
       >
-        <v-toolbar-title>Pending user approvals</v-toolbar-title>
+        <v-toolbar-title>Tutor Applications</v-toolbar-title>
         <v-divider
           class="mx-4"
           inset
@@ -25,7 +26,7 @@
             
           <v-card>
             <v-card-title>
-              <span class="text-h5">{{ formTitle }}</span>
+              <span class="text-h5">Approve Application for {{ editedPerson.fName }} {{ editedPerson.lName }}</span>
             </v-card-title>
 
             <v-card-text>
@@ -51,14 +52,14 @@
             <v-card-actions>
               <v-spacer></v-spacer>
               <v-btn
-                color="blue darken-1"
+                color="error"
                 text
                 @click="close"
               >
                 Cancel
               </v-btn>
               <v-btn
-                color="blue darken-1"
+                color="accent"
                 text
                 @click="save"
               >
@@ -67,14 +68,13 @@
             </v-card-actions>
           </v-card>
         </v-dialog>
-        <v-dialog v-model="dialogDelete" max-width="500px">
+        <v-dialog v-model="dialogDelete" max-width="800">
           <v-card>
-            <v-card-title class="text-h5">Are you sure you want to delete this item?</v-card-title>
+            <v-card-title class="text-h5">Are you sure you want to delete {{ editedPerson.fName }} {{ editedPerson.lName }}'s application?</v-card-title>
             <v-card-actions>
               <v-spacer></v-spacer>
-              <v-btn color="blue darken-1" text @click="closeDelete">Cancel</v-btn>
-              <v-btn color="blue darken-1" text @click="deleteItemConfirm">OK</v-btn>
-              <v-spacer></v-spacer>
+              <v-btn color="error" text @click="closeDelete">Cancel</v-btn>
+              <v-btn color="accent" text @click="deleteItemConfirm">OK</v-btn>
             </v-card-actions>
           </v-card>
         </v-dialog>
@@ -82,11 +82,12 @@
     </template>
    
     <template v-slot:expanded-item="{ headers, item }">
-            <td :colspan="headers.length">
-              Phone Number: {{ item.person.phoneNum }}
-              <br>
-              Email Address: {{ item.person.email }}
-            </td>
+      <v-spacer></v-spacer>
+      <td :colspan="headers.length">
+        Phone Number: {{ item.phoneNum }}
+        <br>
+        Email Address: {{ item.email }}
+      </td>
     </template>
     <template v-slot:[`item.actions`]="{ item }">      
         <v-icon
@@ -103,34 +104,34 @@
         mdi-delete
       </v-icon>
     </template>
-    <template v-slot:no-data>
-      <v-btn
-        color="primary"
-        @click="initialize"
-      >
-        Reset
-      </v-btn>
-    </template>
   </v-data-table>
+  </v-container>
 </template>
 
 <script>
+import Utils from '@/config/utils.js'
+import GroupServices from "@/services/groupServices.js";
+import PersonServices from "@/services/personServices.js";
 import PersonRoleServices from "@/services/personRoleServices.js";
 
   export default {
     data: () => ({
-      StatusSelect: ['Pending', 'Approved', 'Denied'],
+      StatusSelect: ['Applied', 'Approved', 'Denied'],
       dialog: false,
       dialogDelete: false,
+      expanded: [],
+      user: {},
+      group: {},
       headers: [
-        { text: "First Name", value: "person.fName" },
-        { text: "Last Name", value: "person.lName" },
-        { text: "Status", value: "status" },
-        { text: "Signature", value: "agree" },
+        { text: "First Name", value: "fName" },
+        { text: "Last Name", value: "lName" },
+        { text: "Status", value: "personrole[0].status" },
+        { text: "Signed Contract", value: "personrole[0].agree" },
         { text: 'Actions', value: 'actions', sortable: false },
       ],
       personroles: [],
       editedIndex: -1,
+      editedPerson: {},
       editedItem: {
         status: '',
       },
@@ -148,39 +149,54 @@ import PersonRoleServices from "@/services/personRoleServices.js";
         val || this.closeDelete()
       },
     },
-    created () {
-      this.getPersonRoles();
+    async created () {
+      this.user = Utils.getStore('user');
+      await this.getGroup(this.user.selectedGroup.replace(/%20/g, " "))
+      .then(() => {
+        this.getPersonRoles();
+      })
     },
     methods: {
-        getPersonRoles() {
-            PersonRoleServices.getAllPersonRoles()
-                .then((response) => {
-                this.personroles = response.data;
-                })
-                .catch((error) => {
-                console.log("There was an error:", error.response);
-                });
-            },
+      async getGroup(name) {
+        await GroupServices.getGroupByName(name)
+        .then((response) => {
+          this.group = response.data[0];
+        })
+        .catch((error) => {
+          console.log("There was an error:", error.response);
+        });
+      },
+      getPersonRoles() {
+        PersonServices.getPendingTutorsForGroup(this.group.id)
+        .then((response) => {
+          this.personroles = response.data;
+        })
+        .catch((error) => {
+          console.log("There was an error:", error.response);
+        });
+      },
       editItem (item) {
         this.editedIndex = this.personroles.indexOf(item.id)
-        this.editedItem = Object.assign({}, item)
+        this.editedPerson = Object.assign({}, item)
+        this.editedItem = Object.assign({}, item.personrole[0])
         console.log(this.editedItem);
         this.dialog = true
       },
       deleteItem (item) {
         this.editedIndex = this.personroles.indexOf(item.id)
-        this.editedItem = Object.assign({}, item)
+        this.editedPerson = Object.assign({}, item)
+        this.editedItem = Object.assign({}, item.personrole[0])
         this.dialogDelete = true
       },
       deleteItemConfirm () {
         this.personroles.splice(this.editedIndex, 1)
-          PersonRoleServices.deletePersonRole(this.editedItem.id)
-            .then(() => {
-              this.getTopics(this.start, this.length);
-            })
-            .catch(error => {
-              console.log("There was an error:", error.response)
-            });
+        PersonRoleServices.deletePersonRole(this.editedItem.id)
+        .then(() => {
+          this.getPersonRoles();
+        })
+        .catch(error => {
+          console.log("There was an error:", error.response)
+        });
         
         this.closeDelete()
       },
@@ -198,21 +214,18 @@ import PersonRoleServices from "@/services/personRoleServices.js";
           this.editedIndex = -1
         })
       },
-      save () {
+      save() {
         console.log(this.editedIndex);
         console.log(this.editedItem);
         PersonRoleServices.updatePersonRole(this.editedItem.id, this.editedItem)
-          .then(() => {
-            this.close()
-            window.location.reload();
-          })
-          .catch((error) => {
-            console.log(error);
-          });
-          Object.assign(this.personroles[this.editedIndex], this.editedItem)
-
-        
-    
+        .then(() => {
+          this.close()
+          this.getPersonRoles();
+        })
+        .catch((error) => {
+          console.log(error);
+        });
+        Object.assign(this.personroles[this.editedIndex], this.editedItem)
       },
     },
   }

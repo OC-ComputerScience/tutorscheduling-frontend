@@ -93,6 +93,7 @@
 <script>
 import PersonServices from '@/services/personServices'
 import TopicServices from '@/services/topicServices'
+import GroupServices from "@/services/groupServices.js";
 import Utils from '@/config/utils.js'
 
   export default {
@@ -112,12 +113,22 @@ import Utils from '@/config/utils.js'
     },
     async created() {
       this.user = Utils.getStore('user');
-      await this.getPerson()
+      this.getPerson();
+      await this.getGroup(this.user.selectedGroup.replace(/%20/g, " "))
       .then(() => {
         this.getTopics();
       })
     },
     methods: {
+      async getGroup(name) {
+        await GroupServices.getGroupByName(name)
+        .then((response) => {
+          this.group = response.data[0];
+        })
+        .catch((error) => {
+          console.log("There was an error:", error.response);
+        });
+      },
       async getPerson() {
         await PersonServices.getPerson(this.user.userID)
           .then(response => {
@@ -129,7 +140,7 @@ import Utils from '@/config/utils.js'
           });
       },
       async getTopics() {
-        await TopicServices.getTopicForPerson(this.user.userID)
+        await TopicServices.getTopicByGroupForPerson(this.group.id, this.user.userID)
         .then(response => {
           response.data.forEach(data => {
             this.topics.push(data);

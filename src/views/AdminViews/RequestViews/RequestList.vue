@@ -25,7 +25,6 @@
         >
             
           <v-card>
-
             <v-card-text>
               <v-container>
                 <v-row>
@@ -49,14 +48,14 @@
             <v-card-actions>
               <v-spacer></v-spacer>
               <v-btn
-                color="blue darken-1"
+                color="error"
                 text
                 @click="close"
               >
                 Cancel
               </v-btn>
               <v-btn
-                color="blue darken-1"
+                color="accent"
                 text
                 @click="save"
               >
@@ -70,8 +69,8 @@
             <v-card-title class="text-h5">Are you sure you want to delete this item?</v-card-title>
             <v-card-actions>
               <v-spacer></v-spacer>
-              <v-btn color="blue darken-1" text @click="closeDelete">Cancel</v-btn>
-              <v-btn color="blue darken-1" text @click="deleteItemConfirm">OK</v-btn>
+              <v-btn color="error" text @click="closeDelete">Cancel</v-btn>
+              <v-btn color="accent" text @click="deleteItemConfirm">OK</v-btn>
               <v-spacer></v-spacer>
             </v-card-actions>
           </v-card>
@@ -96,20 +95,13 @@
     </template>
 
     <template v-slot:expanded-item="{ headers, item }">
-            <td :colspan="headers.length">
-              Topic: {{ getTopicName(item.topic) }} <br>
-              Class Num: {{ item.courseNum }} <br>
-              Description: {{ item.description }}
-            </td>
-    </template>
-
-    <template v-slot:no-data>
-      <v-btn
-        color="primary"
-        @click="initialize"
-      >
-        Reset
-      </v-btn>
+      <br>
+        <td :colspan="headers.length">
+          Topic: {{ item.topic.name }} <br>
+          Class Num: {{ item.courseNum }} <br>
+          Description: {{ item.description }}
+        </td>
+      <br>
     </template>
   </v-data-table>
 </v-container>
@@ -122,12 +114,13 @@
 
   export default {
     data: () => ({
+      expanded: [],
       StatusSelect: ['Recieved', 'In-Progress', 'Completed'],
       dialog: false,
       dialogDelete: false,
       user: {},
       headers: [
-        { text: "Person Name", value: "person.lName" },
+        { text: "Person's Name", value: "fullName" },
         { text: "Problem", value: "problem" },
         { text: "Status", value: "status" },
         { text: 'Actions', value: 'actions', sortable: false },
@@ -157,13 +150,8 @@
       .then(() => {
         this.getRequestsForGroup();
       })
-      // this.getRequests();
     },
     methods: {
-      getTopicName(item) {
-        let temp = item;
-        return temp.name;
-      },
       async getGroup(name) {
         await GroupServices.getGroupByName(name)
         .then((response) => {
@@ -176,7 +164,10 @@
       getRequestsForGroup() {
         RequestServices.getAllForGroup(this.group.id)
         .then(response => {
-          this.locations = response.data;
+          this.requests = response.data;
+          for (let i = 0; i < this.requests.length; i++) {
+            this.requests[i].fullName = this.requests[i].person.fName + " " + this.requests[i].person.lName;
+          }
         })
         .catch(error => {
           console.log("There was an error:", error.response)
@@ -234,7 +225,7 @@
         RequestServices.updateRequest(this.editedItem.id, this.editedItem)
           .then(() => {
             this.close()
-            window.location.reload();
+            this.getRequestsForGroup();
           })
           .catch((error) => {
             console.log(error);
