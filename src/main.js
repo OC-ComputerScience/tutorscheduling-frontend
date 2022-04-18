@@ -5,7 +5,6 @@ import router from './router'
 import store from './store/store'
 import vuetify from './plugins/vuetify'
 import vuePdf from 'vue-pdf'
-import JsonCSV from 'vue-json-csv'
 import GoogleAuth from '@/config/google.js'
 
 const gauthOption = {
@@ -16,7 +15,6 @@ const gauthOption = {
 Vue.use(GoogleAuth, gauthOption)
 
 Vue.component('vue-pdf', vuePdf)
-Vue.component('downloadCsv', JsonCSV)
 
 Vue.use(VueRouter)
 Vue.config.productionTip = false

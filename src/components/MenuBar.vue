@@ -159,7 +159,7 @@
             v-if="drawer"
             class="hidden-lg-and-up"
             v-model="drawer"
-            app
+            app            
             right
             :mini-variant.sync="$vuetify.breakpoint.smAndDown"
             color="primary"
@@ -284,6 +284,14 @@ export default {
                 color: 'white',
                 text: 'Locations',
                 icon: 'mdi-map-marker',
+                roles: 'HeadAdmin,Admin,Supervisor'
+            },
+            {
+                link: 'reportList',
+                name: 'reportList',
+                color: 'white',
+                text: 'Reports',
+                icon: 'mdi-chart-line',
                 roles: 'HeadAdmin,Admin,Supervisor'
             },
             {

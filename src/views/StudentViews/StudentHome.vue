@@ -105,7 +105,7 @@ import GroupServices from "@/services/groupServices.js";
         });
       },
       async getAppointments() {
-        await AppointmentServices.getAppointmentForPersonForGroup(this.group.id, this.user.userID)
+        await AppointmentServices.getUpcomingAppointmentForPersonForGroup(this.group.id, this.user.userID)
           .then(response => {
             this.appointments = response.data;
             console.log(response);
