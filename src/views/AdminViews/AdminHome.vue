@@ -9,7 +9,7 @@
       <v-row>
         <v-col>
           <v-card 
-            :to="{ name: 'personList' }"
+            :to="{ name: 'mainCalendar' }"
             class="mx-auto my-12 d-flex justify-center"
             max-width="400"
             height="100"
@@ -94,6 +94,22 @@
           </v-card>
         </v-col>
       </v-row>
+      <v-row>
+        <v-col>
+          <v-card 
+            :to="{ name: 'pendingList' }"
+            class="mx-auto my-12 d-flex justify-center"
+            max-width="400"
+            height="100"
+            elevation="10"
+            color="accent"
+          >
+            <v-card-title class="justify-center white--text">
+                  View Applications
+            </v-card-title>
+          </v-card>
+        </v-col>
+      </v-row>
       <br><br>
       <v-card>
         <v-card-title>
@@ -122,6 +138,7 @@
 <script>
 import Utils from '@/config/utils.js'
 import AppointmentServices from '@/services/appointmentServices.js'
+import GroupServices from "@/services/groupServices.js";
 
   export default {
     props: ["id"],
@@ -137,6 +154,7 @@ import AppointmentServices from '@/services/appointmentServices.js'
       return {
         search: '',
         user: {},
+        group: {},
         appointments: [],
         headers: [{text: 'Date', value: 'date'}, 
                   {text: 'Start Time', value: 'startTime'},
@@ -144,13 +162,25 @@ import AppointmentServices from '@/services/appointmentServices.js'
                   {text: 'Topic', value: 'topicId'}]
       };
     },
-    created() {
+    async created() {
       this.user = Utils.getStore('user');
-      this.getAppointments();
+      await this.getGroup(this.user.selectedGroup.replace(/%20/g, " "))
+      .then(() => {
+        this.getAppointmentsForGroup();
+      })
     },
     methods: {
-      async getAppointments() {
-        await AppointmentServices.getAllAppointments()
+      async getGroup(name) {
+        await GroupServices.getGroupByName(name)
+        .then((response) => {
+          this.group = response.data[0];
+        })
+        .catch((error) => {
+          console.log("There was an error:", error.response);
+        });
+      },
+      async getAppointmentsForGroup() {
+        await AppointmentServices.getAppointmentForGroup(this.group.id)
           .then(response => {
             this.appointments = response.data;
             console.log(response);

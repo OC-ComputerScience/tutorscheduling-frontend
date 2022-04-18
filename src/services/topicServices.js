@@ -15,6 +15,9 @@ export default {
     getTopicForPerson(id) {
       return apiClient.get("topic/person/" + id)
     },
+    getTopicByGroupForPerson(groupId, personId) {
+      return apiClient.get("topic/group/" + groupId + "/person/" + personId)
+    },
     getTopic(id) {
       return apiClient.get("topic/" + id);
     },

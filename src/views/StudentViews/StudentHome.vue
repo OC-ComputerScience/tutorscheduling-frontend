@@ -63,6 +63,7 @@
 <script>
 import Utils from '@/config/utils.js'
 import AppointmentServices from '@/services/appointmentServices.js'
+import GroupServices from "@/services/groupServices.js";
 
   export default {
     props: ["id"],
@@ -78,6 +79,7 @@ import AppointmentServices from '@/services/appointmentServices.js'
       return {
         search: '',
         user: {},
+        group: {},
         appointments: [],
         headers: [{text: 'Date', value: 'date'}, 
                   {text: 'Start Time', value: 'startTime'},
@@ -85,13 +87,25 @@ import AppointmentServices from '@/services/appointmentServices.js'
                   {text: 'Topic', value: 'topicId'}]
       };
     },
-    created() {
+    async created() {
       this.user = Utils.getStore('user');
-      this.getAppointments();
+      await this.getGroup(this.user.selectedGroup.replace(/%20/g, " "))
+      .then(() => {
+        this.getAppointments();
+      })
     },
     methods: {
+      async getGroup(name) {
+        await GroupServices.getGroupByName(name)
+        .then((response) => {
+          this.group = response.data[0];
+        })
+        .catch((error) => {
+          console.log("There was an error:", error.response);
+        });
+      },
       async getAppointments() {
-        await AppointmentServices.getAppointmentForPerson(this.user.userID)
+        await AppointmentServices.getAppointmentForPersonForGroup(this.group.id, this.user.userID)
           .then(response => {
             this.appointments = response.data;
             console.log(response);
