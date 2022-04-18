@@ -191,8 +191,13 @@
 </template>
 
 <script>
-import AvailabilityServices from "@/services/availabilityServices.js";
-import PersonServices from "@/services/personServices.js";
+import AvailabilityServices from "@/services/availabilityServices.js"
+import PersonServices from "@/services/personServices.js"
+import GroupServices from "@/services/groupServices.js"
+import TopicServices from "@/services/topicServices.js"
+import LocationServices from "@/services/locationServices.js"
+import AppointmentServices from "@/services/appointmentServices.js"
+import PersonAppointmentServices from "@/services/personAppointmentServices.js"
 
   export default {
     name: 'App',
@@ -200,6 +205,8 @@ import PersonServices from "@/services/personServices.js";
     },
     data: () => ({
       availability: {},
+      appointment: {},
+      personAppointment: {},
       availabilities: [],
       dates: [],
       dialog: false,
@@ -212,6 +219,10 @@ import PersonServices from "@/services/personServices.js";
       menu4: false,
       menu5: false,
       person: {},
+      user: {},
+      group: {},
+      topic: {},
+      location: {},
       headers: [                  
                   {text: 'Date', value: 'date',},
                   {text: 'Start Time', value: 'startTime'},
@@ -234,7 +245,9 @@ import PersonServices from "@/services/personServices.js";
     async created() {
       this.getPerson()
       .then(() => {
-        this.getAvailabilities();
+        this.getAvailabilities()
+        this.user = this.$store.state.loginUser
+        this.getGroupByName(this.user.selectedGroup.replace(/%20/g, " "))
       })
       // console.log(this.person);
       // this.getAvailabilities();
@@ -249,7 +262,23 @@ import PersonServices from "@/services/personServices.js";
         this.availability.endTime = this.endTime;
         this.availability.personId = this.person.id;
         await AvailabilityServices.addAvailability(this.availability)
-        .then(() => {
+        .then(async ()=> {
+          let date = new Date(element)
+          date.setHours(date.getHours() + 5)
+          this.appointment.date = date
+          this.appointment.startTime = this.startTime
+          this.appointment.endTime = this.endTime
+          this.appointment.type = "Single Session"
+          this.appointment.status = "available"
+          this.appointment.groupId = this.group.id
+          this.appointment.locationId = this.location.id
+          this.appointment.topicId = this.topic.id
+          await AppointmentServices.addAppointment(this.appointment).then(async response => {
+            this.personAppointment.isTutor = true
+            this.personAppointment.personId = this.person.id
+            this.personAppointment.appointmentId = response.data.id
+            await PersonAppointmentServices.addPersonAppointment(this.personAppointment)
+          })
         })
         .catch((error) => {
           console.log(error);
@@ -322,6 +351,28 @@ import PersonServices from "@/services/personServices.js";
             console.log("There was an error:", error.response)
           });
       }
+    },
+    getGroupByName(name) {
+      GroupServices.getGroupByName(name)
+      .then((response) => {
+        this.group = response.data[0]
+        this.getTopicsForGroup()
+      })
+      .catch((error) => {
+        console.log("There was an error:", error.response);
+      });
+    },
+    getTopicsForGroup() {
+      TopicServices.getTopicForPerson(this.person.id)
+      .then(response => {
+        this.topic = response.data[0]
+        LocationServices.getAllForGroup(this.group.id).then(response => {
+          this.location = response.data[0]
+        })
+      })
+      .catch(error => {
+        console.log("There was an error:", error.response)
+      });
     },
 
     // popup functions
