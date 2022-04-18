@@ -14,74 +14,94 @@
       >
       <!-- Sets focus to current date -->
       <v-btn
-          outlined
-          class="mr-4"
-          color="grey darken-2"
-          @click="setToday"
+        outlined
+        class="mr-4"
+        color="grey darken-2"
+        @click="setToday"
       >
-          Today
+      Today
+      </v-btn>
+      <v-btn
+        outlined
+        class="mr-4"
+        color="grey darken-2"
+        @click="viewMonth()"
+      >
+      Month
       </v-btn>
       <!-- Navigates calendar forward and back -->
       <v-btn
-          fab
-          text
-          small
-          color="grey darken-2"
-          @click="prev"
+        fab
+        text
+        small
+        color="grey darken-2"
+        @click="prev"
       >
-        <v-icon small>
-        mdi-chevron-left
-        </v-icon>
+      <v-icon small>
+      mdi-chevron-left
+      </v-icon>
       </v-btn>
       <v-btn
-          fab
-          text
-          small
-          color="grey darken-2"
-          @click="next"
+        fab
+        text
+        small
+        color="grey darken-2"
+        @click="next"
       >
-        <v-icon small>
-        mdi-chevron-right
-        </v-icon>
+      <v-icon small>
+      mdi-chevron-right
+      </v-icon>
       </v-btn>
       <!-- Shows current month and year displayed on calendar -->
       <v-toolbar-title v-if="$refs.calendar">
           {{ $refs.calendar.title }}
       </v-toolbar-title>
       <v-spacer></v-spacer>
+      <v-col>
+        <v-select
+        dense
+        v-model="selectedTopic"
+        :items="topics"
+        item-text="name"
+        item-value="id"
+        label="Topic"
+        outlined
+        @change="loadAppointments()"
+        ></v-select>
+      </v-col>
       <!-- Dropdown menu to select format -->
       <!-- Will modify to only include relevant formats -->
       <v-menu
-          bottom
-          right
+        bottom
+        right
       >
-          <template v-slot:activator="{ on, attrs }">
-          <v-btn
-              outlined
-              color="grey darken-2"
-              v-bind="attrs"
-              v-on="on"
-          >
-              <span>{{ typeToLabel[type] }}</span>
-              <v-icon right>
-              mdi-menu-down
-              </v-icon>
-          </v-btn>
-          </template>
-          <v-list>
-          <v-list-item @click="type = 'day'">
-              <v-list-item-title>Day</v-list-item-title>
-          </v-list-item>
-          <v-list-item @click="type = 'week'">
-              <v-list-item-title>Week</v-list-item-title>
-          </v-list-item>
-          <v-list-item @click="type = 'month'">
-              <v-list-item-title>Month</v-list-item-title>
-          </v-list-item>
-          <v-list-item @click="type = '4day'">
-              <v-list-item-title>4 days</v-list-item-title>
-          </v-list-item>
-          </v-list>
+        <template v-slot:activator="{ on, attrs }">
+        <v-btn
+          outlined
+          color="grey darken-2"
+          v-bind="attrs"
+          v-on="on"
+        >
+        <span>{{ typeToLabel[type] }}</span>
+        <v-icon right>
+        mdi-menu-down
+        </v-icon>
+        </v-btn>
+        </template>
+        <v-list>
+        <v-list-item @click="type = 'day'">
+          <v-list-item-title>Day</v-list-item-title>
+        </v-list-item>
+        <v-list-item @click="type = 'week'">
+          <v-list-item-title>Week</v-list-item-title>
+        </v-list-item>
+        <v-list-item @click="type = 'month'">
+          <v-list-item-title>Month</v-list-item-title>
+        </v-list-item>
+        <v-list-item @click="type = '4day'">
+          <v-list-item-title>4 days</v-list-item-title>
+        </v-list-item>
+        </v-list>
       </v-menu>
       </v-toolbar>
       </v-sheet>
@@ -116,73 +136,134 @@
         :color="selectedEvent.color"
         dark
         >
-          <v-btn icon>
-            <v-icon>mdi-pencil</v-icon>
-          </v-btn>
-          <v-toolbar-title v-html="selectedEvent.name"></v-toolbar-title>
-          </v-toolbar>
-          <!--TODO: Clean this up, allow signing up for timeslot -->
-          <!-- How to show tutor? -->
-          <v-card-text v-if="selectedAppointment != null">
-            <b>Time slot:</b>
-            {{calcTime(selectedAppointment.startTime)}}-{{calcTime(selectedAppointment.endTime)}}
-            <br>
-            <b>Pre-session Info:</b>
-            {{selectedAppointment.preSessionInfo}}
-            <br>
-            <b>Type:</b>
-            {{selectedAppointment.type}}
-            <br>
-            <b>Group:</b>
-            {{group.name}}
-            <br>
-            <b>Location:</b>
-            {{location.name}}
-            <br>
-            <b>Topic:</b>
-            {{topic.name}}
-            <br>
+        <v-btn icon>
+          <v-icon>mdi-pencil</v-icon>
+        </v-btn>
+        <v-toolbar-title v-html="selectedEvent.name"></v-toolbar-title>
+        </v-toolbar>
+        <!--TODO: Clean this up, allow signing up for timeslot -->
+        <!-- How to show tutor? -->
+        <v-card-text v-if="selectedAppointment != null">
+          <b>Time slot:</b>
+          {{calcTime(selectedAppointment.startTime)}}-{{calcTime(selectedAppointment.endTime)}}
+          <br>
+          <b>Tutors: </b>
+          <span v-if="tutors.length > 0">
+            <span v-for="tutor in tutors" :key="tutor.id">
+              <span v-if="tutor == tutors[tutors.length - 1]">{{tutor.fName}} {{tutor.lName}}</span>
+              <span v-else>{{tutor.fName}} {{tutor.lName}}, </span>
+            </span>
+          </span>
+          <span v-else>
+            <span>None</span>
+          </span>
+          <br>
+          <b>Students: </b>
+          <span v-if="students.length > 0">
+            <span v-for="student in students" :key="student.id">
+              <span v-if="student == students[students.length - 1]">{{student.fName}} {{student.lName}}</span>
+              <span v-else>{{student.fName}} {{student.lName}}, </span>
+            </span>
+          </span>
+          <span v-else>
+            <span>None</span>
+          </span>
+          <v-container>
+          <v-select 
+            v-model="selectedAppointment.locationId"
+            :items="locations"
+            item-text="name"
+            item-value="id"
+            label="Location"
+            required
+            dense
+            :disabled="!checkStatus('available')"
+          >
+          </v-select>
 
-            <v-select
-              v-model="newStart"
-              :items="startTimes"
-              item-text="timeText"
-              item-value="time"
-              label="Booked Start"
-              required
-              @change="updateTimes()"
-            >
-            </v-select>
-            <v-select
-              v-model="newEnd"
-              :items="endTimes"
-              item-text="timeText"
-              item-value="time"
-              label="Booked End"
-              required
-              @change="updateTimes()"
-            >
-            </v-select>
-            <!-- User sign up here -->
-            <v-btn
-              text
-              color="primary"
-              @click="bookAppointment()"
-            >
-              Book
-            </v-btn>
-
-          </v-card-text>
-          <v-card-actions>
-            <v-btn
-              text
-              color="secondary"
-              @click="selectedOpen = false"
-            >
-              Cancel
-            </v-btn>
-          </v-card-actions>
-          </v-card>
+          <v-select 
+            v-model="selectedAppointment.topicId"
+            :items="currentTopics"
+            item-text="name"
+            item-value="id"
+            label="Topic"
+            required
+            dense
+            :disabled="!checkStatus('available')"
+          >
+          </v-select>
+          
+          </v-container>
+          <v-container v-if="checkStatus('available')">
+          <v-select
+            v-model="newStart"
+            :items="startTimes"
+            item-text="timeText"
+            item-value="time"
+            label="Booked Start"
+            required
+            @change="updateTimes()"
+            dense
+          >
+          </v-select>
+          </v-container>
+          <v-container v-if="checkStatus('available')">
+          <v-select 
+            v-model="newEnd"
+            :items="endTimes"
+            item-text="timeText"
+            item-value="time"
+            label="Booked End"
+            required
+            @change="updateTimes()"
+            dense
+          >
+          </v-select>
+          </v-container>
+          <v-textarea
+          v-model="selectedAppointment.preSessionInfo"
+          id="preSession"
+          :counter="130"
+          label="Pre-Session Info"
+          hint="Enter Info About What You Need Help With..."
+          persistent-hint
+          required
+          auto-grow
+          rows="1"
+          :disabled="!checkStatus('available')"
+          ></v-textarea>
+          <!-- User sign up here -->
+        </v-card-text>
+        <v-card-actions>
+        <v-btn v-if="checkRole('Student')"
+          color="primary"
+          @click="bookAppointment()"
+          :disabled="!checkStatus('available')"
+        >
+        Book
+        </v-btn>
+        <v-btn v-if="checkRole('Tutor')"
+          color="#12f000"
+          @click="confirmAppointment(true)"
+          :disabled="!checkStatus('pending')"
+        >
+        Confirm
+        </v-btn>
+        <v-btn v-if="checkRole('Tutor')"
+          color="error"
+          @click="confirmAppointment(false)"
+          :disabled="!checkStatus('pending')"
+        >
+        Reject
+        </v-btn>
+        <v-btn
+          color="accent"
+          @click="selectedOpen = false"
+        >
+        Cancel
+        </v-btn>
+        </v-card-actions>
+        </v-card>
         </v-menu>
       </v-sheet>
     </v-col>
@@ -193,19 +274,31 @@
 
 <script>
 import AppointmentServices from '@/services/appointmentServices.js'
+import PersonAppointmentServices from '@/services/personAppointmentServices.js'
+import PersonServices from "@/services/personServices.js"
 import GroupServices from "@/services/groupServices.js"
 import LocationServices from "@/services/locationServices.js"
+import PersonTopicServices from "@/services/personTopicServices.js"
 import TopicServices from "@/services/topicServices.js"
+import PersonRoleServices from "@/services/personRoleServices.js"
+import RoleServices from "@/services/roleServices.js"
+import Utils from '@/config/utils.js'
 
   export default {
+  props: ["id"],
+
   data: () => ({
     //appointment info
     appointments: [],
+    personAppointments: [],
     selectedAppointment: {},
     //info related to current appointment
     group: {},
-    location: {},
-    topic: {},
+    person: {},
+    tutors: [],
+    students: [],
+    currentTopics: [],
+    locations: [],
     //used for generating time slots
     startTimes: [],
     endTimes: [],
@@ -220,40 +313,105 @@ import TopicServices from "@/services/topicServices.js"
       day: 'Day',
       '4day': '4 Days',
     },
+    topics: [],
+    selectedTopic: -1,
     //event data for calendar events
     selectedEvent: {},
     selectedElement: null,
     selectedOpen: false,
     events: [],
+    //current user data
+    role: {},
+    user: {}
   }),
   created() {
-    this.getAppointments();
+    this.user = Utils.getStore('user')
+    this.getGroupByName(this.user.selectedGroup.replace(/%20/g, " "))
+    this.getRole()
+    this.getAppointments()
   },
   methods: {
+    //Initialize data for calendar
     getAppointments() {
       AppointmentServices.getAllAppointments()
       .then(response => {
-        this.appointments = response.data;
-        this.loadAppointments();
+        this.appointments = response.data
+        PersonAppointmentServices.getAllPersonAppointments()
+        .then(response => {
+          this.personAppointments = response.data;
+          this.loadAppointments()
+        })
       })
       .catch(error => {
         console.log("There was an error:", error.response)
       });
     },
-
+    getGroupByName(name) {
+      GroupServices.getGroupByName(name)
+      .then((response) => {
+        this.group = response.data[0]
+        this.getTopicsForGroup()
+        this.getLocations()
+      })
+      .catch((error) => {
+        console.log("There was an error:", error.response);
+      });
+    },
+    getTopicsForGroup() {
+      TopicServices.getAllForGroup(this.group.id)
+      .then(response => {
+        let temp = response.data
+        temp.push({name:"Any", id: -1})
+        this.topics = temp
+      })
+      .catch(error => {
+        console.log("There was an error:", error.response)
+      });
+    },
+    getRole() {
+     PersonRoleServices.getPersonRole(this.id).then((response) => {
+       RoleServices.getRole(response.data.roleId).then((result) => {
+         this.role = result.data
+       })
+     })
+    },
+    //Update on a session being booked
     bookAppointment() {
-      this.splitAppointment().then(() => {
-        this.getAppointments();
-        this.loadAppointments();
-        this.selectedEvent.color = 'yellow'
+      AppointmentServices.getAppointment(this.selectedAppointment.id).then(response => {
+        if(response.data.status == "available") {
+          this.splitAppointment().then(() => {
+            this.getAppointments()
+            this.selectedEvent.color = 'yellow'
+          })
+        } else {
+          alert("This appointment has already been booked - Try a different slot")
+          this.getAppointments()
+          this.selectedOpen = false
+        }
       })
     },
-
+    //Update on tutor confirming booking
+    confirmAppointment(confirm) {
+      if(confirm) {
+        this.selectedAppointment.status = "booked"
+        AppointmentServices.updateAppointment(this.selectedAppointment.id, this.selectedAppointment).then(() =>{
+          this.getAppointments()
+          this.selectedEvent.color = 'blue'
+        })
+      } else {
+        this.selectedAppointment.status = "cancelled"
+        AppointmentServices.updateAppointment(this.selectedAppointment.id, this.selectedAppointment).then(() =>{
+          this.getAppointments()
+          this.selectedEvent.color = 'red'
+        })
+      }
+    },
     //Split appointments into more availablity slots when part of slot is booked
     async splitAppointment() {
-      if(this.selectedAppointment.status != "available") {
+      if(!this.checkStatus('available')) {
         return;
       }
+      //If the start of the booked slot isn't the start of the slot, generate an open slot
       if(this.selectedAppointment.startTime < this.newStart) {
         let temp = {
           date: this.selectedAppointment.date,
@@ -261,14 +419,23 @@ import TopicServices from "@/services/topicServices.js"
           endTime: this.newStart,
           type: this.selectedAppointment.type,
           status: this.selectedAppointment.status,
-          preSessionInfo: this.selectedAppointment.preSessionInfo,
+          preSessionInfo: "",
           groupId: this.selectedAppointment.groupId,
           locationId: this.selectedAppointment.locationId,
           topicId: this.selectedAppointment.topicId,
         }
-        console.log(temp)
-        AppointmentServices.addAppointment(temp)
+        AppointmentServices.addAppointment(temp).then((response)=> {
+          this.tutors.forEach((t) => {
+            let pap = {
+              isTutor: true,
+              appointmentId: response.data.id,
+              personId: t.id
+            }
+            PersonAppointmentServices.addPersonAppointment(pap)
+          })
+        })
       }
+      //If the end of the booked slot isn't the end of the slot, generate an open slot
       if(this.selectedAppointment.endTime > this.newEnd) {
         let temp = {
           date: this.selectedAppointment.date,
@@ -276,20 +443,33 @@ import TopicServices from "@/services/topicServices.js"
           endTime: this.selectedAppointment.endTime,
           type: this.selectedAppointment.type,
           status: this.selectedAppointment.status,
-          preSessionInfo: this.selectedAppointment.preSessionInfo,
+          preSessionInfo: "",
           groupId: this.selectedAppointment.groupId,
           locationId: this.selectedAppointment.locationId,
           topicId: this.selectedAppointment.topicId,
         }
-        console.log(temp)
-        AppointmentServices.addAppointment(temp)
+        AppointmentServices.addAppointment(temp).then((response)=> {
+          this.tutors.forEach((t) => {
+            let pap = {
+              isTutor: true,
+              appointmentId: response.data.id,
+              personId: t.id
+            }
+            PersonAppointmentServices.addPersonAppointment(pap)
+          })
+        })
       }
-
+      //Load appointment info
       this.selectedAppointment.status = "pending"
       this.selectedAppointment.endTime = this.newEnd
       this.selectedAppointment.startTime = this.newStart
-      console.log(this.selectedAppointment.status)
+      //Load person info
+      this.person.isTutor = false
+      this.person.appointmentId = this.selectedAppointment.id
+      this.person.personId = this.$store.state.loginUser.userID
+      //Update stored data
       await AppointmentServices.updateAppointment(this.selectedAppointment.id, this.selectedAppointment)
+      await PersonAppointmentServices.addPersonAppointment(this.person)
     },
 
     //Formats time to be more user friendly
@@ -305,10 +485,10 @@ import TopicServices from "@/services/topicServices.js"
       if (hours == 0) {
         hours = 12
       }
-      let dayTime = ((milHours / 12) > 0 ? "PM":"AM")
+      let dayTime = (~~(milHours / 12) > 0 ? "PM":"AM")
       return "" + hours + ":" + minutes + " " + dayTime
     },
-
+    //Create time slots for users to select from
     generateTimes(start, end) {
       let startInfo = start.split(":")
       let endInfo = end.split(":")
@@ -317,7 +497,7 @@ import TopicServices from "@/services/topicServices.js"
       let minutes = startInfo[1]
       let seconds = "00"
 
-      let newTime = startInfo
+      let newTime = start
       let newTimeText = ""
       let j = 0
 
@@ -330,8 +510,14 @@ import TopicServices from "@/services/topicServices.js"
       if(endInfo[1] == "30") {
         loop += 1
       }
+      let temp
       for(let i = 0; i < loop; i++) {
-        newTime = (hours + Math.floor((i + j)/2)) + ":" + minutes + ":" + seconds
+        temp = (hours + Math.floor((i + j)/2))
+        if(temp < 10)
+        {
+          temp = "0" + temp
+        }
+        newTime = temp + ":" + minutes + ":" + seconds
         newTimeText = this.calcTime(newTime)
         minutes = (minutes == "00" ? "30":"00")
         times.push({
@@ -345,43 +531,44 @@ import TopicServices from "@/services/topicServices.js"
       this.startTimes = this.generateTimes(this.selectedAppointment.startTime, this.newEnd)
       this.endTimes = this.generateTimes(this.newStart, this.selectedAppointment.endTime)
     },
-
     //Load data for info associated with events
-    getGroup(groupId) {
-      GroupServices.getGroup(groupId)
-        .then((response) => {
-          this.group = response.data;
-          console.log(response.data);
-        })
-        .catch((error) => {
-          console.log("There was an error:", error.response);
-        });
-    },
     getTopic(topicId) {
       TopicServices.getTopic(topicId)
         .then((response) => {
           this.topic = response.data;
-          console.log(response.data);
         })
         .catch((error) => {
           console.log("There was an error:", error.response);
         });
     },
-    getLocation(locationId) {
-      LocationServices.getLocation(locationId)
+    getLocations() {
+      LocationServices.getAllForGroup(this.group.id)
         .then((response) => {
-          this.location = response.data;
-          console.log(response.data);
+          this.locations = response.data;
         })
         .catch((error) => {
           console.log("There was an error:", error.response);
         });
     },
-    
+    getTopicsForTutor(tutor) {
+      this.currentTopics = []
+      PersonTopicServices.getAllForPerson(tutor.id).then(response => {
+        let personTopics = response.data
+        personTopics.forEach(topic => {
+          TopicServices.getTopic(topic.topicId).then(result => {
+            this.currentTopics.push(result.data)
+          })
+        })
+      })
+    },
     //Functions that run calendar functionality
     viewDay ({ date }) {
       this.focus = date
       this.type = 'day'
+    },
+    viewMonth () {
+      this.focus = ''
+      this.type = 'month'
     },
     getEventColor (event) {
       return event.color
@@ -402,12 +589,10 @@ import TopicServices from "@/services/topicServices.js"
         this.selectedEvent = event
         AppointmentServices.getAppointment(event.appointmentId).then(response => {
           this.selectedAppointment = response.data
-          this.getGroup(this.selectedAppointment.groupId)
-          this.getLocation(this.selectedAppointment.locationId)
-          this.getTopic(this.selectedAppointment.topicId)
           this.newStart = this.selectedAppointment.startTime
           this.newEnd = this.selectedAppointment.endTime
           this.updateTimes()
+          this.updatePeople()
           this.selectedElement = nativeEvent.target
           requestAnimationFrame(() => requestAnimationFrame(() => this.selectedOpen = true))
         });
@@ -420,13 +605,89 @@ import TopicServices from "@/services/topicServices.js"
       }
       nativeEvent.stopPropagation()
     },
-
+    //Update the lists of tutors and students
+    updatePeople() {
+      this.tutors = []
+      this.students = []
+      let tutorFound = false
+      this.personAppointments.forEach((person) => {
+        if(person.appointmentId == this.selectedAppointment.id) {
+          PersonServices.getPerson(person.personId).then((response) => {
+            if(person.isTutor) {
+              this.tutors.push(response.data)
+              if(!tutorFound) {
+                this.getTopicsForTutor(response.data)
+                tutorFound = true
+              }
+            } else {
+              this.students.push(response.data)
+            }
+          })
+        }
+      })
+      
+    },
+    //Checks if the current session matches the given status, for hiding certain elements
+    checkStatus(status) {
+      if(this.selectedAppointment != null && this.selectedAppointment.status == status) {
+        return true;
+      }
+      else {
+        return false;
+      }
+    },
+    checkTopic(topic) {
+      if(this.selectedTopic != null && this.selectedTopic == topic) {
+        return true;
+      }
+      else {
+        return false;
+      }
+    },
+    checkRole(type) {
+      if(this.role != null && this.role.type == type) {
+        return true;
+      }
+      else {
+        return false;
+      }
+    },
+    checkUserInAppointment(appId) {
+      let found = false
+      this.personAppointments.forEach((p) => {
+        if(p.personId == this.user.userID && p.appointmentId == appId) {
+          found = true
+        }
+      })
+      return found
+    },
     //Load all appointments in backend into calendar events
-    async loadAppointments () {
+    async loadAppointments() {
       const events = []
-      console.log(this.appointments.length);
-      //TODO - add filtering options
+      let filtered
       for(let i = 0; i < this.appointments.length; i++) {
+        //filter events to only add appropriate events
+        filtered = true
+        //only add appointments from the current group
+        if(this.appointments[i].groupId != this.group.id) {
+          filtered = false;
+        }
+        //filter by topic
+        if(this.selectedTopic != -1 && !this.checkTopic(this.appointments[i].topicId)) {
+          filtered = false;
+        }
+        if(!this.checkRole("Admin"))
+        {
+          if(!(this.appointments[i].status == "available") || this.checkRole("Tutor")) {
+          //only add if user is associated with event
+            if(!this.checkUserInAppointment(this.appointments[i].id)){
+              filtered = false;
+            }
+          }
+        }
+
+        if(filtered) {
+        //Set color for each event
         let color = 'grey darken-1'
         switch (this.appointments[i].status) {
           case "pending":
@@ -445,6 +706,7 @@ import TopicServices from "@/services/topicServices.js"
             color = 'grey darken-1'
             break
         }
+        //Format times for each event
         let startTime = new Date(this.appointments[i].date)
         let startTimes = this.appointments[i].startTime.split(":");
         startTime.setHours(startTime.getHours() + parseInt(startTimes[0]))
@@ -460,6 +722,7 @@ import TopicServices from "@/services/topicServices.js"
           timed: true,
           appointmentId: this.appointments[i].id
         })
+      }
       }
       this.events = events
     },
