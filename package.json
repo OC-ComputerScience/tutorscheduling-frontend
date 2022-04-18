@@ -16,6 +16,7 @@
     "vue-doc-preview": "^0.3.2",
     "vue-json-csv": "^2.1.0",
     "vue-json-to-csv": "^1.1.8",
+    "vue-nested-json-to-csv": "0.0.23",
     "vue-pdf": "^4.3.0",
     "vue-router": "^3.5.3",
     "vue-signature": "^2.5.4",
