@@ -226,7 +226,7 @@ const router =  new Router({
       component: AvailabilityAdd
     },
     {
-      path: '/calendar',
+      path: '/calendar/:id',
       name: 'mainCalendar',
       component: MainCalendar,
       props: true
