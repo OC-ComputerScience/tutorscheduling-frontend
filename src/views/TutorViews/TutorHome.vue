@@ -173,7 +173,7 @@ import GroupServices from "@/services/groupServices.js";
         await PersonRoleServices.getPersonRole(this.id)
         .then((response) => {
           console.log(response);
-          if(response.data.status.includes("approved"))
+          if(response.data.status.includes("approved") || response.data.status.includes("Approved"))
           {
             this.approved = true;
             console.log(this.approved)

@@ -8,65 +8,103 @@
         <br><br>
         <h4>Filter the table below and then download the csv file.</h4>
         <br><br>
-        <v-col md="4">
-          <v-menu
-            v-model="menu"
-            :close-on-content-click="false"
-            :nudge-right="40"
-            transition="scale-transition"
-            offset-y
-            min-width="auto"
-          >
-            <template v-slot:activator="{ on, attrs }">
-              <v-text-field
-                v-model="dateRangeText"
-                label="Date Range"
-                prepend-icon="mdi-calendar"
-                readonly
-                v-bind="attrs"
-                v-on="on"
-              ></v-text-field>
-            </template>
-            <v-date-picker
-              v-model="dates"
-              range
-            ></v-date-picker>
-          </v-menu>
-        </v-col>
-        <v-col>
-          <v-select
-            :items="topics"
-            item-text="name"
-            item-value="id"
-            label="Topic"
-            @change="this.selectedTopic = topic"
-          >
-          </v-select>
-        </v-col>
+        <v-row>
+          <v-col md="4">
+            <v-menu
+              v-model="menu"
+              :close-on-content-click="false"
+              :nudge-right="40"
+              transition="scale-transition"
+              offset-y
+              min-width="auto"
+            >
+              <template v-slot:activator="{ on, attrs }">
+                <v-text-field
+                  v-model="dateRangeText"
+                  label="Date Range"
+                  prepend-icon="mdi-calendar"
+                  readonly
+                  v-bind="attrs"
+                  v-on="on"
+                ></v-text-field>
+              </template>
+              <v-date-picker
+                v-model="dates"
+                range
+              ></v-date-picker>
+            </v-menu>
+          </v-col>
+          <v-col md="4">
+            <v-select
+              v-model="selectedTopic"
+              :items="topics"
+              item-text="name"
+              item-value="id"
+              label="Topic"
+            >
+            </v-select>
+          </v-col>
+          <v-col md="4">
+            <v-select
+              v-model="selectedStatus"
+              :items="status"
+              label="Status"
+            >
+            </v-select>
+          </v-col>
+          <!-- <v-col md="4">
+            <v-select
+              v-model="selectedType"
+              :items="types"
+              label="Type"
+            >
+            </v-select>
+          </v-col> -->
+          <v-col md="4">
+            <v-select
+              v-model="selectedTutors"
+              :items="tutors"
+              item-text="fullName"
+              item-value="id"
+              chips
+              multiple
+              label="Tutors"
+            >
+            </v-select>
+          </v-col>
+          <v-col md="4">
+            <v-select
+              v-model="selectedStudents"
+              :items="students"
+              item-text="fullName"
+              item-value="id"
+              chips
+              multiple
+              label="Students"
+            >
+            </v-select>
+          </v-col>
+        </v-row>
+        <v-btn
+            color="success"
+            class="mr-4"
+            @click="filter()"
+        >
+            Filter
+        </v-btn>
         <br><br>
-        <v-card>
-            <v-card-title>
-                Appointments for {{this.user.selectedGroup}} Reporting
-                <v-spacer></v-spacer>
-                <vue-json-to-csv
-                    :json-data="selectedAppointments"
-                    :labels="labels"
-                    :csv-title="fileName"
-                >
-                    <v-btn
-                        color="success"
-                        class="mr-4"
-                    >
-                        Download CSV
-                    </v-btn>
-                </vue-json-to-csv>
-            </v-card-title>
-            <v-data-table
-                :headers="headers"
-                :items="appointments"
-                :items-per-page="50"
-            ></v-data-table>
-        </v-card>
+        <vue-json-to-csv
+            :json-data="selectedAppointments"
+            :labels="labels"
+            :csv-title="fileName"
+        >
+            <v-btn
+                color="success"
+                class="mr-4"
+            >
+                Download CSV
+            </v-btn>
+        </vue-json-to-csv>
     </v-container>
   </div>
 </template>
@@ -76,6 +114,8 @@ import VueJsonToCsv from 'vue-json-to-csv'
 import Utils from '@/config/utils.js'
 import AppointmentServices from '@/services/appointmentServices.js'
 import GroupServices from "@/services/groupServices.js";
+import PersonServices from "@/services/personServices.js";
+import TopicServices from "@/services/topicServices.js";
 
   export default {
     name: 'App',
@@ -89,7 +129,13 @@ import GroupServices from "@/services/groupServices.js";
         group: {},
         user: {},
         topics: [],
-        selectedTopic: '',
+        selectedTopic: -1,
+        status: ["available", "booked", "cancelled", "pending", "completed"],
+        selectedStatus: '',
+        tutors: [],
+        selectedTutors: [],
+        students: [],
+        selectedStudents: [],
         fileName: '',
         today: '',
         appointments: [],
@@ -122,14 +168,16 @@ import GroupServices from "@/services/groupServices.js";
       this.user = Utils.getStore('user');
       await this.getGroup(this.user.selectedGroup.replace(/%20/g, " "))
       .then(async () => {
+        this.getTopicsForGroup();
         await this.getAppointmentsForGroup()
-        .then(() => {
+        .then(async () => {
           var date = new Date();
           this.today = String(date.getMonth() + 1).padStart(2, '0') + '-'
               + String(date.getDate()).padStart(2, '0') + '-' 
               + date.getFullYear();
           this.fileName = this.user.selectedGroup + " Report for " + this.today;
-          this.setSelectedAppointments();
+          await this.setSelectedAppointments();
+          this.updatePeople();
         })
       })
     },
@@ -143,13 +191,8 @@ import GroupServices from "@/services/groupServices.js";
           console.log("There was an error:", error.response);
         });
       },
-      setSelectedAppointments() {
-        // filter appointments by date
-        if(this.dates.length > 0) {
-          this.selectedAppointments = this.appointments.filter(appointment => appointment.date > this.dates[0] && appointment.date < this.dates[1]);
-        }
-        else  // if no dates are picked, it will add all appointments
-          this.selectedAppointments = this.appointments;
+      async setSelectedAppointments() {
+        this.selectedAppointments = this.appointments;
         for(let i = 0; i < this.appointments.length; i++) {
           this.selectedAppointments[i].topicName = this.appointments[i].topic.name;
           this.selectedAppointments[i].locationName = this.appointments[i].location.name;
@@ -205,11 +248,59 @@ import GroupServices from "@/services/groupServices.js";
             console.log("There was an error:", error.response)
           });
       },
-      addRole() {
-        this.$router.push({ name: 'roleAdd'});
+      getTopicsForGroup() {
+        TopicServices.getAllForGroup(this.group.id)
+        .then(response => {
+          // let temp = response.data
+          // temp.push({name:"Any", id: -1})
+          this.topics = response.data
+        })
+        .catch(error => {
+          console.log("There was an error:", error.response)
+        });
       },
-      cancel() {
-        this.$router.go(-1);
+      //Update the lists of tutors and students
+      updatePeople() {
+        this.tutors = []
+        this.students = []
+        PersonServices.getAllForGroup(this.group.id)
+        .then(response => {
+          let people = response.data;
+          console.log(people);
+          for(let i = 0; i < people.length; i++) {
+            people[i].fullName = people[i].fName + " " + people[i].lName;
+            if(people[i].personrole[0].role.type.includes("Tutor")) {
+              this.tutors.push(people[i]);
+            }
+            else if (people[i].personrole[0].role.type.includes("Student")) {
+              this.students.push(people[i]);
+            }
+          }
+            console.log(this.tutors)
+            console.log(this.students)
+        })
+        .catch(error => {
+          console.log("There was an error:", error.response)
+        });
+      },
+      filter() {
+        // filter appointments by date
+        console.log(this.dates);
+        if(this.dates.length > 0) {
+          this.selectedAppointments = this.selectedAppointments.filter(appointment => new Date(appointment.date) >= new Date(this.dates[0]) && new Date(appointment.date) <= new Date(this.dates[1]));
+        }
+        if(this.selectedTopic > 0) {
+          this.selectedAppointments = this.selectedAppointments.filter(appointment => appointment.topicId === this.selectedTopic);
+        }
+        if(this.selectedStatus !== '') {
+          this.selectedAppointments = this.selectedAppointments.filter(appointment => appointment.status === this.selectedStatus);
+        }
+        // need to filter by tutors/students
+        // if(this.selectedTutors.length > 0) {
+        //   this.selectedAppointments = this.selectedAppointments.filter(appointment => appointment.status === this.selectedStatus);
+        // }
+
+        console.log(this.selectedAppointments);
       }
     }
   }
