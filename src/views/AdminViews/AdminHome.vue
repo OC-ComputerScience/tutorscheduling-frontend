@@ -169,7 +169,7 @@ import GroupServices from "@/services/groupServices.js";
         headers: [{text: 'Date', value: 'date'}, 
                   {text: 'Start Time', value: 'startTime'},
                   {text: 'End Time', value: 'endTime'},
-                  {text: 'Topic', value: 'topicId'}]
+                  {text: 'Topic', value: 'topic.name'}]
       };
     },
     async created() {
