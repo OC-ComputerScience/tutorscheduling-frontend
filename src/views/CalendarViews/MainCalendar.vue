@@ -17,17 +17,9 @@
         outlined
         class="mr-4"
         color="grey darken-2"
-        @click="setToday"
-      >
-      Today
-      </v-btn>
-      <v-btn
-        outlined
-        class="mr-4"
-        color="grey darken-2"
         @click="viewMonth()"
       >
-      Month
+      Reset
       </v-btn>
       <!-- Navigates calendar forward and back -->
       <v-btn
@@ -57,7 +49,7 @@
           {{ $refs.calendar.title }}
       </v-toolbar-title>
       <v-spacer></v-spacer>
-      <v-col>
+      <v-col cols="3" align-self="start">
         <v-select
         dense
         v-model="selectedTopic"
@@ -69,6 +61,15 @@
         @change="loadAppointments()"
         ></v-select>
       </v-col>
+      <v-btn
+          outlined
+          class="mr-4"
+          color="grey darken-2"
+          @click="viewKey()"
+          right
+        >
+        Key
+      </v-btn>
       <!-- Dropdown menu to select format -->
       <!-- Will modify to only include relevant formats -->
       <v-menu
@@ -269,19 +270,87 @@
     </v-col>
     </v-row>
     </v-container>
+    <v-dialog v-model="keyVisible" max-width="600px">
+    <v-card
+    >
+      <v-card-title class="text-h5">Color Meanings</v-card-title>
+      <v-card-text class="text-h6">
+        <v-btn
+        elevation="0"
+        color="grey darken-1"
+        class="white--text"
+        width="100"
+        > 
+        Grey
+        </v-btn>
+        <span> - This event marks an open timeslot that is available to be booked by any student</span>
+        <br>
+        <v-btn
+        elevation="0"
+        color="yellow"
+        class="white--text"
+        width="100"
+        > 
+        Yellow
+        </v-btn>
+        <span> - This event marks that a set time has been requested and is pending tutor approval</span>
+        <br>
+        <v-btn
+        elevation="0"
+        color="red"
+        class="white--text"
+        width="100"
+        > 
+        Red
+        </v-btn>
+        <span> - This event marks a requested timeslot that has been cancelled by the tutor</span>
+        <br>
+        <v-btn
+        elevation="0"
+        color="blue"
+        class="white--text"
+        width="100"
+        > 
+        Blue
+        </v-btn>
+        <span> - This event marks a timeslot that has been booked and notes an upcoming meeting</span>
+        <br>
+        <v-btn
+        elevation="0"
+        color="green"
+        class="white--text"
+        width="100"
+        > 
+        Green
+        </v-btn>
+        <span> - This event marks a timeslot that for a meeting that has been completed, 
+          and is used for keeping track of user reviews</span>
+      </v-card-text>
+      <v-card-actions>
+        <v-spacer></v-spacer>
+        <v-btn color="blue darken-1" text @click="hideKey">Close</v-btn>
+        <v-spacer></v-spacer>
+      </v-card-actions>
+    </v-card>
+  </v-dialog>
   </div>
 </template>
 
 <script>
+//For info on appointments
 import AppointmentServices from '@/services/appointmentServices.js'
 import PersonAppointmentServices from '@/services/personAppointmentServices.js'
+//For info on people and their associated roles
 import PersonServices from "@/services/personServices.js"
-import GroupServices from "@/services/groupServices.js"
-import LocationServices from "@/services/locationServices.js"
 import PersonTopicServices from "@/services/personTopicServices.js"
-import TopicServices from "@/services/topicServices.js"
 import PersonRoleServices from "@/services/personRoleServices.js"
 import RoleServices from "@/services/roleServices.js"
+//For info to be shown with appointments
+import GroupServices from "@/services/groupServices.js"
+import LocationServices from "@/services/locationServices.js"
+import TopicServices from "@/services/topicServices.js"
+//Plugin functions
+import TwilioServices from "@/services/twilioServices.js"
 import Utils from '@/config/utils.js'
 
   export default {
@@ -313,6 +382,7 @@ import Utils from '@/config/utils.js'
       day: 'Day',
       '4day': '4 Days',
     },
+    keyVisible: false,
     topics: [],
     selectedTopic: -1,
     //event data for calendar events
@@ -470,6 +540,7 @@ import Utils from '@/config/utils.js'
       //Update stored data
       await AppointmentServices.updateAppointment(this.selectedAppointment.id, this.selectedAppointment)
       await PersonAppointmentServices.addPersonAppointment(this.person)
+      this.sendMessage(this.tutors[0], this.user.fName, this.user.lName)
     },
 
     //Formats time to be more user friendly
@@ -582,7 +653,17 @@ import Utils from '@/config/utils.js'
     next () {
       this.$refs.calendar.next()
     },
-
+    viewKey() {
+      this.keyVisible = true;
+    },
+    hideKey() {
+      this.keyVisible = false;
+    },
+    sendMessage(tutor, fName, lName) {
+      let temp = tutor
+      temp.message = "You have a session request from " +fName + " " + lName + " pending"
+      TwilioServices.sendMessage(temp);
+    },
     //Animates Event card popping up
     showEvent ({ nativeEvent, event }) {
       const open = () => {
