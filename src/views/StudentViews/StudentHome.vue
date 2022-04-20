@@ -84,7 +84,7 @@ import GroupServices from "@/services/groupServices.js";
         headers: [{text: 'Date', value: 'date'}, 
                   {text: 'Start Time', value: 'startTime'},
                   {text: 'End Time', value: 'endTime'},
-                  {text: 'Topic', value: 'topicId'}]
+                  {text: 'Topic', value: 'topic.name'}]
       };
     },
     async created() {
@@ -105,7 +105,7 @@ import GroupServices from "@/services/groupServices.js";
         });
       },
       async getAppointments() {
-        await AppointmentServices.getAppointmentForPersonForGroup(this.group.id, this.user.userID)
+        await AppointmentServices.getUpcomingAppointmentForPersonForGroup(this.group.id, this.user.userID)
           .then(response => {
             this.appointments = response.data;
             console.log(response);

@@ -15,8 +15,14 @@ export default {
     getAppointmentForGroup(groupId) {
       return apiClient.get("appointment/group/" + groupId)
     },
+    getUpcomingAppointmentForGroup(groupId) {
+      return apiClient.get("appointment/upGroup/" + groupId)
+    },
     getAppointmentForPersonForGroup(groupId, personId) {
       return apiClient.get("appointment/group/" + groupId + "/person/" + personId)
+    },
+    getUpcomingAppointmentForPersonForGroup(groupId, personId) {
+      return apiClient.get("appointment/upGroup/" + groupId + "/person/" + personId)
     },
     addAppointment(appointment) {
       return apiClient.post("appointment", appointment);

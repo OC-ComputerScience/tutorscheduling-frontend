@@ -60,7 +60,7 @@
       <v-row>
         <v-col>
           <v-card 
-            :to="{ name: 'signUp' }"
+            :to="{ name: 'apply' }"
             height="100"
             elevation="10"
             color="yellow"
@@ -73,7 +73,7 @@
         </v-col>
         <v-col>
           <v-card 
-            :to="{ name: 'signUp' }"
+            :to="{ name: 'apply' }"
             height="100"
             elevation="10"
             color="teal"
