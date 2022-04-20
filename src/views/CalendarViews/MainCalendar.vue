@@ -3,7 +3,7 @@
   <div>
     <v-container>
     <v-toolbar>
-      <v-toolbar-title>Schedule</v-toolbar-title>
+      <v-toolbar-title>Calendar</v-toolbar-title>
     </v-toolbar>
     <br>
     <v-row class="fill-height">

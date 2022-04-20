@@ -6,8 +6,8 @@
         <v-spacer></v-spacer>
         <v-toolbar-title>Admin</v-toolbar-title>
       </v-toolbar>
-      <v-row>
-        <v-col>
+      <v-row justify="center">
+        <v-col md="4">
           <v-card 
             :to="{ name: 'mainCalendar' }"
             class="mx-auto my-12 d-flex justify-center"
@@ -21,7 +21,7 @@
             </v-card-title>
           </v-card>
         </v-col>
-        <v-col>
+        <v-col md="4">
           <v-card 
             :to="{ name: 'requestList' }"
             class="mx-auto my-12 d-flex justify-center"
@@ -35,7 +35,7 @@
             </v-card-title>
           </v-card>
         </v-col>
-        <v-col>
+        <v-col md="4">
           <v-card 
             :to="{ name: 'personList' }"
             class="mx-auto my-12 d-flex justify-center"
@@ -49,9 +49,7 @@
             </v-card-title>
           </v-card>
         </v-col>
-      </v-row>
-      <v-row>
-        <v-col>
+        <v-col md="4">
           <v-card 
             :to="{ name: 'topicList' }"
             class="mx-auto my-12 d-flex justify-center"
@@ -65,7 +63,7 @@
             </v-card-title>
           </v-card>
         </v-col>
-        <v-col>
+        <v-col md="4">
           <v-card 
             :to="{ name: 'roleList' }"
             class="mx-auto my-12 d-flex justify-center"
@@ -79,7 +77,7 @@
             </v-card-title>
           </v-card>
         </v-col>
-        <v-col>
+        <v-col md="4">
           <v-card 
             :to="{ name: 'locationList' }"
             class="mx-auto my-12 d-flex justify-center"
@@ -93,9 +91,7 @@
             </v-card-title>
           </v-card>
         </v-col>
-      </v-row>
-      <v-row>
-        <v-col>
+        <v-col md="4">
           <v-card 
             :to="{ name: 'pendingList' }"
             class="mx-auto my-12 d-flex justify-center"
@@ -106,6 +102,20 @@
           >
             <v-card-title class="justify-center white--text">
                   View Applications
+            </v-card-title>
+          </v-card>
+        </v-col>
+        <v-col md="4">
+          <v-card 
+            :to="{ name: 'reportList' }"
+            class="mx-auto my-12 d-flex justify-center"
+            max-width="400"
+            height="100"
+            elevation="10"
+            color="accent"
+          >
+            <v-card-title class="justify-center white--text">
+                  View Reports
             </v-card-title>
           </v-card>
         </v-col>
@@ -159,7 +169,7 @@ import GroupServices from "@/services/groupServices.js";
         headers: [{text: 'Date', value: 'date'}, 
                   {text: 'Start Time', value: 'startTime'},
                   {text: 'End Time', value: 'endTime'},
-                  {text: 'Topic', value: 'topicId'}]
+                  {text: 'Topic', value: 'topic.name'}]
       };
     },
     async created() {
@@ -180,7 +190,7 @@ import GroupServices from "@/services/groupServices.js";
         });
       },
       async getAppointmentsForGroup() {
-        await AppointmentServices.getAppointmentForGroup(this.group.id)
+        await AppointmentServices.getUpcomingAppointmentForGroup(this.group.id)
           .then(response => {
             this.appointments = response.data;
             console.log(response);

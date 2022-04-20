@@ -43,6 +43,8 @@ import RoleView    from './views/AdminViews/RoleViews/RoleView.vue';
 import RequestList    from './views/AdminViews/RequestViews/RequestList.vue';
 import RequestAdd     from './views/StudentViews/RequestAdd.vue';
 
+// Reports
+import ReportList    from './views/AdminViews/ReportViews/ReportList.vue';
 
 // Approvals
 import PendingList    from './views/AdminViews/ApprovalViews/PendingList.vue';
@@ -208,6 +210,12 @@ const router =  new Router({
       path: '/pendingList',
       name: 'pendingList',
       component: PendingList,
+      props: true
+    },
+    {
+      path: '/reportList',
+      name: 'reportList',
+      component: ReportList,
       props: true
     },
     {
