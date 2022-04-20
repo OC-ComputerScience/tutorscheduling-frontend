@@ -94,7 +94,6 @@
           v-if="menu2"
           v-model="startTime"
           full-width
-          :allowed-minutes="this.allowedStep"
           @click:minute="$refs.menu.save(startTime)"
         ></v-time-picker>
 
@@ -130,7 +129,6 @@
           v-model="endTime"
           full-width
           @click:minute="$refs.menu.save(endTime)"
-          :allowed-minutes="this.allowedStep"
         ></v-time-picker>
 
         
@@ -270,7 +268,7 @@ import PersonAppointmentServices from "@/services/personAppointmentServices.js"
           this.appointment.date = date
           this.appointment.startTime = this.startTime
           this.appointment.endTime = this.endTime
-          this.appointment.type = this.person.fName + " " + this.person.lName
+          this.appointment.type = "Single Session"
           this.appointment.status = "available"
           this.appointment.groupId = this.group.id
           this.appointment.locationId = this.location.id
@@ -358,7 +356,6 @@ import PersonAppointmentServices from "@/services/personAppointmentServices.js"
       GroupServices.getGroupByName(name)
       .then((response) => {
         this.group = response.data[0]
-        console.log(this.group)
         this.getTopicsForGroup()
       })
       .catch((error) => {
@@ -369,18 +366,14 @@ import PersonAppointmentServices from "@/services/personAppointmentServices.js"
       TopicServices.getTopicForPerson(this.person.id)
       .then(response => {
         this.topic = response.data[0]
-        console.log(this.topic)
         LocationServices.getAllForGroup(this.group.id).then(response => {
           this.location = response.data[0]
-          console.log(this.location)
         })
       })
       .catch(error => {
         console.log("There was an error:", error.response)
       });
     },
-
-    allowedStep: m => m % 30 === 0,
 
     // popup functions
     deleteItem (item) {
@@ -393,7 +386,7 @@ import PersonAppointmentServices from "@/services/personAppointmentServices.js"
         AvailabilityServices.deleteAvailability(this.editedItem.id)
           .then(() => {
             this.close()
-            this.getAvailabilities()      
+            window.location.reload();          
           })
           .catch(error => {
             console.log("There was an error:", error.response)
