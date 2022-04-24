@@ -129,6 +129,7 @@
 
 <script>
 import AuthServices from '@/services/authServices'
+import AppointmentServices from '@/services/appointmentServices'
 import GroupServices from '@/services/groupServices'
 import RoleServices from '@/services/roleServices'
 import PersonServices from '@/services/personServices'
@@ -187,6 +188,7 @@ export default {
           Utils.setStore("user", this.user);
           this.name = this.user.fName;
           console.log(this.user);
+          //this.getPerson();
           this.openDialogs();
         })
         .catch(error => {
@@ -201,11 +203,28 @@ export default {
       await PersonServices.getPerson(this.user.userID)
         .then(response => {
           this.person = response.data;
-          return;
+          // changes made for the future to get google calendar token
+          // console.log(this.person);
+          // if(this.person.googleToken === '') {
+          //   this.getGoogleCalToken();
+          // }
+          // else {
+          //   this.openDialogs();
+          // }
         })
         .catch(error => {
           console.log("There was an error:", error.response)
         });
+    },
+    getGoogleCalToken() {
+      AppointmentServices.getGoogleCalPage()
+      .then(response => {
+        console.log(response)
+        window.open(response.data)
+      })
+      .catch(error => {
+        console.log("There was an error:", error.response)
+      });
     },
     async getPersonRoles() {
         await RoleServices.getIncompleteRoleForPerson(this.user.userID)
