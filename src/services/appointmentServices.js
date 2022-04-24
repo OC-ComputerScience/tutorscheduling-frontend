@@ -6,6 +6,9 @@ export default {
     getAllAppointments() {
       return apiClient.get("appointment");
     },
+    getGoogleCalPage() {
+      return apiClient.get("appointment/googlecal");
+    },
     getAppointment(id) {
       return apiClient.get("appointment/" + id);
     },
@@ -29,6 +32,9 @@ export default {
     },
     updateAppointment(appointmentId, appointment) {
       return apiClient.put("appointment/" + appointmentId, appointment);
+    },
+    updateAppointmentStatus(appointmentId, appointment) {
+      return apiClient.put("appointment/status/" + appointmentId, appointment);
     },
     deleteAppointment(appointmentId) {
       return apiClient.delete("appointment/" + appointmentId);

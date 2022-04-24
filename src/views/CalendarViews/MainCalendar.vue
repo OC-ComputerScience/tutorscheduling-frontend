@@ -464,7 +464,8 @@ import Utils from '@/config/utils.js'
     confirmAppointment(confirm) {
       if(confirm) {
         this.selectedAppointment.status = "booked"
-        AppointmentServices.updateAppointment(this.selectedAppointment.id, this.selectedAppointment).then(() =>{
+        AppointmentServices.updateAppointmentStatus(this.selectedAppointment.id, this.selectedAppointment)
+        .then(() =>{
           this.getAppointments()
           this.selectedEvent.color = 'blue'
         })
