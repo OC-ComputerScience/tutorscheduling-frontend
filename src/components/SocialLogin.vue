@@ -193,7 +193,6 @@ export default {
           Utils.setStore("user", this.user);
           this.name = this.user.fName;
           console.log(this.user);
-          //this.getPerson();
           this.openDialogs();
         })
         .catch(error => {
@@ -208,14 +207,6 @@ export default {
       await PersonServices.getPerson(this.user.userID)
         .then(response => {
           this.person = response.data;
-          // changes made for the future to get google calendar token
-          // console.log(this.person);
-          // if(this.person.googleToken === '') {
-          //   this.getGoogleCalToken();
-          // }
-          // else {
-          //   this.openDialogs();
-          // }
         })
         .catch(error => {
           console.log("There was an error:", error.response)
