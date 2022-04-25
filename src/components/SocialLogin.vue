@@ -180,7 +180,12 @@ export default {
         console.log('getAuthResponse', GoogleUser.getAuthResponse());
         var userInfo = {
           email: GoogleUser.getBasicProfile().getEmail(),
-          accessToken: GoogleUser.getAuthResponse().id_token
+          idToken: GoogleUser.getAuthResponse().id_token,
+          token: {
+            access_token: GoogleUser.getAuthResponse().access_token,
+            token_type: GoogleUser.getAuthResponse().token_type,
+            expiry_date: GoogleUser.getAuthResponse().expires_at
+          }
         }
         AuthServices.loginUser(userInfo)
         .then(response => {
