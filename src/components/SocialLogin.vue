@@ -180,7 +180,12 @@ export default {
         console.log('getAuthResponse', GoogleUser.getAuthResponse());
         var userInfo = {
           email: GoogleUser.getBasicProfile().getEmail(),
-          accessToken: GoogleUser.getAuthResponse().id_token
+          idToken: GoogleUser.getAuthResponse().id_token,
+          token: {
+            access_token: GoogleUser.getAuthResponse().access_token,
+            token_type: GoogleUser.getAuthResponse().token_type,
+            expiry_date: GoogleUser.getAuthResponse().expires_at
+          }
         }
         AuthServices.loginUser(userInfo)
         .then(response => {
@@ -188,7 +193,6 @@ export default {
           Utils.setStore("user", this.user);
           this.name = this.user.fName;
           console.log(this.user);
-          //this.getPerson();
           this.openDialogs();
         })
         .catch(error => {
@@ -203,14 +207,6 @@ export default {
       await PersonServices.getPerson(this.user.userID)
         .then(response => {
           this.person = response.data;
-          // changes made for the future to get google calendar token
-          // console.log(this.person);
-          // if(this.person.googleToken === '') {
-          //   this.getGoogleCalToken();
-          // }
-          // else {
-          //   this.openDialogs();
-          // }
         })
         .catch(error => {
           console.log("There was an error:", error.response)
