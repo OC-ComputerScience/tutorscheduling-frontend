@@ -122,6 +122,8 @@
         ></v-calendar>
 
         <!--Pop-up that appears when an event is selected -->
+
+        <!-- add another v-menu for group session v private-->
         <v-menu
         v-model="selectedOpen"
         :close-on-content-click="false"
@@ -193,10 +195,12 @@
             :disabled="!checkStatus('available')"
           >
           </v-select>
-          
+
           </v-container>
+          <!-- show time ad an changeable value for private lessons-->
           <v-container v-if="checkStatus('available')">
           <v-select
+            v-if="selectedAppointment.type = 'Private'"
             v-model="newStart"
             :items="startTimes"
             item-text="timeText"
@@ -207,9 +211,22 @@
             dense
           >
           </v-select>
+          <!-- show time as an unchangeable value -->
+          <v-select
+            v-else-if="selectedAppointment.type = 'Group'"
+            v-model="newStart"
+            :items="selectedAppointment.startTime"
+            item-text="timeText"
+            item-value="time"
+            label="Booked Start"
+            required
+            dense
+          >
+          </v-select>
           </v-container>
           <v-container v-if="checkStatus('available')">
           <v-select 
+            v-if="selectedAppointment.type = 'Private'"
             v-model="newEnd"
             :items="endTimes"
             item-text="timeText"
@@ -220,18 +237,31 @@
             dense
           >
           </v-select>
+          <v-select
+            v-else-if="selectedAppointment.type = 'Group'"
+            v-model="newEnd"
+            :items="selectedAppointment.endTime"
+            item-text="timeText"
+            item-value="time"
+            label="Booked End"
+            required
+            dense
+          >
+          </v-select>
           </v-container>
+          <!-- put in presession-info for appointment for private appointments-->
           <v-textarea
-          v-model="selectedAppointment.preSessionInfo"
-          id="preSession"
-          :counter="130"
-          label="Pre-Session Info"
-          hint="Enter Info About What You Need Help With..."
-          persistent-hint
-          required
-          auto-grow
-          rows="1"
-          :disabled="!checkStatus('available')"
+            v-if="selectedAppointment.type = 'Private'"
+            v-model="selectedAppointment.preSessionInfo"
+            id="preSession"
+            :counter="130"
+            label="Pre-Session Info"
+            hint="Enter Info About What You Need Help With..."
+            persistent-hint
+            required
+            auto-grow
+            rows="1"
+            :disabled="!checkStatus('available')"
           ></v-textarea>
           <!-- User sign up here -->
         </v-card-text>
@@ -463,12 +493,20 @@ import Utils from '@/config/utils.js'
     //Update on tutor confirming booking
     confirmAppointment(confirm) {
       if(confirm) {
-        this.selectedAppointment.status = "booked"
-        AppointmentServices.updateAppointmentStatus(this.selectedAppointment.id, this.selectedAppointment)
-        .then(() =>{
-          this.getAppointments()
-          this.selectedEvent.color = 'blue'
-        })
+        if(this.selectedAppointment.type == 'Private'){
+          this.selectedAppointment.status = "booked"
+          AppointmentServices.updateAppointmentStatus(this.selectedAppointment.id, this.selectedAppointment)
+          .then(() =>{
+            this.getAppointments()
+            this.selectedEvent.color = 'blue'
+          })
+        }
+        else if(this.selectedAppointment.type == 'Group'){
+          AppointmentServices.updateAppointmentStatus(this.selectedAppointment.id, this.selectedAppointment)
+          .then(() =>{
+            this.getAppointments()
+          })
+        }
       } else {
         this.selectedAppointment.status = "cancelled"
         AppointmentServices.updateAppointment(this.selectedAppointment.id, this.selectedAppointment).then(() =>{

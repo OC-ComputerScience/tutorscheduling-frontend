@@ -136,13 +136,21 @@
         
       </v-menu>
     </v-col>
-    <v-btn
+    <v-container >
+      <v-checkbox
+        v-model="groupSession"
+        :label="'Group Session?'"
+        value
+      ></v-checkbox>
+      <v-btn
         color="success"
         class="mr-4"
         @click="addAvailability"
       >
         Save
-      </v-btn>
+      </v-btn> <!-- have combo box here asking if the availabilities being added are group sessions or private -->
+    </v-container>
+    
   </v-row>
   </div>
   <div>
@@ -220,6 +228,7 @@ import PersonAppointmentServices from "@/services/personAppointmentServices.js"
       menu3: false,
       menu4: false,
       menu5: false,
+      groupSession: {},
       person: {},
       user: {},
       group: {},
@@ -270,7 +279,11 @@ import PersonAppointmentServices from "@/services/personAppointmentServices.js"
           this.appointment.date = date
           this.appointment.startTime = this.startTime
           this.appointment.endTime = this.endTime
-          this.appointment.type = this.person.fName + " " + this.person.lName
+          if(this.groupSession == false){
+            this.appointment.type = "Private"
+          }
+          else
+            this.appointment.type = "Group"
           this.appointment.status = "available"
           this.appointment.groupId = this.group.id
           this.appointment.locationId = this.location.id
