@@ -61,6 +61,18 @@
         @change="loadAppointments()"
         ></v-select>
       </v-col>
+      <v-col cols="3" align-self="start">
+        <v-select
+        dense
+        v-model="selectedTutor"
+        :items="tutorSelect"
+        item-text="name"
+        item-value="id"
+        label="Tutor"
+        outlined
+        @change="loadAppointments()"
+        ></v-select>
+      </v-col>
       <v-btn
           outlined
           class="mr-4"
@@ -384,7 +396,9 @@ import Utils from '@/config/utils.js'
     },
     keyVisible: false,
     topics: [],
+    tutorSelect: [],
     selectedTopic: -1,
+    selectedTutor: -1,
     //event data for calendar events
     selectedEvent: {},
     selectedElement: null,
@@ -421,6 +435,7 @@ import Utils from '@/config/utils.js'
       .then((response) => {
         this.group = response.data[0]
         this.getTopicsForGroup()
+        this.getTutorsForGroup()
         this.getLocations()
       })
       .catch((error) => {
@@ -436,6 +451,28 @@ import Utils from '@/config/utils.js'
       })
       .catch(error => {
         console.log("There was an error:", error.response)
+      });
+    },
+    getTutorsForGroup() {
+      PersonServices.getAllForGroup(this.group.id)
+      .then(response => {
+        let temp = response.data
+        this.tutorSelect.push({name:"Any", id: -1})
+        PersonRoleServices.getAllPersonRoles()
+          .then(response => {
+            let roletemp = response.data
+            for (var j = 0; j < temp.length; j++){
+              for (var i = 0; i < roletemp.length; i++){
+                if (temp[j].id == roletemp[i].personId && roletemp[i].roleId == 1){
+                  temp[j].name = temp[j].fName + " " + temp[j].lName
+                  this.tutorSelect.push(temp[j])
+                }
+              }
+          }
+        })
+      })
+      .catch(error => {
+        console.log("There was an error:", error.response.data)
       });
     },
     getRole() {
@@ -726,6 +763,21 @@ import Utils from '@/config/utils.js'
         return false;
       }
     },
+    checkTutor(tutor) {
+      if(this.selectedTutor != null && this.selectedTutor == tutor) {
+        return true;
+      }
+      else { // findallforperson in appointments
+        return false;
+      }
+      /*let found = false
+      this.personAppointments.forEach((p) => {
+        if(p.personId == this.user.userID && p.appointmentId == appId) {
+          found = true
+        }
+      })
+      return found*/
+    },
     checkRole(type) {
       if(this.role != null && this.role.type == type) {
         return true;
@@ -756,6 +808,13 @@ import Utils from '@/config/utils.js'
         }
         //filter by topic
         if(this.selectedTopic != -1 && !this.checkTopic(this.appointments[i].topicId)) {
+          filtered = false;
+        }
+        //filter by tutor
+        console.log(this.appointments[i].personAppointments.personId)
+        if(this.selectedTutor != -1 && 
+          !this.checkTutor(this.appointments[i].person.id)) 
+        {
           filtered = false;
         }
         if(!this.checkRole("Admin"))
