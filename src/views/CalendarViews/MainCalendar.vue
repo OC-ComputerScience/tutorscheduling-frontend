@@ -462,7 +462,7 @@ import Utils from '@/config/utils.js'
           .then(response => {
             let roletemp = response.data
             for (var j = 0; j < temp.length; j++){
-              for (var i = 0; i < roletemp.length; i++){
+              for (var i = 0; i < roletemp.length; i++){ // switch later on to check personappointment = istutor
                 if (temp[j].id == roletemp[i].personId && roletemp[i].roleId == 1){
                   temp[j].name = temp[j].fName + " " + temp[j].lName
                   this.tutorSelect.push(temp[j])
@@ -763,20 +763,15 @@ import Utils from '@/config/utils.js'
         return false;
       }
     },
-    checkTutor(tutor) {
-      if(this.selectedTutor != null && this.selectedTutor == tutor) {
-        return true;
-      }
-      else { // findallforperson in appointments
-        return false;
-      }
-      /*let found = false
+    checkTutor(appointId) {
+      let found = false
       this.personAppointments.forEach((p) => {
-        if(p.personId == this.user.userID && p.appointmentId == appId) {
+        if(p.personId == this.selectedTutor && p.appointmentId == appointId && p.isTutor) {
           found = true
         }
       })
-      return found*/
+
+      return found
     },
     checkRole(type) {
       if(this.role != null && this.role.type == type) {
@@ -811,9 +806,8 @@ import Utils from '@/config/utils.js'
           filtered = false;
         }
         //filter by tutor
-        console.log(this.appointments[i].personAppointments.personId)
         if(this.selectedTutor != -1 && 
-          !this.checkTutor(this.appointments[i].person.id)) 
+          !this.checkTutor(this.appointments[i].id)) 
         {
           filtered = false;
         }
