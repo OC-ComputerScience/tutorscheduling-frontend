@@ -199,34 +199,37 @@
           </v-container>
           <!-- show time ad an changeable value for private lessons-->
           <v-container v-if="checkStatus('available')">
-          <v-select
-            v-if="selectedAppointment.type = 'Private'"
-            v-model="newStart"
-            :items="startTimes"
-            item-text="timeText"
-            item-value="time"
-            label="Booked Start"
-            required
-            @change="updateTimes()"
-            dense
-          >
-          </v-select>
+          
+          <span v-if="appointmentType.includes('Private')">
+            <v-select
+              v-model="newStart"
+              :items="startTimes"
+              item-text="timeText"
+              item-value="time"
+              label="Booked Start"
+              required
+              @change="updateTimes()"
+              dense
+            >
+            </v-select>
+          </span>
           <!-- show time as an unchangeable value -->
-          <v-select
-            v-else-if="selectedAppointment.type = 'Group'"
+          <span v-else>
+             <v-select
             v-model="newStart"
             :items="selectedAppointment.startTime"
             item-text="timeText"
             item-value="time"
-            label="Booked Start"
+            label="Booked End"
             required
             dense
           >
           </v-select>
+          </span>
           </v-container>
           <v-container v-if="checkStatus('available')">
+          <span v-if="appointmentType.includes('Private')">
           <v-select 
-            v-if="selectedAppointment.type = 'Private'"
             v-model="newEnd"
             :items="endTimes"
             item-text="timeText"
@@ -237,8 +240,9 @@
             dense
           >
           </v-select>
+          </span>
+          <span v-else>
           <v-select
-            v-else-if="selectedAppointment.type = 'Group'"
             v-model="newEnd"
             :items="selectedAppointment.endTime"
             item-text="timeText"
@@ -248,6 +252,7 @@
             dense
           >
           </v-select>
+          </span>
           </v-container>
           <!-- put in presession-info for appointment for private appointments-->
           <v-textarea
@@ -389,6 +394,7 @@ import Utils from '@/config/utils.js'
   data: () => ({
     //appointment info
     appointments: [],
+    appointmentType: "",
     personAppointments: [],
     selectedAppointment: {},
     //info related to current appointment
@@ -493,7 +499,7 @@ import Utils from '@/config/utils.js'
     //Update on tutor confirming booking
     confirmAppointment(confirm) {
       if(confirm) {
-        if(this.selectedAppointment.type == 'Private'){
+        if(this.appointmentType.includes('Private')){
           this.selectedAppointment.status = "booked"
           AppointmentServices.updateAppointmentStatus(this.selectedAppointment.id, this.selectedAppointment)
           .then(() =>{
@@ -501,7 +507,7 @@ import Utils from '@/config/utils.js'
             this.selectedEvent.color = 'blue'
           })
         }
-        else if(this.selectedAppointment.type == 'Group'){
+        else if(this.appointmentType.includes('Group')){
           AppointmentServices.updateAppointmentStatus(this.selectedAppointment.id, this.selectedAppointment)
           .then(() =>{
             this.getAppointments()
@@ -711,6 +717,7 @@ import Utils from '@/config/utils.js'
           this.selectedAppointment = response.data
           this.newStart = this.selectedAppointment.startTime
           this.newEnd = this.selectedAppointment.endTime
+          this.appointmentType = this.selectedAppointment.type
           this.updateTimes()
           this.updatePeople()
           this.selectedElement = nativeEvent.target
