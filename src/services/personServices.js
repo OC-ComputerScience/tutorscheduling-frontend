@@ -18,6 +18,9 @@ export default {
     getPendingTutorsForGroup(groupId) {
       return apiClient.get("person/tutor/" + groupId);
     },
+    getApprovedTutorsForGroup(groupId) {
+      return apiClient.get("person/appTutor/" + groupId);
+    },
     addPerson(person) {
       return apiClient.post("person", person);
     },

@@ -275,6 +275,7 @@ import PersonAppointmentServices from "@/services/personAppointmentServices.js"
           this.appointment.groupId = this.group.id
           this.appointment.locationId = this.location.id
           this.appointment.topicId = this.topic.id
+          console.log(this.appointment.groupId)
           await AppointmentServices.addAppointment(this.appointment).then(async response => {
             this.personAppointment.isTutor = true
             this.personAppointment.personId = this.person.id
