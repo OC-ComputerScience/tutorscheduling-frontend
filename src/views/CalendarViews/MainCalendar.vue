@@ -423,6 +423,7 @@ import Utils from '@/config/utils.js'
         PersonAppointmentServices.getAllPersonAppointments()
         .then(response => {
           this.personAppointments = response.data;
+          console.log(this.personAppointments)
           this.loadAppointments()
         })
       })
@@ -454,7 +455,7 @@ import Utils from '@/config/utils.js'
       });
     },
     getTutorsForGroup() {
-      PersonServices.getAllForGroup(this.group.id)
+      /*PersonServices.getAllForGroup(this.group.id)
       .then(response => {
         let temp = response.data
         this.tutorSelect.push({name:"Any", id: -1})
@@ -463,14 +464,24 @@ import Utils from '@/config/utils.js'
             let roletemp = response.data
             for (var j = 0; j < temp.length; j++){
               for (var i = 0; i < roletemp.length; i++){ // switch later on to check personappointment = istutor
-                if (temp[j].id == roletemp[i].personId && roletemp[i].roleId == 1){
+                console.log(roletemp[i].role)
+                if (temp[j].id == roletemp[i].personId && roletemp[i].role.type.includes('Tutor')){
                   temp[j].name = temp[j].fName + " " + temp[j].lName
                   this.tutorSelect.push(temp[j])
                 }
               }
           }
         })
-      })
+      })*/
+      PersonServices.getApprovedTutorsForGroup(this.group.id)
+      .then(response => {
+        let temp = response.data
+        this.tutorSelect.push({name:"Any", id: -1})
+        for (var i = 0; i < temp.length; i++){ 
+            temp[i].name = temp[i].fName + " " + temp[i].lName
+            this.tutorSelect.push(temp[i])
+          }
+        })
       .catch(error => {
         console.log("There was an error:", error.response.data)
       });
@@ -765,7 +776,9 @@ import Utils from '@/config/utils.js'
     },
     checkTutor(appointId) {
       let found = false
+      console.log(this.personAppointments)
       this.personAppointments.forEach((p) => {
+        console.log(p)
         if(p.personId == this.selectedTutor && p.appointmentId == appointId && p.isTutor) {
           found = true
         }
