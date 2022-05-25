@@ -12,6 +12,7 @@
     "core-js": "^3.6.5",
     "pdfvuer": "^2.0.1",
     "underscore": "^1.13.2",
+    "uuid": "^8.3.2",
     "vue": "^2.6.14",
     "vue-doc-preview": "^0.3.2",
     "vue-json-csv": "^2.1.0",
@@ -49,7 +50,7 @@
       "eslint:recommended"
     ],
     "parserOptions": {
-      "parser": "babel-eslint"
+      "parser": "@babel/eslint-parser"
     },
     "rules": {}
   },

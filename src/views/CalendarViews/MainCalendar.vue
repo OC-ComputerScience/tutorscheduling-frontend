@@ -423,7 +423,7 @@ import Utils from '@/config/utils.js'
         PersonAppointmentServices.getAllPersonAppointments()
         .then(response => {
           this.personAppointments = response.data;
-          console.log(this.personAppointments)
+          
           this.loadAppointments()
         })
       })
@@ -776,9 +776,9 @@ import Utils from '@/config/utils.js'
     },
     checkTutor(appointId) {
       let found = false
-      console.log(this.personAppointments)
+     
       this.personAppointments.forEach((p) => {
-        console.log(p)
+        
         if(p.personId == this.selectedTutor && p.appointmentId == appointId && p.isTutor) {
           found = true
         }
