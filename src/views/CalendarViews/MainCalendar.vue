@@ -455,24 +455,6 @@ import Utils from '@/config/utils.js'
       });
     },
     getTutorsForGroup() {
-      /*PersonServices.getAllForGroup(this.group.id)
-      .then(response => {
-        let temp = response.data
-        this.tutorSelect.push({name:"Any", id: -1})
-        PersonRoleServices.getAllPersonRoles()
-          .then(response => {
-            let roletemp = response.data
-            for (var j = 0; j < temp.length; j++){
-              for (var i = 0; i < roletemp.length; i++){ // switch later on to check personappointment = istutor
-                console.log(roletemp[i].role)
-                if (temp[j].id == roletemp[i].personId && roletemp[i].role.type.includes('Tutor')){
-                  temp[j].name = temp[j].fName + " " + temp[j].lName
-                  this.tutorSelect.push(temp[j])
-                }
-              }
-          }
-        })
-      })*/
       PersonServices.getApprovedTutorsForGroup(this.group.id)
       .then(response => {
         let temp = response.data
@@ -766,13 +748,34 @@ import Utils from '@/config/utils.js'
         return false;
       }
     },
-    checkTopic(topic) {
-      if(this.selectedTopic != null && this.selectedTopic == topic) {
-        return true;
+    async checkTopic(appoint) {
+      let check=false;
+      var tutorId;
+      if (this.selectedTopic == null) return true;
+      if (this.selectedTopic == appoint.topicId) return true;
+      await AppointmentServices.getTutorForAppointment(appoint.id)
+      .then ((response)=> {
+        tutorId = response.data.id;
+      })
+      .catch((error) => {
+        console.log("There was an error:" + error.response);
+      });
+      if (tutorId !=null) {
+        await PersonTopicServices.getTopicForPersonGroup(this.group.id, tutorId)
+        .then ((response)=> {
+          let topics = response.data;
+          for ( let i=0; i < topics.length; i++) {
+            if (topics[i].id == this.selectedTopic)
+              check = true;
+            }
+        })
+        .catch((error) => {
+          console.log("There was an error:", error.response);
+        })
+        return check;
       }
-      else {
-        return false;
-      }
+      else
+        return check;
     },
     checkTutor(appointId) {
       let found = false
@@ -815,7 +818,8 @@ import Utils from '@/config/utils.js'
           filtered = false;
         }
         //filter by topic
-        if(this.selectedTopic != -1 && !this.checkTopic(this.appointments[i].topicId)) {
+        let checkedtopic = await this.checkTopic(this.appointments[i])
+        if(this.selectedTopic != -1 && !checkedtopic) {
           filtered = false;
         }
         //filter by tutor
@@ -833,7 +837,6 @@ import Utils from '@/config/utils.js'
             }
           }
         }
-
         if(filtered) {
         //Set color for each event
         let color = 'grey darken-1'

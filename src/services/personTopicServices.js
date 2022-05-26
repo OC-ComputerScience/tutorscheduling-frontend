@@ -15,6 +15,9 @@ import apiClient from "@/services/services.js";
      getAllForPerson(id) {
         return apiClient.get("persontopic/person/" + id);
       },
+    getTopicForPersonGroup(groupId, personId) {
+      return apiClient.get("persontopic/group/" + groupId + "/person/" + personId)
+    },
      addPersonTopic(persontopic) {
        return apiClient.post("persontopic", persontopic);
      },
