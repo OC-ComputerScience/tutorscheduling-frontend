@@ -753,6 +753,7 @@ import Utils from '@/config/utils.js'
       var tutorId;
       if (this.selectedTopic == null) return true;
       if (this.selectedTopic == appoint.topicId) return true;
+      if (appoint.topicId != null && this.selectedTopic != appoint.topicId) return false;
       await AppointmentServices.getTutorForAppointment(appoint.id)
       .then ((response)=> {
         tutorId = response.data.id;
