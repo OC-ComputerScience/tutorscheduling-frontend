@@ -13,6 +13,8 @@
     >
       <v-date-picker
         v-model="dates"
+        :min="nowDate"
+        show-adjacent-months
         multiple
       ></v-date-picker>
     </v-col>
@@ -94,6 +96,7 @@
           v-if="menu2"
           v-model="startTime"
           full-width
+          :min="nowTime"
           :allowed-minutes="this.allowedStep"
           @click:minute="$refs.menu.save(startTime)"
         ></v-time-picker>
@@ -206,6 +209,8 @@ import Utils from '@/config/utils.js'
     components: {
     },
     data: () => ({
+      nowDate: null,
+      nowTime: null,
       availability: {},
       appointment: {},
       personAppointment: {},
@@ -244,6 +249,10 @@ import Utils from '@/config/utils.js'
       },
     },
     async created() {
+      this.nowDate = new Date().toISOString().slice(0,10);
+      let temp = this.roundToNearest30(new Date());
+      this.nowTime =  temp.getHours() + ":" + temp.getMinutes();
+      console.log(this.nowTime)
       this.user = Utils.getStore('user')
       this.getAvailabilities()
       await this.getGroupByName(this.user.selectedGroup.replace(/%20/g, " "))
@@ -256,6 +265,12 @@ import Utils from '@/config/utils.js'
 
     },
     methods: {
+      roundToNearest30(date) {
+        const minutes = 30;
+        const ms = 1000 * 60 * minutes;
+
+        return new Date(Math.ceil(date.getTime() / ms) * ms);
+      },
     async addAvailability() {
       for (var i = 0; i < this.dates.length; i++) {
         let element = this.dates[i];
