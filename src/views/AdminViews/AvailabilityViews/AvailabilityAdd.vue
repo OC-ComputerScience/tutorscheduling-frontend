@@ -72,72 +72,35 @@
       cols="11"
       sm="5"
     >
-      <v-menu
-        ref="menu"
-        v-model="menu2"
-        :close-on-content-click="false"
-        :nudge-right="40"
-        transition="scale-transition"
-        offset-y
-        max-width="290px"
-        min-width="290px"
+      <v-select
+        v-model="newStart"
+        :items="startTimes"
+        label="Start Time"
+        prepend-icon="mdi-clock-time-four-outline"
+        item-text="timeText"
+        item-value="time"
+        required
+        @change="updateTimes()"
+        dense
       >
-        <template v-slot:activator="{ on, attrs }">
-          <v-text-field
-            v-model="startTime"
-            label="Start Time"
-            prepend-icon="mdi-clock-time-four-outline"
-            readonly
-            v-bind="attrs"
-            v-on="on"
-          ></v-text-field>
-        </template>
-        <v-time-picker
-          v-if="menu2"
-          v-model="startTime"
-          full-width
-          :min="nowTime"
-          :allowed-minutes="this.allowedStep"
-          @click:minute="$refs.menu.save(startTime)"
-        ></v-time-picker>
-
-        
-      </v-menu>
+      </v-select>
     </v-col>
     <v-col
       cols="11"
       sm="5"
     >
-      <v-menu
-        ref="menu"
-        v-model="menu3"
-        :close-on-content-click="false"
-        :nudge-right="40"
-        transition="scale-transition"
-        offset-y
-        max-width="290px"
-        min-width="290px"
+      <v-select 
+        v-model="newEnd"
+        :items="endTimes"
+        label="End Time"
+        prepend-icon="mdi-clock-time-four-outline"
+        item-text="timeText"
+        item-value="time"
+        required
+        @change="updateTimes()"
+        dense
       >
-        <template v-slot:activator="{ on, attrs }">
-          <v-text-field
-            v-model="endTime"
-            label="End Time"
-            prepend-icon="mdi-clock-time-four-outline"
-            readonly
-            v-bind="attrs"
-            v-on="on"
-          ></v-text-field>
-        </template>
-        <v-time-picker
-          v-if="menu3"
-          v-model="endTime"
-          full-width
-          @click:minute="$refs.menu.save(endTime)"
-          :allowed-minutes="this.allowedStep"
-        ></v-time-picker>
-
-        
-      </v-menu>
+      </v-select>
     </v-col>
     <v-btn
         color="success"
@@ -218,6 +181,11 @@ import Utils from '@/config/utils.js'
       dates: [],
       dialog: false,
       dialogDelete: false,
+      //used for generating time slots
+      startTimes: [],
+      endTimes: [],
+      newStart: "00:00",
+      newEnd: "23:30",
       startTime: null,
       endTime: null,
       menu: false,
@@ -253,8 +221,10 @@ import Utils from '@/config/utils.js'
       this.nowDate = new Date().toISOString().slice(0,10);
       let temp = this.roundToNearest30(new Date());
       this.nowTime =  temp.getHours() + ":" + temp.getMinutes();
+      this.newStart = this.nowTime;
       this.user = Utils.getStore('user')
       this.getAvailabilities()
+      this.updateTimes();
       await this.getGroupByName(this.user.selectedGroup.replace(/%20/g, " "))
   
       // this.getPerson()
@@ -265,48 +235,111 @@ import Utils from '@/config/utils.js'
 
     },
     methods: {
+      //Formats time to be more user friendly
+      calcTime(time) {
+        if(time == null)
+        {
+          return null;
+        }
+        let temp = time.split(":")
+        let milHours = parseInt(temp[0])
+        let minutes = temp[1]
+        let hours = milHours % 12
+        if (hours == 0) {
+          hours = 12
+        }
+        let dayTime = (~~(milHours / 12) > 0 ? "PM":"AM")
+        return "" + hours + ":" + minutes + " " + dayTime
+      },
+      //Create time slots for users to select from
+      generateTimes(start, end) {
+        let startInfo = start.split(":")
+        let endInfo = end.split(":")
+        let loop = (parseInt(endInfo[0]) - parseInt(startInfo[0])) * 2 + 1
+        let hours = parseInt(startInfo[0])
+        let minutes = startInfo[1]
+        let seconds = "00"
+
+        let newTime = start
+        let newTimeText = ""
+        let j = 0
+
+        let times = []
+
+        if(startInfo[1] == "30") {
+          loop -= 1
+          j = 1
+        }
+        if(endInfo[1] == "30") {
+          loop += 1
+        }
+        let temp
+        for(let i = 0; i < loop; i++) {
+          temp = (hours + Math.floor((i + j)/2))
+          if(temp < 10)
+          {
+            temp = "0" + temp
+          }
+          newTime = temp + ":" + minutes + ":" + seconds
+          newTimeText = this.calcTime(newTime)
+          minutes = (minutes == "00" ? "30":"00")
+          times.push({
+            time: newTime,
+            timeText: newTimeText
+          })
+        }
+        return times
+      },
+      updateTimes() {
+        this.startTimes = this.generateTimes(this.nowTime, this.newEnd)
+        // adding this to make sure that you can't start an appointment at the end time
+        this.startTimes.pop();
+        this.endTimes = this.generateTimes(this.newStart, "23:30")
+        // adding this to make sure you can't end an appointment at the start time
+        this.endTimes.shift();
+      },
       roundToNearest30(date) {
         const minutes = 30;
         const ms = 1000 * 60 * minutes;
 
         return new Date(Math.ceil(date.getTime() / ms) * ms);
       },
-    async addAvailability() {
-      for (var i = 0; i < this.dates.length; i++) {
-        let element = this.dates[i];
-        this.availability.date = element;
-        this.availability.startTime = this.startTime;
-        this.availability.endTime = this.endTime;
-        this.availability.personId = this.user.userID;
-        await AvailabilityServices.addAvailability(this.availability)
-        .then(async ()=> {
-          let date = new Date(element)
-          date.setHours(date.getHours() + 5)
-          this.appointment.date = date
-          this.appointment.startTime = this.startTime
-          this.appointment.endTime = this.endTime
-          this.appointment.type = this.user.fName + " " + this.user.lName
-          this.appointment.status = "available"
-          this.appointment.groupId = this.group.id
-          this.appointment.locationId = this.location.id
-          this.appointment.topicId = this.topic.id
-          console.log(this.appointment.groupId)
-          await AppointmentServices.addAppointment(this.appointment).then(async response => {
-            this.personAppointment.isTutor = true
-            this.personAppointment.personId = this.user.userID
-            this.personAppointment.appointmentId = response.data.id
-            await PersonAppointmentServices.addPersonAppointment(this.personAppointment)
+      async addAvailability() {
+        for (var i = 0; i < this.dates.length; i++) {
+          let element = this.dates[i];
+          this.availability.date = element;
+          this.availability.startTime = this.newStart;
+          this.availability.endTime = this.newEnd;
+          this.availability.personId = this.user.userID;
+          await AvailabilityServices.addAvailability(this.availability)
+          .then(async ()=> {
+            let date = new Date(element)
+            date.setHours(date.getHours() + 5)
+            this.appointment.date = date
+            this.appointment.startTime = this.newStart
+            this.appointment.endTime = this.newEnd
+            this.appointment.type = this.user.fName + " " + this.user.lName
+            this.appointment.status = "available"
+            this.appointment.groupId = this.group.id
+            this.appointment.locationId = this.location.id
+            this.appointment.topicId = this.topic.id
+            // console.log(this.appointment.groupId)
+            await AppointmentServices.addAppointment(this.appointment).then(async response => {
+              this.personAppointment.isTutor = true
+              this.personAppointment.personId = this.user.userID
+              this.personAppointment.appointmentId = response.data.id
+              await PersonAppointmentServices.addPersonAppointment(this.personAppointment)
+            })
           })
-        })
-        .catch((error) => {
-          console.log(error);
-        });
-      }
-
-      this.$router.go();
-      
-    },
-    getAvailabilities() {
+          .catch((error) => {
+            console.log(error);
+          });
+        }
+        //this.getAvailabilities();
+        this.$router.go();
+        
+      },
+      getAvailabilities() {
         AvailabilityServices.getPersonAvailability(this.user.userID)
         .then(response => {
           this.availabilities = response.data;
@@ -375,7 +408,7 @@ import Utils from '@/config/utils.js'
       GroupServices.getGroupByName(name)
       .then((response) => {
         this.group = response.data[0]
-        console.log(this.group)
+        // console.log(this.group)
         this.getTopicsForGroup()
       })
       .catch((error) => {
@@ -386,10 +419,10 @@ import Utils from '@/config/utils.js'
       TopicServices.getTopicForPerson(this.user.userID)
       .then(response => {
         this.topic = response.data[0]
-        console.log(this.topic)
+        // console.log(this.topic)
         LocationServices.getAllForGroup(this.group.id).then(response => {
           this.location = response.data[0]
-          console.log(this.location)
+          // console.log(this.location)
         })
       })
       .catch(error => {
