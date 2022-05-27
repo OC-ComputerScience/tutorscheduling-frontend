@@ -16,6 +16,7 @@
         :min="nowDate"
         show-adjacent-months
         multiple
+        @input="updateTimes()"
       ></v-date-picker>
     </v-col>
     <v-col
@@ -46,9 +47,12 @@
         </template>
         <v-date-picker
           v-model="dates"
+          :min="nowDate"
+          show-adjacent-months
           multiple
           no-title
           scrollable
+          @input="updateTimes()"
         >
           <v-spacer></v-spacer>
           <v-btn
@@ -217,11 +221,6 @@ import Utils from '@/config/utils.js'
       },
     },
     async created() {
-      // setting the minimum date and time for the picker components
-      this.nowDate = new Date().toISOString().slice(0,10);
-      let temp = this.roundToNearest30(new Date());
-      this.nowTime =  temp.getHours() + ":" + temp.getMinutes();
-      this.newStart = this.nowTime;
       this.user = Utils.getStore('user')
       this.getAvailabilities()
       this.updateTimes();
@@ -291,6 +290,19 @@ import Utils from '@/config/utils.js'
         return times
       },
       updateTimes() {
+        // setting the minimum date and time for the picker components
+        this.nowDate = new Date().toISOString().slice(0,10);
+        let temp = this.roundToNearest30(new Date());
+        // see if selected dates includes today -- if not, allow all times
+        console.log(this.dates)
+        const test = this.dates.filter(date => date === this.nowDate);
+        if (test.length > 0) {
+          this.nowTime =  temp.getHours() + ":" + temp.getMinutes();
+        }
+        else {
+          this.nowTime = "00:00"
+        }
+        this.newStart = this.nowTime;
         this.startTimes = this.generateTimes(this.nowTime, this.newEnd)
         // adding this to make sure that you can't start an appointment at the end time
         this.startTimes.pop();
