@@ -427,7 +427,6 @@ import Utils from '@/config/utils.js'
           this.personAppointments = response.data;
           
           this.loadAppointments();
-          console.log("in get \n" +this.events)
         })
       })
       .catch(error => {
@@ -860,7 +859,6 @@ import Utils from '@/config/utils.js'
         //Format times for each event and need to set minutes for events too
         let startTime = new Date(this.appointments[i].date)
         let startTimes = this.appointments[i].startTime.split(":");
-        console.log(startTimes)
         startTime.setHours(startTime.getHours() + parseInt(startTimes[0]))
         startTime.setMinutes(startTime.getMinutes() + parseInt(startTimes[1]))
         let endTime = new Date(this.appointments[i].date)
@@ -879,7 +877,6 @@ import Utils from '@/config/utils.js'
       }
       }
       this.events = events
-      console.log(this.events[0])
     },
   },
 }
