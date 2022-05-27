@@ -249,10 +249,10 @@ import Utils from '@/config/utils.js'
       },
     },
     async created() {
+      // setting the minimum date and time for the picker components
       this.nowDate = new Date().toISOString().slice(0,10);
       let temp = this.roundToNearest30(new Date());
       this.nowTime =  temp.getHours() + ":" + temp.getMinutes();
-      console.log(this.nowTime)
       this.user = Utils.getStore('user')
       this.getAvailabilities()
       await this.getGroupByName(this.user.selectedGroup.replace(/%20/g, " "))
