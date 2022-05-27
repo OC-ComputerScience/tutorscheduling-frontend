@@ -296,7 +296,7 @@
         > 
         Grey
         </v-btn>
-        <span> - This event marks an open timeslot that is available to be booked by any student</span>
+        <span> - This event marks an open timeslot that is available to be booked by any student.</span>
         <br>
         <v-btn
         elevation="0"
@@ -306,7 +306,7 @@
         > 
         Yellow
         </v-btn>
-        <span> - This event marks that a set time has been requested and is pending tutor approval</span>
+        <span> - This event marks that a set time has been requested and is pending tutor approval.</span>
         <br>
         <v-btn
         elevation="0"
@@ -316,7 +316,7 @@
         > 
         Red
         </v-btn>
-        <span> - This event marks a requested timeslot that has been cancelled by the tutor</span>
+        <span> - This event marks a requested timeslot that has been cancelled by the tutor.</span>
         <br>
         <v-btn
         elevation="0"
@@ -326,7 +326,7 @@
         > 
         Blue
         </v-btn>
-        <span> - This event marks a timeslot that has been booked and notes an upcoming meeting</span>
+        <span> - This event marks a timeslot that has been booked and notes an upcoming meeting.</span>
         <br>
         <v-btn
         elevation="0"
@@ -337,7 +337,7 @@
         Green
         </v-btn>
         <span> - This event marks a timeslot that for a meeting that has been completed, 
-          and is used for keeping track of user reviews</span>
+          and is used for keeping track of user reviews.</span>
       </v-card-text>
       <v-card-actions>
         <v-spacer></v-spacer>
@@ -650,8 +650,12 @@ import Utils from '@/config/utils.js'
       return times
     },
     updateTimes() {
-      this.startTimes = this.generateTimes(this.selectedAppointment.startTime, this.newEnd)
-      this.endTimes = this.generateTimes(this.newStart, this.selectedAppointment.endTime)
+      this.startTimes = this.generateTimes(this.selectedAppointment.startTime, this.newEnd);
+      // adding this to make sure that you can't start an appointment at the end time
+      this.startTimes.pop();
+      this.endTimes = this.generateTimes(this.newStart, this.selectedAppointment.endTime);
+      // adding this to make sure you can't end an appointment at the start time
+      this.endTimes.shift();
     },
     //Load data for info associated with events
     getTopic(topicId) {
