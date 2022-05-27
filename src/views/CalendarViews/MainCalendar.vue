@@ -121,15 +121,17 @@
         <!--Calendar element needs a list of events to show -->
         <!--Type determines calendar format -->
         <v-calendar
-        ref="calendar"
-        v-model="focus"
-        color="primary"
-        :events="events"
-        :event-color="getEventColor"
-        :type="type"
-        @click:event="showEvent"
-        @click:more="viewDay"
-        @click:date="viewDay"
+          ref="calendar"
+          v-model="focus"
+          color="primary"
+          :events="events"
+          :event-color="getEventColor"
+          :event-overlap-mode="mode"
+          :event-overlap-threshold="30"
+          :type="type"
+          @click:event="showEvent"
+          @click:more="viewDay"
+          @click:date="viewDay"
         ></v-calendar>
 
         <!--Pop-up that appears when an event is selected -->
@@ -294,7 +296,7 @@
         > 
         Grey
         </v-btn>
-        <span> - This event marks an open timeslot that is available to be booked by any student</span>
+        <span> - This event marks an open timeslot that is available to be booked by any student.</span>
         <br>
         <v-btn
         elevation="0"
@@ -304,7 +306,7 @@
         > 
         Yellow
         </v-btn>
-        <span> - This event marks that a set time has been requested and is pending tutor approval</span>
+        <span> - This event marks that a set time has been requested and is pending tutor approval.</span>
         <br>
         <v-btn
         elevation="0"
@@ -314,7 +316,7 @@
         > 
         Red
         </v-btn>
-        <span> - This event marks a requested timeslot that has been cancelled by the tutor</span>
+        <span> - This event marks a requested timeslot that has been cancelled by the tutor.</span>
         <br>
         <v-btn
         elevation="0"
@@ -324,7 +326,7 @@
         > 
         Blue
         </v-btn>
-        <span> - This event marks a timeslot that has been booked and notes an upcoming meeting</span>
+        <span> - This event marks a timeslot that has been booked and notes an upcoming meeting.</span>
         <br>
         <v-btn
         elevation="0"
@@ -335,7 +337,7 @@
         Green
         </v-btn>
         <span> - This event marks a timeslot that for a meeting that has been completed, 
-          and is used for keeping track of user reviews</span>
+          and is used for keeping track of user reviews.</span>
       </v-card-text>
       <v-card-actions>
         <v-spacer></v-spacer>
@@ -368,6 +370,7 @@ import Utils from '@/config/utils.js'
   props: ["id"],
 
   data: () => ({
+    mode: 'stack',
     //appointment info
     appointments: [],
     personAppointments: [],
@@ -423,7 +426,7 @@ import Utils from '@/config/utils.js'
         .then(response => {
           this.personAppointments = response.data;
           
-          this.loadAppointments()
+          this.loadAppointments();
         })
       })
       .catch(error => {
@@ -494,9 +497,9 @@ import Utils from '@/config/utils.js'
     },
     //Update on a session being booked
     bookAppointment() {
-      AppointmentServices.getAppointment(this.selectedAppointment.id).then(response => {
+      AppointmentServices.getAppointment(this.selectedAppointment.id).then(async response => {
         if(response.data.status == "available") {
-          this.splitAppointment().then(() => {
+          await this.splitAppointment().then(() => {
             this.getAppointments()
             this.selectedEvent.color = 'yellow'
           })
@@ -647,8 +650,12 @@ import Utils from '@/config/utils.js'
       return times
     },
     updateTimes() {
-      this.startTimes = this.generateTimes(this.selectedAppointment.startTime, this.newEnd)
-      this.endTimes = this.generateTimes(this.newStart, this.selectedAppointment.endTime)
+      this.startTimes = this.generateTimes(this.selectedAppointment.startTime, this.newEnd);
+      // adding this to make sure that you can't start an appointment at the end time
+      this.startTimes.pop();
+      this.endTimes = this.generateTimes(this.newStart, this.selectedAppointment.endTime);
+      // adding this to make sure you can't end an appointment at the start time
+      this.endTimes.shift();
     },
     //Load data for info associated with events
     getTopic(topicId) {
@@ -853,13 +860,15 @@ import Utils from '@/config/utils.js'
             color = 'grey darken-1'
             break
         }
-        //Format times for each event
+        //Format times for each event and need to set minutes for events too
         let startTime = new Date(this.appointments[i].date)
         let startTimes = this.appointments[i].startTime.split(":");
         startTime.setHours(startTime.getHours() + parseInt(startTimes[0]))
+        startTime.setMinutes(startTime.getMinutes() + parseInt(startTimes[1]))
         let endTime = new Date(this.appointments[i].date)
         let endTimes = this.appointments[i].endTime.split(":");
         endTime.setHours(endTime.getHours() + parseInt(endTimes[0]))
+        endTime.setMinutes(endTime.getMinutes() + parseInt(endTimes[1]))
         //Note the format of each event, what data is associated with it
         events.push({
           name: this.appointments[i].type,
