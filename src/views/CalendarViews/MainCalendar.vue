@@ -121,15 +121,17 @@
         <!--Calendar element needs a list of events to show -->
         <!--Type determines calendar format -->
         <v-calendar
-        ref="calendar"
-        v-model="focus"
-        color="primary"
-        :events="events"
-        :event-color="getEventColor"
-        :type="type"
-        @click:event="showEvent"
-        @click:more="viewDay"
-        @click:date="viewDay"
+          ref="calendar"
+          v-model="focus"
+          color="primary"
+          :events="events"
+          :event-color="getEventColor"
+          :event-overlap-mode="mode"
+          :event-overlap-threshold="30"
+          :type="type"
+          @click:event="showEvent"
+          @click:more="viewDay"
+          @click:date="viewDay"
         ></v-calendar>
 
         <!--Pop-up that appears when an event is selected -->
@@ -368,6 +370,7 @@ import Utils from '@/config/utils.js'
   props: ["id"],
 
   data: () => ({
+    mode: 'stack',
     //appointment info
     appointments: [],
     personAppointments: [],
@@ -423,7 +426,7 @@ import Utils from '@/config/utils.js'
         .then(response => {
           this.personAppointments = response.data;
           
-          this.loadAppointments()
+          this.loadAppointments();
         })
       })
       .catch(error => {
@@ -494,9 +497,9 @@ import Utils from '@/config/utils.js'
     },
     //Update on a session being booked
     bookAppointment() {
-      AppointmentServices.getAppointment(this.selectedAppointment.id).then(response => {
+      AppointmentServices.getAppointment(this.selectedAppointment.id).then(async response => {
         if(response.data.status == "available") {
-          this.splitAppointment().then(() => {
+          await this.splitAppointment().then(() => {
             this.getAppointments()
             this.selectedEvent.color = 'yellow'
           })
@@ -853,13 +856,15 @@ import Utils from '@/config/utils.js'
             color = 'grey darken-1'
             break
         }
-        //Format times for each event
+        //Format times for each event and need to set minutes for events too
         let startTime = new Date(this.appointments[i].date)
         let startTimes = this.appointments[i].startTime.split(":");
         startTime.setHours(startTime.getHours() + parseInt(startTimes[0]))
+        startTime.setMinutes(startTime.getMinutes() + parseInt(startTimes[1]))
         let endTime = new Date(this.appointments[i].date)
         let endTimes = this.appointments[i].endTime.split(":");
         endTime.setHours(endTime.getHours() + parseInt(endTimes[0]))
+        endTime.setMinutes(endTime.getMinutes() + parseInt(endTimes[1]))
         //Note the format of each event, what data is associated with it
         events.push({
           name: this.appointments[i].type,
