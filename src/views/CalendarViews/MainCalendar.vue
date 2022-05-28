@@ -1,4 +1,3 @@
-
 <template>
   <div>
     <v-container>
@@ -61,6 +60,18 @@
         @change="loadAppointments()"
         ></v-select>
       </v-col>
+      <v-col cols="3" align-self="start">
+        <v-select
+        dense
+        v-model="selectedTutor"
+        :items="tutorSelect"
+        item-text="name"
+        item-value="id"
+        label="Tutor"
+        outlined
+        @change="loadAppointments()"
+        ></v-select>
+      </v-col>
       <v-btn
           outlined
           class="mr-4"
@@ -110,15 +121,17 @@
         <!--Calendar element needs a list of events to show -->
         <!--Type determines calendar format -->
         <v-calendar
-        ref="calendar"
-        v-model="focus"
-        color="primary"
-        :events="events"
-        :event-color="getEventColor"
-        :type="type"
-        @click:event="showEvent"
-        @click:more="viewDay"
-        @click:date="viewDay"
+          ref="calendar"
+          v-model="focus"
+          color="primary"
+          :events="events"
+          :event-color="getEventColor"
+          :event-overlap-mode="mode"
+          :event-overlap-threshold="30"
+          :type="type"
+          @click:event="showEvent"
+          @click:more="viewDay"
+          @click:date="viewDay"
         ></v-calendar>
 
         <!--Pop-up that appears when an event is selected -->
@@ -318,7 +331,7 @@
         > 
         Grey
         </v-btn>
-        <span> - This event marks an open timeslot that is available to be booked by any student</span>
+        <span> - This event marks an open timeslot that is available to be booked by any student.</span>
         <br>
         <v-btn
         elevation="0"
@@ -328,7 +341,7 @@
         > 
         Yellow
         </v-btn>
-        <span> - This event marks that a set time has been requested and is pending tutor approval</span>
+        <span> - This event marks that a set time has been requested and is pending tutor approval.</span>
         <br>
         <v-btn
         elevation="0"
@@ -338,7 +351,7 @@
         > 
         Red
         </v-btn>
-        <span> - This event marks a requested timeslot that has been cancelled by the tutor</span>
+        <span> - This event marks a requested timeslot that has been cancelled by the tutor.</span>
         <br>
         <v-btn
         elevation="0"
@@ -348,7 +361,7 @@
         > 
         Blue
         </v-btn>
-        <span> - This event marks a timeslot that has been booked and notes an upcoming meeting</span>
+        <span> - This event marks a timeslot that has been booked and notes an upcoming meeting.</span>
         <br>
         <v-btn
         elevation="0"
@@ -359,7 +372,7 @@
         Green
         </v-btn>
         <span> - This event marks a timeslot that for a meeting that has been completed, 
-          and is used for keeping track of user reviews</span>
+          and is used for keeping track of user reviews.</span>
       </v-card-text>
       <v-card-actions>
         <v-spacer></v-spacer>
@@ -392,6 +405,7 @@ import Utils from '@/config/utils.js'
   props: ["id"],
 
   data: () => ({
+    mode: 'stack',
     //appointment info
     appointments: [],
     appointmentType: "",
@@ -420,7 +434,9 @@ import Utils from '@/config/utils.js'
     },
     keyVisible: false,
     topics: [],
+    tutorSelect: [],
     selectedTopic: -1,
+    selectedTutor: -1,
     //event data for calendar events
     selectedEvent: {},
     selectedElement: null,
@@ -445,7 +461,8 @@ import Utils from '@/config/utils.js'
         PersonAppointmentServices.getAllPersonAppointments()
         .then(response => {
           this.personAppointments = response.data;
-          this.loadAppointments()
+          
+          this.loadAppointments();
         })
       })
       .catch(error => {
@@ -457,6 +474,7 @@ import Utils from '@/config/utils.js'
       .then((response) => {
         this.group = response.data[0]
         this.getTopicsForGroup()
+        this.getTutorsForGroup()
         this.getLocations()
       })
       .catch((error) => {
@@ -474,6 +492,20 @@ import Utils from '@/config/utils.js'
         console.log("There was an error:", error.response)
       });
     },
+    getTutorsForGroup() {
+      PersonServices.getApprovedTutorsForGroup(this.group.id)
+      .then(response => {
+        let temp = response.data
+        this.tutorSelect.push({name:"Any", id: -1})
+        for (var i = 0; i < temp.length; i++){ 
+            temp[i].name = temp[i].fName + " " + temp[i].lName
+            this.tutorSelect.push(temp[i])
+          }
+        })
+      .catch(error => {
+        console.log("There was an error:", error.response.data)
+      });
+    },
     getRole() {
      PersonRoleServices.getPersonRole(this.id).then((response) => {
        RoleServices.getRole(response.data.roleId).then((result) => {
@@ -483,9 +515,9 @@ import Utils from '@/config/utils.js'
     },
     //Update on a session being booked
     bookAppointment() {
-      AppointmentServices.getAppointment(this.selectedAppointment.id).then(response => {
+      AppointmentServices.getAppointment(this.selectedAppointment.id).then(async response => {
         if(response.data.status == "available") {
-          this.splitAppointment().then(() => {
+          await this.splitAppointment().then(() => {
             this.getAppointments()
             this.selectedEvent.color = 'yellow'
           })
@@ -644,8 +676,12 @@ import Utils from '@/config/utils.js'
       return times
     },
     updateTimes() {
-      this.startTimes = this.generateTimes(this.selectedAppointment.startTime, this.newEnd)
-      this.endTimes = this.generateTimes(this.newStart, this.selectedAppointment.endTime)
+      this.startTimes = this.generateTimes(this.selectedAppointment.startTime, this.newEnd);
+      // adding this to make sure that you can't start an appointment at the end time
+      this.startTimes.pop();
+      this.endTimes = this.generateTimes(this.newStart, this.selectedAppointment.endTime);
+      // adding this to make sure you can't end an appointment at the start time
+      this.endTimes.shift();
     },
     //Load data for info associated with events
     getTopic(topicId) {
@@ -763,13 +799,47 @@ import Utils from '@/config/utils.js'
         return false;
       }
     },
-    checkTopic(topic) {
-      if(this.selectedTopic != null && this.selectedTopic == topic) {
-        return true;
+    async checkTopic(appoint) {
+      let check=false;
+      var tutorId;
+      if (this.selectedTopic == null) return true;
+      if (this.selectedTopic == appoint.topicId) return true;
+      if (appoint.topicId != null && this.selectedTopic != appoint.topicId) return false;
+      await AppointmentServices.getTutorForAppointment(appoint.id)
+      .then ((response)=> {
+        tutorId = response.data.id;
+      })
+      .catch((error) => {
+        console.log("There was an error:" + error.response);
+      });
+      if (tutorId !=null) {
+        await PersonTopicServices.getTopicForPersonGroup(this.group.id, tutorId)
+        .then ((response)=> {
+          let topics = response.data;
+          for ( let i=0; i < topics.length; i++) {
+            if (topics[i].id == this.selectedTopic)
+              check = true;
+            }
+        })
+        .catch((error) => {
+          console.log("There was an error:", error.response);
+        })
+        return check;
       }
-      else {
-        return false;
-      }
+      else
+        return check;
+    },
+    checkTutor(appointId) {
+      let found = false
+     
+      this.personAppointments.forEach((p) => {
+        
+        if(p.personId == this.selectedTutor && p.appointmentId == appointId && p.isTutor) {
+          found = true
+        }
+      })
+
+      return found
     },
     checkRole(type) {
       if(this.role != null && this.role.type == type) {
@@ -800,7 +870,14 @@ import Utils from '@/config/utils.js'
           filtered = false;
         }
         //filter by topic
-        if(this.selectedTopic != -1 && !this.checkTopic(this.appointments[i].topicId)) {
+        let checkedtopic = await this.checkTopic(this.appointments[i])
+        if(this.selectedTopic != -1 && !checkedtopic) {
+          filtered = false;
+        }
+        //filter by tutor
+        if(this.selectedTutor != -1 && 
+          !this.checkTutor(this.appointments[i].id)) 
+        {
           filtered = false;
         }
         if(!this.checkRole("Admin"))
@@ -812,7 +889,6 @@ import Utils from '@/config/utils.js'
             }
           }
         }
-
         if(filtered) {
         //Set color for each event
         let color = 'grey darken-1'
@@ -833,13 +909,15 @@ import Utils from '@/config/utils.js'
             color = 'grey darken-1'
             break
         }
-        //Format times for each event
+        //Format times for each event and need to set minutes for events too
         let startTime = new Date(this.appointments[i].date)
         let startTimes = this.appointments[i].startTime.split(":");
         startTime.setHours(startTime.getHours() + parseInt(startTimes[0]))
+        startTime.setMinutes(startTime.getMinutes() + parseInt(startTimes[1]))
         let endTime = new Date(this.appointments[i].date)
         let endTimes = this.appointments[i].endTime.split(":");
         endTime.setHours(endTime.getHours() + parseInt(endTimes[0]))
+        endTime.setMinutes(endTime.getMinutes() + parseInt(endTimes[1]))
         //Note the format of each event, what data is associated with it
         events.push({
           name: this.appointments[i].type,

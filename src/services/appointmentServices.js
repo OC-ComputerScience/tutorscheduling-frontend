@@ -6,11 +6,17 @@ export default {
     getAllAppointments() {
       return apiClient.get("appointment");
     },
+    getAllForGroup(id) {
+      return apiClient.get("appointment/group/" + id);
+    },
     getGoogleCalPage() {
       return apiClient.get("appointment/googlecal");
     },
     getAppointment(id) {
       return apiClient.get("appointment/" + id);
+    },
+    getTutorForAppointment(id) {
+      return apiClient.get("appointment/tutorAppointment/" + id);
     },
     getAppointmentForPerson(personId) {
       return apiClient.get("appointment/person/" + personId)

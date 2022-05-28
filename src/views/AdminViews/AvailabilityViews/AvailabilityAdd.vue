@@ -202,12 +202,12 @@
 
 <script>
 import AvailabilityServices from "@/services/availabilityServices.js"
-import PersonServices from "@/services/personServices.js"
 import GroupServices from "@/services/groupServices.js"
 import TopicServices from "@/services/topicServices.js"
 import LocationServices from "@/services/locationServices.js"
 import AppointmentServices from "@/services/appointmentServices.js"
 import PersonAppointmentServices from "@/services/personAppointmentServices.js"
+import Utils from '@/config/utils.js'
 
   export default {
     name: 'App',
@@ -254,12 +254,13 @@ import PersonAppointmentServices from "@/services/personAppointmentServices.js"
       },
     },
     async created() {
-      this.getPerson()
-      .then(() => {
-        this.getAvailabilities()
-        this.user = this.$store.state.loginUser
-        this.getGroupByName(this.user.selectedGroup.replace(/%20/g, " "))
-      })
+      this.user = Utils.getStore('user')
+      this.getAvailabilities()
+      await this.getGroupByName(this.user.selectedGroup.replace(/%20/g, " "))
+  
+      // this.getPerson()
+      // .then(() => {
+      //      })
       // console.log(this.person);
       // this.getAvailabilities();
 
@@ -271,7 +272,7 @@ import PersonAppointmentServices from "@/services/personAppointmentServices.js"
         this.availability.date = element;
         this.availability.startTime = this.startTime;
         this.availability.endTime = this.endTime;
-        this.availability.personId = this.person.id;
+        this.availability.personId = this.user.userID;
         await AvailabilityServices.addAvailability(this.availability)
         .then(async ()=> {
           let date = new Date(element)
@@ -286,12 +287,12 @@ import PersonAppointmentServices from "@/services/personAppointmentServices.js"
             this.appointment.type = "Group"
           this.appointment.status = "available"
           this.appointment.groupId = this.group.id
-          this.appointment.locationId = this.location.id
-          this.appointment.topicId = this.topic.id
+          //this.appointment.locationId = this.location.id
+          //this.appointment.topicId = this.topic.id
           console.log(this.appointment.groupId)
           await AppointmentServices.addAppointment(this.appointment).then(async response => {
             this.personAppointment.isTutor = true
-            this.personAppointment.personId = this.person.id
+            this.personAppointment.personId = this.user.userID
             this.personAppointment.appointmentId = response.data.id
             await PersonAppointmentServices.addPersonAppointment(this.personAppointment)
           })
@@ -305,7 +306,7 @@ import PersonAppointmentServices from "@/services/personAppointmentServices.js"
       
     },
     getAvailabilities() {
-        AvailabilityServices.getPersonAvailability(this.person.id)
+        AvailabilityServices.getPersonAvailability(this.user.userID)
         .then(response => {
           this.availabilities = response.data;
 
@@ -355,19 +356,20 @@ import PersonAppointmentServices from "@/services/personAppointmentServices.js"
           console.log("There was an error:", error.response)
         });
       },
-    async getPerson() {
-      if (this.$store.state.loginUser.userID !== undefined && this.$store.state.loginUser !== null) {
-        await PersonServices.getPerson(this.$store.state.loginUser.userID)
-          .then(response => {
-            this.person = response.data;
+      // don't need this since we can get all needed info from the store by using Utils
+    // async getPerson() {
+    //   if (this.$store.state.loginUser.userID !== undefined && this.$store.state.loginUser !== null) {
+    //     await PersonServices.getPerson(this.$store.state.loginUser.userID)
+    //       .then(response => {
+    //         this.person = response.data;
   
-            return;
-          })
-          .catch(error => {
-            console.log("There was an error:", error.response)
-          });
-      }
-    },
+    //         return;
+    //       })
+    //       .catch(error => {
+    //         console.log("There was an error:", error.response)
+    //       });
+    //   }
+    // },
     getGroupByName(name) {
       GroupServices.getGroupByName(name)
       .then((response) => {
@@ -380,7 +382,7 @@ import PersonAppointmentServices from "@/services/personAppointmentServices.js"
       });
     },
     getTopicsForGroup() {
-      TopicServices.getTopicForPerson(this.person.id)
+      TopicServices.getTopicForPerson(this.user.userID)
       .then(response => {
         this.topic = response.data[0]
         console.log(this.topic)
