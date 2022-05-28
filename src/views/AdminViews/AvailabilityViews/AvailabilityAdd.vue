@@ -273,8 +273,8 @@ import Utils from '@/config/utils.js'
           this.appointment.type = this.user.fName + " " + this.user.lName
           this.appointment.status = "available"
           this.appointment.groupId = this.group.id
-          this.appointment.locationId = this.location.id
-          this.appointment.topicId = this.topic.id
+          //this.appointment.locationId = this.location.id
+          //this.appointment.topicId = this.topic.id
           console.log(this.appointment.groupId)
           await AppointmentServices.addAppointment(this.appointment).then(async response => {
             this.personAppointment.isTutor = true
