@@ -65,6 +65,9 @@ import TutorTopics from './views/TutorViews/TutorTopics.vue'
 import StudentHome from './views/StudentViews/StudentHome.vue'
 import StudentInfo from './views/StudentViews/StudentInfo.vue'
 
+// Feedback
+import AppointmentFeedback from './views/FeedbackViews/AppointmentFeedback.vue'
+
 Vue.use(Router)
 
 const router =  new Router({
@@ -276,6 +279,11 @@ const router =  new Router({
       path: '/adminInfo',
       name: 'adminInfo',
       component: AdminInfo
+    },
+    {
+      path: '/appointmentFeedback/:id',
+      name: 'appointmentFeedback',
+      component: AppointmentFeedback
     },
     /*
     {
