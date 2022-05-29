@@ -234,7 +234,6 @@ import Utils from '@/config/utils.js'
 
     },
     methods: {
-      //Formats time to be more user friendly
       calcTime(time) {
         if(time == null)
         {
