@@ -658,6 +658,7 @@ import Utils from '@/config/utils.js'
       this.person.personId = this.$store.state.loginUser.userID
       //Update stored data
       await PersonAppointmentServices.addPersonAppointment(this.person).then(() => {
+        this.sendMessage(this.tutors[0], this.user.fName, this.user.lName)
         this.getAppointments()
         this.$router.go(0);
       })
