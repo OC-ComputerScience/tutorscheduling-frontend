@@ -329,7 +329,7 @@
           <v-btn v-if="!isTutorEvent || checkRole('Student')"
             color="primary"
             @click="bookAppointment()"
-            :disabled="!checkStatus('available') || isGroupBook"
+            :disabled="!checkStatus('available') || isGroupBook || selectedAppointment.topicId == null || selectedAppointment.locationId == null"
           >
           Book
           </v-btn>
