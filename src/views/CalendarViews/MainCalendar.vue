@@ -184,6 +184,9 @@
           <span v-else>
             <span>None</span>
           </span>
+
+          <!-- make location and topic changable if the appointment type is private-->
+          <span  v-if="appointmentType.includes('Private')">
           <v-container>
           <v-select 
             v-model="selectedAppointment.locationId"
@@ -208,8 +211,37 @@
             :disabled="!checkStatus('available')"
           >
           </v-select>
+          </v-container>
+          </span>
+          <!-- slots for locaiton and topic to be unchangable if the session type is group-->
+          <span  v-else>
+          <v-container>
+          <v-select 
+            v-model="selectedAppointment.locationId"
+            :items="locations"
+            item-text="name"
+            item-value="id"
+            label="Location"
+            required
+            dense
+            readonly
+          >
+          </v-select>
+
+          <v-select 
+            v-model="selectedAppointment.topicId"
+            :items="currentTopics"
+            item-text="name"
+            item-value="id"
+            label="Topic"
+            required
+            dense
+            readonly
+          >
+          </v-select>
 
           </v-container>
+          </span>
           <!-- show time ad an changeable value for private lessons-->
           <v-container v-if="checkStatus('available')">
           
@@ -228,16 +260,14 @@
           </span>
           <!-- show time as an unchangeable value -->
           <span v-else>
-             <v-select
-            v-model="newStart"
-            :items="selectedAppointment.startTime"
-            item-text="timeText"
-            item-value="time"
-            label="Booked End"
-            required
-            dense
-          >
-          </v-select>
+             <v-text-field
+                v-model="newStart"
+                label="Booked Start"
+                required
+                dense
+                readonly
+              >
+             </v-text-field>
           </span>
           </v-container>
           <v-container v-if="checkStatus('available')">
@@ -255,42 +285,54 @@
           </v-select>
           </span>
           <span v-else>
-          <v-select
-            v-model="newEnd"
-            :items="selectedAppointment.endTime"
-            item-text="timeText"
-            item-value="time"
-            label="Booked End"
-            required
-            dense
-          >
-          </v-select>
+          <v-text-field
+                v-model="newEnd"
+                label="Booked End"
+                required
+                dense
+                readonly
+              >
+             </v-text-field>
           </span>
           </v-container>
-          <!-- put in presession-info for appointment for private appointments-->
-          <v-textarea
-            v-if="selectedAppointment.type = 'Private'"
-            v-model="selectedAppointment.preSessionInfo"
-            id="preSession"
-            :counter="130"
-            label="Pre-Session Info"
-            hint="Enter Info About What You Need Help With..."
-            persistent-hint
-            required
-            auto-grow
-            rows="1"
-            :disabled="!checkStatus('available')"
-          ></v-textarea>
+          <!-- put in presession-info for appointment for private appointments/ add a readonly if group-->
+          <span v-if="appointmentType.includes('Private')">
+            <v-textarea
+              v-model="selectedAppointment.preSessionInfo"
+              id="preSession"
+              :counter="130"
+              label="Pre-Session Info"
+              hint="Enter Info About What You Need Help With..."
+              persistent-hint
+              required
+              auto-grow
+              rows="1"
+              :disabled="!checkStatus('available')"
+            ></v-textarea>
+          </span>
+          <span v-else>
+            <v-textarea
+              v-model="selectedAppointment.preSessionInfo"
+              :counter="130"
+              label="Pre-Session Info"
+              hint="Enter Info About What You Need Help With..."
+              persistent-hint
+              required
+              auto-grow
+              rows="1"
+              readonly
+            ></v-textarea>
+          </span>
           <!-- User sign up here -->
         </v-card-text>
         <v-card-actions>
-        <v-btn v-if="checkRole('Student')"
-          color="primary"
-          @click="bookAppointment()"
-          :disabled="!checkStatus('available')"
-        >
-        Book
-        </v-btn>
+          <v-btn v-if="!isTutorEvent || checkRole('Student')"
+            color="primary"
+            @click="bookAppointment()"
+            :disabled="!checkStatus('available') || isGroupBook"
+          >
+          Book
+          </v-btn>
         <v-btn v-if="checkRole('Tutor')"
           color="#12f000"
           @click="confirmAppointment(true)"
@@ -373,6 +415,17 @@
         </v-btn>
         <span> - This event marks a timeslot that for a meeting that has been completed, 
           and is used for keeping track of user reviews.</span>
+        <br>
+        <v-btn
+        elevation="0"
+        color="purple"
+        class="white--text"
+        width="100"
+        > 
+        Purple
+        </v-btn>
+        <span> - This event marks a timeslot that for a group session that allows both students
+          and tutors to sign up for it.</span>
       </v-card-text>
       <v-card-actions>
         <v-spacer></v-spacer>
@@ -437,6 +490,8 @@ import Utils from '@/config/utils.js'
     tutorSelect: [],
     selectedTopic: -1,
     selectedTutor: -1,
+    isTutorEvent: null,
+    isGroupBook: null,
     //event data for calendar events
     selectedEvent: {},
     selectedElement: null,
@@ -451,6 +506,7 @@ import Utils from '@/config/utils.js'
     this.getGroupByName(this.user.selectedGroup.replace(/%20/g, " "))
     this.getRole()
     this.getAppointments()
+    this.isTutorOfSelectedEvent()
   },
   methods: {
     //Initialize data for calendar
@@ -513,15 +569,56 @@ import Utils from '@/config/utils.js'
        })
      })
     },
+    // Check to see if the tutor in question is the tutor of the selected event
+    async isTutorOfSelectedEvent(){
+      await PersonAppointmentServices.getPersonAppointmentForPerson(this.user.userID)
+      .then(response => {
+        let temp = response.data
+        for (let i = 0; i < temp.length; i++){
+          if (temp[i].appointmentId == this.selectedAppointment.id && temp[i].isTutor && temp[i].personId == this.user.userID){
+            this.isTutorEvent = true
+            return
+          }
+        }        
+          this.isTutorEvent = false
+        })
+      .catch(error => {
+        console.log("There was an error:", error.response.data)
+      });
+    },
+    //Check if student has already signed up for group appointment
+    checkGroupBoooking() {
+      PersonAppointmentServices.getPersonAppointmentForPerson(this.user.userID)
+      .then(response => {
+        let temp = response.data
+        for (let i = 0; i < temp.length; i++){
+          if (temp[i].appointmentId == this.selectedAppointment.id){
+            console.log('true')
+            this.isGroupBook = true
+            return 
+          }
+        }
+        console.log('false')
+        this.isGroupBook = false
+        })
+      .catch(error => {
+        console.log("There was an error:", error.response.data)
+      });
+
+    },
     //Update on a session being booked
     bookAppointment() {
       AppointmentServices.getAppointment(this.selectedAppointment.id).then(async response => {
-        if(response.data.status == "available") {
+        if(response.data.status == "available" && response.data.type.includes('Private')) {
           await this.splitAppointment().then(() => {
             this.getAppointments()
             this.selectedEvent.color = 'yellow'
           })
-        } else {
+        }
+        else if (response.data.type.includes('Group')) {
+            this.bookGroupSession()
+        } 
+        else {
           alert("This appointment has already been booked - Try a different slot")
           this.getAppointments()
           this.selectedOpen = false
@@ -531,18 +628,12 @@ import Utils from '@/config/utils.js'
     //Update on tutor confirming booking
     confirmAppointment(confirm) {
       if(confirm) {
-        if(this.appointmentType.includes('Private')){
+        if(this.appointmentType.includes("Private")){
           this.selectedAppointment.status = "booked"
           AppointmentServices.updateAppointmentStatus(this.selectedAppointment.id, this.selectedAppointment)
           .then(() =>{
             this.getAppointments()
             this.selectedEvent.color = 'blue'
-          })
-        }
-        else if(this.appointmentType.includes('Group')){
-          AppointmentServices.updateAppointmentStatus(this.selectedAppointment.id, this.selectedAppointment)
-          .then(() =>{
-            this.getAppointments()
           })
         }
       } else {
@@ -553,6 +644,25 @@ import Utils from '@/config/utils.js'
         })
       }
     },
+    //Add personAppointments from Group Sessions
+    async bookGroupSession() {
+      //Load person info
+
+      if(this.checkRole('Tutor')){
+        this.person.isTutor = true
+      }
+      else{
+        this.person.isTutor = false
+        }
+      this.person.appointmentId = this.selectedAppointment.id
+      this.person.personId = this.$store.state.loginUser.userID
+      //Update stored data
+      await PersonAppointmentServices.addPersonAppointment(this.person).then(() => {
+        this.getAppointments()
+        this.$router.go(0);
+      })
+    },
+    
     //Split appointments into more availablity slots when part of slot is booked
     async splitAppointment() {
       if(!this.checkStatus('available')) {
@@ -754,6 +864,8 @@ import Utils from '@/config/utils.js'
           this.newStart = this.selectedAppointment.startTime
           this.newEnd = this.selectedAppointment.endTime
           this.appointmentType = this.selectedAppointment.type
+          this.isTutorOfSelectedEvent()
+          this.checkGroupBoooking()
           this.updateTimes()
           this.updatePeople()
           this.selectedElement = nativeEvent.target
@@ -887,6 +999,9 @@ import Utils from '@/config/utils.js'
             if(!this.checkUserInAppointment(this.appointments[i].id)){
               filtered = false;
             }
+            if(this.appointments[i].type.includes('Group')){
+              filtered = true
+            }
           }
         }
         if(filtered) {
@@ -908,6 +1023,9 @@ import Utils from '@/config/utils.js'
           default:
             color = 'grey darken-1'
             break
+        }
+        if (this.appointments[i].type.includes('Group')){
+          color = 'purple'
         }
         //Format times for each event and need to set minutes for events too
         let startTime = new Date(this.appointments[i].date)
