@@ -57,6 +57,27 @@
           @click:row="rowClick"
         ></v-data-table>
       </v-card>
+      <br>
+      <v-card>
+        <v-card-title>
+          Provide Appointment Feedback in {{this.user.selectedGroup}}
+          <v-spacer></v-spacer>
+          <v-text-field
+              v-model="search"
+              append-icon="mdi-magnify"
+              label="Search"
+              single-line
+              hide-details
+          ></v-text-field>
+        </v-card-title>
+        <v-data-table
+          :headers="headers"
+          :search="search"
+          :items="appointments"
+          :items-per-page="50"
+          @click:row="rowClick"
+        ></v-data-table>
+      </v-card>
       </v-container>
     <v-container v-else>
       <h4>Pending supervisor's approval...</h4>
@@ -90,6 +111,7 @@ import GroupServices from "@/services/groupServices.js";
         currentId: 0,
         approved: false,
         appointments: [],
+        appointmentsneedingfeedback: [],
         headers: [{text: 'Date', value: 'date'}, 
                   {text: 'Start Time', value: 'startTime'},
                   {text: 'End Time', value: 'endTime'},
@@ -158,6 +180,54 @@ import GroupServices from "@/services/groupServices.js";
                 formattedET = formattedET + " A.M.";
               }
               this.appointments[index].endTime = formattedET;
+            } 
+
+          })
+          .catch(error => {
+            console.log("There was an error:", error.response)
+          });
+      },
+      async getAppointmentsNeedingFeedback() {
+        await AppointmentServices.getUpcomingAppointmentForPersonForGroup(this.group.id, this.user.userID)
+          .then(response => {
+            this.appointmentsneedingfeedback = response.data;
+            console.log(response);
+
+            for (let index = 0; index < this.appointmentsneedingfeedback.length; ++index) {
+              //format date
+              let element = this.appointmentsneedingfeedback[index];
+              let formattedDate = element.date.toString().substring(5,10) + "-" + element.date.toString().substring(0,4);
+              this.appointmentsneedingfeedback[index].date = formattedDate;
+              // format start time
+              let modST = element.startTime.toString().substring(0,2) % 12;
+              let formattedST = modST + ":" + element.startTime.toString().substring(3,5);
+              if (element.startTime.toString().substring(0,2) > 12){
+                formattedST = formattedST + " P.M.";}
+              else if(modST == 0 && element.startTime.toString().substring(0,2) == "12"){
+                formattedST = "12:" + element.startTime.toString().substring(3,5) + " P.M.";
+              }
+              else if(modST == 0){
+                formattedST = "12:" + element.startTime.toString().substring(3,5) + " A.M.";
+              }
+              else{
+                formattedST = formattedST + " A.M.";
+              }
+              this.appointmentsneedingfeedback[index].startTime = formattedST;
+              // format end time
+              let modET = element.endTime.toString().substring(0,2) % 12;
+              let formattedET = modET + ":" + element.endTime.toString().substring(3,5);
+              if (element.endTime.toString().substring(0,2) > 12){
+                formattedET = formattedET + " P.M.";}
+              else if(modET == 0 && element.endTime.toString().substring(0,2) == "12"){
+                formattedET = "12:" + element.endTime.toString().substring(3,5) + " P.M.";
+              }
+              else if(modET == 0){
+                formattedET = "12:" + element.endTime.toString().substring(3,5) + " A.M.";
+              }
+              else{
+                formattedET = formattedET + " A.M.";
+              }
+              this.appointmentsneedingfeedback[index].endTime = formattedET;
             } 
 
           })

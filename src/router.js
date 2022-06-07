@@ -283,7 +283,8 @@ const router =  new Router({
     {
       path: '/appointmentFeedback/:id',
       name: 'appointmentFeedback',
-      component: AppointmentFeedback
+      component: AppointmentFeedback,
+      props: true
     },
     /*
     {
