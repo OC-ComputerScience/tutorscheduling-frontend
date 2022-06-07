@@ -402,7 +402,7 @@ import Utils from '@/config/utils.js'
         else {
           this.nowTime = "00:00"
         }
-        this.newStart = this.nowTime;
+     //   this.newStart = this.nowTime; - caused problem with saving startDate in availabilityß
         this.startTimes = this.generateTimes(this.nowTime, this.newEnd)
         // adding this to make sure that you can't start an appointment at the end time
         this.startTimes.pop();
@@ -455,8 +455,13 @@ import Utils from '@/config/utils.js'
             console.log(error);
           });
         }
-        //this.getAvailabilities();
-        this.$router.go();
+        this.dates =[];
+        this.newStart ="00:00";
+        this.newEnd = "23:30";
+        this.getAvailabilities();
+        this.updateTimes();
+    
+        //this.$router.go();
         
       },
       getAvailabilities() {
