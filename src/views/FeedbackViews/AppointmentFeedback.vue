@@ -3,7 +3,7 @@
     <v-container>
       <v-toolbar>
         <v-toolbar-title
-          >Providing Feedback for {{ this.personAppointment }}</v-toolbar-title
+          >Providing Feedback for your recent appointment</v-toolbar-title
         >
       </v-toolbar>
       <br />
@@ -72,6 +72,8 @@ export default {
         console.log(response.data);
       })
       .catch((error) => {
+        
+        console.log("PersonAppointment: " + this);
         console.log("There was an error:", error.response);
       });
   },
