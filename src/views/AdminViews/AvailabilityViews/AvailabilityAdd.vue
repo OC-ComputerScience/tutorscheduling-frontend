@@ -6,6 +6,86 @@
     <v-toolbar-title>Add Availability</v-toolbar-title>
   </v-toolbar>
   <br><br>
+  <template>
+    <v-dialog
+      v-model="groupDialog"
+      persistent
+      max-width="600px"
+    >
+      <v-card>
+        <v-card-title>
+          <span class="text-h5">Information for Session</span>
+        </v-card-title>
+        <v-card-text> 
+          <v-container>
+            <v-row>
+              <v-col
+                cols="12"
+                sm="6"
+                md="4"
+              >
+                <v-select 
+                  v-model="location"
+                  :items="locations"
+                  item-text="name"
+                  item-value="id"
+                  label="Location"
+                  required
+                  dense
+                >
+                </v-select>
+              </v-col>
+              <v-col
+                cols="12"
+                sm="6"
+                md="4"
+              >
+                <v-select 
+                  v-model="topic"
+                  :items="topics"
+                  item-text="name"
+                  item-value="id"
+                  label="Topic"
+                  required
+                  dense
+                >
+                </v-select>
+              </v-col>
+            </v-row>
+            <v-row>
+            <v-col >
+                <v-textarea
+                  v-model="preSessionInfo"
+                  label="Pre-session info"
+                  hint="Information for the session"
+                  required
+                  outlined
+                ></v-textarea>
+              </v-col>
+            </v-row>
+          </v-container>
+          <small>*indicates required field</small>
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn
+            color="blue darken-1"
+            text
+            @click="groupDialog = false"
+          >
+            Close
+          </v-btn>
+          <v-btn
+            color="blue darken-1"
+            text
+            @click="addAvailability"
+          >
+            Save
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+  </template>
   <v-row>
     <v-col
       cols="12"
@@ -106,13 +186,26 @@
       >
       </v-select>
     </v-col>
-    <v-btn
+    <v-container >
+      <v-select 
+          v-model="groupSession"
+          :items="sessionValues"
+          item-text="text"
+          item-value="value"
+          label="Choose a session type"
+          required
+          dense
+        >
+        </v-select>
+      <v-btn
         color="success"
         class="mr-4"
-        @click="addAvailability"
+        @click="groupHandler"
       >
         Save
-      </v-btn>
+      </v-btn> <!-- have combo box here asking if the availabilities being added are group sessions or private -->
+    </v-container>
+    
   </v-row>
   </div>
   <div>
@@ -185,6 +278,7 @@ import Utils from '@/config/utils.js'
       dates: [],
       dialog: false,
       dialogDelete: false,
+      groupDialog: false,
       //used for generating time slots
       startTimes: [],
       endTimes: [],
@@ -197,10 +291,17 @@ import Utils from '@/config/utils.js'
       menu3: false,
       menu4: false,
       menu5: false,
+      groupSession: {},
+      person: {},
       user: {},
       group: {},
       topic: {},
+      topics: [],
       location: {},
+      locations: [],
+      sessionValues: [{text: 'Private', value: 'Private'},
+                      {text: 'Group', value: 'Group'}],
+      preSessionInfo: "",
       headers: [                  
                   {text: 'Date', value: 'date',},
                   {text: 'Start Time', value: 'startTime'},
@@ -315,31 +416,39 @@ import Utils from '@/config/utils.js'
 
         return new Date(Math.ceil(date.getTime() / ms) * ms);
       },
-      async addAvailability() {
-        for (var i = 0; i < this.dates.length; i++) {
-          let element = this.dates[i];
-          this.availability.date = element;
-          this.availability.startTime = this.newStart;
-          this.availability.endTime = this.newEnd;
-          this.availability.personId = this.user.userID;
-          await AvailabilityServices.addAvailability(this.availability)
-          .then(async ()=> {
-            let date = new Date(element)
-            date.setHours(date.getHours() + 5)
-            this.appointment.date = date
-            this.appointment.startTime = this.newStart
-            this.appointment.endTime = this.newEnd
-            this.appointment.type = this.user.fName + " " + this.user.lName
-            this.appointment.status = "available"
-            this.appointment.groupId = this.group.id
-            this.appointment.locationId = this.location.id
-            this.appointment.topicId = this.topic.id
-            // console.log(this.appointment.groupId)
-            await AppointmentServices.addAppointment(this.appointment).then(async response => {
-              this.personAppointment.isTutor = true
-              this.personAppointment.personId = this.user.userID
-              this.personAppointment.appointmentId = response.data.id
-              await PersonAppointmentServices.addPersonAppointment(this.personAppointment)
+      async   addAvailability() {
+      for (var i = 0; i < this.dates.length; i++) {
+        let element = this.dates[i];
+        this.availability.date = element;
+        this.availability.startTime = this.newStart;
+        this.availability.endTime = this.newEnd;
+        this.availability.personId = this.user.userID;
+        await AvailabilityServices.addAvailability(this.availability)
+        .then(async ()=> {
+          let date = new Date(element)
+          date.setHours(date.getHours() + 5)
+          this.appointment.date = date
+          this.appointment.startTime = this.newStart
+          this.appointment.endTime = this.newEnd
+          if(this.groupSession.includes('Private')){
+            this.appointment.type = "Private"
+          }
+          else{
+            this.appointment.type = "Group"
+            this.appointment.locationId = this.location
+            this.appointment.topicId = this.topic
+            this.appointment.preSessionInfo = this.preSessionInfo
+          }
+          this.appointment.groupId = this.group.id
+          this.appointment.status = "available"
+          console.log('test')
+          console.log(this.appointment)
+          console.log(this.appointment.groupId)
+          await AppointmentServices.addAppointment(this.appointment).then(async response => {
+            this.personAppointment.isTutor = true
+            this.personAppointment.personId = this.user.userID
+            this.personAppointment.appointmentId = response.data.id
+            await PersonAppointmentServices.addPersonAppointment(this.personAppointment)
             })
           })
           .catch((error) => {
@@ -429,11 +538,10 @@ import Utils from '@/config/utils.js'
     getTopicsForGroup() {
       TopicServices.getTopicForPerson(this.user.userID)
       .then(response => {
-        this.topic = response.data[0]
-        // console.log(this.topic)
+        this.topics = response.data
+        console.log(this.topic)
         LocationServices.getAllForGroup(this.group.id).then(response => {
-          this.location = response.data[0]
-          // console.log(this.location)
+          this.locations = response.data
         })
       })
       .catch(error => {
@@ -444,6 +552,14 @@ import Utils from '@/config/utils.js'
     allowedStep: m => m % 30 === 0,
 
     // popup functions
+    groupHandler() {
+      if(this.groupSession.includes('Group')){
+        this.groupDialog = true
+      }
+      else 
+        this.addAvailability()
+
+    },
     deleteItem (item) {
       this.editedIndex = this.availabilities.indexOf(item.id)
       this.editedItem = Object.assign({}, item)
