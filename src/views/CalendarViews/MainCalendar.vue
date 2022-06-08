@@ -499,7 +499,10 @@ import Utils from '@/config/utils.js'
     events: [],
     //current user data
     role: {},
-    user: {}
+    user: {},
+    //student and tutor names
+    studentName: "",
+    tutorName: "",
   }),
   created() {
     this.user = Utils.getStore('user')
@@ -593,12 +596,10 @@ import Utils from '@/config/utils.js'
         let temp = response.data
         for (let i = 0; i < temp.length; i++){
           if (temp[i].appointmentId == this.selectedAppointment.id){
-            console.log('true')
             this.isGroupBook = true
             return 
           }
         }
-        console.log('false')
         this.isGroupBook = false
         })
       .catch(error => {
@@ -971,6 +972,38 @@ import Utils from '@/config/utils.js'
       })
       return found
     },
+    //Get the name of the student for the appointments
+    async getStudentNameForAppointment(appointId){
+      var found = false
+      var studentId 
+      for (var i = 0;i < this.personAppointments.length;i++){
+        if (this.personAppointments[i].appointmentId == appointId.id && this.personAppointments[i].isTutor == '0'){
+          found = true
+          studentId = this.personAppointments[i].personId
+        }
+      }
+      if(found){
+        PersonServices.getPerson(studentId).then((response) => {
+          this.studentName = response.data.fName + " " + response.data.lName
+        })
+      }
+      else{
+        this.studentName = 'Open'
+      }
+    },
+    //Get the name of the tutor for the appointments
+    getTutorNameForAppointment(appointId){
+      var tutorId 
+      for (var i = 0;i < this.personAppointments.length;i++){
+        if (this.personAppointments[i].appointmentId == appointId.id && this.personAppointments[i].isTutor == '1'){
+          tutorId = this.personAppointments[i].personId
+    
+          PersonServices.getPerson(tutorId).then((response) => {
+            this.tutorName = response.data.fName + " " + response.data.lName
+          })
+        }
+      }
+    },
     //Load all appointments in backend into calendar events
     async loadAppointments() {
       const events = []
@@ -1038,14 +1071,39 @@ import Utils from '@/config/utils.js'
         endTime.setHours(endTime.getHours() + parseInt(endTimes[0]))
         endTime.setMinutes(endTime.getMinutes() + parseInt(endTimes[1]))
         //Note the format of each event, what data is associated with it
-        events.push({
-          name: this.appointments[i].type,
-          start: startTime,
-          end: endTime,
-          color: color,
-          timed: true,
-          appointmentId: this.appointments[i].id
-        })
+        if (this.appointments[i].type.includes('Group')){
+          events.push({
+            name: 'G: ' + this.topics[this.appointments[i].topicId - 1].name,
+            start: startTime,
+            end: endTime,
+            color: color,
+            timed: true,
+            appointmentId: this.appointments[i].id
+          })
+        }
+        if (this.appointments[i].type.includes('Private') && this.checkRole('Tutor')){
+          this.getStudentNameForAppointment(this.appointments[i])
+          events.push({
+            name: 'P: ' + this.studentName,
+            start: startTime,
+            end: endTime,
+            color: color,
+            timed: true,
+            appointmentId: this.appointments[i].id
+          })
+        }
+        else if(this.appointments[i].type.includes('Private') && this.checkRole('Student')){
+          this.getTutorNameForAppointment(this.appointments[i])
+          events.push({
+            name: 'P: ' + this.tutorName,
+            start: startTime,
+            end: endTime,
+            color: color,
+            timed: true,
+            appointmentId: this.appointments[i].id
+          })
+        }
+        
       }
       }
       this.events = events
