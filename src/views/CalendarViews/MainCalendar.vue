@@ -351,7 +351,14 @@
           color="accent"
           @click="selectedOpen = false"
         >
-        Cancel
+        Close
+        </v-btn>
+        
+        <v-btn v-if="checkStatus('booked') || isGroupBook"
+          color="red"
+          @click="studentCancelAppointment()"
+        >
+        Cancel Appointment
         </v-btn>
         </v-card-actions>
         </v-card>
@@ -593,12 +600,10 @@ import Utils from '@/config/utils.js'
         let temp = response.data
         for (let i = 0; i < temp.length; i++){
           if (temp[i].appointmentId == this.selectedAppointment.id){
-            console.log('true')
             this.isGroupBook = true
             return 
           }
         }
-        console.log('false')
         this.isGroupBook = false
         })
       .catch(error => {
@@ -658,7 +663,6 @@ import Utils from '@/config/utils.js'
       this.person.personId = this.$store.state.loginUser.userID
       //Update stored data
       await PersonAppointmentServices.addPersonAppointment(this.person).then(() => {
-        this.sendMessage(this.tutors[0], this.user.fName, this.user.lName)
         this.getAppointments()
         this.$router.go(0);
       })
@@ -982,6 +986,11 @@ import Utils from '@/config/utils.js'
         if(this.appointments[i].groupId != this.group.id) {
           filtered = false;
         }
+        //filter away canceled appointments
+        if(!this.checkRole('Admin') && (this.appointments[i].status.includes('studentCancel') || 
+            this.appointments[i].status.includes('tutorCancel'))) {
+          filtered = false;
+        }
         //filter by topic
         let checkedtopic = await this.checkTopic(this.appointments[i])
         if(this.selectedTopic != -1 && !checkedtopic) {
@@ -1012,7 +1021,10 @@ import Utils from '@/config/utils.js'
           case "pending":
             color = 'yellow'
             break
-          case "cancelled":
+          case "studentCancel":
+            color = 'red'
+            break
+          case "tutorCancel":
             color = 'red'
             break
           case "booked":
@@ -1049,6 +1061,82 @@ import Utils from '@/config/utils.js'
       }
       }
       this.events = events
+    },
+    //method for canceling appointments
+    async studentCancelAppointment(){
+      //delete appointment as a student of a private session
+      if (this.selectedAppointment.type.includes('Private') && this.checkRole('Student')){
+        this.selectedAppointment.status = "studentCancel"
+        AppointmentServices.updateAppointmentStatus(this.selectedAppointment.id, this.selectedAppointment)
+          .then(() =>{
+            let temp = {
+              date: this.selectedAppointment.date,
+              startTime: this.selectedAppointment.startTime,
+              endTime: this.selectedAppointment.endTime,
+              type: this.selectedAppointment.type,
+              status: 'available',
+              preSessionInfo: "",
+              groupId: this.selectedAppointment.groupId,
+            }
+            AppointmentServices.addAppointment(temp)
+            .then((response) =>{
+              this.tutors.forEach((t) => {
+              let pap = {
+                isTutor: true,
+                appointmentId: response.data.id,
+                personId: t.id
+              }
+              PersonAppointmentServices.addPersonAppointment(pap)
+            })
+            this.getAppointments()
+            this.$router.go(0);
+          })
+      })
+      }
+      //delete appointment as a student of a group session
+      else if (this.selectedAppointment.type.includes('Group') && this.checkRole('Student')){
+        for (let i = 0;i < this.personAppointments.length;i++) {
+          if (this.personAppointments[i].appointmentId == this.selectedAppointment.id && !this.personAppointments[i].isTutor
+            && this.personAppointments[i].personId == this.user.userID){
+            PersonAppointmentServices.deletePersonAppointment(this.personAppointments[i].id)
+            this.$router.go(0);
+          }
+        }
+      }
+      //delete appointment as a tutor of a private session
+      else if (this.selectedAppointment.type.includes('Private') && this.checkRole('Tutor')){
+        for (let i = 0;i < this.personAppointments.length;i++) {
+          if (this.personAppointments[i].appointmentId == this.selectedAppointment.id && this.personAppointments[i].isTutor){
+            PersonAppointmentServices.deletePersonAppointment(this.personAppointments[i].id)
+            AppointmentServices.deleteAppointment(this.selectedAppointment.id)
+            this.$router.go(0);
+          }
+        }
+      }
+      //delete appointment as a tutor of a group session
+      else if (this.selectedAppointment.type.includes('Group') && this.checkRole('Tutor')){
+        for (let i = 0;i < this.personAppointments.length;i++) {
+          if (this.personAppointments[i].appointmentId == this.selectedAppointment.id && this.personAppointments[i].isTutor && 
+            this.personAppointments[i].personId == this.user.userID){
+            PersonAppointmentServices.deletePersonAppointment(this.personAppointments[i].id)
+            await PersonAppointmentServices.getAllPersonAppointments()
+            .then(response => {
+              this.personAppointments = response.data;
+
+              let found = false;
+              for (let j = 0;i < this.personAppointments.length;j++) {
+                if (this.personAppointments[j].appointmentId == this.selectedAppointment.id && this.personAppointments[j].isTutor) {
+                  found = true
+                }
+              }
+              if (!found){
+                AppointmentServices.deleteAppointment(this.selectedAppointment.id)
+              }
+              this.$router.go(0);
+              })
+          }
+        }
+      }
     },
   },
 }
