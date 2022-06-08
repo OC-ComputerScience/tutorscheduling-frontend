@@ -128,7 +128,7 @@
 </template>
 
 <script>
-import googleOneTapSignin from '@/config/googleOneTapSignin' 
+// import googleOneTapSignin from '@/config/googleOneTapSignin' 
 // import AuthServices from '@/services/authServices'
 import GroupServices from '@/services/groupServices'
 import RoleServices from '@/services/roleServices'
@@ -156,11 +156,30 @@ export default {
       checkedGroups: [],
       name: '',
       roleCounter: 0,
-      user: {}
+      user: {},
+      googleUserData: {}
     }
   },
   created () {
     this.getGroups();
+    global.handleCredentialResponse = function handleCredentialResponse(id_token) {
+        console.log(id_token)
+      }
+      const googleScript = document.createElement('script');
+      googleScript.src = "https://accounts.google.com/gsi/client";
+      googleScript.async = true;
+      googleScript.defer = true;
+      document.body.appendChild(googleScript)
+      const googleDiv1 = document.createElement('div');
+      googleDiv1.id = "g_id_onload";
+      // console.log(process.env.VUE_APP_CLIENT_ID)
+      googleDiv1.dataset.client_id = process.env.VUE_APP_CLIENT_ID;
+      googleDiv1.dataset.callback = "handleCredentialResponse"
+      document.body.appendChild(googleDiv1);
+      const googleDiv2 = document.createElement('div');
+      googleDiv2.className = "g_id_signin";
+      googleDiv2.dataset.type = "standard";
+      document.body.appendChild(googleDiv2);
   },
   computed: {
     validateRoleCheckbox() {
@@ -169,9 +188,11 @@ export default {
   },
   methods: {
     loginWithGoogle() {
-      const { googleOptions, oneTapSignin, userData } = googleOneTapSignin()
-      oneTapSignin(googleOptions)
-      console.log(userData.value)
+      
+      // const { googleOptions, oneTapSignin, userData } = googleOneTapSignin()
+      // console.log(userData)
+      // oneTapSignin(googleOptions)
+      // console.log(userData)
       // this.$gAuth.accounts.id.initialize(this.googleAuth);
       // this.$gAuth
       // .signIn()
