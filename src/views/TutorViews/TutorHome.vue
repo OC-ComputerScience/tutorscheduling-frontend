@@ -54,13 +54,12 @@
           :search="search"
           :items="appointments"
           :items-per-page="50"
-          @click:row="rowClick"
         ></v-data-table>
       </v-card>
       <br>
       <v-card>
         <v-card-title>
-          Provide Appointment Feedback in {{this.user.selectedGroup}}
+          Provide Appointment Feedback for {{this.user.selectedGroup}}
           <v-spacer></v-spacer>
           <v-text-field
               v-model="search"
@@ -73,9 +72,9 @@
         <v-data-table
           :headers="headers"
           :search="search"
-          :items="appointments"
+          :items="appointmentsneedingfeedback"
           :items-per-page="50"
-          @click:row="rowClick"
+          @click:row="provideFeedback"
         ></v-data-table>
       </v-card>
       </v-container>
@@ -97,7 +96,6 @@ import GroupServices from "@/services/groupServices.js";
     name: 'App',
     watch: {
       id: function () {
-        console.log(this.id);
         this.getTutorRole();
       },
     },
@@ -120,13 +118,13 @@ import GroupServices from "@/services/groupServices.js";
     },
     async created() {
       this.user = Utils.getStore('user');
-      console.log(this.id);
       if(this.id !== 0) {
         this.getTutorRole();
       }
       await this.getGroup(this.user.selectedGroup.replace(/%20/g, " "))
       .then(() => {
         this.getAppointments();
+        this.getAppointmentsNeedingFeedback();
       })
     },
     methods: {
@@ -143,7 +141,6 @@ import GroupServices from "@/services/groupServices.js";
         await AppointmentServices.getUpcomingAppointmentForPersonForGroup(this.group.id, this.user.userID)
           .then(response => {
             this.appointments = response.data;
-            console.log(response);
 
             for (let index = 0; index < this.appointments.length; ++index) {
               //format date
@@ -188,10 +185,9 @@ import GroupServices from "@/services/groupServices.js";
           });
       },
       async getAppointmentsNeedingFeedback() {
-        await AppointmentServices.getUpcomingAppointmentForPersonForGroup(this.group.id, this.user.userID)
+        await AppointmentServices.getPassedAppointmentForPersonForGroupTutor(this.group.id, this.user.userID)
           .then(response => {
             this.appointmentsneedingfeedback = response.data;
-            console.log(response);
 
             for (let index = 0; index < this.appointmentsneedingfeedback.length; ++index) {
               //format date
@@ -234,19 +230,18 @@ import GroupServices from "@/services/groupServices.js";
           .catch(error => {
             console.log("There was an error:", error.response)
           });
-      },
-      rowClick: function (item, row) {      
+      },      
+      provideFeedback: function (item, row) {      
         row.select(true);
-        //this.$router.push({ name: 'appointmentView', params: { id: item.id } });
+        this.$router.push({ name: 'tutorAppointmentFeedback', params: { id: item.id, userId: this.user.userID } });
       },
+      
       async getTutorRole() {
         await PersonRoleServices.getPersonRole(this.id)
         .then((response) => {
-          console.log(response);
           if(response.data.status.includes("approved") || response.data.status.includes("Approved"))
           {
             this.approved = true;
-            console.log(this.approved)
           }
           else 
             this.approved = false;

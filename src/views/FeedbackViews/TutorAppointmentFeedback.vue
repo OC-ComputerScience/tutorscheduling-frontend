@@ -13,11 +13,11 @@
           <v-layout justify-center>
             <h4>What would you rate this appointment experience?</h4>
           </v-layout>
-            <br />
+          <br />
           <v-layout justify-center>
             <v-rating
               class="justify-center"
-              v-model="personAppointment.feedbacknumber"
+              v-model="numericalfeedback"
               background-color="grey"
               color="primary"
               empty-icon="mdi-star-outline"
@@ -30,7 +30,7 @@
           </v-layout>
         </div>
         <v-text-field
-          v-model="personAppointment.feedbacktext"
+          v-model="textualfeedback"
           id="description"
           :counter="500"
           label="Provide Feedback..."
@@ -54,43 +54,69 @@
 
 <script>
 import PersonAppointmentServices from "@/services/personAppointmentServices.js";
+import AppointmentServices from "@/services/appointmentServices.js";
 
 export default {
-  props: ["id"],
+  props: ["id", "userId"],
 
   data() {
     return {
       personAppointment: {},
+      numericalfeedback: null,
+      textualfeedback: "",
+      personAppointmentId: "",
+      appointment: {},
       message: "Make updates to the PersonAppointment",
       roles: ["admin"],
     };
   },
-  created() {
-    PersonAppointmentServices.getPersonAppointment(this.id)
+  
+  async created() {
+    await PersonAppointmentServices.findPersonAppointmentByPersonAndAppointment(
+      this.userId,
+      this.id
+    )
       .then((response) => {
         this.personAppointment = response.data;
+        this.personAppointmentId = this.personAppointment.id;
+        console.log(this.personAppointment);
+      })
+      .catch((error) => {
+        console.log("There was an error:", error.response);
+      });
+    await AppointmentServices.getAppointment(this.id)
+      .then((response) => {
+        this.appointment = response.data;
         console.log(response.data);
       })
       .catch((error) => {
-        
-        console.log("PersonAppointment: " + this);
+        console.log("Appointment: " + this);
         console.log("There was an error:", error.response);
       });
+    
   },
 
   methods: {
-    updatePersonAppointment() {
+    async updatePersonAppointment() {
+      this.appointment.status = "complete";
+      this.personAppointment.feedbacktext = this.textualfeedback;
+      this.personAppointment.feedbacknumber = this.numericalfeedback;
+      AppointmentServices.updateAppointmentStatus(this.id, this.appointment),
+
       PersonAppointmentServices.updatePersonAppointment(
-        this.id,
+        this.personAppointment.id,
         this.personAppointment
       )
-        .then(() => {
+        .then((response) => {
+          console.log(response.data)
           this.$router.go(-1);
         })
         .catch((error) => {
           console.log(error);
         });
+      
     },
+   
     cancel() {
       this.$router.go(-1);
     },
