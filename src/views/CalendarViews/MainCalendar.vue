@@ -356,7 +356,7 @@
         
         <v-btn v-if="checkStatus('booked') || isGroupBook"
           color="red"
-          @click="studentCancelAppointment()"
+          @click="cancelAppointment()"
         >
         Cancel Appointment
         </v-btn>
@@ -860,6 +860,16 @@ import Utils from '@/config/utils.js'
       temp.message = "You have a session request from " +fName + " " + lName + " pending"
       TwilioServices.sendMessage(temp);
     },
+    cancelMessage(tutor, fName, lName) {
+      let temp = tutor
+      temp.message = "Your appointment with " +fName + " " + lName + " has been canceled"
+      TwilioServices.sendMessage(temp);
+    },
+    tutorCancelMessage(student, fName, lName){
+      let temp = student
+      temp.message = "Your appointment with " +fName + " " + lName + " has been canceled"
+      TwilioServices.sendMessage(temp);
+    },
     //Animates Event card popping up
     showEvent ({ nativeEvent, event }) {
       const open = () => {
@@ -1063,7 +1073,7 @@ import Utils from '@/config/utils.js'
       this.events = events
     },
     //method for canceling appointments
-    async studentCancelAppointment(){
+    async cancelAppointment(){
       //delete appointment as a student of a private session
       if (this.selectedAppointment.type.includes('Private') && this.checkRole('Student')){
         this.selectedAppointment.status = "studentCancel"
@@ -1088,6 +1098,7 @@ import Utils from '@/config/utils.js'
               }
               PersonAppointmentServices.addPersonAppointment(pap)
             })
+            this.cancelMessage(this.tutors[0], this.user.fName, this.user.lName)
             this.getAppointments()
             this.$router.go(0);
           })
@@ -1109,6 +1120,7 @@ import Utils from '@/config/utils.js'
           if (this.personAppointments[i].appointmentId == this.selectedAppointment.id && this.personAppointments[i].isTutor){
             PersonAppointmentServices.deletePersonAppointment(this.personAppointments[i].id)
             AppointmentServices.deleteAppointment(this.selectedAppointment.id)
+            this.tutorCancelMessage(this.students[0], this.user.fName, this.user.lName)
             this.$router.go(0);
           }
         }
@@ -1117,23 +1129,23 @@ import Utils from '@/config/utils.js'
       else if (this.selectedAppointment.type.includes('Group') && this.checkRole('Tutor')){
         for (let i = 0;i < this.personAppointments.length;i++) {
           if (this.personAppointments[i].appointmentId == this.selectedAppointment.id && this.personAppointments[i].isTutor && 
-            this.personAppointments[i].personId == this.user.userID){
+          this.personAppointments[i].personId == this.user.userID){
             PersonAppointmentServices.deletePersonAppointment(this.personAppointments[i].id)
             await PersonAppointmentServices.getAllPersonAppointments()
-            .then(response => {
+            .then((response) => {
               this.personAppointments = response.data;
-
-              let found = false;
-              for (let j = 0;i < this.personAppointments.length;j++) {
-                if (this.personAppointments[j].appointmentId == this.selectedAppointment.id && this.personAppointments[j].isTutor) {
-                  found = true
-                }
+            })
+            let found = false;
+            for (let j = 0;j < this.personAppointments.length;j++) {
+              if (this.personAppointments[j].appointmentId == this.selectedAppointment.id && this.personAppointments[j].isTutor &&
+              this.personAppointments[j].personId != this.user.userID) {
+                found = true
               }
-              if (!found){
-                AppointmentServices.deleteAppointment(this.selectedAppointment.id)
-              }
-              this.$router.go(0);
-              })
+            }
+            if (!found){
+              AppointmentServices.deleteAppointment(this.selectedAppointment.id)
+            }
+            this.$router.go(0);
           }
         }
       }
