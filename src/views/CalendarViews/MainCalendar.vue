@@ -354,7 +354,7 @@
         Close
         </v-btn>
         
-        <v-btn v-if="checkStatus('booked') || isGroupBook || (checkStatus('available') && checkRole('Tutor') && isGroupBook)"
+        <v-btn v-if="checkStatus('booked') || isGroupBook || (isTutorOfSelectedEvent() && checkStatus('available'))"
           color="red"
           @click="cancelAppointment()"
         >
