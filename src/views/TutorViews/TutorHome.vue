@@ -54,7 +54,27 @@
           :search="search"
           :items="appointments"
           :items-per-page="50"
-          @click:row="rowClick"
+        ></v-data-table>
+      </v-card>
+      <br>
+      <v-card>
+        <v-card-title>
+          Provide Appointment Feedback for {{this.user.selectedGroup}}
+          <v-spacer></v-spacer>
+          <v-text-field
+              v-model="search"
+              append-icon="mdi-magnify"
+              label="Search"
+              single-line
+              hide-details
+          ></v-text-field>
+        </v-card-title>
+        <v-data-table
+          :headers="headers"
+          :search="search"
+          :items="appointmentsneedingfeedback"
+          :items-per-page="50"
+          @click:row="provideFeedback"
         ></v-data-table>
       </v-card>
       </v-container>
@@ -76,7 +96,6 @@ import GroupServices from "@/services/groupServices.js";
     name: 'App',
     watch: {
       id: function () {
-        console.log(this.id);
         this.getTutorRole();
       },
     },
@@ -90,6 +109,7 @@ import GroupServices from "@/services/groupServices.js";
         currentId: 0,
         approved: false,
         appointments: [],
+        appointmentsneedingfeedback: [],
         headers: [{text: 'Date', value: 'date'}, 
                   {text: 'Start Time', value: 'startTime'},
                   {text: 'End Time', value: 'endTime'},
@@ -98,13 +118,13 @@ import GroupServices from "@/services/groupServices.js";
     },
     async created() {
       this.user = Utils.getStore('user');
-      console.log(this.id);
       if(this.id !== 0) {
         this.getTutorRole();
       }
       await this.getGroup(this.user.selectedGroup.replace(/%20/g, " "))
       .then(() => {
         this.getAppointments();
+        this.getAppointmentsNeedingFeedback();
       })
     },
     methods: {
@@ -121,7 +141,6 @@ import GroupServices from "@/services/groupServices.js";
         await AppointmentServices.getUpcomingAppointmentForPersonForGroup(this.group.id, this.user.userID)
           .then(response => {
             this.appointments = response.data;
-            console.log(response);
 
             for (let index = 0; index < this.appointments.length; ++index) {
               //format date
@@ -165,18 +184,64 @@ import GroupServices from "@/services/groupServices.js";
             console.log("There was an error:", error.response)
           });
       },
-      rowClick: function (item, row) {      
+      async getAppointmentsNeedingFeedback() {
+        await AppointmentServices.getPassedAppointmentForPersonForGroupTutor(this.group.id, this.user.userID)
+          .then(response => {
+            this.appointmentsneedingfeedback = response.data;
+
+            for (let index = 0; index < this.appointmentsneedingfeedback.length; ++index) {
+              //format date
+              let element = this.appointmentsneedingfeedback[index];
+              let formattedDate = element.date.toString().substring(5,10) + "-" + element.date.toString().substring(0,4);
+              this.appointmentsneedingfeedback[index].date = formattedDate;
+              // format start time
+              let modST = element.startTime.toString().substring(0,2) % 12;
+              let formattedST = modST + ":" + element.startTime.toString().substring(3,5);
+              if (element.startTime.toString().substring(0,2) > 12){
+                formattedST = formattedST + " P.M.";}
+              else if(modST == 0 && element.startTime.toString().substring(0,2) == "12"){
+                formattedST = "12:" + element.startTime.toString().substring(3,5) + " P.M.";
+              }
+              else if(modST == 0){
+                formattedST = "12:" + element.startTime.toString().substring(3,5) + " A.M.";
+              }
+              else{
+                formattedST = formattedST + " A.M.";
+              }
+              this.appointmentsneedingfeedback[index].startTime = formattedST;
+              // format end time
+              let modET = element.endTime.toString().substring(0,2) % 12;
+              let formattedET = modET + ":" + element.endTime.toString().substring(3,5);
+              if (element.endTime.toString().substring(0,2) > 12){
+                formattedET = formattedET + " P.M.";}
+              else if(modET == 0 && element.endTime.toString().substring(0,2) == "12"){
+                formattedET = "12:" + element.endTime.toString().substring(3,5) + " P.M.";
+              }
+              else if(modET == 0){
+                formattedET = "12:" + element.endTime.toString().substring(3,5) + " A.M.";
+              }
+              else{
+                formattedET = formattedET + " A.M.";
+              }
+              this.appointmentsneedingfeedback[index].endTime = formattedET;
+            } 
+
+          })
+          .catch(error => {
+            console.log("There was an error:", error.response)
+          });
+      },      
+      provideFeedback: function (item, row) {      
         row.select(true);
-        //this.$router.push({ name: 'appointmentView', params: { id: item.id } });
+        this.$router.push({ name: 'tutorAppointmentFeedback', params: { id: item.id, userId: this.user.userID } });
       },
+      
       async getTutorRole() {
         await PersonRoleServices.getPersonRole(this.id)
         .then((response) => {
-          console.log(response);
           if(response.data.status.includes("approved") || response.data.status.includes("Approved"))
           {
             this.approved = true;
-            console.log(this.approved)
           }
           else 
             this.approved = false;

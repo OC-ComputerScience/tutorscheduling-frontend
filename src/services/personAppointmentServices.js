@@ -12,6 +12,9 @@ export default {
     getPersonAppointmentForPerson(personId) {
       return apiClient.get("personappointment/person/" + personId)
     },
+    findPersonAppointmentByPersonAndAppointment(personId, appointmentId) {
+      return apiClient.get("personappointment/person/" + personId + "/appointment/" + appointmentId)
+    },
     addPersonAppointment(personappointment) {
       return apiClient.post("personappointment", personappointment);
     },
