@@ -328,7 +328,7 @@
         <v-card-actions>
           <v-btn v-if="!isTutorEvent || checkRole('Student')"
             color="primary"
-            @click="bookAppointment()"
+            @click="bookAppointment(); selectedOpen = false;"
             :disabled="!checkStatus('available') || isGroupBook || selectedAppointment.topicId == null || selectedAppointment.locationId == null"
           >
           Book
@@ -354,7 +354,7 @@
         Close
         </v-btn>
         
-        <v-btn v-if="checkStatus('booked') || isGroupBook || (isTutorOfSelectedEvent() && checkStatus('available'))"
+        <v-btn v-if="checkStatus('booked') || isGroupBook || (isTutorEvent && checkStatus('available'))"
           color="red"
           @click="cancelAppointment(); selectedOpen = false;"
         >
@@ -594,8 +594,8 @@ import Utils from '@/config/utils.js'
       });
     },
     //Check if student has already signed up for group appointment
-    checkGroupBoooking() {
-      PersonAppointmentServices.getPersonAppointmentForPerson(this.user.userID)
+    async checkGroupBoooking() {
+      await PersonAppointmentServices.getPersonAppointmentForPerson(this.user.userID)
       .then(response => {
         let temp = response.data
         for (let i = 0; i < temp.length; i++){
@@ -664,8 +664,8 @@ import Utils from '@/config/utils.js'
       //Update stored data
       await PersonAppointmentServices.addPersonAppointment(this.person).then(() => {
         this.getAppointments()
-        this.$router.go(0);
       })
+      
     },
     
     //Split appointments into more availablity slots when part of slot is booked
@@ -1123,14 +1123,17 @@ import Utils from '@/config/utils.js'
             for(let j = 0; j<this.personAppointments.length;j++){
               if (this.personAppointments[j].appointmentId == this.selectedAppointment.id && !this.personAppointments[j].isTutor){
                 this.selectedAppointment.status = "tutorCancel"
-                AppointmentServices.updateAppointmentStatus(this.selectedAppointment.id, this.selectedAppointment)
+                await AppointmentServices.updateAppointmentStatus(this.selectedAppointment.id, this.selectedAppointment)
                 this.tutorCancelMessage(this.students[0], this.user.fName, this.user.lName)
-              }
-              else {
-                PersonAppointmentServices.deletePersonAppointment(this.personAppointments[i].id)
-                AppointmentServices.deleteAppointment(this.selectedAppointment.id)
+                this.getAppointments()
+                return
               }
             }
+            
+              
+            PersonAppointmentServices.deletePersonAppointment(this.personAppointments[i].id)
+            AppointmentServices.deleteAppointment(this.selectedAppointment.id)
+          
             this.getAppointments()
             //this.$router.go(0);
           }
