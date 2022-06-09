@@ -354,7 +354,7 @@
         Close
         </v-btn>
         
-        <v-btn v-if="checkStatus('booked') || isGroupBook"
+        <v-btn v-if="checkStatus('booked') || isGroupBook || (checkStatus('available') && checkRole('Tutor') && isGroupBook)"
           color="red"
           @click="cancelAppointment()"
         >
@@ -599,7 +599,7 @@ import Utils from '@/config/utils.js'
       .then(response => {
         let temp = response.data
         for (let i = 0; i < temp.length; i++){
-          if (temp[i].appointmentId == this.selectedAppointment.id){
+          if (temp[i].appointmentId == this.selectedAppointment.id && this.selectedAppointment.type.includes('Group')){
             this.isGroupBook = true
             return 
           }
@@ -1019,7 +1019,8 @@ import Utils from '@/config/utils.js'
             if(!this.checkUserInAppointment(this.appointments[i].id)){
               filtered = false;
             }
-            if(this.appointments[i].type.includes('Group')){
+            if(this.appointments[i].type.includes('Group') 
+                && !(this.appointments[i].status.includes('tutorCancel') || this.appointments[i].status.includes('studentCancel'))){
               filtered = true
             }
           }
@@ -1047,7 +1048,7 @@ import Utils from '@/config/utils.js'
             color = 'grey darken-1'
             break
         }
-        if (this.appointments[i].type.includes('Group')){
+        if (this.appointments[i].type.includes('Group') && !(this.appointments[i].status.includes('tutorCancel') || this.appointments[i].status.includes('studentCancel'))){
           color = 'purple'
         }
         //Format times for each event and need to set minutes for events too
@@ -1118,9 +1119,17 @@ import Utils from '@/config/utils.js'
       else if (this.selectedAppointment.type.includes('Private') && this.checkRole('Tutor')){
         for (let i = 0;i < this.personAppointments.length;i++) {
           if (this.personAppointments[i].appointmentId == this.selectedAppointment.id && this.personAppointments[i].isTutor){
-            PersonAppointmentServices.deletePersonAppointment(this.personAppointments[i].id)
-            AppointmentServices.deleteAppointment(this.selectedAppointment.id)
-            this.tutorCancelMessage(this.students[0], this.user.fName, this.user.lName)
+            for(let j = 0; j<this.personAppointments.length;j++){
+              if (this.personAppointments[j].appointmentId == this.selectedAppointment.id && !this.personAppointments[j].isTutor){
+                this.selectedAppointment.status = "tutorCancel"
+                AppointmentServices.updateAppointmentStatus(this.selectedAppointment.id, this.selectedAppointment)
+                this.tutorCancelMessage(this.students[0], this.user.fName, this.user.lName)
+              }
+              else {
+                PersonAppointmentServices.deletePersonAppointment(this.personAppointments[i].id)
+                AppointmentServices.deleteAppointment(this.selectedAppointment.id)
+              }
+            }
             this.$router.go(0);
           }
         }
@@ -1130,7 +1139,6 @@ import Utils from '@/config/utils.js'
         for (let i = 0;i < this.personAppointments.length;i++) {
           if (this.personAppointments[i].appointmentId == this.selectedAppointment.id && this.personAppointments[i].isTutor && 
           this.personAppointments[i].personId == this.user.userID){
-            PersonAppointmentServices.deletePersonAppointment(this.personAppointments[i].id)
             await PersonAppointmentServices.getAllPersonAppointments()
             .then((response) => {
               this.personAppointments = response.data;
@@ -1142,7 +1150,14 @@ import Utils from '@/config/utils.js'
                 found = true
               }
             }
-            if (!found){
+            if (this.students.length > 0 && this.tutors.length == 1){
+                this.selectedAppointment.status = "tutorCancel"
+                AppointmentServices.updateAppointmentStatus(this.selectedAppointment.id, this.selectedAppointment)            
+            }
+            else if (found){
+              PersonAppointmentServices.deletePersonAppointment(this.personAppointments[i].id)
+            }
+            else {
               AppointmentServices.deleteAppointment(this.selectedAppointment.id)
             }
             this.$router.go(0);
