@@ -356,7 +356,7 @@
         
         <v-btn v-if="checkStatus('booked') || isGroupBook || (isTutorOfSelectedEvent() && checkStatus('available'))"
           color="red"
-          @click="cancelAppointment()"
+          @click="cancelAppointment(); selectedOpen = false;"
         >
         Cancel Appointment
         </v-btn>
@@ -1101,7 +1101,7 @@ import Utils from '@/config/utils.js'
             })
             this.cancelMessage(this.tutors[0], this.user.fName, this.user.lName)
             this.getAppointments()
-            this.$router.go(0);
+            //this.$router.go(0);
           })
       })
       }
@@ -1111,7 +1111,8 @@ import Utils from '@/config/utils.js'
           if (this.personAppointments[i].appointmentId == this.selectedAppointment.id && !this.personAppointments[i].isTutor
             && this.personAppointments[i].personId == this.user.userID){
             PersonAppointmentServices.deletePersonAppointment(this.personAppointments[i].id)
-            this.$router.go(0);
+            this.getAppointments()
+            //this.$router.go(0);
           }
         }
       }
@@ -1130,7 +1131,8 @@ import Utils from '@/config/utils.js'
                 AppointmentServices.deleteAppointment(this.selectedAppointment.id)
               }
             }
-            this.$router.go(0);
+            this.getAppointments()
+            //this.$router.go(0);
           }
         }
       }
@@ -1160,7 +1162,8 @@ import Utils from '@/config/utils.js'
             else {
               AppointmentServices.deleteAppointment(this.selectedAppointment.id)
             }
-            this.$router.go(0);
+            this.getAppointments()
+            //this.$router.go(0);
           }
         }
       }
