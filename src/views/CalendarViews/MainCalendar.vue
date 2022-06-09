@@ -354,7 +354,8 @@
         Close
         </v-btn>
         
-        <v-btn v-if="checkStatus('booked') || isGroupBook || (isTutorEvent && checkStatus('available'))"
+        <v-btn v-if="checkStatus('booked') || isGroupBook || (isTutorEvent && checkStatus('available')) || 
+                    (checkRole('Student') && checkStatus('pending'))"
           color="red"
           @click="cancelAppointment(); selectedOpen = false;"
         >
@@ -1076,7 +1077,7 @@ import Utils from '@/config/utils.js'
     //method for canceling appointments
     async cancelAppointment(){
       //delete appointment as a student of a private session
-      if (this.selectedAppointment.type.includes('Private') && this.checkRole('Student')){
+      if (this.selectedAppointment.type.includes('Private') && this.checkRole('Student') && this.checkStatus('booked')){
         this.selectedAppointment.status = "studentCancel"
         AppointmentServices.updateAppointmentStatus(this.selectedAppointment.id, this.selectedAppointment)
           .then(() =>{
@@ -1104,6 +1105,21 @@ import Utils from '@/config/utils.js'
             //this.$router.go(0);
           })
       })
+      }
+      else if (this.selectedAppointment.type.includes('Private') && this.checkRole('Student') && this.checkStatus('pending')){
+        this.selectedAppointment.status = "available"
+        this.selectedAppointment.locationId = null;
+        this.selectedAppointment.topicId = null;
+        this.selectedAppointment.preSessionInfo = "";
+        AppointmentServices.updateAppointmentStatus(this.selectedAppointment.id, this.selectedAppointment)
+        for (let i = 0;i < this.personAppointments.length;i++) {
+          if (this.personAppointments[i].appointmentId == this.selectedAppointment.id && !this.personAppointments[i].isTutor
+            && this.personAppointments[i].personId == this.user.userID){
+            PersonAppointmentServices.deletePersonAppointment(this.personAppointments[i].id)
+            this.getAppointments()
+            //this.$router.go(0);
+          }
+        }
       }
       //delete appointment as a student of a group session
       else if (this.selectedAppointment.type.includes('Group') && this.checkRole('Student')){
@@ -1156,8 +1172,11 @@ import Utils from '@/config/utils.js'
               }
             }
             if (this.students.length > 0 && this.tutors.length == 1){
-                this.selectedAppointment.status = "tutorCancel"
-                AppointmentServices.updateAppointmentStatus(this.selectedAppointment.id, this.selectedAppointment)            
+              for (let k = 0; k < this.students.length; k++){
+                this.tutorCancelMessage(this.students[k], this.user.fName, this.user.lName)
+              } 
+              this.selectedAppointment.status = "tutorCancel"
+              AppointmentServices.updateAppointmentStatus(this.selectedAppointment.id, this.selectedAppointment)         
             }
             else if (found){
               PersonAppointmentServices.deletePersonAppointment(this.personAppointments[i].id)
