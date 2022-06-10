@@ -331,7 +331,7 @@
           <v-btn v-if="!isTutorEvent || checkRole('Student')"
             color="primary"
             @click="bookAppointment(); selectedOpen = false;"
-            :disabled="!checkStatus('available') || isGroupBook || selectedAppointment.topicId == null || selectedAppointment.locationId == null"
+            :disabled="!checkStatus('available') || isGroupBook || checkRole('Admin') || selectedAppointment.topicId == null || selectedAppointment.locationId == null"
           >
           Book
           </v-btn>
@@ -1050,7 +1050,7 @@ import Utils from '@/config/utils.js'
         {
           filtered = false;
         }
-        if(!this.checkRole("Admin"))
+        if(!this.checkRole('Admin'))
         {
           if(!(this.appointments[i].status == "available") || this.checkRole("Tutor")) {
           //only add if user is associated with event
@@ -1124,6 +1124,16 @@ import Utils from '@/config/utils.js'
           await this.getTutorNameForAppointment(this.appointments[i])
           events.push({
             name: 'P: ' + this.tutorName,
+            start: startTime,
+            end: endTime,
+            color: color,
+            timed: true,
+            appointmentId: this.appointments[i].id
+          })
+        }
+        else if(this.checkRole('Admin') && !this.appointments[i].type.includes('Group')){
+          events.push({
+            name: 'S: ' + this.appointments[i].status,
             start: startTime,
             end: endTime,
             color: color,
