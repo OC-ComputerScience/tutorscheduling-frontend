@@ -520,11 +520,11 @@ import Utils from '@/config/utils.js'
   },
   methods: {
     //Initialize data for calendar
-    getAppointments() {
-      AppointmentServices.getAllAppointments()
-      .then(response => {
+   async getAppointments() {
+      await AppointmentServices.getAllAppointments()
+      .then(async (response) => {
         this.appointments = response.data
-        PersonAppointmentServices.getAllPersonAppointments()
+        await PersonAppointmentServices.getAllPersonAppointments()
         .then(response => {
           this.personAppointments = response.data;
           
@@ -1104,7 +1104,7 @@ import Utils from '@/config/utils.js'
               await PersonAppointmentServices.addPersonAppointment(pap)
             })
             this.cancelMessage(this.tutors[0], this.user.fName, this.user.lName)
-            this.getAppointments()
+            await this.getAppointments()
             //this.$router.go(0);
           })
       })
@@ -1119,7 +1119,7 @@ import Utils from '@/config/utils.js'
           if (this.personAppointments[i].appointmentId == this.selectedAppointment.id && !this.personAppointments[i].isTutor
             && this.personAppointments[i].personId == this.user.userID){
             await PersonAppointmentServices.deletePersonAppointment(this.personAppointments[i].id)
-            this.getAppointments()
+            await this.getAppointments()
             //this.$router.go(0);
           }
         }
@@ -1130,7 +1130,7 @@ import Utils from '@/config/utils.js'
           if (this.personAppointments[i].appointmentId == this.selectedAppointment.id && !this.personAppointments[i].isTutor
             && this.personAppointments[i].personId == this.user.userID){
             await PersonAppointmentServices.deletePersonAppointment(this.personAppointments[i].id)
-            this.getAppointments()
+            await this.getAppointments()
             //this.$router.go(0);
           }
         }
@@ -1144,7 +1144,7 @@ import Utils from '@/config/utils.js'
                 this.selectedAppointment.status = "tutorCancel"
                 await AppointmentServices.updateAppointmentStatus(this.selectedAppointment.id, this.selectedAppointment)
                 this.tutorCancelMessage(this.students[0], this.user.fName, this.user.lName)
-                this.getAppointments()
+                await this.getAppointments()
                 return
               }
             }
@@ -1153,7 +1153,7 @@ import Utils from '@/config/utils.js'
             await PersonAppointmentServices.deletePersonAppointment(this.personAppointments[i].id)
             await AppointmentServices.deleteAppointment(this.selectedAppointment.id)
           
-            this.getAppointments()
+            await this.getAppointments()
             //this.$router.go(0);
           }
         }
@@ -1179,15 +1179,17 @@ import Utils from '@/config/utils.js'
                 this.tutorCancelMessage(this.students[k], this.user.fName, this.user.lName)
               } 
               this.selectedAppointment.status = "tutorCancel"
-              AppointmentServices.updateAppointmentStatus(this.selectedAppointment.id, this.selectedAppointment)         
+              await AppointmentServices.updateAppointmentStatus(this.selectedAppointment.id, this.selectedAppointment)         
             }
             else if (found){
-              PersonAppointmentServices.deletePersonAppointment(this.personAppointments[i].id)
+              await PersonAppointmentServices.deletePersonAppointment(this.personAppointments[i].id)
             }
             else {
-              AppointmentServices.deleteAppointment(this.selectedAppointment.id)
+              await AppointmentServices.deleteAppointment(this.selectedAppointment.id)
             }
             await this.getAppointments()
+
+
             //this.$router.go(0);
           }
         }
