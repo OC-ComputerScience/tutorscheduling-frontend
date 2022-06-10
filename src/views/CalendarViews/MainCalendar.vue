@@ -511,8 +511,8 @@ import Utils from '@/config/utils.js'
     role: {},
     user: {},
     //student and tutor names
-    studentName: "",
-    tutorName: "",
+    studentName: '',
+    tutorName: '',
   }),
   created() {
     this.user = Utils.getStore('user')
@@ -689,8 +689,8 @@ import Utils from '@/config/utils.js'
           status: this.selectedAppointment.status,
           preSessionInfo: "",
           groupId: this.selectedAppointment.groupId,
-          locationId: this.selectedAppointment.locationId,
-          topicId: this.selectedAppointment.topicId,
+          //locationId: this.selectedAppointment.locationId,
+          //topicId: this.selectedAppointment.topicId,
         }
         AppointmentServices.addAppointment(temp).then((response)=> {
           this.tutors.forEach((t) => {
@@ -713,8 +713,8 @@ import Utils from '@/config/utils.js'
           status: this.selectedAppointment.status,
           preSessionInfo: "",
           groupId: this.selectedAppointment.groupId,
-          locationId: this.selectedAppointment.locationId,
-          topicId: this.selectedAppointment.topicId,
+          //locationId: this.selectedAppointment.locationId,
+          //topicId: this.selectedAppointment.topicId,
         }
         AppointmentServices.addAppointment(temp).then((response)=> {
           this.tutors.forEach((t) => {
@@ -1002,7 +1002,7 @@ import Utils from '@/config/utils.js'
         }
       }
       if(found){
-        PersonServices.getPerson(studentId).then((response) => {
+        await PersonServices.getPerson(studentId).then((response) => {
           this.studentName = response.data.fName + " " + response.data.lName
         })
       }
@@ -1011,13 +1011,13 @@ import Utils from '@/config/utils.js'
       }
     },
     //Get the name of the tutor for the appointments
-    getTutorNameForAppointment(appointId){
+    async getTutorNameForAppointment(appointId){
       var tutorId 
       for (var i = 0;i < this.personAppointments.length;i++){
         if (this.personAppointments[i].appointmentId == appointId.id && this.personAppointments[i].isTutor == '1'){
           tutorId = this.personAppointments[i].personId
     
-          PersonServices.getPerson(tutorId).then((response) => {
+          await PersonServices.getPerson(tutorId).then((response) => {
             this.tutorName = response.data.fName + " " + response.data.lName
           })
         }
@@ -1110,7 +1110,7 @@ import Utils from '@/config/utils.js'
           })
         }
         if (this.appointments[i].type.includes('Private') && this.checkRole('Tutor')){
-          this.getStudentNameForAppointment(this.appointments[i])
+          await this.getStudentNameForAppointment(this.appointments[i])
           events.push({
             name: 'P: ' + this.studentName,
             start: startTime,
@@ -1121,7 +1121,7 @@ import Utils from '@/config/utils.js'
           })
         }
         else if(this.appointments[i].type.includes('Private') && this.checkRole('Student')){
-          this.getTutorNameForAppointment(this.appointments[i])
+          await this.getTutorNameForAppointment(this.appointments[i])
           events.push({
             name: 'P: ' + this.tutorName,
             start: startTime,
