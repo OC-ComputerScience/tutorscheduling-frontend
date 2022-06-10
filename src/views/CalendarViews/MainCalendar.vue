@@ -84,6 +84,7 @@
       <!-- Dropdown menu to select format -->
       <!-- Will modify to only include relevant formats -->
       <v-menu
+
         bottom
         right
       >
@@ -139,6 +140,7 @@
         <!-- add another v-menu for group session v private-->
         <v-menu
         v-model="selectedOpen"
+        :open-on-click="false"
         :close-on-content-click="false"
         :activator="selectedElement"
         offset-x
@@ -873,9 +875,10 @@ import Utils from '@/config/utils.js'
     },
     //Animates Event card popping up
     showEvent ({ nativeEvent, event }) {
+    
       const open = () => {
         this.selectedEvent = event
-        AppointmentServices.getAppointment(event.appointmentId).then(response => {
+        AppointmentServices.getAppointment(event.appointmentId).then((response) => {
           this.selectedAppointment = response.data
           this.newStart = this.selectedAppointment.startTime
           this.newEnd = this.selectedAppointment.endTime
@@ -885,7 +888,7 @@ import Utils from '@/config/utils.js'
           this.updateTimes()
           this.updatePeople()
           this.selectedElement = nativeEvent.target
-          requestAnimationFrame(() => requestAnimationFrame(() => this.selectedOpen = true))
+         requestAnimationFrame(() => requestAnimationFrame(() => this.selectedOpen = true))
         });
       }
       if (this.selectedOpen) {
@@ -897,13 +900,13 @@ import Utils from '@/config/utils.js'
       nativeEvent.stopPropagation()
     },
     //Update the lists of tutors and students
-    updatePeople() {
+    async updatePeople() {
       this.tutors = []
       this.students = []
       let tutorFound = false
-      this.personAppointments.forEach((person) => {
+      this.personAppointments.forEach(async (person) => {
         if(person.appointmentId == this.selectedAppointment.id) {
-          PersonServices.getPerson(person.personId).then((response) => {
+          await PersonServices.getPerson(person.personId).then((response) => {
             if(person.isTutor) {
               this.tutors.push(response.data)
               if(!tutorFound) {
@@ -916,7 +919,6 @@ import Utils from '@/config/utils.js'
           })
         }
       })
-      
     },
     //Checks if the current session matches the given status, for hiding certain elements
     checkStatus(status) {
@@ -1072,6 +1074,7 @@ import Utils from '@/config/utils.js'
         })
       }
       }
+  
       this.events = events
     },
     //method for canceling appointments
@@ -1079,8 +1082,8 @@ import Utils from '@/config/utils.js'
       //delete appointment as a student of a private session
       if (this.selectedAppointment.type.includes('Private') && this.checkRole('Student') && this.checkStatus('booked')){
         this.selectedAppointment.status = "studentCancel"
-        AppointmentServices.updateAppointmentStatus(this.selectedAppointment.id, this.selectedAppointment)
-          .then(() =>{
+        await AppointmentServices.updateAppointmentStatus(this.selectedAppointment.id, this.selectedAppointment)
+          .then(async () =>{
             let temp = {
               date: this.selectedAppointment.date,
               startTime: this.selectedAppointment.startTime,
@@ -1090,15 +1093,15 @@ import Utils from '@/config/utils.js'
               preSessionInfo: "",
               groupId: this.selectedAppointment.groupId,
             }
-            AppointmentServices.addAppointment(temp)
-            .then((response) =>{
-              this.tutors.forEach((t) => {
+            await AppointmentServices.addAppointment(temp)
+            .then( async(response) =>{
+              this.tutors.forEach(async (t) => {
               let pap = {
                 isTutor: true,
                 appointmentId: response.data.id,
                 personId: t.id
               }
-              PersonAppointmentServices.addPersonAppointment(pap)
+              await PersonAppointmentServices.addPersonAppointment(pap)
             })
             this.cancelMessage(this.tutors[0], this.user.fName, this.user.lName)
             this.getAppointments()
@@ -1111,11 +1114,11 @@ import Utils from '@/config/utils.js'
         this.selectedAppointment.locationId = null;
         this.selectedAppointment.topicId = null;
         this.selectedAppointment.preSessionInfo = "";
-        AppointmentServices.updateAppointmentStatus(this.selectedAppointment.id, this.selectedAppointment)
+        await AppointmentServices.updateAppointmentStatus(this.selectedAppointment.id, this.selectedAppointment)
         for (let i = 0;i < this.personAppointments.length;i++) {
           if (this.personAppointments[i].appointmentId == this.selectedAppointment.id && !this.personAppointments[i].isTutor
             && this.personAppointments[i].personId == this.user.userID){
-            PersonAppointmentServices.deletePersonAppointment(this.personAppointments[i].id)
+            await PersonAppointmentServices.deletePersonAppointment(this.personAppointments[i].id)
             this.getAppointments()
             //this.$router.go(0);
           }
@@ -1126,7 +1129,7 @@ import Utils from '@/config/utils.js'
         for (let i = 0;i < this.personAppointments.length;i++) {
           if (this.personAppointments[i].appointmentId == this.selectedAppointment.id && !this.personAppointments[i].isTutor
             && this.personAppointments[i].personId == this.user.userID){
-            PersonAppointmentServices.deletePersonAppointment(this.personAppointments[i].id)
+            await PersonAppointmentServices.deletePersonAppointment(this.personAppointments[i].id)
             this.getAppointments()
             //this.$router.go(0);
           }
@@ -1147,8 +1150,8 @@ import Utils from '@/config/utils.js'
             }
             
               
-            PersonAppointmentServices.deletePersonAppointment(this.personAppointments[i].id)
-            AppointmentServices.deleteAppointment(this.selectedAppointment.id)
+            await PersonAppointmentServices.deletePersonAppointment(this.personAppointments[i].id)
+            await AppointmentServices.deleteAppointment(this.selectedAppointment.id)
           
             this.getAppointments()
             //this.$router.go(0);
@@ -1184,7 +1187,7 @@ import Utils from '@/config/utils.js'
             else {
               AppointmentServices.deleteAppointment(this.selectedAppointment.id)
             }
-            this.getAppointments()
+            await this.getAppointments()
             //this.$router.go(0);
           }
         }
