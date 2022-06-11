@@ -363,6 +363,13 @@
         >
         Cancel Appointment
         </v-btn>
+
+        <v-btn v-if="checkRole('Admin') && checkStatus('available')"
+          color="green"
+          @click="adminAddStudent = true"
+        >
+        Sign Up Student
+        </v-btn>
         </v-card-actions>
         </v-card>
         </v-menu>
@@ -370,6 +377,50 @@
     </v-col>
     </v-row>
     </v-container>
+    <template>
+    <v-dialog
+      v-model="adminAddStudent"
+      persistent
+      max-width="600px"
+    >
+      <v-card>
+        <v-card-title>
+          <span class="text-h5">Enter the student's Email</span>
+        </v-card-title>
+        <v-card-text> 
+          <v-container>
+            <v-row>
+                <v-text-field 
+                  v-model="studentEmail"
+                  label="Student's Email"
+                  required
+                  dense
+                  max-width="300px"
+                >
+                </v-text-field>
+            </v-row>
+          </v-container>
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn
+            color="blue darken-1"
+            text
+            @click="adminAddStudent = false"
+          >
+            Close
+          </v-btn>
+          <v-btn
+            color="blue darken-1"
+            text
+            @click="adminAdd()"
+          >
+            Search
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+  </template>
     <v-dialog v-model="keyVisible" max-width="600px">
     <v-card
     >
@@ -447,6 +498,7 @@
   </div>
 </template>
 
+
 <script>
 //For info on appointments
 import AppointmentServices from '@/services/appointmentServices.js'
@@ -509,7 +561,10 @@ import Utils from '@/config/utils.js'
     events: [],
     //current user data
     role: {},
-    user: {}
+    user: {},
+    //admin adding a student
+    adminAddStudent: false,
+    studentEmail: "",
   }),
   created() {
     this.user = Utils.getStore('user')
@@ -1194,6 +1249,17 @@ import Utils from '@/config/utils.js'
           }
         }
       }
+    },
+    adminAdd() {
+      PersonServices.getPersonForEmail(this.studentEmail).then((response)=> {
+        let temp = response.data;
+        if (temp != null){
+          console.log(temp)
+        }
+        else {
+          console.log(temp)
+        }
+      })
     },
   },
 }

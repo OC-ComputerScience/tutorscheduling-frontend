@@ -21,6 +21,9 @@ export default {
     getApprovedTutorsForGroup(groupId) {
       return apiClient.get("person/appTutor/" + groupId);
     },
+    getPersonForEmail(email) {
+      return apiClient.get("person/email/" + email);
+    },
     addPerson(person) {
       return apiClient.post("person", person);
     },
