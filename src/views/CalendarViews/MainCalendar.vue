@@ -1023,6 +1023,12 @@ import Utils from '@/config/utils.js'
         }
       }
     },
+    async getTopicName(id){
+      TopicServices.getTopic(id).then((response) => {
+        console.log(response.data.name)
+        return response.data.name;
+      })
+    },
     //Load all appointments in backend into calendar events
     async loadAppointments() {
       const events = []
@@ -1100,13 +1106,16 @@ import Utils from '@/config/utils.js'
         endTime.setMinutes(endTime.getMinutes() + parseInt(endTimes[1]))
         //Note the format of each event, what data is associated with it
         if (this.appointments[i].type.includes('Group')){
-          events.push({
-            name: 'G: ' + this.topics[this.appointments[i].topicId - 1].name,
-            start: startTime,
-            end: endTime,
-            color: color,
-            timed: true,
-            appointmentId: this.appointments[i].id
+          TopicServices.getTopic(this.appointments[i].topicId).then((response) => {
+            let topicName = response.data.name
+            events.push({
+              name: 'G: ' + topicName,
+              start: startTime,
+              end: endTime,
+              color: color,
+              timed: true,
+              appointmentId: this.appointments[i].id
+            })
           })
         }
         if (this.appointments[i].type.includes('Private') && this.checkRole('Tutor')){
