@@ -435,7 +435,11 @@
         Purple
         </v-btn>
         <span> - This event marks a timeslot that for a group session that allows both students
-          and tutors to sign up for it.</span>
+          and tutors to sign up for it.</span><br>
+        <v-card-title class="text-h5">Event Name Meanings</v-card-title>
+        <span> G (Group session): {Topic name}</span><br>
+        <span> P (Private session): {Tutor of session / Student who booked the session} <br></span>
+        <span v-if="checkRole('Admin')">S (Cancelled session): {Status of cancelled session}<br></span>
       </v-card-text>
       <v-card-actions>
         <v-spacer></v-spacer>
@@ -1118,7 +1122,8 @@ import Utils from '@/config/utils.js'
             })
           })
         }
-        if (this.appointments[i].type.includes('Private') && this.checkRole('Tutor')){
+        if ((this.appointments[i].type.includes('Private') && this.checkRole('Tutor')) || 
+            (this.checkRole('Admin') && (this.appointments[i].status.includes('booked') || this.appointments[i].status.includes('pending')))){
           await this.getStudentNameForAppointment(this.appointments[i])
           events.push({
             name: 'P: ' + this.studentName,
@@ -1129,7 +1134,8 @@ import Utils from '@/config/utils.js'
             appointmentId: this.appointments[i].id
           })
         }
-        else if(this.appointments[i].type.includes('Private') && this.checkRole('Student')){
+        else if(this.appointments[i].type.includes('Private') && !this.appointments[i].status.includes('Cancel') &&
+               (this.checkRole('Student') || this.checkRole('Admin'))){
           await this.getTutorNameForAppointment(this.appointments[i])
           events.push({
             name: 'P: ' + this.tutorName,
