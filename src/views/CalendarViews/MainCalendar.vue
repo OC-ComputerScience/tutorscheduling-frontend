@@ -331,7 +331,7 @@
           <v-btn v-if="!isTutorEvent || checkRole('Student')"
             color="primary"
             @click="bookAppointment(); selectedOpen = false;"
-            :disabled="!checkStatus('available') || isGroupBook || selectedAppointment.topicId == null || selectedAppointment.locationId == null"
+            :disabled="!checkStatus('available') || isGroupBook || checkRole('Admin') || selectedAppointment.topicId == null || selectedAppointment.locationId == null"
           >
           Book
           </v-btn>
@@ -435,7 +435,11 @@
         Purple
         </v-btn>
         <span> - This event marks a timeslot that for a group session that allows both students
-          and tutors to sign up for it.</span>
+          and tutors to sign up for it.</span><br>
+        <v-card-title class="text-h5">Event Name Meanings</v-card-title>
+        <span> G (Group session): {Topic name}</span><br>
+        <span> P (Private session): {Tutor of session / Student who booked the session} <br></span>
+        <span v-if="checkRole('Admin')">S (Cancelled session): {Status of cancelled session}<br></span>
       </v-card-text>
       <v-card-actions>
         <v-spacer></v-spacer>
@@ -509,7 +513,10 @@ import Utils from '@/config/utils.js'
     events: [],
     //current user data
     role: {},
-    user: {}
+    user: {},
+    //student and tutor names
+    studentName: '',
+    tutorName: '',
   }),
   created() {
     this.user = Utils.getStore('user')
@@ -686,8 +693,8 @@ import Utils from '@/config/utils.js'
           status: this.selectedAppointment.status,
           preSessionInfo: "",
           groupId: this.selectedAppointment.groupId,
-          locationId: this.selectedAppointment.locationId,
-          topicId: this.selectedAppointment.topicId,
+          //locationId: this.selectedAppointment.locationId,
+          //topicId: this.selectedAppointment.topicId,
         }
         AppointmentServices.addAppointment(temp).then((response)=> {
           this.tutors.forEach((t) => {
@@ -710,8 +717,8 @@ import Utils from '@/config/utils.js'
           status: this.selectedAppointment.status,
           preSessionInfo: "",
           groupId: this.selectedAppointment.groupId,
-          locationId: this.selectedAppointment.locationId,
-          topicId: this.selectedAppointment.topicId,
+          //locationId: this.selectedAppointment.locationId,
+          //topicId: this.selectedAppointment.topicId,
         }
         AppointmentServices.addAppointment(temp).then((response)=> {
           this.tutors.forEach((t) => {
@@ -988,6 +995,44 @@ import Utils from '@/config/utils.js'
       })
       return found
     },
+    //Get the name of the student for the appointments
+    async getStudentNameForAppointment(appointId){
+      var found = false
+      var studentId 
+      for (var i = 0;i < this.personAppointments.length;i++){
+        if (this.personAppointments[i].appointmentId == appointId.id && this.personAppointments[i].isTutor == '0'){
+          found = true
+          studentId = this.personAppointments[i].personId
+        }
+      }
+      if(found){
+        await PersonServices.getPerson(studentId).then((response) => {
+          this.studentName = response.data.fName + " " + response.data.lName
+        })
+      }
+      else{
+        this.studentName = 'Open'
+      }
+    },
+    //Get the name of the tutor for the appointments
+    async getTutorNameForAppointment(appointId){
+      var tutorId 
+      for (var i = 0;i < this.personAppointments.length;i++){
+        if (this.personAppointments[i].appointmentId == appointId.id && this.personAppointments[i].isTutor == '1'){
+          tutorId = this.personAppointments[i].personId
+    
+          await PersonServices.getPerson(tutorId).then((response) => {
+            this.tutorName = response.data.fName + " " + response.data.lName
+          })
+        }
+      }
+    },
+    async getTopicName(id){
+      TopicServices.getTopic(id).then((response) => {
+        console.log(response.data.name)
+        return response.data.name;
+      })
+    },
     //Load all appointments in backend into calendar events
     async loadAppointments() {
       const events = []
@@ -1015,7 +1060,7 @@ import Utils from '@/config/utils.js'
         {
           filtered = false;
         }
-        if(!this.checkRole("Admin"))
+        if(!this.checkRole('Admin'))
         {
           if(!(this.appointments[i].status == "available") || this.checkRole("Tutor")) {
           //only add if user is associated with event
@@ -1064,14 +1109,54 @@ import Utils from '@/config/utils.js'
         endTime.setHours(endTime.getHours() + parseInt(endTimes[0]))
         endTime.setMinutes(endTime.getMinutes() + parseInt(endTimes[1]))
         //Note the format of each event, what data is associated with it
-        events.push({
-          name: this.appointments[i].type,
-          start: startTime,
-          end: endTime,
-          color: color,
-          timed: true,
-          appointmentId: this.appointments[i].id
-        })
+        if (this.appointments[i].type.includes('Group')){
+          TopicServices.getTopic(this.appointments[i].topicId).then((response) => {
+            let topicName = response.data.name
+            events.push({
+              name: 'G: ' + topicName,
+              start: startTime,
+              end: endTime,
+              color: color,
+              timed: true,
+              appointmentId: this.appointments[i].id
+            })
+          })
+        }
+        if ((this.appointments[i].type.includes('Private') && this.checkRole('Tutor')) || 
+            (this.checkRole('Admin') && (this.appointments[i].status.includes('booked') || this.appointments[i].status.includes('pending')))){
+          await this.getStudentNameForAppointment(this.appointments[i])
+          events.push({
+            name: 'P: ' + this.studentName,
+            start: startTime,
+            end: endTime,
+            color: color,
+            timed: true,
+            appointmentId: this.appointments[i].id
+          })
+        }
+        else if(this.appointments[i].type.includes('Private') && !this.appointments[i].status.includes('Cancel') &&
+               (this.checkRole('Student') || this.checkRole('Admin'))){
+          await this.getTutorNameForAppointment(this.appointments[i])
+          events.push({
+            name: 'P: ' + this.tutorName,
+            start: startTime,
+            end: endTime,
+            color: color,
+            timed: true,
+            appointmentId: this.appointments[i].id
+          })
+        }
+        else if(this.checkRole('Admin') && !this.appointments[i].type.includes('Group')){
+          events.push({
+            name: 'S: ' + this.appointments[i].status,
+            start: startTime,
+            end: endTime,
+            color: color,
+            timed: true,
+            appointmentId: this.appointments[i].id
+          })
+        }
+        
       }
       }
   
