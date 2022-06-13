@@ -325,13 +325,58 @@
               readonly
             ></v-textarea>
           </span>
+          <span v-if="adminAddStudent">
+            <v-text-field 
+              v-model="studentEmail"
+              label="Student's Email"
+              required
+              dense
+              max-width="300px"
+              :rules="[rules.required, rules.email]"
+            >
+            </v-text-field>
+            <v-row>
+            <v-btn
+              color="green"
+              text
+              @click="findEmail()"
+            >
+              Search
+            </v-btn>
+            <v-text-field
+              v-if="emailStatus != ''"
+              v-model="emailStatus"
+              readonly
+            ></v-text-field>
+            </v-row>
+          </span>
+          <span v-if="studentNameInput">
+            <v-text-field 
+              v-model="studentfName"
+              label="Student's First Name"
+              required
+              dense
+              max-width="300px"
+            >
+            </v-text-field>
+            <v-text-field 
+              v-model="studentlName"
+              label="Student's Last Name"
+              required
+              dense
+              max-width="300px"
+            >
+            </v-text-field>
+          </span>
           <!-- User sign up here -->
         </v-card-text>
         <v-card-actions>
           <v-btn v-if="!isTutorEvent || checkRole('Student')"
             color="primary"
             @click="bookAppointment(); selectedOpen = false;"
-            :disabled="!checkStatus('available') || isGroupBook || checkRole('Admin') || selectedAppointment.topicId == null || selectedAppointment.locationId == null"
+            :disabled="!checkStatus('available') || isGroupBook || ((studentfName == '' || studentlName == '') && !emailFound) ||
+                        (checkRole('Admin') && selectedAppointment.type.includes('Group')) || selectedAppointment.topicId == null 
+                        || selectedAppointment.locationId == null"
           >
           Book
           </v-btn>
@@ -377,50 +422,6 @@
     </v-col>
     </v-row>
     </v-container>
-    <template>
-    <v-dialog
-      v-model="adminAddStudent"
-      persistent
-      max-width="600px"
-    >
-      <v-card>
-        <v-card-title>
-          <span class="text-h5">Enter the student's Email</span>
-        </v-card-title>
-        <v-card-text> 
-          <v-container>
-            <v-row>
-                <v-text-field 
-                  v-model="studentEmail"
-                  label="Student's Email"
-                  required
-                  dense
-                  max-width="300px"
-                >
-                </v-text-field>
-            </v-row>
-          </v-container>
-        </v-card-text>
-        <v-card-actions>
-          <v-spacer></v-spacer>
-          <v-btn
-            color="blue darken-1"
-            text
-            @click="adminAddStudent = false"
-          >
-            Close
-          </v-btn>
-          <v-btn
-            color="blue darken-1"
-            text
-            @click="adminAdd()"
-          >
-            Search
-          </v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
-  </template>
     <v-dialog v-model="keyVisible" max-width="600px">
     <v-card
     >
@@ -569,6 +570,18 @@ import Utils from '@/config/utils.js'
     //admin adding a student
     adminAddStudent: false,
     studentEmail: "",
+    emailStatus: "",
+    studentNameInput: false,
+    emailFound: false,
+    studentfName: "",
+    studentlName: "",
+    walkInStudent: {},
+    rules: {
+          required: value => !!value || 'Required.',
+          email: value => {
+            const pattern = /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
+            return pattern.test(value) || 'Invalid e-mail.'
+          }},
     //student and tutor names
     studentName: '',
     tutorName: '',
@@ -679,10 +692,23 @@ import Utils from '@/config/utils.js'
     //Update on a session being booked
     bookAppointment() {
       AppointmentServices.getAppointment(this.selectedAppointment.id).then(async response => {
-        if(response.data.status == "available" && response.data.type.includes('Private')) {
+        if(response.data.status == "available" && response.data.type.includes('Private') && !this.checkRole('Admin')) {
           await this.splitAppointment().then(() => {
             this.getAppointments()
             this.selectedEvent.color = 'yellow'
+          })
+        }
+        else if (this.adminAddStudent && !this.studentNameInput) {
+          await this.splitAppointmentForAdminAdd().then(() => {
+            this.getAppointments()
+            this.selectedEvent.color = 'blue'
+          })
+        }
+        else if (this.adminAddStudent && this.studentNameInput) {
+          this.adminAdd()
+          await this.splitAppointmentForAdminAdd().then(() => {
+            this.getAppointments()
+            this.selectedEvent.color = 'blue'
           })
         }
         else if (response.data.type.includes('Group')) {
@@ -733,6 +759,74 @@ import Utils from '@/config/utils.js'
       
     },
     
+    //Split appointments into more availablity slots when part of slot is booked by an Admin
+    async splitAppointmentForAdminAdd() {
+      if(!this.checkStatus('available')) {
+        return;
+      }
+      //If the start of the booked slot isn't the start of the slot, generate an open slot
+      if(this.selectedAppointment.startTime < this.newStart) {
+        let temp = {
+          date: this.selectedAppointment.date,
+          startTime: this.selectedAppointment.startTime,
+          endTime: this.newStart,
+          type: this.selectedAppointment.type,
+          status: this.selectedAppointment.status,
+          preSessionInfo: "",
+          groupId: this.selectedAppointment.groupId,
+          //locationId: this.selectedAppointment.locationId,
+          //topicId: this.selectedAppointment.topicId,
+        }
+        AppointmentServices.addAppointment(temp).then((response)=> {
+          this.tutors.forEach((t) => {
+            let pap = {
+              isTutor: true,
+              appointmentId: response.data.id,
+              personId: t.id
+            }
+            PersonAppointmentServices.addPersonAppointment(pap)
+          })
+        })
+      }
+      //If the end of the booked slot isn't the end of the slot, generate an open slot
+      if(this.selectedAppointment.endTime > this.newEnd) {
+        let temp = {
+          date: this.selectedAppointment.date,
+          startTime: this.newEnd,
+          endTime: this.selectedAppointment.endTime,
+          type: this.selectedAppointment.type,
+          status: this.selectedAppointment.status,
+          preSessionInfo: "",
+          groupId: this.selectedAppointment.groupId,
+          //locationId: this.selectedAppointment.locationId,
+          //topicId: this.selectedAppointment.topicId,
+        }
+        AppointmentServices.addAppointment(temp).then((response)=> {
+          this.tutors.forEach((t) => {
+            let pap = {
+              isTutor: true,
+              appointmentId: response.data.id,
+              personId: t.id
+            }
+            PersonAppointmentServices.addPersonAppointment(pap)
+          })
+        })
+      }
+      //Load appointment info
+      this.selectedAppointment.status = "booked"
+      this.selectedAppointment.endTime = this.newEnd
+      this.selectedAppointment.startTime = this.newStart
+      //Load person info
+      this.person.isTutor = false
+      this.person.appointmentId = this.selectedAppointment.id
+      this.person.personId = this.walkInStudent.id
+      console.log(this.walkInStudent)
+      //Update stored data
+      await AppointmentServices.updateAppointment(this.selectedAppointment.id, this.selectedAppointment)
+      await PersonAppointmentServices.addPersonAppointment(this.person)
+      this.adminAddStudent = false
+    },
+
     //Split appointments into more availablity slots when part of slot is booked
     async splitAppointment() {
       if(!this.checkStatus('available')) {
@@ -1335,17 +1429,78 @@ import Utils from '@/config/utils.js'
         }
       }
     },
-    adminAdd() {
+    findEmail() {
       PersonServices.getPersonForEmail(this.studentEmail).then((response)=> {
         let temp = response.data;
-        if (temp != null){
-          console.log(temp)
+        if (!temp.email.includes('not found')){
+          PersonServices.getAllForGroup(this.group.id).then((responseGroup) => {
+            let people = responseGroup.data
+            for (let i = 0; i < people.length; i++) {
+              if (people[i].id == temp.id) {
+                this.emailStatus = 'Student ' + temp.fName + " " + temp.lName + " found!"
+                this.walkInStudent = temp;
+                this.emailFound = true;
+                return 
+              }
+            }
+          })
+          this.emailStatus = 'Student ' + temp.fName + " " + temp.lName + " has been added to " + this.group.name + "!"
+          this.walkInStudent = temp;
+          RoleServices.getAllForGroup(this.group.id).then((responseRole) => {
+            let roles = responseRole.data;
+            for (let i = 0;i<roles.length;i++) {
+              if (roles[i].type == 'Student'){
+                let personRole = {
+                  status: 'approved',
+                  roleId: roles[i].id,
+                  personId: temp.id,
+                  dateSigned: Date(),
+                  agree: true,
+                }
+                PersonRoleServices.addPersonRole(personRole)
+                this.emailFound = true;
+                return
+              }
+            }
+        })
         }
         else {
-          console.log(temp)
+          this.studentNameInput = true;
+          this.emailStatus = 'No Student Found'// get rid of popup and add to the open selecte event, then if email not found, add more blanks for student name
         }
       })
     },
+    // add a student to the system and then to the current group
+    adminAdd() {
+      let student = {
+            fName: this.studentfName,
+            lName: this.studentlName,
+            email: this.studentEmail,
+            createdAt: Date(),
+            updatedAt: Date(),
+          }
+      PersonServices.addPerson(student).then((response) => {
+        let temp = response.data
+        this.walkInStudent = temp;
+        console.log(this.walkInStudent)
+        RoleServices.getAllForGroup(this.group.id).then((responseRole) => {
+          let roles = responseRole.data;
+          for (let i = 0;i<roles.length;i++) {
+            if (roles[i].type == 'Student'){
+              let personRole = {
+                status: 'approved',
+                roleId: roles[i].id,
+                personId: response.data.id,
+                dateSigned: Date(),
+                agree: true,
+              }
+              PersonRoleServices.addPersonRole(personRole)
+              return
+            }
+          }
+        })
+      })
+    }
   },
 }
 </script>
