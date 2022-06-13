@@ -375,7 +375,7 @@
             color="primary"
             @click="bookAppointment(); selectedOpen = false;"
             :disabled="!checkStatus('available') || isGroupBook || ((studentfName == '' || studentlName == '') && !emailFound) ||
-                        (checkRole('Admin') && selectedAppointment.type.includes('Group')) || selectedAppointment.topicId == null 
+                        (checkRole('Admin') && selectedAppointment.type.includes('Group') && !adminAddStudent) || selectedAppointment.topicId == null 
                         || selectedAppointment.locationId == null"
           >
           Book
@@ -401,7 +401,7 @@
         Close
         </v-btn>
         
-        <v-btn v-if="checkStatus('booked') || isGroupBook || (isTutorEvent && checkStatus('available')) || 
+        <v-btn v-if="(checkStatus('booked') && !checkRole('Admin')) || isGroupBook || (isTutorEvent && checkStatus('available')) || 
                     (checkRole('Student') && checkStatus('pending'))"
           color="red"
           @click="cancelAppointment(); selectedOpen = false;"
@@ -412,6 +412,7 @@
         <v-btn v-if="checkRole('Admin') && checkStatus('available')"
           color="green"
           @click="adminAddStudent = true"
+          :disabled="adminAddStudent"
         >
         Sign Up Student
         </v-btn>
@@ -698,17 +699,18 @@ import Utils from '@/config/utils.js'
             this.selectedEvent.color = 'yellow'
           })
         }
-        else if (this.adminAddStudent && !this.studentNameInput) {
+        else if (this.adminAddStudent && !this.studentNameInput && response.data.type.includes('Private')) {
           await this.splitAppointmentForAdminAdd().then(() => {
             this.getAppointments()
             this.selectedEvent.color = 'blue'
           })
         }
-        else if (this.adminAddStudent && this.studentNameInput) {
-          this.adminAdd()
-          await this.splitAppointmentForAdminAdd().then(() => {
-            this.getAppointments()
-            this.selectedEvent.color = 'blue'
+        else if (this.adminAddStudent && this.studentNameInput && response.data.type.includes('Private')) {
+          await this.adminAdd().then(() => {
+            this.splitAppointmentForAdminAdd().then(() => {
+              this.getAppointments()
+              this.selectedEvent.color = 'blue'
+            })
           })
         }
         else if (response.data.type.includes('Group')) {
@@ -743,19 +745,39 @@ import Utils from '@/config/utils.js'
     //Add personAppointments from Group Sessions
     async bookGroupSession() {
       //Load person info
+      if (this.adminAddStudent && this.studentNameInput) {
+        await this.adminAdd().then(() => {
+          this.person.isTutor = false
+          this.person.appointmentId = this.selectedAppointment.id
+          this.person.personId = this.walkInStudent.id
 
-      if(this.checkRole('Tutor')){
-        this.person.isTutor = true
+          PersonAppointmentServices.addPersonAppointment(this.person).then(() => {
+            this.getAppointments()
+          })
+        })
       }
-      else{
+      else if (this.adminAddStudent && !this.studentNameInput) {
         this.person.isTutor = false
+        this.person.appointmentId = this.selectedAppointment.id
+        this.person.personId = this.walkInStudent.id
+        await PersonAppointmentServices.addPersonAppointment(this.person).then(() => {
+          this.getAppointments()
+        })
+      }
+      else {
+        if(this.checkRole('Tutor')){
+          this.person.isTutor = true
         }
-      this.person.appointmentId = this.selectedAppointment.id
-      this.person.personId = this.$store.state.loginUser.userID
-      //Update stored data
-      await PersonAppointmentServices.addPersonAppointment(this.person).then(() => {
-        this.getAppointments()
-      })
+        else{
+          this.person.isTutor = false
+          }
+        this.person.appointmentId = this.selectedAppointment.id
+        this.person.personId = this.$store.state.loginUser.userID
+        //Update stored data
+        await PersonAppointmentServices.addPersonAppointment(this.person).then(() => {
+          this.getAppointments()
+        })
+      }
       
     },
     
@@ -1052,6 +1074,12 @@ import Utils from '@/config/utils.js'
         requestAnimationFrame(() => requestAnimationFrame(() => open()))
       } else {
         open()
+        this.adminAddStudent = false
+        this.studentEmail = ''
+        this.emailStatus = ''
+        this.studentfName = ''
+        this.studentlName = ''
+        this.studentNameInput = false
       }
       nativeEvent.stopPropagation()
     },
@@ -1437,6 +1465,35 @@ import Utils from '@/config/utils.js'
             let people = responseGroup.data
             for (let i = 0; i < people.length; i++) {
               if (people[i].id == temp.id) {
+                RoleServices.getRoleByGroupForPerson(this.group.id, temp.id).then((result) => {
+                  let role = result.data
+                  let onlyTutor = true;
+                  for (let k = 0; k < role.length;k++) {
+                    if (role[k].type.includes('Student')){
+                      onlyTutor = false
+                    }
+                  }
+                  if (onlyTutor) {
+                    RoleServices.getAllForGroup(this.group.id).then((responseRole) => {
+                      let roles = responseRole.data;
+                      for (let i = 0;i<roles.length;i++) {
+                        if (roles[i].type == 'Student'){
+                          let personRole = {
+                            status: 'approved',
+                            roleId: roles[i].id,
+                            personId: temp.id,
+                            dateSigned: Date(),
+                            agree: true,
+                          }
+                          PersonRoleServices.addPersonRole(personRole)
+                          this.emailStatus = temp.fName + " " + temp.lName + " has been added as a student!"
+                          this.emailFound = true;
+                          return
+                        }
+                      }
+                    })
+                  }
+                })
                 this.emailStatus = 'Student ' + temp.fName + " " + temp.lName + " found!"
                 this.walkInStudent = temp;
                 this.emailFound = true;
@@ -1462,7 +1519,7 @@ import Utils from '@/config/utils.js'
                 return
               }
             }
-        })
+          })
         }
         else {
           this.studentNameInput = true;
@@ -1471,7 +1528,7 @@ import Utils from '@/config/utils.js'
       })
     },
     // add a student to the system and then to the current group
-    adminAdd() {
+    async adminAdd() {
       let student = {
             fName: this.studentfName,
             lName: this.studentlName,
@@ -1479,10 +1536,9 @@ import Utils from '@/config/utils.js'
             createdAt: Date(),
             updatedAt: Date(),
           }
-      PersonServices.addPerson(student).then((response) => {
+      await PersonServices.addPerson(student).then((response) => {
         let temp = response.data
         this.walkInStudent = temp;
-        console.log(this.walkInStudent)
         RoleServices.getAllForGroup(this.group.id).then((responseRole) => {
           let roles = responseRole.data;
           for (let i = 0;i<roles.length;i++) {
