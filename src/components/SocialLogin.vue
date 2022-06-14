@@ -127,7 +127,7 @@
     </div>
 </template>
 
-<script src="https://accounts.google.com/gsi/client" async defer></script>
+<!-- <script src="https://accounts.google.com/gsi/client" async defer></script> -->
 
 <script>
 // import google from "https://accounts.google.com/gsi/client"
@@ -165,14 +165,9 @@ export default {
   },
   created () {
     this.getGroups();
-
-    google.accounts.id.initialize({
-      client_id: process.env.VUE_APP_CLIENT_ID,
-      callback: global.handleCredentialResponse = function handleCredentialResponse(id_token) {
-        console.log(id_token)
-      }
-    });
-    google.accounts.id.prompt();
+    console.log("created")
+    console.log(global.google)
+    
     // global.handleCredentialResponse = function handleCredentialResponse(id_token) {
     //     console.log(id_token)
     //   }
@@ -199,7 +194,16 @@ export default {
   },
   methods: {
     loginWithGoogle() {
-      
+      console.log("inside button click")
+      global.google.accounts.id.initialize({
+      client_id: process.env.VUE_APP_CLIENT_ID,
+      callback: global.handleCredentialResponse = function handleCredentialResponse(id_token) {
+        console.log(id_token)
+      }
+    });
+    global.google.accounts.id.prompt((notification) => {
+      console.log(notification)
+    });
       // const { googleOptions, oneTapSignin, userData } = googleOneTapSignin()
       // console.log(userData)
       // oneTapSignin(googleOptions)
