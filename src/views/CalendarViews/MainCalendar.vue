@@ -84,6 +84,7 @@
       <!-- Dropdown menu to select format -->
       <!-- Will modify to only include relevant formats -->
       <v-menu
+
         bottom
         right
       >
@@ -135,8 +136,11 @@
         ></v-calendar>
 
         <!--Pop-up that appears when an event is selected -->
+
+        <!-- add another v-menu for group session v private-->
         <v-menu
         v-model="selectedOpen"
+        :open-on-click="false"
         :close-on-content-click="false"
         :activator="selectedElement"
         offset-x
@@ -182,6 +186,9 @@
           <span v-else>
             <span>None</span>
           </span>
+
+          <!-- make location and topic changable if the appointment type is private-->
+          <span  v-if="appointmentType.includes('Private')">
           <v-container>
           <v-select 
             v-model="selectedAppointment.locationId"
@@ -206,22 +213,67 @@
             :disabled="!checkStatus('available')"
           >
           </v-select>
-          
           </v-container>
-          <v-container v-if="checkStatus('available')">
-          <v-select
-            v-model="newStart"
-            :items="startTimes"
-            item-text="timeText"
-            item-value="time"
-            label="Booked Start"
+          </span>
+          <!-- slots for locaiton and topic to be unchangable if the session type is group-->
+          <span  v-else>
+          <v-container>
+          <v-select 
+            v-model="selectedAppointment.locationId"
+            :items="locations"
+            item-text="name"
+            item-value="id"
+            label="Location"
             required
-            @change="updateTimes()"
             dense
+            readonly
           >
           </v-select>
+
+          <v-select 
+            v-model="selectedAppointment.topicId"
+            :items="currentTopics"
+            item-text="name"
+            item-value="id"
+            label="Topic"
+            required
+            dense
+            readonly
+          >
+          </v-select>
+
+          </v-container>
+          </span>
+          <!-- show time ad an changeable value for private lessons-->
+          <v-container v-if="checkStatus('available')">
+          
+          <span v-if="appointmentType.includes('Private')">
+            <v-select
+              v-model="newStart"
+              :items="startTimes"
+              item-text="timeText"
+              item-value="time"
+              label="Booked Start"
+              required
+              @change="updateTimes()"
+              dense
+            >
+            </v-select>
+          </span>
+          <!-- show time as an unchangeable value -->
+          <span v-else>
+             <v-text-field
+                v-model="newStart"
+                label="Booked Start"
+                required
+                dense
+                readonly
+              >
+             </v-text-field>
+          </span>
           </v-container>
           <v-container v-if="checkStatus('available')">
+          <span v-if="appointmentType.includes('Private')">
           <v-select 
             v-model="newEnd"
             :items="endTimes"
@@ -233,29 +285,56 @@
             dense
           >
           </v-select>
+          </span>
+          <span v-else>
+          <v-text-field
+                v-model="newEnd"
+                label="Booked End"
+                required
+                dense
+                readonly
+              >
+             </v-text-field>
+          </span>
           </v-container>
-          <v-textarea
-          v-model="selectedAppointment.preSessionInfo"
-          id="preSession"
-          :counter="130"
-          label="Pre-Session Info"
-          hint="Enter Info About What You Need Help With..."
-          persistent-hint
-          required
-          auto-grow
-          rows="1"
-          :disabled="!checkStatus('available')"
-          ></v-textarea>
+          <!-- put in presession-info for appointment for private appointments/ add a readonly if group-->
+          <span v-if="appointmentType.includes('Private')">
+            <v-textarea
+              v-model="selectedAppointment.preSessionInfo"
+              id="preSession"
+              :counter="130"
+              label="Pre-Session Info"
+              hint="Enter Info About What You Need Help With..."
+              persistent-hint
+              required
+              auto-grow
+              rows="1"
+              :disabled="!checkStatus('available')"
+            ></v-textarea>
+          </span>
+          <span v-else>
+            <v-textarea
+              v-model="selectedAppointment.preSessionInfo"
+              :counter="130"
+              label="Pre-Session Info"
+              hint="Enter Info About What You Need Help With..."
+              persistent-hint
+              required
+              auto-grow
+              rows="1"
+              readonly
+            ></v-textarea>
+          </span>
           <!-- User sign up here -->
         </v-card-text>
         <v-card-actions>
-        <v-btn v-if="checkRole('Student')"
-          color="primary"
-          @click="bookAppointment()"
-          :disabled="!checkStatus('available')"
-        >
-        Book
-        </v-btn>
+          <v-btn v-if="!isTutorEvent || checkRole('Student')"
+            color="primary"
+            @click="bookAppointment(); selectedOpen = false;"
+            :disabled="!checkStatus('available') || isGroupBook || checkRole('Admin') || selectedAppointment.topicId == null || selectedAppointment.locationId == null"
+          >
+          Book
+          </v-btn>
         <v-btn v-if="checkRole('Tutor')"
           color="#12f000"
           @click="confirmAppointment(true)"
@@ -274,7 +353,15 @@
           color="accent"
           @click="selectedOpen = false"
         >
-        Cancel
+        Close
+        </v-btn>
+        
+        <v-btn v-if="checkStatus('booked') || isGroupBook || (isTutorEvent && checkStatus('available')) || 
+                    (checkRole('Student') && checkStatus('pending'))"
+          color="red"
+          @click="cancelAppointment(); selectedOpen = false;"
+        >
+        Cancel Appointment
         </v-btn>
         </v-card-actions>
         </v-card>
@@ -338,6 +425,21 @@
         </v-btn>
         <span> - This event marks a timeslot that for a meeting that has been completed, 
           and is used for keeping track of user reviews.</span>
+        <br>
+        <v-btn
+        elevation="0"
+        color="purple"
+        class="white--text"
+        width="100"
+        > 
+        Purple
+        </v-btn>
+        <span> - This event marks a timeslot that for a group session that allows both students
+          and tutors to sign up for it.</span><br>
+        <v-card-title class="text-h5">Event Name Meanings</v-card-title>
+        <span> G (Group session): {Topic name}</span><br>
+        <span> P (Private session): {Tutor of session / Student who booked the session} <br></span>
+        <span v-if="checkRole('Admin')">S (Cancelled session): {Status of cancelled session}<br></span>
       </v-card-text>
       <v-card-actions>
         <v-spacer></v-spacer>
@@ -373,6 +475,7 @@ import Utils from '@/config/utils.js'
     mode: 'stack',
     //appointment info
     appointments: [],
+    appointmentType: "",
     personAppointments: [],
     selectedAppointment: {},
     //info related to current appointment
@@ -401,6 +504,8 @@ import Utils from '@/config/utils.js'
     tutorSelect: [],
     selectedTopic: -1,
     selectedTutor: -1,
+    isTutorEvent: null,
+    isGroupBook: null,
     //event data for calendar events
     selectedEvent: {},
     selectedElement: null,
@@ -408,21 +513,25 @@ import Utils from '@/config/utils.js'
     events: [],
     //current user data
     role: {},
-    user: {}
+    user: {},
+    //student and tutor names
+    studentName: '',
+    tutorName: '',
   }),
   created() {
     this.user = Utils.getStore('user')
     this.getGroupByName(this.user.selectedGroup.replace(/%20/g, " "))
     this.getRole()
     this.getAppointments()
+    this.isTutorOfSelectedEvent()
   },
   methods: {
     //Initialize data for calendar
-    getAppointments() {
-      AppointmentServices.getAllAppointments()
-      .then(response => {
+   async getAppointments() {
+      await AppointmentServices.getAllAppointments()
+      .then(async (response) => {
         this.appointments = response.data
-        PersonAppointmentServices.getAllPersonAppointments()
+        await PersonAppointmentServices.getAllPersonAppointments()
         .then(response => {
           this.personAppointments = response.data;
           
@@ -477,15 +586,54 @@ import Utils from '@/config/utils.js'
        })
      })
     },
+    // Check to see if the tutor in question is the tutor of the selected event
+    async isTutorOfSelectedEvent(){
+      await PersonAppointmentServices.getPersonAppointmentForPerson(this.user.userID)
+      .then(response => {
+        let temp = response.data
+        for (let i = 0; i < temp.length; i++){
+          if (temp[i].appointmentId == this.selectedAppointment.id && temp[i].isTutor && temp[i].personId == this.user.userID){
+            this.isTutorEvent = true
+            return
+          }
+        }        
+          this.isTutorEvent = false
+        })
+      .catch(error => {
+        console.log("There was an error:", error.response.data)
+      });
+    },
+    //Check if student has already signed up for group appointment
+    async checkGroupBoooking() {
+      await PersonAppointmentServices.getPersonAppointmentForPerson(this.user.userID)
+      .then(response => {
+        let temp = response.data
+        for (let i = 0; i < temp.length; i++){
+          if (temp[i].appointmentId == this.selectedAppointment.id && this.selectedAppointment.type.includes('Group')){
+            this.isGroupBook = true
+            return 
+          }
+        }
+        this.isGroupBook = false
+        })
+      .catch(error => {
+        console.log("There was an error:", error.response.data)
+      });
+
+    },
     //Update on a session being booked
     bookAppointment() {
       AppointmentServices.getAppointment(this.selectedAppointment.id).then(async response => {
-        if(response.data.status == "available") {
+        if(response.data.status == "available" && response.data.type.includes('Private')) {
           await this.splitAppointment().then(() => {
             this.getAppointments()
             this.selectedEvent.color = 'yellow'
           })
-        } else {
+        }
+        else if (response.data.type.includes('Group')) {
+            this.bookGroupSession()
+        } 
+        else {
           alert("This appointment has already been booked - Try a different slot")
           this.getAppointments()
           this.selectedOpen = false
@@ -495,12 +643,14 @@ import Utils from '@/config/utils.js'
     //Update on tutor confirming booking
     confirmAppointment(confirm) {
       if(confirm) {
-        this.selectedAppointment.status = "booked"
-        AppointmentServices.updateAppointmentStatus(this.selectedAppointment.id, this.selectedAppointment)
-        .then(() =>{
-          this.getAppointments()
-          this.selectedEvent.color = 'blue'
-        })
+        if(this.appointmentType.includes("Private")){
+          this.selectedAppointment.status = "booked"
+          AppointmentServices.updateAppointmentStatus(this.selectedAppointment.id, this.selectedAppointment)
+          .then(() =>{
+            this.getAppointments()
+            this.selectedEvent.color = 'blue'
+          })
+        }
       } else {
         this.selectedAppointment.status = "cancelled"
         AppointmentServices.updateAppointment(this.selectedAppointment.id, this.selectedAppointment).then(() =>{
@@ -509,6 +659,25 @@ import Utils from '@/config/utils.js'
         })
       }
     },
+    //Add personAppointments from Group Sessions
+    async bookGroupSession() {
+      //Load person info
+
+      if(this.checkRole('Tutor')){
+        this.person.isTutor = true
+      }
+      else{
+        this.person.isTutor = false
+        }
+      this.person.appointmentId = this.selectedAppointment.id
+      this.person.personId = this.$store.state.loginUser.userID
+      //Update stored data
+      await PersonAppointmentServices.addPersonAppointment(this.person).then(() => {
+        this.getAppointments()
+      })
+      
+    },
+    
     //Split appointments into more availablity slots when part of slot is booked
     async splitAppointment() {
       if(!this.checkStatus('available')) {
@@ -524,8 +693,8 @@ import Utils from '@/config/utils.js'
           status: this.selectedAppointment.status,
           preSessionInfo: "",
           groupId: this.selectedAppointment.groupId,
-          locationId: this.selectedAppointment.locationId,
-          topicId: this.selectedAppointment.topicId,
+          //locationId: this.selectedAppointment.locationId,
+          //topicId: this.selectedAppointment.topicId,
         }
         AppointmentServices.addAppointment(temp).then((response)=> {
           this.tutors.forEach((t) => {
@@ -548,8 +717,8 @@ import Utils from '@/config/utils.js'
           status: this.selectedAppointment.status,
           preSessionInfo: "",
           groupId: this.selectedAppointment.groupId,
-          locationId: this.selectedAppointment.locationId,
-          topicId: this.selectedAppointment.topicId,
+          //locationId: this.selectedAppointment.locationId,
+          //topicId: this.selectedAppointment.topicId,
         }
         AppointmentServices.addAppointment(temp).then((response)=> {
           this.tutors.forEach((t) => {
@@ -701,18 +870,32 @@ import Utils from '@/config/utils.js'
       temp.message = "You have a session request from " +fName + " " + lName + " pending"
       TwilioServices.sendMessage(temp);
     },
+    cancelMessage(tutor, fName, lName) {
+      let temp = tutor
+      temp.message = "Your appointment with " +fName + " " + lName + " has been canceled"
+      TwilioServices.sendMessage(temp);
+    },
+    tutorCancelMessage(student, fName, lName){
+      let temp = student
+      temp.message = "Your appointment with " +fName + " " + lName + " has been canceled"
+      TwilioServices.sendMessage(temp);
+    },
     //Animates Event card popping up
     showEvent ({ nativeEvent, event }) {
+    
       const open = () => {
         this.selectedEvent = event
-        AppointmentServices.getAppointment(event.appointmentId).then(response => {
+        AppointmentServices.getAppointment(event.appointmentId).then((response) => {
           this.selectedAppointment = response.data
           this.newStart = this.selectedAppointment.startTime
           this.newEnd = this.selectedAppointment.endTime
+          this.appointmentType = this.selectedAppointment.type
+          this.isTutorOfSelectedEvent()
+          this.checkGroupBoooking()
           this.updateTimes()
           this.updatePeople()
           this.selectedElement = nativeEvent.target
-          requestAnimationFrame(() => requestAnimationFrame(() => this.selectedOpen = true))
+         requestAnimationFrame(() => requestAnimationFrame(() => this.selectedOpen = true))
         });
       }
       if (this.selectedOpen) {
@@ -724,13 +907,13 @@ import Utils from '@/config/utils.js'
       nativeEvent.stopPropagation()
     },
     //Update the lists of tutors and students
-    updatePeople() {
+    async updatePeople() {
       this.tutors = []
       this.students = []
       let tutorFound = false
-      this.personAppointments.forEach((person) => {
+      this.personAppointments.forEach(async (person) => {
         if(person.appointmentId == this.selectedAppointment.id) {
-          PersonServices.getPerson(person.personId).then((response) => {
+          await PersonServices.getPerson(person.personId).then((response) => {
             if(person.isTutor) {
               this.tutors.push(response.data)
               if(!tutorFound) {
@@ -743,7 +926,6 @@ import Utils from '@/config/utils.js'
           })
         }
       })
-      
     },
     //Checks if the current session matches the given status, for hiding certain elements
     checkStatus(status) {
@@ -813,6 +995,44 @@ import Utils from '@/config/utils.js'
       })
       return found
     },
+    //Get the name of the student for the appointments
+    async getStudentNameForAppointment(appointId){
+      var found = false
+      var studentId 
+      for (var i = 0;i < this.personAppointments.length;i++){
+        if (this.personAppointments[i].appointmentId == appointId.id && this.personAppointments[i].isTutor == '0'){
+          found = true
+          studentId = this.personAppointments[i].personId
+        }
+      }
+      if(found){
+        await PersonServices.getPerson(studentId).then((response) => {
+          this.studentName = response.data.fName + " " + response.data.lName
+        })
+      }
+      else{
+        this.studentName = 'Open'
+      }
+    },
+    //Get the name of the tutor for the appointments
+    async getTutorNameForAppointment(appointId){
+      var tutorId 
+      for (var i = 0;i < this.personAppointments.length;i++){
+        if (this.personAppointments[i].appointmentId == appointId.id && this.personAppointments[i].isTutor == '1'){
+          tutorId = this.personAppointments[i].personId
+    
+          await PersonServices.getPerson(tutorId).then((response) => {
+            this.tutorName = response.data.fName + " " + response.data.lName
+          })
+        }
+      }
+    },
+    async getTopicName(id){
+      TopicServices.getTopic(id).then((response) => {
+        console.log(response.data.name)
+        return response.data.name;
+      })
+    },
     //Load all appointments in backend into calendar events
     async loadAppointments() {
       const events = []
@@ -822,6 +1042,11 @@ import Utils from '@/config/utils.js'
         filtered = true
         //only add appointments from the current group
         if(this.appointments[i].groupId != this.group.id) {
+          filtered = false;
+        }
+        //filter away canceled appointments
+        if(!this.checkRole('Admin') && (this.appointments[i].status.includes('studentCancel') || 
+            this.appointments[i].status.includes('tutorCancel'))) {
           filtered = false;
         }
         //filter by topic
@@ -835,12 +1060,16 @@ import Utils from '@/config/utils.js'
         {
           filtered = false;
         }
-        if(!this.checkRole("Admin"))
+        if(!this.checkRole('Admin'))
         {
           if(!(this.appointments[i].status == "available") || this.checkRole("Tutor")) {
           //only add if user is associated with event
             if(!this.checkUserInAppointment(this.appointments[i].id)){
               filtered = false;
+            }
+            if(this.appointments[i].type.includes('Group') 
+                && !(this.appointments[i].status.includes('tutorCancel') || this.appointments[i].status.includes('studentCancel'))){
+              filtered = true
             }
           }
         }
@@ -851,7 +1080,10 @@ import Utils from '@/config/utils.js'
           case "pending":
             color = 'yellow'
             break
-          case "cancelled":
+          case "studentCancel":
+            color = 'red'
+            break
+          case "tutorCancel":
             color = 'red'
             break
           case "booked":
@@ -864,6 +1096,9 @@ import Utils from '@/config/utils.js'
             color = 'grey darken-1'
             break
         }
+        if (this.appointments[i].type.includes('Group') && !(this.appointments[i].status.includes('tutorCancel') || this.appointments[i].status.includes('studentCancel'))){
+          color = 'purple'
+        }
         //Format times for each event and need to set minutes for events too
         let startTime = new Date(this.appointments[i].date)
         let startTimes = this.appointments[i].startTime.split(":");
@@ -874,17 +1109,176 @@ import Utils from '@/config/utils.js'
         endTime.setHours(endTime.getHours() + parseInt(endTimes[0]))
         endTime.setMinutes(endTime.getMinutes() + parseInt(endTimes[1]))
         //Note the format of each event, what data is associated with it
-        events.push({
-          name: this.appointments[i].type,
-          start: startTime,
-          end: endTime,
-          color: color,
-          timed: true,
-          appointmentId: this.appointments[i].id
-        })
+        if (this.appointments[i].type.includes('Group')){
+          TopicServices.getTopic(this.appointments[i].topicId).then((response) => {
+            let topicName = response.data.name
+            events.push({
+              name: 'G: ' + topicName,
+              start: startTime,
+              end: endTime,
+              color: color,
+              timed: true,
+              appointmentId: this.appointments[i].id
+            })
+          })
+        }
+        if ((this.appointments[i].type.includes('Private') && this.checkRole('Tutor')) || 
+            (this.checkRole('Admin') && (this.appointments[i].status.includes('booked') || this.appointments[i].status.includes('pending')))){
+          await this.getStudentNameForAppointment(this.appointments[i])
+          events.push({
+            name: 'P: ' + this.studentName,
+            start: startTime,
+            end: endTime,
+            color: color,
+            timed: true,
+            appointmentId: this.appointments[i].id
+          })
+        }
+        else if(this.appointments[i].type.includes('Private') && !this.appointments[i].status.includes('Cancel') &&
+               (this.checkRole('Student') || this.checkRole('Admin'))){
+          await this.getTutorNameForAppointment(this.appointments[i])
+          events.push({
+            name: 'P: ' + this.tutorName,
+            start: startTime,
+            end: endTime,
+            color: color,
+            timed: true,
+            appointmentId: this.appointments[i].id
+          })
+        }
+        else if(this.checkRole('Admin') && !this.appointments[i].type.includes('Group')){
+          events.push({
+            name: 'S: ' + this.appointments[i].status,
+            start: startTime,
+            end: endTime,
+            color: color,
+            timed: true,
+            appointmentId: this.appointments[i].id
+          })
+        }
+        
       }
       }
+  
       this.events = events
+    },
+    //method for canceling appointments
+    async cancelAppointment(){
+      //delete appointment as a student of a private session
+      if (this.selectedAppointment.type.includes('Private') && this.checkRole('Student') && this.checkStatus('booked')){
+        this.selectedAppointment.status = "studentCancel"
+        await AppointmentServices.updateAppointmentStatus(this.selectedAppointment.id, this.selectedAppointment)
+          .then(async () =>{
+            let temp = {
+              date: this.selectedAppointment.date,
+              startTime: this.selectedAppointment.startTime,
+              endTime: this.selectedAppointment.endTime,
+              type: this.selectedAppointment.type,
+              status: 'available',
+              preSessionInfo: "",
+              groupId: this.selectedAppointment.groupId,
+            }
+            await AppointmentServices.addAppointment(temp)
+            .then( async(response) =>{
+              this.tutors.forEach(async (t) => {
+              let pap = {
+                isTutor: true,
+                appointmentId: response.data.id,
+                personId: t.id
+              }
+              await PersonAppointmentServices.addPersonAppointment(pap)
+            })
+            this.cancelMessage(this.tutors[0], this.user.fName, this.user.lName)
+            await this.getAppointments()
+            //this.$router.go(0);
+          })
+      })
+      }
+      else if (this.selectedAppointment.type.includes('Private') && this.checkRole('Student') && this.checkStatus('pending')){
+        this.selectedAppointment.status = "available"
+        this.selectedAppointment.locationId = null;
+        this.selectedAppointment.topicId = null;
+        this.selectedAppointment.preSessionInfo = "";
+        await AppointmentServices.updateAppointmentStatus(this.selectedAppointment.id, this.selectedAppointment)
+        for (let i = 0;i < this.personAppointments.length;i++) {
+          if (this.personAppointments[i].appointmentId == this.selectedAppointment.id && !this.personAppointments[i].isTutor
+            && this.personAppointments[i].personId == this.user.userID){
+            await PersonAppointmentServices.deletePersonAppointment(this.personAppointments[i].id)
+            await this.getAppointments()
+            //this.$router.go(0);
+          }
+        }
+      }
+      //delete appointment as a student of a group session
+      else if (this.selectedAppointment.type.includes('Group') && this.checkRole('Student')){
+        for (let i = 0;i < this.personAppointments.length;i++) {
+          if (this.personAppointments[i].appointmentId == this.selectedAppointment.id && !this.personAppointments[i].isTutor
+            && this.personAppointments[i].personId == this.user.userID){
+            await PersonAppointmentServices.deletePersonAppointment(this.personAppointments[i].id)
+            await this.getAppointments()
+            //this.$router.go(0);
+          }
+        }
+      }
+      //delete appointment as a tutor of a private session
+      else if (this.selectedAppointment.type.includes('Private') && this.checkRole('Tutor')){
+        for (let i = 0;i < this.personAppointments.length;i++) {
+          if (this.personAppointments[i].appointmentId == this.selectedAppointment.id && this.personAppointments[i].isTutor){
+            for(let j = 0; j<this.personAppointments.length;j++){
+              if (this.personAppointments[j].appointmentId == this.selectedAppointment.id && !this.personAppointments[j].isTutor){
+                this.selectedAppointment.status = "tutorCancel"
+                await AppointmentServices.updateAppointmentStatus(this.selectedAppointment.id, this.selectedAppointment)
+                this.tutorCancelMessage(this.students[0], this.user.fName, this.user.lName)
+                await this.getAppointments()
+                return
+              }
+            }
+            
+              
+            await PersonAppointmentServices.deletePersonAppointment(this.personAppointments[i].id)
+            await AppointmentServices.deleteAppointment(this.selectedAppointment.id)
+          
+            await this.getAppointments()
+            //this.$router.go(0);
+          }
+        }
+      }
+      //delete appointment as a tutor of a group session
+      else if (this.selectedAppointment.type.includes('Group') && this.checkRole('Tutor')){
+        for (let i = 0;i < this.personAppointments.length;i++) {
+          if (this.personAppointments[i].appointmentId == this.selectedAppointment.id && this.personAppointments[i].isTutor && 
+          this.personAppointments[i].personId == this.user.userID){
+            await PersonAppointmentServices.getAllPersonAppointments()
+            .then((response) => {
+              this.personAppointments = response.data;
+            })
+            let found = false;
+            for (let j = 0;j < this.personAppointments.length;j++) {
+              if (this.personAppointments[j].appointmentId == this.selectedAppointment.id && this.personAppointments[j].isTutor &&
+              this.personAppointments[j].personId != this.user.userID) {
+                found = true
+              }
+            }
+            if (this.students.length > 0 && this.tutors.length == 1){
+              for (let k = 0; k < this.students.length; k++){
+                this.tutorCancelMessage(this.students[k], this.user.fName, this.user.lName)
+              } 
+              this.selectedAppointment.status = "tutorCancel"
+              await AppointmentServices.updateAppointmentStatus(this.selectedAppointment.id, this.selectedAppointment)         
+            }
+            else if (found){
+              await PersonAppointmentServices.deletePersonAppointment(this.personAppointments[i].id)
+            }
+            else {
+              await AppointmentServices.deleteAppointment(this.selectedAppointment.id)
+            }
+            await this.getAppointments()
+
+
+            //this.$router.go(0);
+          }
+        }
+      }
     },
   },
 }

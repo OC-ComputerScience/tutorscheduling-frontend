@@ -33,6 +33,12 @@ export default {
     getUpcomingAppointmentForPersonForGroup(groupId, personId) {
       return apiClient.get("appointment/upGroup/" + groupId + "/person/" + personId)
     },
+    getPassedAppointmentForPersonForGroupTutor(groupId, personId) {
+      return apiClient.get("appointment/passGroupTutor/" + groupId + "/person/" + personId)
+    },
+    getPassedAppointmentForPersonForGroupStudent(groupId, personId) {
+      return apiClient.get("appointment/passGroupStudent/" + groupId + "/person/" + personId)
+    },
     addAppointment(appointment) {
       return apiClient.post("appointment", appointment);
     },
