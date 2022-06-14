@@ -674,21 +674,38 @@ import Utils from '@/config/utils.js'
     },
     //Check if student has already signed up for group appointment
     async checkGroupBoooking() {
-      await PersonAppointmentServices.getPersonAppointmentForPerson(this.user.userID)
-      .then(response => {
-        let temp = response.data
-        for (let i = 0; i < temp.length; i++){
-          if (temp[i].appointmentId == this.selectedAppointment.id && this.selectedAppointment.type.includes('Group')){
-            this.isGroupBook = true
-            return 
+      if(this.adminAddStudent) {
+        await PersonAppointmentServices.getPersonAppointmentForPerson(this.walkInStudent.id)
+        .then(response => {
+          let temp = response.data
+          for (let i = 0; i < temp.length; i++){
+            if (temp[i].appointmentId == this.selectedAppointment.id && this.selectedAppointment.type.includes('Group')){
+              this.isGroupBook = true
+              return 
+            }
           }
-        }
-        this.isGroupBook = false
-        })
-      .catch(error => {
-        console.log("There was an error:", error.response.data)
-      });
-
+          this.isGroupBook = false
+          })
+        .catch(error => {
+          console.log("There was an error:", error.response.data)
+        });
+      }
+      else {
+        await PersonAppointmentServices.getPersonAppointmentForPerson(this.user.userID)
+        .then(response => {
+          let temp = response.data
+          for (let i = 0; i < temp.length; i++){
+            if (temp[i].appointmentId == this.selectedAppointment.id && this.selectedAppointment.type.includes('Group')){
+              this.isGroupBook = true
+              return 
+            }
+          }
+          this.isGroupBook = false
+          })
+        .catch(error => {
+          console.log("There was an error:", error.response.data)
+        });
+      }
     },
     //Update on a session being booked
     bookAppointment() {
@@ -842,7 +859,6 @@ import Utils from '@/config/utils.js'
       this.person.isTutor = false
       this.person.appointmentId = this.selectedAppointment.id
       this.person.personId = this.walkInStudent.id
-      console.log(this.walkInStudent)
       //Update stored data
       await AppointmentServices.updateAppointment(this.selectedAppointment.id, this.selectedAppointment)
       await PersonAppointmentServices.addPersonAppointment(this.person)
@@ -1206,7 +1222,6 @@ import Utils from '@/config/utils.js'
     },
     async getTopicName(id){
       TopicServices.getTopic(id).then((response) => {
-        console.log(response.data.name)
         return response.data.name;
       })
     },
@@ -1460,21 +1475,22 @@ import Utils from '@/config/utils.js'
     findEmail() {
       PersonServices.getPersonForEmail(this.studentEmail).then((response)=> {
         let temp = response.data;
+        let onlyTutor = true
         if (!temp.email.includes('not found')){
-          PersonServices.getAllForGroup(this.group.id).then((responseGroup) => {
+          this.studentNameInput = false; 
+          PersonServices.getAllForGroup(this.group.id).then(async (responseGroup) => {
             let people = responseGroup.data
             for (let i = 0; i < people.length; i++) {
               if (people[i].id == temp.id) {
-                RoleServices.getRoleByGroupForPerson(this.group.id, temp.id).then((result) => {
+                await RoleServices.getRoleByGroupForPerson(this.group.id, temp.id).then(async (result) => {
                   let role = result.data
-                  let onlyTutor = true;
                   for (let k = 0; k < role.length;k++) {
                     if (role[k].type.includes('Student')){
                       onlyTutor = false
                     }
                   }
                   if (onlyTutor) {
-                    RoleServices.getAllForGroup(this.group.id).then((responseRole) => {
+                    await RoleServices.getAllForGroup(this.group.id).then((responseRole) => {
                       let roles = responseRole.data;
                       for (let i = 0;i<roles.length;i++) {
                         if (roles[i].type == 'Student'){
@@ -1497,28 +1513,29 @@ import Utils from '@/config/utils.js'
                 this.emailStatus = 'Student ' + temp.fName + " " + temp.lName + " found!"
                 this.walkInStudent = temp;
                 this.emailFound = true;
+                this.checkGroupBoooking()
                 return 
               }
             }
-          })
-          this.emailStatus = 'Student ' + temp.fName + " " + temp.lName + " has been added to " + this.group.name + "!"
-          this.walkInStudent = temp;
-          RoleServices.getAllForGroup(this.group.id).then((responseRole) => {
-            let roles = responseRole.data;
-            for (let i = 0;i<roles.length;i++) {
-              if (roles[i].type == 'Student'){
-                let personRole = {
-                  status: 'approved',
-                  roleId: roles[i].id,
-                  personId: temp.id,
-                  dateSigned: Date(),
-                  agree: true,
+            this.emailStatus = 'Student ' + temp.fName + " " + temp.lName + " has been added to " + this.group.name + "!"
+            this.walkInStudent = temp;
+            RoleServices.getAllForGroup(this.group.id).then((responseRole) => {
+              let roles = responseRole.data;
+              for (let i = 0;i<roles.length;i++) {
+                if (roles[i].type == 'Student'){
+                  let personRole = {
+                    status: 'approved',
+                    roleId: roles[i].id,
+                    personId: temp.id,
+                    dateSigned: Date(),
+                    agree: true,
+                  }
+                  PersonRoleServices.addPersonRole(personRole)
+                  this.emailFound = true;
+                  return
                 }
-                PersonRoleServices.addPersonRole(personRole)
-                this.emailFound = true;
-                return
               }
-            }
+            })
           })
         }
         else {
