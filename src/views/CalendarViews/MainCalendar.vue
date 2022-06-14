@@ -374,7 +374,7 @@
           <v-btn v-if="!isTutorEvent || checkRole('Student')"
             color="primary"
             @click="bookAppointment(); selectedOpen = false;"
-            :disabled="!checkStatus('available') || isGroupBook || ((studentfName == '' || studentlName == '') && !emailFound) ||
+            :disabled="!checkStatus('available') || isGroupBook || ((studentfName == '' || studentlName == '') && !emailFound && checkRole('Admin')) ||
                         (checkRole('Admin') && selectedAppointment.type.includes('Group') && !adminAddStudent) || selectedAppointment.topicId == null 
                         || selectedAppointment.locationId == null"
           >
@@ -691,7 +691,7 @@ import Utils from '@/config/utils.js'
         });
       }
       else {
-        await PersonAppointmentServices.getPersonAppointmentForPerson(this.user.userID)
+        PersonAppointmentServices.getPersonAppointmentForPerson(this.user.userID)
         .then(response => {
           let temp = response.data
           for (let i = 0; i < temp.length; i++){
@@ -1541,6 +1541,10 @@ import Utils from '@/config/utils.js'
         else {
           this.studentNameInput = true;
           this.emailStatus = 'No Student Found'// get rid of popup and add to the open selecte event, then if email not found, add more blanks for student name
+          this.isGroupBook = false
+          this.emailFound = false
+          this.studentfName = ''
+          this.studentlName = ''
         }
       })
     },
