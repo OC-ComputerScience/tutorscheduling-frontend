@@ -5,6 +5,7 @@ import router from './router'
 import store from './store/store'
 import vuetify from './plugins/vuetify'
 import vuePdf from 'vue-pdf'
+
 // import GoogleAuth from '@/config/google.js'
 
 // const gauthOption = {
