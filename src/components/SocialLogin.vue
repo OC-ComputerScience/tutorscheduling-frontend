@@ -160,7 +160,8 @@ export default {
       name: '',
       roleCounter: 0,
       user: {},
-      googleUserData: {}
+      googleUserData: {},
+      token: ""
     }
   },
   created () {
@@ -193,17 +194,22 @@ export default {
     }
   },
   methods: {
-    loginWithGoogle() {
+    async loginWithGoogle() {
       console.log("inside button click")
-      global.google.accounts.id.initialize({
-      client_id: process.env.VUE_APP_CLIENT_ID,
-      callback: global.handleCredentialResponse = function handleCredentialResponse(id_token) {
-        console.log(id_token)
-      }
-    });
-    global.google.accounts.id.prompt((notification) => {
-      console.log(notification)
-    });
+      await global.google.accounts.id.initialize({
+        client_id: process.env.VUE_APP_CLIENT_ID,
+        callback: global.handleCredentialResponse = function handleCredentialResponse(id_token) {
+          console.log(id_token);
+          this.token = id_token;
+          return;
+        }
+      });
+      global.google.accounts.id.prompt((notification) => {
+        console.log(notification)
+      });
+      console.log(this.token)
+      this.parseJwt(this.token);
+      console.log(this.googleUserData);
       // const { googleOptions, oneTapSignin, userData } = googleOneTapSignin()
       // console.log(userData)
       // oneTapSignin(googleOptions)
@@ -242,6 +248,15 @@ export default {
       // .catch(error => {
       //   console.log('error', error);
       // })
+    },
+    parseJwt(token) {
+      var base64Url = token.split('.')[1];
+      var base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+      var jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+          return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+      }).join(''));
+
+      this.googleUserData = JSON.parse(jsonPayload);
     },
     async getPerson() {
       await PersonServices.getPerson(this.user.userID)
