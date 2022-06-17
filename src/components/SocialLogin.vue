@@ -21,6 +21,7 @@
             elevation="10"
             color="primary"
             class="d-flex justify-center"
+            id="parent_id"
           >
             <v-card-title class="justify-center white--text">
               Login
@@ -132,7 +133,7 @@
 <script>
 // import google from "https://accounts.google.com/gsi/client"
 // import googleOneTapSignin from '@/config/googleOneTapSignin' 
-// import AuthServices from '@/services/authServices'
+import AuthServices from '@/services/authServices'
 import GroupServices from '@/services/groupServices'
 import RoleServices from '@/services/roleServices'
 import PersonServices from '@/services/personServices'
@@ -166,27 +167,6 @@ export default {
   },
   created () {
     this.getGroups();
-    console.log("created")
-    console.log(global.google)
-    
-    // global.handleCredentialResponse = function handleCredentialResponse(id_token) {
-    //     console.log(id_token)
-    //   }
-    //   const googleScript = document.createElement('script');
-    //   googleScript.src = "https://accounts.google.com/gsi/client";
-    //   googleScript.async = true;
-    //   googleScript.defer = true;
-    //   document.body.appendChild(googleScript)
-    //   const googleDiv1 = document.createElement('div');
-    //   googleDiv1.id = "g_id_onload";
-    //   // console.log(process.env.VUE_APP_CLIENT_ID)
-    //   googleDiv1.dataset.client_id = process.env.VUE_APP_CLIENT_ID;
-    //   googleDiv1.dataset.callback = "handleCredentialResponse"
-    //   document.body.appendChild(googleDiv1);
-    //   const googleDiv2 = document.createElement('div');
-    //   googleDiv2.className = "g_id_signin";
-    //   googleDiv2.dataset.type = "standard";
-    //   document.body.appendChild(googleDiv2);
   },
   computed: {
     validateRoleCheckbox() {
@@ -194,27 +174,56 @@ export default {
     }
   },
   methods: {
+    // window.handleCredentialResponse = function (response) {
+    //   console.log(response);
+    //   this.token = response.credential;
+    //   this.parseJwt(this.token);
+    //   console.log(this.googleUserData);
+    // },
     async loginWithGoogle() {
       console.log("inside button click")
-      await global.google.accounts.id.initialize({
+      global.google.accounts.id.initialize({
         client_id: process.env.VUE_APP_CLIENT_ID,
-        callback: global.handleCredentialResponse = function handleCredentialResponse(id_token) {
-          console.log(id_token);
-          this.token = id_token;
-          return;
+        cancel_on_tap_outside: false,
+        // prompt_parent_id: 'parent_id',
+        // ux_mode: "redirect",
+        callback: global.handleCredentialResponse = function handleCredentialResponse(response) {
+          console.log(response);
+          let token = { 
+            credential : response.credential
+          };
+          AuthServices.loginUser(token)
+          .then(response => {
+            this.user = response.data;
+            Utils.setStore("user", this.user);
+            this.name = this.user.fName;
+            console.log(this.user);
+            this.openDialogs();
+          })
+          .catch(error => {
+            console.log('error', error);
+          })
+          // this.token = response.credential;
+          // var token = response.credential;
+          // var base64Url = token.split('.')[1];
+          // var base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+          // var jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+          //     return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+          // }).join(''));
+          
+          // var googleUser = JSON.parse(jsonPayload);
+          // console.log(googleUser);
+
+          // var userInfo = {
+          //   email: googleUser.email,
+          //   idToken: googleUser
+          // }
         }
       });
       global.google.accounts.id.prompt((notification) => {
         console.log(notification)
       });
-      console.log(this.token)
-      this.parseJwt(this.token);
-      console.log(this.googleUserData);
-      // const { googleOptions, oneTapSignin, userData } = googleOneTapSignin()
-      // console.log(userData)
-      // oneTapSignin(googleOptions)
-      // console.log(userData)
-      // this.$gAuth.accounts.id.initialize(this.googleAuth);
+      
       // this.$gAuth
       // .signIn()
       // .then(GoogleUser => {
@@ -250,6 +259,8 @@ export default {
       // })
     },
     parseJwt(token) {
+      console.log(token);
+      console.log(this.token)
       var base64Url = token.split('.')[1];
       var base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
       var jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
