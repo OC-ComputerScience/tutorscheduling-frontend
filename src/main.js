@@ -7,6 +7,8 @@ import vuetify from './plugins/vuetify'
 import vuePdf from 'vue-pdf'
 import 'material-design-icons-iconfont/dist/material-design-icons.css'
 
+require('dotenv').config()
+
 Vue.component('vue-pdf', vuePdf)
 
 Vue.use(VueRouter)

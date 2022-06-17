@@ -1,10 +1,11 @@
-name: DEPLOY TO STAGING
+name: AWS DEPLOY TO STAGING
 
-on:
-    pull_request:
-        types : [closed]
-        branches:
-            - dev
+#turn off deploy to AWS
+#on:
+#    pull_request:
+#       types : [closed]
+#       branches:
+#            - dev
 
 jobs:
     aws-deploy:
