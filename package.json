@@ -6,7 +6,7 @@
     "serve": "vue-cli-service serve --host localhost",
     "build": "vue-cli-service build",
     "lint": "vue-cli-service lint",
-    "bundle": "mv .env deploy"
+    "bundle": "mv .env dist"
   },
   "dependencies": {
     "axios": "^0.25.0",
