@@ -1495,11 +1495,11 @@ import Utils from '@/config/utils.js'
                       for (let i = 0;i<roles.length;i++) {
                         if (roles[i].type == 'Student'){
                           let personRole = {
-                            status: 'approved',
+                            status: 'applied',
                             roleId: roles[i].id,
                             personId: temp.id,
                             dateSigned: Date(),
-                            agree: true,
+                            agree: false,
                           }
                           PersonRoleServices.addPersonRole(personRole)
                           this.emailStatus = temp.fName + " " + temp.lName + " has been added as a student!"
@@ -1524,11 +1524,11 @@ import Utils from '@/config/utils.js'
               for (let i = 0;i<roles.length;i++) {
                 if (roles[i].type == 'Student'){
                   let personRole = {
-                    status: 'approved',
+                    status: 'applied',
                     roleId: roles[i].id,
                     personId: temp.id,
                     dateSigned: Date(),
-                    agree: true,
+                    agree: false,
                   }
                   PersonRoleServices.addPersonRole(personRole)
                   this.emailFound = true;
@@ -1565,11 +1565,11 @@ import Utils from '@/config/utils.js'
           for (let i = 0;i<roles.length;i++) {
             if (roles[i].type == 'Student'){
               let personRole = {
-                status: 'approved',
+                status: 'applied',
                 roleId: roles[i].id,
                 personId: response.data.id,
                 dateSigned: Date(),
-                agree: true,
+                agree: false,
               }
               PersonRoleServices.addPersonRole(personRole)
               return
