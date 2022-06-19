@@ -78,7 +78,7 @@
           <v-btn
             color="blue darken-1"
             text
-            @click="addAvailability"
+            @click="addAvailability(); groupDialog = false;"
           >
             Save
           </v-btn>
@@ -164,7 +164,7 @@
         item-text="timeText"
         item-value="time"
         required
-        @change="updateTimes()"
+        @change="updateTimes(); secondTime = false;"
         dense
       >
       </v-select>
@@ -182,6 +182,7 @@
         item-value="time"
         required
         @change="updateTimes()"
+        :disabled="secondTime"
         dense
       >
       </v-select>
@@ -279,6 +280,7 @@ import Utils from '@/config/utils.js'
       dialog: false,
       dialogDelete: false,
       groupDialog: false,
+      secondTime: true,
       //used for generating time slots
       startTimes: [],
       endTimes: [],
@@ -295,13 +297,13 @@ import Utils from '@/config/utils.js'
       person: {},
       user: {},
       group: {},
-      topic: {},
+      topic: '',
       topics: [],
-      location: {},
+      location: '',
       locations: [],
       sessionValues: [{text: 'Private', value: 'Private'},
                       {text: 'Group', value: 'Group'}],
-      preSessionInfo: "",
+      preSessionInfo: '',
       headers: [                  
                   {text: 'Date', value: 'date',},
                   {text: 'Start Time', value: 'startTime'},
@@ -394,7 +396,6 @@ import Utils from '@/config/utils.js'
         this.nowDate = new Date().toISOString().slice(0,10);
         let temp = this.roundToNearest30(new Date());
         // see if selected dates includes today -- if not, allow all times
-        console.log(this.dates)
         const test = this.dates.filter(date => date === this.nowDate);
         if (test.length > 0) {
           this.nowTime =  temp.getHours() + ":" + temp.getMinutes();
@@ -404,7 +405,7 @@ import Utils from '@/config/utils.js'
         }
      //   this.newStart = this.nowTime; - caused problem with saving startDate in availabilityß
         this.startTimes = this.generateTimes(this.nowTime, this.newEnd)
-        // adding this to make sure that you can't start an appointment at the end time
+        // adding this to make sure thxat you can't start an appointment at the end time
         this.startTimes.pop();
         this.endTimes = this.generateTimes(this.newStart, "23:30")
         // adding this to make sure you can't end an appointment at the start time
@@ -416,7 +417,7 @@ import Utils from '@/config/utils.js'
 
         return new Date(Math.ceil(date.getTime() / ms) * ms);
       },
-      async   addAvailability() {
+      async addAvailability() {
       for (var i = 0; i < this.dates.length; i++) {
         let element = this.dates[i];
         this.availability.date = element;
@@ -432,6 +433,9 @@ import Utils from '@/config/utils.js'
           this.appointment.endTime = this.newEnd
           if(this.groupSession.includes('Private')){
             this.appointment.type = "Private"
+            this.appointment.locationId = null
+            this.appointment.topicId = null
+            this.appointment.preSessionInfo = null
           }
           else{
             this.appointment.type = "Group"
@@ -441,14 +445,11 @@ import Utils from '@/config/utils.js'
           }
           this.appointment.groupId = this.group.id
           this.appointment.status = "available"
-          console.log('test')
-          console.log(this.appointment)
-          console.log(this.appointment.groupId)
           await AppointmentServices.addAppointment(this.appointment).then(async response => {
             this.personAppointment.isTutor = true
             this.personAppointment.personId = this.user.userID
             this.personAppointment.appointmentId = response.data.id
-            await PersonAppointmentServices.addPersonAppointment(this.personAppointment)
+            await PersonAppointmentServices.addPersonAppointment(this.personAppointment)   
             })
           })
           .catch((error) => {
@@ -458,14 +459,18 @@ import Utils from '@/config/utils.js'
         this.dates =[];
         this.newStart ="00:00";
         this.newEnd = "23:30";
+        this.groupSession = '';
+        this.topic = ''
+        this.location = ''
+        this.preSessionInfo = ''
+        this.secondTime = true;
         this.getAvailabilities();
         this.updateTimes();
-    
         //this.$router.go();
         
       },
-      getAvailabilities() {
-        AvailabilityServices.getPersonAvailability(this.user.userID)
+      async getAvailabilities() {
+        await AvailabilityServices.getPersonAvailability(this.user.userID)
         .then(response => {
           this.availabilities = response.data;
 
@@ -544,7 +549,6 @@ import Utils from '@/config/utils.js'
       TopicServices.getTopicForPerson(this.user.userID)
       .then(response => {
         this.topics = response.data
-        console.log(this.topic)
         LocationServices.getAllForGroup(this.group.id).then(response => {
           this.locations = response.data
         })
