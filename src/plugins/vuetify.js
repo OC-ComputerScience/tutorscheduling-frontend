@@ -24,4 +24,3 @@ export default new Vuetify({
       iconfont: 'mdi', // default - only for display purposes
     },
 });
-
