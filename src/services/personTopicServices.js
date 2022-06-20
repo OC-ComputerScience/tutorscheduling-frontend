@@ -28,3 +28,4 @@ import apiClient from "@/services/services.js";
        return apiClient.delete("persontopic/" + personTopicId);
      }
    }; 
+   
