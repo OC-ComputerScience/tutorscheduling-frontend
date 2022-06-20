@@ -34,3 +34,4 @@ export default {
       return apiClient.delete("role/" + roleId);
     }
   };
+  

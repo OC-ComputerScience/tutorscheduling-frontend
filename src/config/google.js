@@ -144,3 +144,4 @@ var googleAuth = (function () {
   }
   
   export default installGoogleAuthPlugin
+  
