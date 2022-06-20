@@ -52,3 +52,4 @@ export default {
       return apiClient.delete("appointment/" + appointmentId);
     }
   };
+  
