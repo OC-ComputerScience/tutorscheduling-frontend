@@ -58,7 +58,7 @@
             <v-btn
               color="accent"
               text
-              @click="dialog = false; dialog2 = true; savePhoneNum()"
+              @click="dialog = false; savePhoneNum()"
             >
               Continue
             </v-btn>
@@ -289,6 +289,7 @@ export default {
         Utils.setStore("user", this.user);
         PersonServices.updatePerson(this.person.id, this.person);
       })
+      this.openDialogs();
     },
     async addGroupRoles(id) {
       await RoleServices.getAllForGroup(id)
@@ -358,13 +359,16 @@ export default {
     openDialogs() {
       // if this person doesn't have any roles, do this
       // console.log(this.roleCounter)
+      console.log(this.user);
       if(this.user.phoneNum === '') {
         this.dialog = true
       }
       else if (this.user.access.length === 0) {
         this.dialog2 = true;      
       }
-      this.goToPage();
+      else {
+        this.goToPage();
+      }
     },
     async goToPage() {
       await this.getPersonRoles()
