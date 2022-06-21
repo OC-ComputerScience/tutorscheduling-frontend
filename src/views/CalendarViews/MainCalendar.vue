@@ -265,6 +265,7 @@
              <v-text-field
                 v-model="newStart"
                 label="Booked Start"
+                type="time"
                 required
                 dense
                 readonly
@@ -290,6 +291,7 @@
           <v-text-field
                 v-model="newEnd"
                 label="Booked End"
+                type="time"
                 required
                 dense
                 readonly
@@ -565,6 +567,7 @@ import Utils from '@/config/utils.js'
     selectedElement: null,
     selectedOpen: false,
     events: [],
+    groupColor: false,
     //current user data
     role: {},
     user: {},
@@ -746,7 +749,8 @@ import Utils from '@/config/utils.js'
         if(this.appointmentType.includes("Private")){
           this.selectedAppointment.status = "booked"
           AppointmentServices.updateAppointmentStatus(this.selectedAppointment.id, this.selectedAppointment)
-          .then(() =>{
+          .then(async () =>{
+            await this.tutorConfirmMessage(this.students[0], this.user.fName, this.user.lName)
             this.getAppointments()
             this.selectedEvent.color = 'blue'
           })
@@ -1067,6 +1071,12 @@ import Utils from '@/config/utils.js'
       temp.message = "Your appointment with " +fName + " " + lName + " has been canceled"
       TwilioServices.sendMessage(temp);
     },
+    async tutorConfirmMessage(student, fName, lName){
+      let temp = student
+      console.log(student)
+      temp.message = "Your appointment with " +fName + " " + lName + " has been confirmed"
+      TwilioServices.sendMessage(temp);
+    },
     //Animates Event card popping up
     showEvent ({ nativeEvent, event }) {
     
@@ -1230,6 +1240,7 @@ import Utils from '@/config/utils.js'
       const events = []
       let filtered
       for(let i = 0; i < this.appointments.length; i++) {
+        await this.groupBookColor(this.appointments[i].id)
         //filter events to only add appropriate events
         filtered = true
         //only add appointments from the current group
@@ -1288,7 +1299,11 @@ import Utils from '@/config/utils.js'
             color = 'grey darken-1'
             break
         }
-        if (this.appointments[i].type.includes('Group') && !(this.appointments[i].status.includes('tutorCancel') || this.appointments[i].status.includes('studentCancel'))){
+        if (this.appointments[i].type.includes('Group') && this.groupColor && !(this.appointments[i].status.includes('tutorCancel') || this.appointments[i].status.includes('studentCancel'))){
+          console.log('here')
+          color = 'blue'
+        }
+        else if (this.appointments[i].type.includes('Group') && !(this.appointments[i].status.includes('tutorCancel') || this.appointments[i].status.includes('studentCancel'))){
           color = 'purple'
         }
         //Format times for each event and need to set minutes for events too
@@ -1353,6 +1368,20 @@ import Utils from '@/config/utils.js'
       }
   
       this.events = events
+    },
+    async groupBookColor(appointId) {
+      let temp = null
+      await PersonAppointmentServices.getPersonAppointmentForPerson(this.user.userID).then((response) => {
+        temp = response.data
+        for(let i = 0; i < temp.length;i++){
+          if (temp[i].appointmentId == appointId){
+            this.groupColor = true;
+            return
+          }
+        } 
+        this.groupColor = false;
+        return 
+      })
     },
     //method for canceling appointments
     async cancelAppointment(){

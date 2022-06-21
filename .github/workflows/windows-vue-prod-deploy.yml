@@ -1,19 +1,19 @@
-name: Deploy to Windows Dev
+name: Deploy to Windows Prod
 
 on:
     pull_request:
         types: [closed]
         branches:
-            - dev
+            - main
 
 jobs:
     windows-deploy:
         runs-on: ubuntu-latest
         env:
-                  DB_HOST: ${{ secrets.DEV_DB_HOST }}
-                  DB_PW: ${{ secrets.DEV_DB_PW}}
-                  DB_USER: ${{ secrets.DEV_DB_USER }}
-                  DB_NAME: ${{ secrets.DEV_DB_NAME }}
+                  DB_HOST: ${{ secrets.PROD_DB_HOST }}
+                  DB_PW: ${{ secrets.PROD_DB_PW}}
+                  DB_USER: ${{ secrets.PROD_DB_USER }}
+                  DB_NAME: ${{ secrets.PROD_DB_NAME }}
                   TWILIO_ACCOUNT_SID : ${{secrets.TWILIO_ACCOUNT_SID}}
                   TWILIO_AUTH_TOKEN1 : ${{secrets.TWILIO_AUTH_TOKEN2}}
                   TWILIO_AUTH_TOKEN2 :  ${{secrets.TWILIO_AUTH_TOKEN2}}
@@ -21,7 +21,7 @@ jobs:
         steps:
             - uses: actions/checkout@v2
               with:
-                  ref: dev
+                  ref: main
             - uses: actions/setup-node@v1
             - run: |
                     touch .env
@@ -44,10 +44,7 @@ jobs:
                   local: dist/
                   remote: c:/Apache24/htdocs
                   recursive : true
-                  host: 'tutorschedulingdev.oc.edu'
+                  host: 'tutorscheduling.oc.edu'
                   username: 'david.north'
-                  privateKey: ${{ secrets.DEV_WIN_SERVER_SSH_KEY  }}
-                  
-
-  
+                  privateKey: ${{ secrets.PROD_WIN_SERVER_SSH_KEY  }}
 

@@ -28,3 +28,5 @@ import apiClient from "@/services/services.js";
        return apiClient.delete("personrole/" + personRoleId);
      }
    }; 
+
+   
