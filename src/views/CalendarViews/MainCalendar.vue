@@ -226,7 +226,8 @@
             label="Location"
             required
             dense
-            readonly
+            :readonly="!isTutorEvent"
+            @change="saveChanges = true"
           >
           </v-select>
 
@@ -238,7 +239,8 @@
             label="Topic"
             required
             dense
-            readonly
+            :readonly="!isTutorEvent || (students.length > 0 && isTutorEvent)"
+            @change="saveChanges = true"
           >
           </v-select>
 
@@ -324,9 +326,11 @@
               required
               auto-grow
               rows="1"
-              readonly
+              :readonly="!isTutorEvent"
+              @change="saveChanges = true"
             ></v-textarea>
           </span>
+          <!-- admin signing a student up -->
           <span v-if="adminAddStudent">
             <v-text-field 
               v-model="studentEmail"
@@ -382,14 +386,14 @@
           >
           Book
           </v-btn>
-        <v-btn v-if="checkRole('Tutor')"
+        <v-btn v-if="checkRole('Tutor') && !appointmentType.includes('Group')"
           color="#12f000"
           @click="confirmAppointment(true)"
           :disabled="!checkStatus('pending')"
         >
         Confirm
         </v-btn>
-        <v-btn v-if="checkRole('Tutor')"
+        <v-btn v-if="checkRole('Tutor') && !appointmentType.includes('Group')"
           color="error"
           @click="confirmAppointment(false)"
           :disabled="!checkStatus('pending')"
@@ -401,6 +405,12 @@
           @click="selectedOpen = false"
         >
         Close
+        </v-btn>
+        <v-btn v-if="isTutorEvent && saveChanges"
+          color="accent"
+          @click="editAppointment(); selectedOpen = false;"
+        >
+        Save Changes
         </v-btn>
         
         <v-btn v-if="(checkStatus('booked') && !checkRole('Admin')) || (isGroupBook && !adminAddStudent) || (isTutorEvent && checkStatus('available')) || 
@@ -589,6 +599,8 @@ import Utils from '@/config/utils.js'
     //student and tutor names
     studentName: '',
     tutorName: '',
+    //editing appointment
+    saveChanges: false,
   }),
   created() {
     this.user = Utils.getStore('user')
@@ -1073,8 +1085,12 @@ import Utils from '@/config/utils.js'
     },
     async tutorConfirmMessage(student, fName, lName){
       let temp = student
-      console.log(student)
       temp.message = "Your appointment with " +fName + " " + lName + " has been confirmed"
+      TwilioServices.sendMessage(temp);
+    },
+    tutorEditMessage(student, fName, lName, type) {
+      let temp = student
+      temp.message = "Your " + type + " appointment with " + fName + " " + lName + " has been edited. Please check changes at http://tutorscheduling.oc.edu/"
       TwilioServices.sendMessage(temp);
     },
     //Animates Event card popping up
@@ -1100,6 +1116,7 @@ import Utils from '@/config/utils.js'
         requestAnimationFrame(() => requestAnimationFrame(() => open()))
       } else {
         open()
+        this.saveChanges = false
         this.adminAddStudent = false
         this.studentEmail = ''
         this.emailStatus = ''
@@ -1300,7 +1317,6 @@ import Utils from '@/config/utils.js'
             break
         }
         if (this.appointments[i].type.includes('Group') && this.groupColor && !(this.appointments[i].status.includes('tutorCancel') || this.appointments[i].status.includes('studentCancel'))){
-          console.log('here')
           color = 'blue'
         }
         else if (this.appointments[i].type.includes('Group') && !(this.appointments[i].status.includes('tutorCancel') || this.appointments[i].status.includes('studentCancel'))){
@@ -1606,6 +1622,14 @@ import Utils from '@/config/utils.js'
           }
         })
       })
+    },
+    async editAppointment(){
+      await AppointmentServices.updateAppointment(this.selectedAppointment.id, this.selectedAppointment).then(async () =>{
+          for (let i = 0;i < this.students.length;i++){
+            this.tutorEditMessage(this.students[i], this.user.fName, this.user.lName, this.selectedAppointment.type)
+          }
+          await this.getAppointments()
+        })
     }
   },
 }
