@@ -360,7 +360,7 @@ export default {
       // if this person doesn't have any roles, do this
       // console.log(this.roleCounter)
       console.log(this.user);
-      if(this.user.phoneNum === '') {
+      if(this.user.phoneNum === '' || this.user.phoneNum === undefined || this.user.phoneNum === null) {
         this.dialog = true
       }
       else if (this.user.access.length === 0) {
