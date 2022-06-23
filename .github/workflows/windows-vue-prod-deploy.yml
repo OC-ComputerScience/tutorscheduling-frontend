@@ -1,10 +1,10 @@
-name: Deploy to Windows Dev
+name: Deploy to Windows Prod
 
 on:
     pull_request:
         types: [closed]
         branches:
-            - master
+            - main
 
 jobs:
     windows-deploy:
@@ -21,7 +21,7 @@ jobs:
         steps:
             - uses: actions/checkout@v2
               with:
-                  ref: dev
+                  ref: main
             - uses: actions/setup-node@v1
             - run: |
                     touch .env
@@ -47,6 +47,4 @@ jobs:
                   host: 'tutorscheduling.oc.edu'
                   username: 'david.north'
                   privateKey: ${{ secrets.PROD_WIN_SERVER_SSH_KEY  }}
-
-  
 
