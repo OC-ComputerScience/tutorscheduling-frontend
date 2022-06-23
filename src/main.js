@@ -14,6 +14,18 @@ Vue.component('vue-pdf', vuePdf)
 Vue.use(VueRouter)
 Vue.config.productionTip = false
 
+Vue.mixin({
+  methods: {
+    async handleCredentialResponse(response) {
+      console.log(response);
+      let token = { 
+        credential : response.credential
+      };
+      return token;
+    }
+  }
+})
+
 new Vue({
   router,
   store,

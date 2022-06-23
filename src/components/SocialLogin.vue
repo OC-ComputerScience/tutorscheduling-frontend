@@ -128,12 +128,8 @@
     </div>
 </template>
 
-<!-- <script src="https://accounts.google.com/gsi/client" async defer></script> -->
-
 <script>
-// import google from "https://accounts.google.com/gsi/client"
-// import googleOneTapSignin from '@/config/googleOneTapSignin' 
-import AuthServices from '@/services/authServices'
+// import AuthServices from '@/services/authServices'
 import GroupServices from '@/services/groupServices'
 import RoleServices from '@/services/roleServices'
 import PersonServices from '@/services/personServices'
@@ -181,93 +177,44 @@ export default {
     //   console.log(this.googleUserData);
     // },
     async loginWithGoogle() {
+      console.log(global.google)
       console.log("inside button click")
       global.google.accounts.id.initialize({
         client_id: process.env.VUE_APP_CLIENT_ID,
         cancel_on_tap_outside: false,
         // prompt_parent_id: 'parent_id',
         // ux_mode: "redirect",
-        callback: global.handleCredentialResponse = function handleCredentialResponse(response) {
-          console.log(response);
-          let token = { 
-            credential : response.credential
-          };
-          AuthServices.loginUser(token)
-          .then(response => {
-            this.user = response.data;
-            Utils.setStore("user", this.user);
-            this.name = this.user.fName;
-            console.log(this.user);
-            this.openDialogs();
-          })
-          .catch(error => {
-            console.log('error', error);
-          })
-          // this.token = response.credential;
-          // var token = response.credential;
-          // var base64Url = token.split('.')[1];
-          // var base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-          // var jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
-          //     return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-          // }).join(''));
-          
-          // var googleUser = JSON.parse(jsonPayload);
-          // console.log(googleUser);
-
-          // var userInfo = {
-          //   email: googleUser.email,
-          //   idToken: googleUser
-          // }
-        }
+        callback: await this.handleCredentialResponse
+        //   global.handleCredentialResponse = function handleCredentialResponse(response) {
+        //   console.log(response);
+        //   let token = { 
+        //     credential : response.credential
+        //   };
+        //   AuthServices.loginUser(token)
+        //   .then(response => {
+        //     this.user = response.data;
+        //     Utils.setStore("user", this.user);
+        //     this.name = this.user.fName;
+        //     console.log(this.user);
+        //     if(this.user.userID !== undefined)
+        //     {
+        //       console.log("out of google stuff 1")
+        //       return;
+        //     }
+        //     // this.openDialogs();
+        //   })
+        //   .catch(error => {
+        //     console.log('error', error);
+        //   })
+        // }
       });
       global.google.accounts.id.prompt((notification) => {
         console.log(notification)
       });
-      
-      // this.$gAuth
-      // .signIn()
-      // .then(GoogleUser => {
-      //   // on success do something
-      //   console.log('GoogleUser', GoogleUser);
-      //   console.log('getId', GoogleUser.getId());
-      //   console.log('basicprofile', GoogleUser.getBasicProfile().getName());
-      //   console.log('getBasicProfile', GoogleUser.getBasicProfile());
-      //   console.log('getAuthResponse', GoogleUser.getAuthResponse());
-      //   var userInfo = {
-      //     email: GoogleUser.getBasicProfile().getEmail(),
-      //     idToken: GoogleUser.getAuthResponse().id_token,
-      //     token: {
-      //       access_token: GoogleUser.getAuthResponse().access_token,
-      //       token_type: GoogleUser.getAuthResponse().token_type,
-      //       expiry_date: GoogleUser.getAuthResponse().expires_at
-      //     }
-      //   }
-      //   AuthServices.loginUser(userInfo)
-      //   .then(response => {
-      //     this.user = response.data;
-      //     Utils.setStore("user", this.user);
-      //     this.name = this.user.fName;
-      //     console.log(this.user);
-      //     this.openDialogs();
-      //   })
-      //   .catch(error => {
-      //     console.log('error', error);
-      //   })
-      // })
-      // .catch(error => {
-      //   console.log('error', error);
-      // })
-    },
-    parseJwt(token) {
-      console.log(token);
-      console.log(this.token)
-      var base64Url = token.split('.')[1];
-      var base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-      var jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
-          return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-      }).join(''));
 
-      this.googleUserData = JSON.parse(jsonPayload);
+      if(this.user.userID !== undefined)
+        console.log("out of google stuff")
+  
     },
     async getPerson() {
       await PersonServices.getPerson(this.user.userID)
