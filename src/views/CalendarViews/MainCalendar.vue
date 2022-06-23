@@ -198,7 +198,8 @@
             label="Location"
             required
             dense
-            :disabled="!checkStatus('available')"
+            :disabled="checkStatus('pending') || (checkRole('Tutor') && !checkStatus('booked')) || ((checkRole('Student') || checkRole('Admin')) && (checkStatus('booked')) || selectedAppointment.status.includes('Cancel'))"
+            @change="saveChanges = true"
           >
           </v-select>
 
@@ -210,7 +211,7 @@
             label="Topic"
             required
             dense
-            :disabled="!checkStatus('available')"
+            :disabled="!checkStatus('available') || checkRole('Tutor')"
           >
           </v-select>
           </v-container>
@@ -258,6 +259,7 @@
               label="Booked Start"
               required
               @change="updateTimes()"
+              :disabled="checkRole('Tutor')"
               dense
             >
             </v-select>
@@ -285,6 +287,7 @@
             label="Booked End"
             required
             @change="updateTimes()"
+            :disabled="checkRole('Tutor')"
             dense
           >
           </v-select>
@@ -313,7 +316,8 @@
               required
               auto-grow
               rows="1"
-              :disabled="!checkStatus('available')"
+              :disabled="(!checkRole('Student') && !checkStatus('available')) || (checkRole('Student') && checkStatus('pending')) || checkRole('Tutor')"
+              @change="saveChanges = true"
             ></v-textarea>
           </span>
           <span v-else>
@@ -406,7 +410,7 @@
         >
         Close
         </v-btn>
-        <v-btn v-if="isTutorEvent && saveChanges"
+        <v-btn v-if="(isTutorEvent || isPrivateBook) && saveChanges"
           color="accent"
           @click="editAppointment(); selectedOpen = false;"
         >
@@ -578,6 +582,7 @@ import Utils from '@/config/utils.js'
     selectedOpen: false,
     events: [],
     groupColor: false,
+    studentGroupColor: false, 
     //current user data
     role: {},
     user: {},
@@ -601,6 +606,7 @@ import Utils from '@/config/utils.js'
     tutorName: '',
     //editing appointment
     saveChanges: false,
+    isPrivateBook: false,
   }),
   created() {
     this.user = Utils.getStore('user')
@@ -721,6 +727,20 @@ import Utils from '@/config/utils.js'
           console.log("There was an error:", error.response.data)
         });
       }
+    },
+    isStudentofAppointment() {
+      PersonAppointmentServices.getPersonAppointmentForPerson(this.user.userID)
+        .then(response => {
+          let temp = response.data
+          for (let i = 0; i < temp.length; i++){
+            if (temp[i].appointmentId == this.selectedAppointment.id && this.selectedAppointment.type.includes('Private')
+             && this.checkRole('Student')){
+              this.isPrivateBook = true
+              return 
+            }
+          }
+          this.isPrivateBook = false
+      })
     },
     //Update on a session being booked
     bookAppointment() {
@@ -1090,7 +1110,10 @@ import Utils from '@/config/utils.js'
     },
     tutorEditMessage(student, fName, lName, type) {
       let temp = student
-      temp.message = "Your " + type + " appointment with " + fName + " " + lName + " has been edited. Please check changes at http://tutorscheduling.oc.edu/"
+      let start = this.calcTime(this.selectedAppointment.startTime)
+      let date = this.selectedAppointment.date.toString().substring(5,10) + "-" + this.selectedAppointment.date.toString().substring(0,4)
+      temp.message = "Your " + type + " appointment with " + fName + " " + lName + " on " + date + " at " + start + 
+        " has been edited. \nPlease check changes at http://tutorscheduling.oc.edu/"
       TwilioServices.sendMessage(temp);
     },
     //Animates Event card popping up
@@ -1098,7 +1121,7 @@ import Utils from '@/config/utils.js'
     
       const open = () => {
         this.selectedEvent = event
-        AppointmentServices.getAppointment(event.appointmentId).then((response) => {
+        AppointmentServices.getAppointment(event.appointmentId).then(async (response) => {
           this.selectedAppointment = response.data
           this.newStart = this.selectedAppointment.startTime
           this.newEnd = this.selectedAppointment.endTime
@@ -1107,6 +1130,7 @@ import Utils from '@/config/utils.js'
           this.checkGroupBoooking()
           this.updateTimes()
           this.updatePeople()
+          this.isStudentofAppointment()
           this.selectedElement = nativeEvent.target
          requestAnimationFrame(() => requestAnimationFrame(() => this.selectedOpen = true))
         });
@@ -1146,6 +1170,22 @@ import Utils from '@/config/utils.js'
           })
         }
       })
+    },
+    isStudentInGroupAppoint(appointId) {
+      PersonAppointmentServices.getAllPersonAppointments().then((response) => {
+        let person = response.data
+        for (let i = 0; i < person.length;i++){
+          if(person[i].appointmentId == appointId) {
+            if(!person[i].isTutor) {
+              this.studentGroupColor =  true;
+              return 
+            }
+          }
+        }
+        
+      })
+      this.studentGroupColor =  false;
+      return 
     },
     //Checks if the current session matches the given status, for hiding certain elements
     checkStatus(status) {
@@ -1258,6 +1298,7 @@ import Utils from '@/config/utils.js'
       let filtered
       for(let i = 0; i < this.appointments.length; i++) {
         await this.groupBookColor(this.appointments[i].id)
+        this.isStudentInGroupAppoint(this.appointments[i].id)
         //filter events to only add appropriate events
         filtered = true
         //only add appointments from the current group
@@ -1333,8 +1374,12 @@ import Utils from '@/config/utils.js'
         endTime.setMinutes(endTime.getMinutes() + parseInt(endTimes[1]))
         //Note the format of each event, what data is associated with it
         if (this.appointments[i].type.includes('Group')){
-          TopicServices.getTopic(this.appointments[i].topicId).then((response) => {
+          TopicServices.getTopic(this.appointments[i].topicId).then(async (response) => {
             let topicName = response.data.name
+            if (this.groupColor && !this.studentGroupColor) {
+              topicName = 'Open'
+              color = 'grey darken-1'
+            }
             events.push({
               name: 'G: ' + topicName,
               start: startTime,
