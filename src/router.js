@@ -72,7 +72,7 @@ import TutorAppointmentFeedback from './views/FeedbackViews/TutorAppointmentFeed
 Vue.use(Router)
 
 const router =  new Router({
-  mode: 'hash',
+  mode: "history",
   linkExactActiveClass: 'active',
   base:
 //    process.env.NODE_ENV === 'development'? "/" : "/tutorScheduling/", - for AWS
