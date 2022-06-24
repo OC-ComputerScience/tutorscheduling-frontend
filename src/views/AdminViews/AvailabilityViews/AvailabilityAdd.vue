@@ -393,7 +393,6 @@ import Utils from '@/config/utils.js'
       },
       getLocalDateString() {
         let date = new Date();
-        console.log("date="+date)
         date.setHours(date.getHours()-(date.getTimezoneOffset()/60));
         return date.toISOString().slice(0,10)
       },
@@ -404,7 +403,7 @@ import Utils from '@/config/utils.js'
         // see if selected dates includes today -- if not, allow all times
         const test = this.dates.filter(date => date === this.nowDate);
         if (test.length > 0) {
-          console.log("hours="+temp.getHours())
+  
           this.nowTime =  temp.getHours() + ":" + temp.getMinutes();
         }
         else {
