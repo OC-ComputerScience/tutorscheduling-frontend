@@ -129,7 +129,7 @@
 </template>
 
 <script>
-// import AuthServices from '@/services/authServices'
+import AuthServices from '@/services/authServices'
 import GroupServices from '@/services/groupServices'
 import RoleServices from '@/services/roleServices'
 import PersonServices from '@/services/personServices'
@@ -170,51 +170,46 @@ export default {
     }
   },
   methods: {
-    // window.handleCredentialResponse = function (response) {
-    //   console.log(response);
-    //   this.token = response.credential;
-    //   this.parseJwt(this.token);
-    //   console.log(this.googleUserData);
-    // },
     async loginWithGoogle() {
+      global.handleCredentialResponse = this.handleCredentialResponse;
       console.log(global.google)
       console.log("inside button click")
       global.google.accounts.id.initialize({
         client_id: process.env.VUE_APP_CLIENT_ID,
         cancel_on_tap_outside: false,
+        auto_select: true,
         // prompt_parent_id: 'parent_id',
         // ux_mode: "redirect",
-        callback: await this.handleCredentialResponse
-        //   global.handleCredentialResponse = function handleCredentialResponse(response) {
-        //   console.log(response);
-        //   let token = { 
-        //     credential : response.credential
-        //   };
-        //   AuthServices.loginUser(token)
-        //   .then(response => {
-        //     this.user = response.data;
-        //     Utils.setStore("user", this.user);
-        //     this.name = this.user.fName;
-        //     console.log(this.user);
-        //     if(this.user.userID !== undefined)
-        //     {
-        //       console.log("out of google stuff 1")
-        //       return;
-        //     }
-        //     // this.openDialogs();
-        //   })
-        //   .catch(error => {
-        //     console.log('error', error);
-        //   })
-        // }
+        callback: global.handleCredentialResponse
       });
+      global.google.accounts.id.renderButton(
+        document.getElementById("parent_id"),
+        { theme: "outline", size: "large" }
+      )
       global.google.accounts.id.prompt((notification) => {
         console.log(notification)
-      });
-
-      if(this.user.userID !== undefined)
-        console.log("out of google stuff")
-  
+      });  
+    },
+    handleCredentialResponse(response) {
+      console.log(response);
+      let token = { 
+        credential : response.credential
+      };
+      AuthServices.loginUser(token)
+      .then(response => {
+        this.user = response.data;
+        Utils.setStore("user", this.user);
+        this.name = this.user.fName;
+        console.log(this.user);
+        if(this.user.userID !== undefined)
+        {
+          console.log("out of google stuff 1")
+        }
+        this.openDialogs();
+      })
+      .catch(error => {
+        console.log('error', error);
+      })
     },
     async getPerson() {
       await PersonServices.getPerson(this.user.userID)
