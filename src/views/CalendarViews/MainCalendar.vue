@@ -198,7 +198,8 @@
             label="Location"
             required
             dense
-            :disabled="!checkStatus('available')"
+            :disabled="checkStatus('pending') || (checkRole('Tutor') && !checkStatus('booked')) || ((checkRole('Student') || checkRole('Admin')) && (checkStatus('booked')) || selectedAppointment.status.includes('Cancel'))"
+            @change="saveChanges = true"
           >
           </v-select>
 
@@ -210,7 +211,7 @@
             label="Topic"
             required
             dense
-            :disabled="!checkStatus('available')"
+            :disabled="!checkStatus('available') || checkRole('Tutor')"
           >
           </v-select>
           </v-container>
@@ -226,7 +227,8 @@
             label="Location"
             required
             dense
-            readonly
+            :readonly="!isTutorEvent"
+            @change="saveChanges = true"
           >
           </v-select>
 
@@ -238,7 +240,8 @@
             label="Topic"
             required
             dense
-            readonly
+            :readonly="!isTutorEvent || (students.length > 0 && isTutorEvent)"
+            @change="saveChanges = true"
           >
           </v-select>
 
@@ -256,6 +259,7 @@
               label="Booked Start"
               required
               @change="updateTimes()"
+              :disabled="checkRole('Tutor')"
               dense
             >
             </v-select>
@@ -283,6 +287,7 @@
             label="Booked End"
             required
             @change="updateTimes()"
+            :disabled="checkRole('Tutor')"
             dense
           >
           </v-select>
@@ -311,7 +316,8 @@
               required
               auto-grow
               rows="1"
-              :disabled="!checkStatus('available')"
+              :disabled="(!checkRole('Student') && !checkStatus('available')) || (checkRole('Student') && checkStatus('pending')) || checkRole('Tutor')"
+              @change="saveChanges = true"
             ></v-textarea>
           </span>
           <span v-else>
@@ -324,9 +330,11 @@
               required
               auto-grow
               rows="1"
-              readonly
+              :readonly="!isTutorEvent"
+              @change="saveChanges = true"
             ></v-textarea>
           </span>
+          <!-- admin signing a student up -->
           <span v-if="adminAddStudent">
             <v-text-field 
               v-model="studentEmail"
@@ -382,14 +390,14 @@
           >
           Book
           </v-btn>
-        <v-btn v-if="checkRole('Tutor')"
+        <v-btn v-if="checkRole('Tutor') && !appointmentType.includes('Group')"
           color="#12f000"
           @click="confirmAppointment(true)"
           :disabled="!checkStatus('pending')"
         >
         Confirm
         </v-btn>
-        <v-btn v-if="checkRole('Tutor')"
+        <v-btn v-if="checkRole('Tutor') && !appointmentType.includes('Group')"
           color="error"
           @click="confirmAppointment(false)"
           :disabled="!checkStatus('pending')"
@@ -401,6 +409,12 @@
           @click="selectedOpen = false"
         >
         Close
+        </v-btn>
+        <v-btn v-if="(isTutorEvent || isPrivateBook) && saveChanges"
+          color="accent"
+          @click="editAppointment(); selectedOpen = false;"
+        >
+        Save Changes
         </v-btn>
         
         <v-btn v-if="(checkStatus('booked') && !checkRole('Admin')) || (isGroupBook && !adminAddStudent) || (isTutorEvent && checkStatus('available')) || 
@@ -568,6 +582,7 @@ import Utils from '@/config/utils.js'
     selectedOpen: false,
     events: [],
     groupColor: false,
+    studentGroupColor: false, 
     //current user data
     role: {},
     user: {},
@@ -589,6 +604,9 @@ import Utils from '@/config/utils.js'
     //student and tutor names
     studentName: '',
     tutorName: '',
+    //editing appointment
+    saveChanges: false,
+    isPrivateBook: false,
   }),
   created() {
     this.user = Utils.getStore('user')
@@ -709,6 +727,20 @@ import Utils from '@/config/utils.js'
           console.log("There was an error:", error.response.data)
         });
       }
+    },
+    isStudentofAppointment() {
+      PersonAppointmentServices.getPersonAppointmentForPerson(this.user.userID)
+        .then(response => {
+          let temp = response.data
+          for (let i = 0; i < temp.length; i++){
+            if (temp[i].appointmentId == this.selectedAppointment.id && this.selectedAppointment.type.includes('Private')
+             && this.checkRole('Student')){
+              this.isPrivateBook = true
+              return 
+            }
+          }
+          this.isPrivateBook = false
+      })
     },
     //Update on a session being booked
     bookAppointment() {
@@ -1073,8 +1105,15 @@ import Utils from '@/config/utils.js'
     },
     async tutorConfirmMessage(student, fName, lName){
       let temp = student
-      console.log(student)
       temp.message = "Your appointment with " +fName + " " + lName + " has been confirmed"
+      TwilioServices.sendMessage(temp);
+    },
+    tutorEditMessage(student, fName, lName, type) {
+      let temp = student
+      let start = this.calcTime(this.selectedAppointment.startTime)
+      let date = this.selectedAppointment.date.toString().substring(5,10) + "-" + this.selectedAppointment.date.toString().substring(0,4)
+      temp.message = "Your " + type + " appointment with " + fName + " " + lName + " on " + date + " at " + start + 
+        " has been edited. \nPlease check changes at http://tutorscheduling.oc.edu/"
       TwilioServices.sendMessage(temp);
     },
     //Animates Event card popping up
@@ -1082,7 +1121,7 @@ import Utils from '@/config/utils.js'
     
       const open = () => {
         this.selectedEvent = event
-        AppointmentServices.getAppointment(event.appointmentId).then((response) => {
+        AppointmentServices.getAppointment(event.appointmentId).then(async (response) => {
           this.selectedAppointment = response.data
           this.newStart = this.selectedAppointment.startTime
           this.newEnd = this.selectedAppointment.endTime
@@ -1091,6 +1130,7 @@ import Utils from '@/config/utils.js'
           this.checkGroupBoooking()
           this.updateTimes()
           this.updatePeople()
+          this.isStudentofAppointment()
           this.selectedElement = nativeEvent.target
          requestAnimationFrame(() => requestAnimationFrame(() => this.selectedOpen = true))
         });
@@ -1100,6 +1140,7 @@ import Utils from '@/config/utils.js'
         requestAnimationFrame(() => requestAnimationFrame(() => open()))
       } else {
         open()
+        this.saveChanges = false
         this.adminAddStudent = false
         this.studentEmail = ''
         this.emailStatus = ''
@@ -1129,6 +1170,22 @@ import Utils from '@/config/utils.js'
           })
         }
       })
+    },
+    isStudentInGroupAppoint(appointId) {
+      PersonAppointmentServices.getAllPersonAppointments().then((response) => {
+        let person = response.data
+        for (let i = 0; i < person.length;i++){
+          if(person[i].appointmentId == appointId) {
+            if(!person[i].isTutor) {
+              this.studentGroupColor =  true;
+              return 
+            }
+          }
+        }
+        
+      })
+      this.studentGroupColor =  false;
+      return 
     },
     //Checks if the current session matches the given status, for hiding certain elements
     checkStatus(status) {
@@ -1241,6 +1298,7 @@ import Utils from '@/config/utils.js'
       let filtered
       for(let i = 0; i < this.appointments.length; i++) {
         await this.groupBookColor(this.appointments[i].id)
+        this.isStudentInGroupAppoint(this.appointments[i].id)
         //filter events to only add appropriate events
         filtered = true
         //only add appointments from the current group
@@ -1300,7 +1358,6 @@ import Utils from '@/config/utils.js'
             break
         }
         if (this.appointments[i].type.includes('Group') && this.groupColor && !(this.appointments[i].status.includes('tutorCancel') || this.appointments[i].status.includes('studentCancel'))){
-          console.log('here')
           color = 'blue'
         }
         else if (this.appointments[i].type.includes('Group') && !(this.appointments[i].status.includes('tutorCancel') || this.appointments[i].status.includes('studentCancel'))){
@@ -1317,8 +1374,12 @@ import Utils from '@/config/utils.js'
         endTime.setMinutes(endTime.getMinutes() + parseInt(endTimes[1]))
         //Note the format of each event, what data is associated with it
         if (this.appointments[i].type.includes('Group')){
-          TopicServices.getTopic(this.appointments[i].topicId).then((response) => {
+          TopicServices.getTopic(this.appointments[i].topicId).then(async (response) => {
             let topicName = response.data.name
+            if (this.groupColor && !this.studentGroupColor) {
+              topicName = 'Open'
+              color = 'grey darken-1'
+            }
             events.push({
               name: 'G: ' + topicName,
               start: startTime,
@@ -1524,11 +1585,11 @@ import Utils from '@/config/utils.js'
                       for (let i = 0;i<roles.length;i++) {
                         if (roles[i].type == 'Student'){
                           let personRole = {
-                            status: 'approved',
+                            status: 'applied',
                             roleId: roles[i].id,
                             personId: temp.id,
                             dateSigned: Date(),
-                            agree: true,
+                            agree: false,
                           }
                           PersonRoleServices.addPersonRole(personRole)
                           this.emailStatus = temp.fName + " " + temp.lName + " has been added as a student!"
@@ -1553,11 +1614,11 @@ import Utils from '@/config/utils.js'
               for (let i = 0;i<roles.length;i++) {
                 if (roles[i].type == 'Student'){
                   let personRole = {
-                    status: 'approved',
+                    status: 'applied',
                     roleId: roles[i].id,
                     personId: temp.id,
                     dateSigned: Date(),
-                    agree: true,
+                    agree: false,
                   }
                   PersonRoleServices.addPersonRole(personRole)
                   this.emailFound = true;
@@ -1594,11 +1655,11 @@ import Utils from '@/config/utils.js'
           for (let i = 0;i<roles.length;i++) {
             if (roles[i].type == 'Student'){
               let personRole = {
-                status: 'approved',
+                status: 'applied',
                 roleId: roles[i].id,
                 personId: response.data.id,
                 dateSigned: Date(),
-                agree: true,
+                agree: false,
               }
               PersonRoleServices.addPersonRole(personRole)
               return
@@ -1606,6 +1667,14 @@ import Utils from '@/config/utils.js'
           }
         })
       })
+    },
+    async editAppointment(){
+      await AppointmentServices.updateAppointment(this.selectedAppointment.id, this.selectedAppointment).then(async () =>{
+          for (let i = 0;i < this.students.length;i++){
+            this.tutorEditMessage(this.students[i], this.user.fName, this.user.lName, this.selectedAppointment.type)
+          }
+          await this.getAppointments()
+        })
     }
   },
 }

@@ -37,7 +37,7 @@
       >
         <v-card tile>
           <v-card-title>
-            <span class="text-h5">Hello, {{this.name}}! Finish setting up your account below:</span>
+            <span class="text-h5">Hello, {{this.fName}}! Finish setting up your account below:</span>
           </v-card-title>
           <v-card-text>
             <v-container>
@@ -59,7 +59,7 @@
             <v-btn
               color="accent"
               text
-              @click="dialog = false; dialog2 = true; savePhoneNum()"
+              @click="dialog = false; savePhoneNum()"
             >
               Continue
             </v-btn>
@@ -74,7 +74,7 @@
       >
         <v-card tile>
           <v-card-title>
-            <span class="text-h5">Hello, {{this.name}}! Select below:</span>
+            <span class="text-h5">Hello, {{this.fName}}! Select below:</span>
           </v-card-title>
           <v-container>
             <v-subheader>Choose your action:</v-subheader>
@@ -154,7 +154,8 @@ export default {
       personrole: {},
       selected: [],
       checkedGroups: [],
-      name: '',
+      fName: '',
+      lName: '',
       roleCounter: 0,
       user: {},
       googleUserData: {},
@@ -272,14 +273,20 @@ export default {
       // console.log(this.checkedGroups)
     },
     async savePhoneNum() {
+      // use this to also update name if it's the first time a student is logging in
       await this.getPerson()
       .then(() => {
         this.person.phoneNum = this.phoneNum;
-        // save phone number locally and to database
+        this.person.fName = this.fName;
+        this.person.lName = this.lName;
+        // save phone number and name locally and to database
         this.user.phoneNum = this.phoneNum;
+        this.user.fName = this.fName;
+        this.user.lName = this.lName;
         Utils.setStore("user", this.user);
         PersonServices.updatePerson(this.person.id, this.person);
       })
+      this.openDialogs();
     },
     async addGroupRoles(id) {
       await RoleServices.getAllForGroup(id)
@@ -349,13 +356,16 @@ export default {
     openDialogs() {
       // if this person doesn't have any roles, do this
       // console.log(this.roleCounter)
-      if(this.user.access.length === 0) {
-        if(this.user.phoneNum === '')
-          this.dialog = true
-        else
-          this.dialog2 = true;      
+      console.log(this.user);
+      if(this.user.phoneNum === '' || this.user.phoneNum === undefined || this.user.phoneNum === null) {
+        this.dialog = true
       }
-      this.goToPage();
+      else if (this.user.access.length === 0) {
+        this.dialog2 = true;      
+      }
+      else {
+        this.goToPage();
+      }
     },
     async goToPage() {
       await this.getPersonRoles()
