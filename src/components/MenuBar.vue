@@ -32,7 +32,8 @@
                     {{ item.text }}
                 </v-btn>
             </v-toolbar-items>
-            <v-menu v-if="this.user != null && selectedGroup != ''" offset-y>
+            <v-menu v-if="this.user != null && selectedGroup != ''" offset-y
+            >
                 <template v-slot:activator="{ on, attrs }">
                     <v-btn
                     color="accent"
@@ -45,13 +46,35 @@
                     </v-btn>
                 </template>
                 <v-list>
-                    <v-list-item
+                    <!--<v-list-item
                         v-for="group in groups"
                         :key="group"
                         @click="(selectedGroup = group); resetMenu()"
                     >
                         <v-list-item-title>{{ group }}</v-list-item-title>
-                    </v-list-item>
+                    </v-list-item> -->
+                        <v-list-group
+                            v-for="(group,i) in user.access"
+                            :key="i"
+                            no-action
+                            sub-group
+                                            @click.stop.prevent
+
+                        >
+                            <template v-slot:activator>
+                                <v-list-item-title v-text="group.name"></v-list-item-title>
+                            </template>
+
+                            <v-list-item
+                            v-for="(role,j) in group.roles"
+                            :key="j"
+                            @click="selectedRoles = role; selectedGroup = group.name; resetMenu()"
+                            >
+                            <v-list-item-content>
+                                <v-list-item-title v-text="role"></v-list-item-title>
+                            </v-list-item-content>
+                            </v-list-item>
+                        </v-list-group>
                 </v-list>
             </v-menu>
             <v-menu
@@ -322,13 +345,14 @@ export default {
     }),
     async created() {
         await this.resetMenu();
+        await this.getRoleByGroup();
     },
     async mounted() {
         await this.resetMenu();
     },
     methods: {
         menuAction(route) {
-            console.log(this.currentPersonRoleID);
+            //console.log(this.currentPersonRoleID);
             this.$router.push({ name: route, params: { id: this.currentPersonRoleID }  });
         },
         async setGroupsAndRoles() {
@@ -348,14 +372,19 @@ export default {
                     if (group.name.toString() === this.selectedGroup.toString()) {
                         // save selected group
                         this.user.selectedGroup = group.name;
-                        Utils.setStore("user", this.user);
                         //console.log(this.user)
-                        this.selectedRoles = '';
-                        for (let j = 0; j < group.roles.length; j++) {
+                        //this.selectedRoles = '';
+                        /*for (let j = 0; j < group.roles.length; j++) {
                             this.selectedRoles += group.roles[j];
                             //console.log(this.user.access)
-                        }
+                        }*/
+                       
+                        if (this.selectedRoles == '') {
+                            this.selectedRoles = this.user.access[0].roles[0]}
+                        this.user.selectedRoles = this.selectedRoles
+                        Utils.setStore("user", this.user);
                         await this.getPersonRoles();
+                        
                     }
                 }
             }
@@ -424,10 +453,10 @@ export default {
             await GroupServices.getIncompleteGroupsForPerson(this.user.userID)
             .then((response) => {
                 this.incompleteGroups = [];
-                console.log(response)
+                //console.log(response)
                 for (let i = 0; i < response.data.length; i++) {
                     let group = response.data[i];
-                    console.log(group);
+                    //console.log(group);
                     this.incompleteGroups.push(group);
                 }
             })
@@ -442,7 +471,7 @@ export default {
                 //console.log(response)
                 for (let i = 0; i < response.data.length && this.hasTopics; i++) {
                     let group = response.data[i];
-                    console.log(group.topic)
+                    //console.log(group.topic)
                     if (group.topic.length === 0) {
                         this.hasTopics = false;
                     }
