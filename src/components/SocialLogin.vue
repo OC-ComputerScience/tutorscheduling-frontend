@@ -117,6 +117,7 @@
             <v-btn
               color="accent"
               text
+              :disabled="!allowGroupContinue"
               @click="savePersonRoles()"
             >
               Continue
@@ -166,6 +167,10 @@ export default {
   computed: {
     validateRoleCheckbox() {
       return [this.student || this.tutor];
+    },
+    allowGroupContinue() {
+      // only let the continue but be enabled if a group is selected
+      return this.selected.length > 0
     }
   },
   methods: {
