@@ -345,7 +345,7 @@ export default {
     }),
     async created() {
         await this.resetMenu();
-        await this.getRoleByGroup();
+
     },
     async mounted() {
         await this.resetMenu();
