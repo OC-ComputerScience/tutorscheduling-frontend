@@ -398,7 +398,7 @@ import Utils from '@/config/utils.js'
         // see if selected dates includes today -- if not, allow all times
         const test = this.dates.filter(date => date === this.nowDate);
         if (test.length > 0) {
-          this.nowTime =  temp.getHours() + ":" + temp.getMinutes();
+          this.nowTime =  temp.toString().slice(16,21);
         }
         else {
           this.nowTime = "00:00"
