@@ -188,6 +188,7 @@
 import Utils from '@/config/utils.js';
 import AuthServices from '@/services/authServices.js'
 import GroupServices from '@/services/groupServices.js'
+import PersonRoleServices from '@/services/personRoleServices.js'
 
 export default {
     name: 'App',
@@ -376,6 +377,7 @@ export default {
                                         this.selectedGroup = this.groups[0];
                                     else if (this.selectedGroup === '')
                                         this.selectedGroup = this.user.selectedGroup;
+
                                     if (this.user != null) {
                                         this.activeMenus = this.menus;
                                         this.activeMenus = this.menus.filter(menu =>
@@ -383,6 +385,7 @@ export default {
                                         );
                                         console.log(this.selectedRoles);
                                         console.log(this.activeMenus);
+                                        this.limitTutorMenu();
                                     } 
                                     else {
                                         this.activeMenus = this.menus.filter(menu =>
@@ -488,6 +491,28 @@ export default {
             .catch(error => {
                 console.log('error', error);
             })
+        },
+        async limitTutorMenu() {
+            if(this.selectedRoles.includes('tutor') || this.selectedRoles.includes('Tutor')) {
+                let approved = false;
+                await PersonRoleServices.getPersonRole(this.currentPersonRoleID)
+                .then((response) => {
+                    if(response.data.status.includes("approved") || response.data.status.includes("Approved"))
+                    {
+                        approved = true;
+                    }
+                })
+                .catch((error) => {
+                    console.log("There was an error:", error.response);
+                });
+
+                if(!approved) {
+                    // makes only tutor home page show up on menu bar
+                    this.activeMenus = this.activeMenus.filter(menu =>
+                        menu.name.includes("tutorHome"));
+                    console.log(this.activeMenus)
+                }
+            }
         }
     },
 };
