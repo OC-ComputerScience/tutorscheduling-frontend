@@ -55,13 +55,13 @@
                     <v-list-item
                         v-for="(group) in groups"
                         :key="group.id"
-                        :disabled="haveRoleAlready(group.id)"
                     >
                         <v-checkbox
                         v-model="selected"
                         :value="group"
                         :label="group.name"
-                        
+                        :disabled="haveRoleAlready(group.id)"
+
                         ></v-checkbox>
                     </v-list-item>
                     </v-list>
@@ -72,6 +72,7 @@
                       color="accent"
                       text
                       @click="savePersonRoles()"
+                      :disabled="selected == ''"
                     >
                     Continue
                     </v-btn>
@@ -125,7 +126,10 @@ export default {
         for (let i = 0;i < groups.length;i++){
           if (groups[i] === response.data.name) {
             this.user.access[i].roles.forEach(role => {
-              if(role.includes('student') && this.student == true) {
+              if(role.includes('Student') && this.student == true) {
+                return true;
+              }
+              else if (role.includes('Tutor') && this.tutor == true) {
                 return true;
               }
             });
