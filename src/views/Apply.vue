@@ -55,6 +55,7 @@
                     <v-list-item
                         v-for="(group) in groups"
                         :key="group.id"
+                        :disabled="haveRoleAlready(group.id)"
                     >
                         <v-checkbox
                         v-model="selected"
@@ -101,7 +102,7 @@ export default {
       checkedGroups: [],
       name: '',
       roleCounter: 0,
-      user: {}
+      user: {},
     }
   },
   created () {
@@ -115,6 +116,24 @@ export default {
     }
   },
   methods: {
+    haveRoleAlready(groupId){
+      GroupServices.getGroup(groupId).then((response) => {
+        let groups = [];
+        this.user.access.forEach(element => {
+          groups.push(element.name);
+        });
+        for (let i = 0;i < groups.length;i++){
+          if (groups[i] === response.data.name) {
+            this.user.access[i].roles.forEach(role => {
+              if(role.includes('student') && this.student == true) {
+                return true;
+              }
+            });
+          }
+        }
+        return false;
+      })
+    },
     async getPersonRoles() {
         await RoleServices.getIncompleteRoleForPerson(this.user.userID)
         .then((response) => {
