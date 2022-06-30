@@ -209,7 +209,7 @@
 
 <script>
 import Utils from '@/config/utils.js';
-import AuthServices from '@/services/authServices.js'
+// import AuthServices from '@/services/authServices.js'
 import GroupServices from '@/services/groupServices.js'
 import PersonRoleServices from '@/services/personRoleServices.js'
 
@@ -510,16 +510,20 @@ export default {
         },
         logout() {
             console.log("in logout function")
-            AuthServices.logoutUser(this.user)
-            .then(response => {
-                console.log(response);
-                Utils.removeItem('user')
-                this.$router.go();
-                this.$router.push({ name: "login"})
-            })
-            .catch(error => {
-                console.log('error', error);
-            })
+            var auth2 = global.gapi.auth2.getAuthInstance();
+            auth2.signOut().then(function () {
+                console.log("User signed out");
+            });
+            // AuthServices.logoutUser(this.user)
+            // .then(response => {
+            //     console.log(response);
+            //     Utils.removeItem('user')
+            //     this.$router.go();
+            //     this.$router.push({ name: "login"})
+            // })
+            // .catch(error => {
+            //     console.log('error', error);
+            // })
         },
         async limitTutorMenu() {
             if(this.selectedRoles.includes('tutor') || this.selectedRoles.includes('Tutor')) {

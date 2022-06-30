@@ -1,8 +1,9 @@
 <template>
     <div class="signup-buttons">
+      <div id="parent_id"></div>
       <v-row>
-        <v-col>
-          <v-card 
+        <!-- <v-col> -->
+          <!-- <v-card 
             @click.prevent="loginWithGoogle"
             height="100"
             elevation="10"
@@ -12,8 +13,8 @@
             <v-card-title class="justify-center white--text">
               Register
             </v-card-title>
-          </v-card>
-        </v-col>
+          </v-card> -->
+        <!-- </v-col>
         <v-col>
           <v-card 
             @click.prevent="loginWithGoogle"
@@ -27,7 +28,7 @@
               Login
             </v-card-title>
           </v-card>
-        </v-col>
+        </v-col> -->
       </v-row>
       
       <v-dialog
@@ -141,6 +142,7 @@ export default {
   name: 'login_signup_social',
   data () {
     return {
+      value: false,
       dialog: false,
       dialog2: false,
       student: true,
@@ -166,6 +168,9 @@ export default {
   created () {
     this.getGroups();
   },
+  mounted() {
+    this.loginWithGoogle();
+  },
   computed: {
     validateRoleCheckbox() {
       return [this.student || this.tutor];
@@ -190,7 +195,13 @@ export default {
       });
       global.google.accounts.id.renderButton(
         document.getElementById("parent_id"),
-        { theme: "outline", size: "large" }
+        { 
+          type: "standard",
+          theme: "outline", 
+          size: "large",
+          text: "signup_with",
+          width: 400
+        }
       )
       global.google.accounts.id.prompt((notification) => {
         console.log(notification)
