@@ -8,7 +8,7 @@
             <v-row justify="center">
                 <v-col justify="center">
                     <v-card 
-                        @click="dialog = true"
+                        @click="dialog = true; haveRoleAlready()"
                         height="100"
                         elevation="10"
                         color="primary"
@@ -31,12 +31,12 @@
                 <v-container>
                     <v-subheader>Choose your action:</v-subheader>
                     <v-list>
-                    <v-list-item>
+                    <v-list-item><!-- put @change -> boolean true or false on group checkboxes-->
                         <v-checkbox
-                        v-model="student"
+                        v-model="student" 
                         :label="`Sign up for tutoring`"
                         :rules="validateRoleCheckbox"
-                        @change="tutor=!student"
+                        @change="tutor=!student; haveRoleAlready();"
                         ></v-checkbox>
                     </v-list-item>
                     <v-list-item>
@@ -44,7 +44,7 @@
                         v-model="tutor"
                         :label="`Apply to be a tutor`"
                         :rules="validateRoleCheckbox"
-                        @change="student=!tutor"
+                        @change="student=!tutor; haveRoleAlready();"
                         ></v-checkbox>
                     </v-list-item>
                     </v-list>
@@ -56,13 +56,20 @@
                         v-for="(group) in groups"
                         :key="group.id"
                     >
+                    
                         <v-checkbox
                         v-model="selected"
                         :value="group"
                         :label="group.name"
-                        :disabled="haveRoleAlready(group.id)"
-
+                        :disabled="group.haveRole"
                         ></v-checkbox>
+                        <v-text-field 
+                          v-if="group.haveRole"
+                          v-model="group.sentenceHaveRole"
+                          disabled
+                          flat solo class="ma-0 pa-0 pb-1" hide-details
+                        >
+                        </v-text-field>
                     </v-list-item>
                     </v-list>
                 </v-container>
@@ -104,6 +111,7 @@ export default {
       name: '',
       roleCounter: 0,
       user: {},
+      sentenceHaveRole: "",
     }
   },
   created () {
@@ -117,26 +125,43 @@ export default {
     }
   },
   methods: {
-    haveRoleAlready(groupId){
-      GroupServices.getGroup(groupId).then((response) => {
+    async haveRoleAlready(){
         let groups = [];
         this.user.access.forEach(element => {
           groups.push(element.name);
         });
-        for (let i = 0;i < groups.length;i++){
-          if (groups[i] === response.data.name) {
-            this.user.access[i].roles.forEach(role => {
-              if(role.includes('Student') && this.student == true) {
-                return true;
+        for (let k = 0;k < this.groups.length;k++){
+          for (let i = 0;i < groups.length;i++){
+            if (groups[i].includes(this.groups[k].name)) {
+              let role = []
+              this.user.access[i].roles.forEach(element => {
+                role.push(element);
+              });
+              for (let j = 0; j < role.length;j++){
+                if(role[j].includes('Student') && this.student == true) {
+                  this.groups[k].haveRole = true;
+                  this.groups[k].sentenceHaveRole = "    You already have this role"
+                  break;
+                }
+                else if (role[j].includes('Tutor') && this.tutor == true) {
+                  this.groups[k].haveRole = true;
+                  this.groups[k].sentenceHaveRole = "    You already have this role"
+                  break;
+                }
+                else {
+                  this.groups[k].haveRole = false;
+                  this.groups[k].sentenceHaveRole = ''
+                }
               }
-              else if (role.includes('Tutor') && this.tutor == true) {
-                return true;
-              }
-            });
+              break
+            }
+            else {
+              this.groups[k].haveRole = false;
+              this.groups[k].sentenceHaveRole = ''
+            }
           }
         }
-        return false;
-      })
+        this.selected = []
     },
     async getPersonRoles() {
         await RoleServices.getIncompleteRoleForPerson(this.user.userID)
