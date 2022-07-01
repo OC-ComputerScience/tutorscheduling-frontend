@@ -1,34 +1,7 @@
 <template>
     <div class="signup-buttons">
-      <div id="parent_id"></div>
-      <v-row>
-        <!-- <v-col> -->
-          <!-- <v-card 
-            @click.prevent="loginWithGoogle"
-            height="100"
-            elevation="10"
-            color="primary"
-            class="d-flex justify-center"
-          >
-            <v-card-title class="justify-center white--text">
-              Register
-            </v-card-title>
-          </v-card> -->
-        <!-- </v-col>
-        <v-col>
-          <v-card 
-            @click.prevent="loginWithGoogle"
-            height="100"
-            elevation="10"
-            color="primary"
-            class="d-flex justify-center"
-            id="parent_id"
-          >
-            <v-card-title class="justify-center white--text">
-              Login
-            </v-card-title>
-          </v-card>
-        </v-col> -->
+      <v-row justify="center">
+        <div display="flex" id="parent_id"></div>
       </v-row>
       
       <v-dialog
@@ -38,7 +11,7 @@
       >
         <v-card tile>
           <v-card-title>
-            <span class="text-h5">Hello, {{this.fName}}! Finish setting up your account below:</span>
+            <span class="text-h5">Hello, {{this.user.fName}}! Finish setting up your account below:</span>
           </v-card-title>
           <v-card-text>
             <v-container>
@@ -75,7 +48,7 @@
       >
         <v-card tile>
           <v-card-title>
-            <span class="text-h5">Hello, {{this.fName}}! Select below:</span>
+            <span class="text-h5">Hello, {{this.user.fName}}! Select below:</span>
           </v-card-title>
           <v-container>
             <v-subheader>Choose your action:</v-subheader>
@@ -216,7 +189,8 @@ export default {
       .then(response => {
         this.user = response.data;
         Utils.setStore("user", this.user);
-        this.name = this.user.fName;
+        this.fName = this.user.fName;
+        this.lName = this.user.lName;
         console.log(this.user);
         if(this.user.userID !== undefined)
         {

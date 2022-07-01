@@ -209,7 +209,7 @@
 
 <script>
 import Utils from '@/config/utils.js';
-// import AuthServices from '@/services/authServices.js'
+import AuthServices from '@/services/authServices.js'
 import GroupServices from '@/services/groupServices.js'
 import PersonRoleServices from '@/services/personRoleServices.js'
 
@@ -344,8 +344,16 @@ export default {
         ],
     }),
     async created() {
-        await this.resetMenu();
-
+        // ensures that their name gets set properly from store
+        this.user = Utils.getStore('user');
+        console.log(this.user)
+        if (this.user != null) {
+            this.title = 'OC Tutoring';
+            //console.log(this.initials)
+            this.initials = this.user.fName[0] + this.user.lName[0];
+            //console.log(this.initials)
+            this.name = this.user.fName + ' ' + this.user.lName;
+        }
     },
     async mounted() {
         await this.resetMenu();
@@ -510,20 +518,16 @@ export default {
         },
         logout() {
             console.log("in logout function")
-            var auth2 = global.gapi.auth2.getAuthInstance();
-            auth2.signOut().then(function () {
-                console.log("User signed out");
-            });
-            // AuthServices.logoutUser(this.user)
-            // .then(response => {
-            //     console.log(response);
-            //     Utils.removeItem('user')
-            //     this.$router.go();
-            //     this.$router.push({ name: "login"})
-            // })
-            // .catch(error => {
-            //     console.log('error', error);
-            // })
+            AuthServices.logoutUser(this.user)
+            .then(response => {
+                console.log(response);
+                Utils.removeItem('user')
+                this.$router.go();
+                this.$router.push({ name: "login"})
+            })
+            .catch(error => {
+                console.log('error', error);
+            })
         },
         async limitTutorMenu() {
             if(this.selectedRoles.includes('tutor') || this.selectedRoles.includes('Tutor')) {
