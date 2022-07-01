@@ -1332,6 +1332,11 @@ import Utils from '@/config/utils.js'
                 && !(this.appointments[i].status.includes('tutorCancel') || this.appointments[i].status.includes('studentCancel'))){
               filtered = true
             }
+            if (this.appointments[i].type.includes('Group') 
+                && !(this.appointments[i].status.includes('tutorCancel') || this.appointments[i].status.includes('studentCancel')) 
+                && this.selectedTopic != -1 && !checkedtopic) {
+                  filtered = false
+                }
           }
         }
         if(filtered) {
