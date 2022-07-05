@@ -391,9 +391,14 @@ import Utils from '@/config/utils.js'
         }
         return times
       },
+      getLocalDateString() {
+        let date = new Date();
+        date.setHours(date.getHours()-(date.getTimezoneOffset()/60));
+        return date.toISOString().slice(0,10)
+      },
       updateTimes() {
         // setting the minimum date and time for the picker components
-        this.nowDate = new Date().toISOString().slice(0,10);
+        this.nowDate = this.getLocalDateString();
         let temp = this.roundToNearest30(new Date());
         // see if selected dates includes today -- if not, allow all times
         const test = this.dates.filter(date => date === this.nowDate);
@@ -403,6 +408,7 @@ import Utils from '@/config/utils.js'
         else {
           this.nowTime = "00:00"
         }
+        console.log("nowTime="+this.nowTime)
      //   this.newStart = this.nowTime; - caused problem with saving startDate in availabilityß
         this.startTimes = this.generateTimes(this.nowTime, this.newEnd)
         // adding this to make sure thxat you can't start an appointment at the end time
@@ -414,8 +420,9 @@ import Utils from '@/config/utils.js'
       roundToNearest30(date) {
         const minutes = 30;
         const ms = 1000 * 60 * minutes;
-
-        return new Date(Math.ceil(date.getTime() / ms) * ms);
+        let newHours = Math.ceil(date.getTime() / ms) * ms
+        date.setTime(newHours);
+        return date
       },
       async addAvailability() {
       for (var i = 0; i < this.dates.length; i++) {
@@ -427,7 +434,7 @@ import Utils from '@/config/utils.js'
         await AvailabilityServices.addAvailability(this.availability)
         .then(async ()=> {
           let date = new Date(element)
-          date.setHours(date.getHours() + 5)
+          date.setHours(date.getHours() + (date.getTimezoneOffset()/60))
           this.appointment.date = date
           this.appointment.startTime = this.newStart
           this.appointment.endTime = this.newEnd
