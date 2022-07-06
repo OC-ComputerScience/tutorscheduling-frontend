@@ -1051,12 +1051,10 @@ import Utils from '@/config/utils.js'
     },
     async getTopicsForTutor(tutor) {
       this.currentTopics = []
-      await PersonTopicServices.getAllForPerson(tutor.id).then(response => {
+      await TopicServices.getTopicByGroupForPerson(this.group.id, tutor.id).then(response => {
         let personTopics = response.data
         personTopics.forEach(async(topic) => {
-          await TopicServices.getTopic(topic.topicId).then(result => {
-            this.currentTopics.push(result.data)
-          })
+            this.currentTopics.push(topic)
         })
       })
     },
