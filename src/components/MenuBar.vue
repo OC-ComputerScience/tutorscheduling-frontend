@@ -378,6 +378,8 @@ export default {
                 for (let i = 0; i < this.user.access.length; i++) {
                     if (this.selectedGroup === '' || this.selectedGroup === undefined || this.selectedGroup === null) {
                             this.selectedGroup = this.user.access[0].name
+                            this.user.selectedGroup = this.selectedGroup
+                            Utils.setStore("user", this.user);Utils.setStore("user", this.user);
                     }
                     if (this.selectedRoles === '' || this.selectedRoles === undefined || this.selectedRoles === null) {
                         this.selectedRoles = this.user.access[0].roles[0]
@@ -402,7 +404,11 @@ export default {
                                 .then(() => {
                                     
                                     if (this.selectedGroup === '' && this.user.selectedGroup === undefined)
+                                    {
                                         this.selectedGroup = this.groups[0];
+                                        this.user.selectedGroup = this.selectedGroup
+                                        Utils.setStore("user", this.user);
+                                    }
                                     else if (this.selectedGroup === '')
                                         this.selectedGroup = this.user.selectedGroup;
 
