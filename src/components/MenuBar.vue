@@ -376,24 +376,15 @@ export default {
                     this.groups.push(element.name);
                 });
                 for (let i = 0; i < this.user.access.length; i++) {
-                    let group = this.user.access[i];
-                    if (group.name.toString() === this.selectedGroup.toString()) {
-                        // save selected group
-                        this.user.selectedGroup = group.name;
-                        //console.log(this.user)
-                        //this.selectedRoles = '';
-                        /*for (let j = 0; j < group.roles.length; j++) {
-                            this.selectedRoles += group.roles[j];
-                            //console.log(this.user.access)
-                        }*/
-                       
-                        if (this.selectedRoles == '') {
-                            this.selectedRoles = this.user.access[0].roles[0]}
-                        this.user.selectedRoles = this.selectedRoles
-                        Utils.setStore("user", this.user);
-                        await this.getPersonRoles();
-                        
+                    if (this.selectedGroup === '' || this.selectedGroup === undefined || this.selectedGroup === null) {
+                            this.selectedGroup = this.user.access[0].name
                     }
+                    if (this.selectedRoles === '' || this.selectedRoles === undefined || this.selectedRoles === null) {
+                        this.selectedRoles = this.user.access[0].roles[0]
+                    }
+                    this.user.selectedRoles = this.selectedRoles
+                    Utils.setStore("user", this.user);
+                    await this.getPersonRoles();
                 }
             }
             else this.title = '';
