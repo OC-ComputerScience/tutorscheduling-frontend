@@ -553,7 +553,7 @@ import Utils from '@/config/utils.js'
       });
     },
     getTopicsForGroup() {
-      TopicServices.getTopicForPerson(this.user.userID)
+      TopicServices.getTopicByGroupForPerson(this.group.id, this.user.userID)
       .then(response => {
         this.topics = response.data
         LocationServices.getAllForGroup(this.group.id).then(response => {

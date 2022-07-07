@@ -1051,12 +1051,10 @@ import Utils from '@/config/utils.js'
     },
     async getTopicsForTutor(tutor) {
       this.currentTopics = []
-      await PersonTopicServices.getAllForPerson(tutor.id).then(response => {
+      await TopicServices.getTopicByGroupForPerson(this.group.id, tutor.id).then(response => {
         let personTopics = response.data
         personTopics.forEach(async(topic) => {
-          await TopicServices.getTopic(topic.topicId).then(result => {
-            this.currentTopics.push(result.data)
-          })
+            this.currentTopics.push(topic)
         })
       })
     },
@@ -1226,7 +1224,7 @@ import Utils from '@/config/utils.js'
       else
         return check;
     },
-    checkTutor(appointId) {
+    async checkTutor(appointId) {
       let found = false
      
       this.personAppointments.forEach((p) => {
@@ -1316,8 +1314,9 @@ import Utils from '@/config/utils.js'
           filtered = false;
         }
         //filter by tutor
+        let checkedTutor = await this.checkTutor(this.appointments[i].id)
         if(this.selectedTutor != -1 && 
-          !this.checkTutor(this.appointments[i].id)) 
+          !checkedTutor) 
         {
           filtered = false;
         }
@@ -1336,7 +1335,12 @@ import Utils from '@/config/utils.js'
                 && !(this.appointments[i].status.includes('tutorCancel') || this.appointments[i].status.includes('studentCancel')) 
                 && this.selectedTopic != -1 && !checkedtopic) {
                   filtered = false
-                }
+            }
+            if (this.appointments[i].type.includes('Group') 
+                && !(this.appointments[i].status.includes('tutorCancel') || this.appointments[i].status.includes('studentCancel')) 
+                && this.selectedTutor != -1 && !checkedTutor) {
+                  filtered = false
+            }
           }
         }
         if(filtered) {
