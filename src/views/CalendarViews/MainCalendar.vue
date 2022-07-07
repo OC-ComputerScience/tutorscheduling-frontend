@@ -198,7 +198,8 @@
             label="Location"
             required
             dense
-            :disabled="!checkStatus('available')"
+            :disabled="checkStatus('pending') || (checkRole('Tutor') && !checkStatus('booked')) || ((checkRole('Student') || checkRole('Admin')) && (checkStatus('booked')) || selectedAppointment.status.includes('Cancel'))"
+            @change="saveChanges = true"
           >
           </v-select>
 
@@ -210,7 +211,7 @@
             label="Topic"
             required
             dense
-            :disabled="!checkStatus('available')"
+            :disabled="!checkStatus('available') || checkRole('Tutor')"
           >
           </v-select>
           </v-container>
@@ -226,7 +227,8 @@
             label="Location"
             required
             dense
-            readonly
+            :readonly="!isTutorEvent"
+            @change="saveChanges = true"
           >
           </v-select>
 
@@ -238,7 +240,8 @@
             label="Topic"
             required
             dense
-            readonly
+            :readonly="!isTutorEvent || (students.length > 0 && isTutorEvent)"
+            @change="saveChanges = true"
           >
           </v-select>
 
@@ -256,6 +259,7 @@
               label="Booked Start"
               required
               @change="updateTimes()"
+              :disabled="checkRole('Tutor')"
               dense
             >
             </v-select>
@@ -283,6 +287,7 @@
             label="Booked End"
             required
             @change="updateTimes()"
+            :disabled="checkRole('Tutor')"
             dense
           >
           </v-select>
@@ -311,7 +316,8 @@
               required
               auto-grow
               rows="1"
-              :disabled="!checkStatus('available')"
+              :disabled="(!checkRole('Student') && !checkStatus('available')) || (checkRole('Student') && checkStatus('pending')) || checkRole('Tutor')"
+              @change="saveChanges = true"
             ></v-textarea>
           </span>
           <span v-else>
@@ -324,9 +330,11 @@
               required
               auto-grow
               rows="1"
-              readonly
+              :readonly="!isTutorEvent"
+              @change="saveChanges = true"
             ></v-textarea>
           </span>
+          <!-- admin signing a student up -->
           <span v-if="adminAddStudent">
             <v-text-field 
               v-model="studentEmail"
@@ -378,18 +386,18 @@
             @click="bookAppointment(); selectedOpen = false;"
             :disabled="!checkStatus('available') || isGroupBook || ((studentfName == '' || studentlName == '') && !emailFound && checkRole('Admin')) ||
                         (checkRole('Admin') && selectedAppointment.type.includes('Group') && !adminAddStudent) || selectedAppointment.topicId == null 
-                        || selectedAppointment.locationId == null"
+                        || selectedAppointment.locationId == null || isTutorEvent"
           >
           Book
           </v-btn>
-        <v-btn v-if="checkRole('Tutor')"
+        <v-btn v-if="checkRole('Tutor') && !appointmentType.includes('Group')"
           color="#12f000"
           @click="confirmAppointment(true)"
           :disabled="!checkStatus('pending')"
         >
         Confirm
         </v-btn>
-        <v-btn v-if="checkRole('Tutor')"
+        <v-btn v-if="checkRole('Tutor') && !appointmentType.includes('Group')"
           color="error"
           @click="confirmAppointment(false)"
           :disabled="!checkStatus('pending')"
@@ -401,6 +409,12 @@
           @click="selectedOpen = false"
         >
         Close
+        </v-btn>
+        <v-btn v-if="(isTutorEvent || isPrivateBook) && saveChanges"
+          color="accent"
+          @click="editAppointment(); selectedOpen = false;"
+        >
+        Save Changes
         </v-btn>
         
         <v-btn v-if="(checkStatus('booked') && !checkRole('Admin')) || (isGroupBook && !adminAddStudent) || (isTutorEvent && checkStatus('available')) || 
@@ -568,6 +582,7 @@ import Utils from '@/config/utils.js'
     selectedOpen: false,
     events: [],
     groupColor: false,
+    studentGroupColor: false, 
     //current user data
     role: {},
     user: {},
@@ -589,6 +604,9 @@ import Utils from '@/config/utils.js'
     //student and tutor names
     studentName: '',
     tutorName: '',
+    //editing appointment
+    saveChanges: false,
+    isPrivateBook: false,
   }),
   created() {
     this.user = Utils.getStore('user')
@@ -604,10 +622,10 @@ import Utils from '@/config/utils.js'
       .then(async (response) => {
         this.appointments = response.data
         await PersonAppointmentServices.getAllPersonAppointments()
-        .then(response => {
+        .then(async (response) => {
           this.personAppointments = response.data;
           
-          this.loadAppointments();
+          await this.loadAppointments();
         })
       })
       .catch(error => {
@@ -651,9 +669,9 @@ import Utils from '@/config/utils.js'
         console.log("There was an error:", error.response.data)
       });
     },
-    getRole() {
-     PersonRoleServices.getPersonRole(this.id).then((response) => {
-       RoleServices.getRole(response.data.roleId).then((result) => {
+    async getRole() {
+     await PersonRoleServices.getPersonRole(this.id).then(async(response) => {
+       await RoleServices.getRole(response.data.roleId).then((result) => {
          this.role = result.data
        })
      })
@@ -694,7 +712,7 @@ import Utils from '@/config/utils.js'
         });
       }
       else {
-        PersonAppointmentServices.getPersonAppointmentForPerson(this.user.userID)
+       await PersonAppointmentServices.getPersonAppointmentForPerson(this.user.userID)
         .then(response => {
           let temp = response.data
           for (let i = 0; i < temp.length; i++){
@@ -710,9 +728,23 @@ import Utils from '@/config/utils.js'
         });
       }
     },
+    async isStudentofAppointment() {
+      await PersonAppointmentServices.getPersonAppointmentForPerson(this.user.userID)
+        .then(response => {
+          let temp = response.data
+          for (let i = 0; i < temp.length; i++){
+            if (temp[i].appointmentId == this.selectedAppointment.id && this.selectedAppointment.type.includes('Private')
+             && this.checkRole('Student')){
+              this.isPrivateBook = true
+              return 
+            }
+          }
+          this.isPrivateBook = false
+      })
+    },
     //Update on a session being booked
-    bookAppointment() {
-      AppointmentServices.getAppointment(this.selectedAppointment.id).then(async response => {
+    async bookAppointment() {
+      await AppointmentServices.getAppointment(this.selectedAppointment.id).then(async response => {
         if(response.data.status == "available" && response.data.type.includes('Private') && !this.checkRole('Admin')) {
           await this.splitAppointment().then(() => {
             this.getAppointments()
@@ -744,11 +776,11 @@ import Utils from '@/config/utils.js'
       })
     },
     //Update on tutor confirming booking
-    confirmAppointment(confirm) {
+    async confirmAppointment(confirm) {
       if(confirm) {
         if(this.appointmentType.includes("Private")){
           this.selectedAppointment.status = "booked"
-          AppointmentServices.updateAppointmentStatus(this.selectedAppointment.id, this.selectedAppointment)
+          await AppointmentServices.updateAppointmentStatus(this.selectedAppointment.id, this.selectedAppointment)
           .then(async () =>{
             await this.tutorConfirmMessage(this.students[0], this.user.fName, this.user.lName)
             this.getAppointments()
@@ -757,7 +789,7 @@ import Utils from '@/config/utils.js'
         }
       } else {
         this.selectedAppointment.status = "cancelled"
-        AppointmentServices.updateAppointment(this.selectedAppointment.id, this.selectedAppointment).then(() =>{
+        await AppointmentServices.updateAppointment(this.selectedAppointment.id, this.selectedAppointment).then(() =>{
           this.getAppointments()
           this.selectedEvent.color = 'red'
         })
@@ -767,12 +799,11 @@ import Utils from '@/config/utils.js'
     async bookGroupSession() {
       //Load person info
       if (this.adminAddStudent && this.studentNameInput) {
-        await this.adminAdd().then(() => {
+        await this.adminAdd().then(async () => {
           this.person.isTutor = false
           this.person.appointmentId = this.selectedAppointment.id
           this.person.personId = this.walkInStudent.id
-
-          PersonAppointmentServices.addPersonAppointment(this.person).then(() => {
+          await PersonAppointmentServices.addPersonAppointment(this.person).then(() => {
             this.getAppointments()
           })
         })
@@ -820,14 +851,14 @@ import Utils from '@/config/utils.js'
           //locationId: this.selectedAppointment.locationId,
           //topicId: this.selectedAppointment.topicId,
         }
-        AppointmentServices.addAppointment(temp).then((response)=> {
-          this.tutors.forEach((t) => {
+        await AppointmentServices.addAppointment(temp).then(async (response)=> {
+          this.tutors.forEach(async(t) => {
             let pap = {
               isTutor: true,
               appointmentId: response.data.id,
               personId: t.id
             }
-            PersonAppointmentServices.addPersonAppointment(pap)
+            await PersonAppointmentServices.addPersonAppointment(pap)
           })
         })
       }
@@ -844,14 +875,14 @@ import Utils from '@/config/utils.js'
           //locationId: this.selectedAppointment.locationId,
           //topicId: this.selectedAppointment.topicId,
         }
-        AppointmentServices.addAppointment(temp).then((response)=> {
-          this.tutors.forEach((t) => {
+        await AppointmentServices.addAppointment(temp).then((response)=> {
+          this.tutors.forEach(async(t) => {
             let pap = {
               isTutor: true,
               appointmentId: response.data.id,
               personId: t.id
             }
-            PersonAppointmentServices.addPersonAppointment(pap)
+            await PersonAppointmentServices.addPersonAppointment(pap)
           })
         })
       }
@@ -887,14 +918,14 @@ import Utils from '@/config/utils.js'
           //locationId: this.selectedAppointment.locationId,
           //topicId: this.selectedAppointment.topicId,
         }
-        AppointmentServices.addAppointment(temp).then((response)=> {
-          this.tutors.forEach((t) => {
+        await AppointmentServices.addAppointment(temp).then((response)=> {
+          this.tutors.forEach(async(t) => {
             let pap = {
               isTutor: true,
               appointmentId: response.data.id,
               personId: t.id
             }
-            PersonAppointmentServices.addPersonAppointment(pap)
+            await PersonAppointmentServices.addPersonAppointment(pap)
           })
         })
       }
@@ -911,14 +942,14 @@ import Utils from '@/config/utils.js'
           //locationId: this.selectedAppointment.locationId,
           //topicId: this.selectedAppointment.topicId,
         }
-        AppointmentServices.addAppointment(temp).then((response)=> {
-          this.tutors.forEach((t) => {
+        await AppointmentServices.addAppointment(temp).then((response)=> {
+          this.tutors.forEach(async(t) => {
             let pap = {
               isTutor: true,
               appointmentId: response.data.id,
               personId: t.id
             }
-            PersonAppointmentServices.addPersonAppointment(pap)
+            await PersonAppointmentServices.addPersonAppointment(pap)
           })
         })
       }
@@ -1018,14 +1049,12 @@ import Utils from '@/config/utils.js'
           console.log("There was an error:", error.response);
         });
     },
-    getTopicsForTutor(tutor) {
+    async getTopicsForTutor(tutor) {
       this.currentTopics = []
-      PersonTopicServices.getAllForPerson(tutor.id).then(response => {
+      await TopicServices.getTopicByGroupForPerson(this.group.id, tutor.id).then(response => {
         let personTopics = response.data
-        personTopics.forEach(topic => {
-          TopicServices.getTopic(topic.topicId).then(result => {
-            this.currentTopics.push(result.data)
-          })
+        personTopics.forEach(async(topic) => {
+            this.currentTopics.push(topic)
         })
       })
     },
@@ -1073,8 +1102,15 @@ import Utils from '@/config/utils.js'
     },
     async tutorConfirmMessage(student, fName, lName){
       let temp = student
-      console.log(student)
       temp.message = "Your appointment with " +fName + " " + lName + " has been confirmed"
+      TwilioServices.sendMessage(temp);
+    },
+    tutorEditMessage(student, fName, lName, type) {
+      let temp = student
+      let start = this.calcTime(this.selectedAppointment.startTime)
+      let date = this.selectedAppointment.date.toString().substring(5,10) + "-" + this.selectedAppointment.date.toString().substring(0,4)
+      temp.message = "Your " + type + " appointment with " + fName + " " + lName + " on " + date + " at " + start + 
+        " has been edited. \nPlease check changes at http://tutorscheduling.oc.edu/"
       TwilioServices.sendMessage(temp);
     },
     //Animates Event card popping up
@@ -1082,7 +1118,7 @@ import Utils from '@/config/utils.js'
     
       const open = () => {
         this.selectedEvent = event
-        AppointmentServices.getAppointment(event.appointmentId).then((response) => {
+        AppointmentServices.getAppointment(event.appointmentId).then(async (response) => {
           this.selectedAppointment = response.data
           this.newStart = this.selectedAppointment.startTime
           this.newEnd = this.selectedAppointment.endTime
@@ -1091,6 +1127,7 @@ import Utils from '@/config/utils.js'
           this.checkGroupBoooking()
           this.updateTimes()
           this.updatePeople()
+          this.isStudentofAppointment()
           this.selectedElement = nativeEvent.target
          requestAnimationFrame(() => requestAnimationFrame(() => this.selectedOpen = true))
         });
@@ -1100,6 +1137,7 @@ import Utils from '@/config/utils.js'
         requestAnimationFrame(() => requestAnimationFrame(() => open()))
       } else {
         open()
+        this.saveChanges = false
         this.adminAddStudent = false
         this.studentEmail = ''
         this.emailStatus = ''
@@ -1129,6 +1167,23 @@ import Utils from '@/config/utils.js'
           })
         }
       })
+    },
+    async isStudentInGroupAppoint(appointId) {
+      this.studentGroupColor =  false;
+      await PersonAppointmentServices.getAllPersonAppointments().then(async(response) => {
+        let person = response.data
+        for (let i = 0; i < person.length;i++){
+          if(person[i].appointmentId == appointId) {
+            if(!person[i].isTutor) {
+              this.studentGroupColor =  true;
+              return 
+            }
+          }
+        }
+        
+      })
+     
+      return 
     },
     //Checks if the current session matches the given status, for hiding certain elements
     checkStatus(status) {
@@ -1169,7 +1224,7 @@ import Utils from '@/config/utils.js'
       else
         return check;
     },
-    checkTutor(appointId) {
+    async checkTutor(appointId) {
       let found = false
      
       this.personAppointments.forEach((p) => {
@@ -1241,6 +1296,7 @@ import Utils from '@/config/utils.js'
       let filtered
       for(let i = 0; i < this.appointments.length; i++) {
         await this.groupBookColor(this.appointments[i].id)
+        await this.isStudentInGroupAppoint(this.appointments[i].id)
         //filter events to only add appropriate events
         filtered = true
         //only add appointments from the current group
@@ -1258,8 +1314,9 @@ import Utils from '@/config/utils.js'
           filtered = false;
         }
         //filter by tutor
+        let checkedTutor = await this.checkTutor(this.appointments[i].id)
         if(this.selectedTutor != -1 && 
-          !this.checkTutor(this.appointments[i].id)) 
+          !checkedTutor) 
         {
           filtered = false;
         }
@@ -1273,6 +1330,16 @@ import Utils from '@/config/utils.js'
             if(this.appointments[i].type.includes('Group') 
                 && !(this.appointments[i].status.includes('tutorCancel') || this.appointments[i].status.includes('studentCancel'))){
               filtered = true
+            }
+            if (this.appointments[i].type.includes('Group') 
+                && !(this.appointments[i].status.includes('tutorCancel') || this.appointments[i].status.includes('studentCancel')) 
+                && this.selectedTopic != -1 && !checkedtopic) {
+                  filtered = false
+            }
+            if (this.appointments[i].type.includes('Group') 
+                && !(this.appointments[i].status.includes('tutorCancel') || this.appointments[i].status.includes('studentCancel')) 
+                && this.selectedTutor != -1 && !checkedTutor) {
+                  filtered = false
             }
           }
         }
@@ -1300,7 +1367,6 @@ import Utils from '@/config/utils.js'
             break
         }
         if (this.appointments[i].type.includes('Group') && this.groupColor && !(this.appointments[i].status.includes('tutorCancel') || this.appointments[i].status.includes('studentCancel'))){
-          console.log('here')
           color = 'blue'
         }
         else if (this.appointments[i].type.includes('Group') && !(this.appointments[i].status.includes('tutorCancel') || this.appointments[i].status.includes('studentCancel'))){
@@ -1317,8 +1383,12 @@ import Utils from '@/config/utils.js'
         endTime.setMinutes(endTime.getMinutes() + parseInt(endTimes[1]))
         //Note the format of each event, what data is associated with it
         if (this.appointments[i].type.includes('Group')){
-          TopicServices.getTopic(this.appointments[i].topicId).then((response) => {
+          await TopicServices.getTopic(this.appointments[i].topicId).then(async (response) => {
             let topicName = response.data.name
+            if (this.groupColor && !this.studentGroupColor) {
+              topicName = 'Open'
+              color = 'grey darken-1'
+            }
             events.push({
               name: 'G: ' + topicName,
               start: startTime,
@@ -1524,11 +1594,11 @@ import Utils from '@/config/utils.js'
                       for (let i = 0;i<roles.length;i++) {
                         if (roles[i].type == 'Student'){
                           let personRole = {
-                            status: 'approved',
+                            status: 'applied',
                             roleId: roles[i].id,
                             personId: temp.id,
                             dateSigned: Date(),
-                            agree: true,
+                            agree: false,
                           }
                           PersonRoleServices.addPersonRole(personRole)
                           this.emailStatus = temp.fName + " " + temp.lName + " has been added as a student!"
@@ -1553,11 +1623,11 @@ import Utils from '@/config/utils.js'
               for (let i = 0;i<roles.length;i++) {
                 if (roles[i].type == 'Student'){
                   let personRole = {
-                    status: 'approved',
+                    status: 'applied',
                     roleId: roles[i].id,
                     personId: temp.id,
                     dateSigned: Date(),
-                    agree: true,
+                    agree: false,
                   }
                   PersonRoleServices.addPersonRole(personRole)
                   this.emailFound = true;
@@ -1594,11 +1664,11 @@ import Utils from '@/config/utils.js'
           for (let i = 0;i<roles.length;i++) {
             if (roles[i].type == 'Student'){
               let personRole = {
-                status: 'approved',
+                status: 'applied',
                 roleId: roles[i].id,
                 personId: response.data.id,
                 dateSigned: Date(),
-                agree: true,
+                agree: false,
               }
               PersonRoleServices.addPersonRole(personRole)
               return
@@ -1606,6 +1676,14 @@ import Utils from '@/config/utils.js'
           }
         })
       })
+    },
+    async editAppointment(){
+      await AppointmentServices.updateAppointment(this.selectedAppointment.id, this.selectedAppointment).then(async () =>{
+          for (let i = 0;i < this.students.length;i++){
+            this.tutorEditMessage(this.students[i], this.user.fName, this.user.lName, this.selectedAppointment.type)
+          }
+          await this.getAppointments()
+        })
     }
   },
 }
