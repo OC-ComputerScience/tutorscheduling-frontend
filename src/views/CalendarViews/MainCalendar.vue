@@ -618,7 +618,12 @@ import Utils from '@/config/utils.js'
   methods: {
     //Initialize data for calendar
    async getAppointments() {
-      await AppointmentServices.getAllAppointments()
+    let group;
+    await GroupServices.getGroupByName(this.user.selectedGroup.replace(/%20/g, " "))
+      .then((response) => {
+        group = response.data;
+      })
+      await AppointmentServices.getAppointmentForGroup(group[0].id)
       .then(async (response) => {
         this.appointments = response.data
         await PersonAppointmentServices.getAllPersonAppointments()
