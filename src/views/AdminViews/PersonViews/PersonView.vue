@@ -199,16 +199,16 @@
         max-width="500px"
       >
         <v-card>
-          <v-card-title>Edit role for {{person.fName}}:</v-card-title>
+          <v-card-title>Change status of role for {{person.fName}}:</v-card-title> <!-- here -->
           <v-card-text>
             <v-container>
               <br>
               <v-select
-                  v-model="personrole.roleId"
-                  :items="roles"
+                  v-model="personrole.status"
+                  :items="updateStatus"
                   item-text="type"
                   item-value="id"
-                  label="Role"
+                  label="Status"
                   required
               >
               </v-select>
@@ -380,6 +380,7 @@ export default {
       tutor: false,
       skillLevels: ["Freshman", "Sophomore", "Junior", "Senior"],
       status: ["applied", "approved"],
+      updateStatus: ["approved", "disabled"],
       roles: [],
       topics: [],
       user: {},
