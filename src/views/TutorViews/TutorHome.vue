@@ -87,6 +87,7 @@
 
 <script>
 import Utils from '@/config/utils.js'
+// import AuthServices from '@/services/authServices'
 import PersonRoleServices from "@/services/personRoleServices.js";
 import AppointmentServices from '@/services/appointmentServices.js'
 import GroupServices from "@/services/groupServices.js";
@@ -136,12 +137,14 @@ import GroupServices from "@/services/groupServices.js";
           ux_mode: 'popup',
           callback: (response) => {
             console.log(response);
-            var code_receiver_uri = 'authorize';
+            // AuthServices.authorizeUser(response.code);
+            var code_receiver_uri = 'http://localhost/tutoring-api/authorize';
             // Send auth code to your backend platform
             const xhr = new XMLHttpRequest();
             xhr.open('POST', code_receiver_uri, true);
             xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
             xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+            xhr.setRequestHeader('Access-Control-Allow-Origin', '*');
             xhr.onload = function() {
               console.log('Signed in as: ' + xhr.responseText);
             };
