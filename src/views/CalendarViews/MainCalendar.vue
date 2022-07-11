@@ -623,7 +623,7 @@ import Utils from '@/config/utils.js'
       .then((response) => {
         group = response.data;
       })
-      await AppointmentServices.getAppointmentForGroup(group[0].id)
+      await AppointmentServices.findAppointmentsForGroup(group[0].id)
       .then(async (response) => {
         this.appointments = response.data
         await PersonAppointmentServices.getAllPersonAppointments()

@@ -24,6 +24,9 @@ export default {
     getAppointmentForGroup(groupId) {
       return apiClient.get("appointment/group/" + groupId)
     },
+    findAppointmentsForGroup(groupId) { // function used to find appointments to put into the calendar
+      return apiClient.get("appointment/allGroup/" + groupId)
+    },
     getUpcomingAppointmentForGroup(groupId) {
       return apiClient.get("appointment/upGroup/" + groupId)
     },
