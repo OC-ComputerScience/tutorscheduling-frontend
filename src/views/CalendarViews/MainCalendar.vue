@@ -382,12 +382,12 @@
           <!-- User sign up here -->
         </v-card-text>
         <v-card-actions>
-          <v-btn v-if="!isTutorEvent || checkRole('Student')"
+          <v-btn v-if="!isTutorEvent || checkRole('Student') || checkRole('Admin')"
             color="primary"
             @click="bookAppointment(); selectedOpen = false;"
             :disabled="!checkStatus('available') || isGroupBook || ((studentfName == '' || studentlName == '') && !emailFound && checkRole('Admin')) ||
                         (checkRole('Admin') && selectedAppointment.type.includes('Group') && !adminAddStudent) || selectedAppointment.topicId == null 
-                        || selectedAppointment.locationId == null || isTutorEvent"
+                        || selectedAppointment.locationId == null || (isTutorEvent && !checkRole('Admin'))"
           >
           Book
           </v-btn>
@@ -411,7 +411,7 @@
         >
         Close
         </v-btn>
-        <v-btn v-if="(isTutorEvent || isPrivateBook) && saveChanges"
+        <v-btn v-if="(isTutorEvent || isPrivateBook) && saveChanges && checkRole('Tutor')"
           color="accent"
           @click="editAppointment(); selectedOpen = false;"
         >
