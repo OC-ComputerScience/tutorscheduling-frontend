@@ -350,6 +350,7 @@
               color="green"
               text
               @click="findEmail()"
+              :disabled="!validateEmail()"
             >
               Search
             </v-btn>
@@ -1062,6 +1063,11 @@ import Utils from '@/config/utils.js'
             this.currentTopics.push(topic)
         })
       })
+    },
+    // validate email function
+    validateEmail() {
+      const pattern = /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
+            return pattern.test(this.studentEmail)
     },
     //Functions that run calendar functionality
     viewDay ({ date }) {
