@@ -227,7 +227,7 @@
             label="Location"
             required
             dense
-            :readonly="!isTutorEvent"
+            :readonly="!isTutorEvent || (isTutorEvent && checkRole('Admin'))"
             @change="saveChanges = true"
           >
           </v-select>
@@ -240,7 +240,7 @@
             label="Topic"
             required
             dense
-            :readonly="!isTutorEvent || (students.length > 0 && isTutorEvent)"
+            :readonly="!isTutorEvent || (students.length > 0 && isTutorEvent) || (isTutorEvent && checkRole('Admin'))"
             @change="saveChanges = true"
           >
           </v-select>
@@ -304,7 +304,7 @@
              </v-text-field>
           </span>
           </v-container>
-          <!-- put in presession-info for appointment for private appointments/ add a readonly if group-->
+          <!-- put in presession-info for appointment for private appointments/ add a readonly if  group-->
           <span v-if="appointmentType.includes('Private')">
             <v-textarea
               v-model="selectedAppointment.preSessionInfo"
@@ -358,6 +358,7 @@
               v-if="emailStatus != ''"
               v-model="emailStatus"
               readonly
+              dense
             ></v-text-field>
             </v-row>
           </span>
@@ -418,7 +419,7 @@
         Save Changes
         </v-btn>
         
-        <v-btn v-if="(checkStatus('booked') && !checkRole('Admin')) || (isGroupBook && !adminAddStudent) || (isTutorEvent && checkStatus('available')) || 
+        <v-btn v-if="(checkStatus('booked') && !checkRole('Admin')) || (isGroupBook && !adminAddStudent) || (isTutorEvent && (checkStatus('available') || checkStatus('booked'))) || 
                     (checkRole('Student') && checkStatus('pending'))"
           color="red"
           @click="cancelAppointment(); selectedOpen = false;"
@@ -1067,7 +1068,13 @@ import Utils from '@/config/utils.js'
     // validate email function
     validateEmail() {
       const pattern = /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
-            return pattern.test(this.studentEmail)
+      let email = pattern.test(this.studentEmail)
+      if (email){
+        if (this.studentEmail.includes('oc.edu') || this.studentEmail.includes('eagles.oc.edu')){
+          return true;
+        }
+      }
+      else return false;
     },
     //Functions that run calendar functionality
     viewDay ({ date }) {
@@ -1586,7 +1593,17 @@ import Utils from '@/config/utils.js'
       PersonServices.getPersonForEmail(this.studentEmail).then((response)=> {
         let temp = response.data;
         let onlyTutor = true
-        if (!temp.email.includes('not found')){
+        if(this.user.userID == temp.id) {
+          this.emailStatus = "You cannot sign yourself up for an appointment."
+          this.emailFound = true;
+          return
+        }
+        else if (temp.id == this.tutors[0].id){
+          this.emailStatus = "You cannot sign-up the tutor for their own appointment."
+          this.emailFound = true;
+          return
+        }
+        else if (!temp.email.includes('not found')){
           this.studentNameInput = false; 
           PersonServices.getAllForGroup(this.group.id).then(async (responseGroup) => {
             let people = responseGroup.data
