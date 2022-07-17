@@ -412,8 +412,8 @@ export default {
                                         this.activeMenus = this.menus.filter(menu =>
                                             menu.roles.includes(this.selectedRoles),
                                         );
-                                        console.log(this.selectedRoles);
-                                        console.log(this.activeMenus);
+                                        //console.log(this.selectedRoles);
+                                        //console.log(this.activeMenus);
                                         if (this.selectedRoles.includes("Student"))
                                             this.limitStudentMenu();
                                         else if (this.selectedRoles.includes("Tutor"))
@@ -544,7 +544,7 @@ export default {
                     // makes only tutor home page show up on menu bar
                     this.activeMenus = this.activeMenus.filter(menu =>
                         menu.name.includes("tutorHome"));
-                    console.log(this.activeMenus)
+                    //console.log(this.activeMenus)
                 }
             }
         },

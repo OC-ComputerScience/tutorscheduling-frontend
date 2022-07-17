@@ -227,7 +227,7 @@
             label="Location"
             required
             dense
-            :readonly="!isTutorEvent"
+            :readonly="!isTutorEvent || (isTutorEvent && checkRole('Admin'))"
             @change="saveChanges = true"
           >
           </v-select>
@@ -240,7 +240,7 @@
             label="Topic"
             required
             dense
-            :readonly="!isTutorEvent || (students.length > 0 && isTutorEvent)"
+            :readonly="!isTutorEvent || (students.length > 0 && isTutorEvent) || (isTutorEvent && checkRole('Admin'))"
             @change="saveChanges = true"
           >
           </v-select>
@@ -304,7 +304,7 @@
              </v-text-field>
           </span>
           </v-container>
-          <!-- put in presession-info for appointment for private appointments/ add a readonly if group-->
+          <!-- put in presession-info for appointment for private appointments/ add a readonly if  group-->
           <span v-if="appointmentType.includes('Private')">
             <v-textarea
               v-model="selectedAppointment.preSessionInfo"
@@ -350,6 +350,7 @@
               color="green"
               text
               @click="findEmail()"
+              :disabled="!validateEmail()"
             >
               Search
             </v-btn>
@@ -357,6 +358,7 @@
               v-if="emailStatus != ''"
               v-model="emailStatus"
               readonly
+              dense
             ></v-text-field>
             </v-row>
           </span>
@@ -381,12 +383,12 @@
           <!-- User sign up here -->
         </v-card-text>
         <v-card-actions>
-          <v-btn v-if="!isTutorEvent || checkRole('Student')"
+          <v-btn v-if="!isTutorEvent || checkRole('Student') || checkRole('Admin')"
             color="primary"
             @click="bookAppointment(); selectedOpen = false;"
             :disabled="!checkStatus('available') || isGroupBook || ((studentfName == '' || studentlName == '') && !emailFound && checkRole('Admin')) ||
                         (checkRole('Admin') && selectedAppointment.type.includes('Group') && !adminAddStudent) || selectedAppointment.topicId == null 
-                        || selectedAppointment.locationId == null || isTutorEvent"
+                        || selectedAppointment.locationId == null || (isTutorEvent && !checkRole('Admin'))"
           >
           Book
           </v-btn>
@@ -410,14 +412,14 @@
         >
         Close
         </v-btn>
-        <v-btn v-if="(isTutorEvent || isPrivateBook) && saveChanges"
+        <v-btn v-if="(isTutorEvent || isPrivateBook) && saveChanges && checkRole('Tutor')"
           color="accent"
           @click="editAppointment(); selectedOpen = false;"
         >
         Save Changes
         </v-btn>
         
-        <v-btn v-if="(checkStatus('booked') && !checkRole('Admin')) || (isGroupBook && !adminAddStudent) || (isTutorEvent && checkStatus('available')) || 
+        <v-btn v-if="(checkStatus('booked') && !checkRole('Admin')) || (isGroupBook && !adminAddStudent) || (isTutorEvent && (checkStatus('available') || checkStatus('booked'))) || 
                     (checkRole('Student') && checkStatus('pending'))"
           color="red"
           @click="cancelAppointment(); selectedOpen = false;"
@@ -618,7 +620,12 @@ import Utils from '@/config/utils.js'
   methods: {
     //Initialize data for calendar
    async getAppointments() {
-      await AppointmentServices.getAllAppointments()
+    let group;
+    await GroupServices.getGroupByName(this.user.selectedGroup.replace(/%20/g, " "))
+      .then((response) => {
+        group = response.data;
+      })
+      await AppointmentServices.findAppointmentsForGroup(group[0].id)
       .then(async (response) => {
         this.appointments = response.data
         await PersonAppointmentServices.getAllPersonAppointments()
@@ -1057,6 +1064,17 @@ import Utils from '@/config/utils.js'
             this.currentTopics.push(topic)
         })
       })
+    },
+    // validate email function
+    validateEmail() {
+      const pattern = /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
+      let email = pattern.test(this.studentEmail)
+      if (email){
+        if (this.studentEmail.includes('oc.edu') || this.studentEmail.includes('eagles.oc.edu')){
+          return true;
+        }
+      }
+      else return false;
     },
     //Functions that run calendar functionality
     viewDay ({ date }) {
@@ -1575,7 +1593,17 @@ import Utils from '@/config/utils.js'
       PersonServices.getPersonForEmail(this.studentEmail).then((response)=> {
         let temp = response.data;
         let onlyTutor = true
-        if (!temp.email.includes('not found')){
+        if(this.user.userID == temp.id) {
+          this.emailStatus = "You cannot sign yourself up for an appointment."
+          this.emailFound = true;
+          return
+        }
+        else if (temp.id == this.tutors[0].id){
+          this.emailStatus = "You cannot sign-up the tutor for their own appointment."
+          this.emailFound = true;
+          return
+        }
+        else if (!temp.email.includes('not found')){
           this.studentNameInput = false; 
           PersonServices.getAllForGroup(this.group.id).then(async (responseGroup) => {
             let people = responseGroup.data

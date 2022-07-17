@@ -45,7 +45,7 @@
                   v-model="phoneNum"
                   id="phoneNum"
                   :counter="50"
-                  label="Phone Number"
+                  label="Mobile Phone Number"
                   hint="123-456-7890"
                   persistent-hint
                   required

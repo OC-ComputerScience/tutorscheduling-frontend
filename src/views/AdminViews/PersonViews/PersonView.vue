@@ -60,7 +60,7 @@
         v-model="person.phoneNum"
         id="phoneNum"
         :counter="13"
-        label="Phone Number"
+        label="Mobile Phone"
         readonly
       ></v-text-field>
 
