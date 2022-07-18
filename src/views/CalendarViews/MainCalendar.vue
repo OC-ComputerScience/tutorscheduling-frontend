@@ -789,7 +789,7 @@ import Utils from '@/config/utils.js'
           this.selectedAppointment.status = "booked"
           await AppointmentServices.updateAppointmentStatus(this.selectedAppointment.id, this.selectedAppointment)
           .then(async () =>{
-            await this.tutorConfirmMessage(this.students[0], this.user.fName, this.user.lName)
+            await this.tutorConfirmMessage(this.students[0], this.user.fName, this.user.lName, this.selectedAppointment.id)
             this.getAppointments()
             this.selectedEvent.color = 'blue'
           })
@@ -971,7 +971,7 @@ import Utils from '@/config/utils.js'
       //Update stored data
       await AppointmentServices.updateAppointment(this.selectedAppointment.id, this.selectedAppointment)
       await PersonAppointmentServices.addPersonAppointment(this.person)
-      this.sendMessage(this.tutors[0], this.user.fName, this.user.lName)
+      this.sendMessage(this.tutors[0], this.user.fName, this.user.lName, this.selectedAppointment.id)
     },
 
     //Formats time to be more user friendly
@@ -1103,25 +1103,49 @@ import Utils from '@/config/utils.js'
     hideKey() {
       this.keyVisible = false;
     },
-    sendMessage(tutor, fName, lName) {
-      let temp = tutor
-      temp.message = "You have a session request from " +fName + " " + lName + " pending"
-      TwilioServices.sendMessage(temp);
+    sendMessage(tutor, fName, lName, appointId) {
+      AppointmentServices.getAppointment(appointId).then((response) => {
+        let appoint = response.data
+        let temp = tutor
+        let start = this.calcTime(this.selectedAppointment.startTime)
+        let date = this.selectedAppointment.date.toString().substring(5,10) + "-" + this.selectedAppointment.date.toString().substring(0,4)
+        temp.message = "Your " + appoint.type + " appointment on " + date + " at " + start + 
+          " has been booked by " + fName + " " + lName + ".\nPlease view this pending appointment at http://tutorscheduling.oc.edu/"
+        TwilioServices.sendMessage(temp);
+      })
     },
-    cancelMessage(tutor, fName, lName) {
-      let temp = tutor
-      temp.message = "Your appointment with " +fName + " " + lName + " has been canceled"
-      TwilioServices.sendMessage(temp);
+    cancelMessage(tutor, fName, lName, appointId) {
+      AppointmentServices.getAppointment(appointId).then((response) => {
+        let appoint = response.data
+        let temp = tutor
+        let start = this.calcTime(this.selectedAppointment.startTime)
+        let date = this.selectedAppointment.date.toString().substring(5,10) + "-" + this.selectedAppointment.date.toString().substring(0,4)
+        temp.message = "Your " + appoint.type + " appointment on " + date + " at " + start + 
+          " has been canceled by " + fName + " " + lName + ". This appointment is now open again for booking."
+        TwilioServices.sendMessage(temp);
+      })
     },
-    tutorCancelMessage(student, fName, lName){
-      let temp = student
-      temp.message = "Your appointment with " +fName + " " + lName + " has been canceled"
-      TwilioServices.sendMessage(temp);
+    tutorCancelMessage(student, fName, lName, appointId){
+      AppointmentServices.getAppointment(appointId).then((response) => {
+        let appoint = response.data
+        let temp = student
+        let start = this.calcTime(this.selectedAppointment.startTime)
+        let date = this.selectedAppointment.date.toString().substring(5,10) + "-" + this.selectedAppointment.date.toString().substring(0,4)
+        temp.message = "Your " + appoint.type + " appointment on " + date + " at " + start + 
+          " has been canceled by " + fName + " " + lName + ". We apologize for the inconvenience."
+        TwilioServices.sendMessage(temp);
+      })
     },
-    async tutorConfirmMessage(student, fName, lName){
-      let temp = student
-      temp.message = "Your appointment with " +fName + " " + lName + " has been confirmed"
-      TwilioServices.sendMessage(temp);
+    async tutorConfirmMessage(student, fName, lName, appointId){
+      AppointmentServices.getAppointment(appointId).then((response) => {
+        let appoint = response.data
+        let temp = student
+        let start = this.calcTime(this.selectedAppointment.startTime)
+        let date = this.selectedAppointment.date.toString().substring(5,10) + "-" + this.selectedAppointment.date.toString().substring(0,4)
+        temp.message = "The " + appoint.type + " appointment you booked on " + date + " at " + start + 
+          " has been confirmed by " + fName + " " + lName + ".\nPlease review this appointment at http://tutorscheduling.oc.edu/"
+        TwilioServices.sendMessage(temp);
+      })
     },
     tutorEditMessage(student, fName, lName, type) {
       let temp = student
@@ -1497,7 +1521,7 @@ import Utils from '@/config/utils.js'
               }
               await PersonAppointmentServices.addPersonAppointment(pap)
             })
-            this.cancelMessage(this.tutors[0], this.user.fName, this.user.lName)
+            this.cancelMessage(this.tutors[0], this.user.fName, this.user.lName, this.selectedAppointment.id)
             await this.getAppointments()
             //this.$router.go(0);
           })
@@ -1537,7 +1561,7 @@ import Utils from '@/config/utils.js'
               if (this.personAppointments[j].appointmentId == this.selectedAppointment.id && !this.personAppointments[j].isTutor){
                 this.selectedAppointment.status = "tutorCancel"
                 await AppointmentServices.updateAppointmentStatus(this.selectedAppointment.id, this.selectedAppointment)
-                this.tutorCancelMessage(this.students[0], this.user.fName, this.user.lName)
+                this.tutorCancelMessage(this.students[0], this.user.fName, this.user.lName, this.selectedAppointment.id)
                 await this.getAppointments()
                 return
               }
@@ -1570,7 +1594,7 @@ import Utils from '@/config/utils.js'
             }
             if (this.students.length > 0 && this.tutors.length == 1){
               for (let k = 0; k < this.students.length; k++){
-                this.tutorCancelMessage(this.students[k], this.user.fName, this.user.lName)
+                this.tutorCancelMessage(this.students[k], this.user.fName, this.user.lName, this.selectedAppointment.id)
               } 
               this.selectedAppointment.status = "tutorCancel"
               await AppointmentServices.updateAppointmentStatus(this.selectedAppointment.id, this.selectedAppointment)         
