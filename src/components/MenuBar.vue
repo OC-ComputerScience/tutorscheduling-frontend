@@ -5,6 +5,7 @@
             color="primary"
             dark
         >
+        <router-link :to="_link">
             <v-img
                 class="mr-4"
                 src="../assets/oc_logo_social.png"
@@ -12,6 +13,7 @@
                 max-width="50"
                 contain
             ></v-img>
+        </router-link>
             <v-toolbar-title class="title">
                 <div>{{ this.title }}</div>    
             </v-toolbar-title>
@@ -350,6 +352,11 @@ export default {
     async mounted() {
         await this.resetMenu();
     },
+    computed: {
+        _link() {
+            return "/" + this.selectedRoles.toLowerCase() + "Home/" + this.currentPersonRoleID;
+        }
+    },
     methods: {
         menuAction(route) {
             //console.log(this.currentPersonRoleID);
@@ -542,6 +549,14 @@ export default {
                     //console.log(this.activeMenus)
                 }
             }
+        },
+        toHomePage(){
+            if (this.selectedRoles.includes("Student"))
+                this.$router.push({ name: "studentHome"});
+            else if (this.selectedRoles.includes("Tutor"))
+                this.$router.push({ name: "tutorHome"});
+            else if (this.selectedRoles.includes("Admin"))
+                this.$router.push({ name: "adminHome"});
         }
     },
 };
