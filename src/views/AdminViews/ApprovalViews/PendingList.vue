@@ -12,7 +12,7 @@
       <v-toolbar
         flat
       >
-        <v-toolbar-title>Tutor Applications</v-toolbar-title>
+        <v-toolbar-title>{{this.message}}</v-toolbar-title>
         <v-divider
           class="mx-4"
           inset

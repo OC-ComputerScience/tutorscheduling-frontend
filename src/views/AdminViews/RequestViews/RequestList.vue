@@ -12,7 +12,7 @@
       <v-toolbar
         flat
       >
-        <v-toolbar-title>{{this.test}}</v-toolbar-title>
+        <v-toolbar-title>{{this.message}}</v-toolbar-title>
         <v-divider
           class="mx-4"
           inset
@@ -128,7 +128,6 @@
           { text: 'Actions', value: 'actions', sortable: false },
         ],
         requests: [],
-        test : 'test',
         editedIndex: -1,
         editedItem: {
           status: '',
