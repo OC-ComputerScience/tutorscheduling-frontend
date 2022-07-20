@@ -2,7 +2,7 @@
   <div style="">
     <v-container>
       <v-toolbar>
-        <v-toolbar-title>{{ this.person.fName }} {{ this.person.lName }}</v-toolbar-title>
+        <v-toolbar-title>{{this.message}}</v-toolbar-title>
       </v-toolbar>
       <br>
       <v-btn
@@ -372,6 +372,7 @@ export default {
 
   data() {
     return {
+      message : 'click Edit to update or Delete to remove person',
       person: {},
       persontopics: [],
       persontopic: {},
@@ -414,6 +415,9 @@ export default {
       this.getRolesForGroup();
       this.getTopicsForGroup();
     })
+    .catch(error => {
+      this.message = error.response.data.message
+    })
   },
   methods: {
     async getGroup(name) {
@@ -422,6 +426,7 @@ export default {
         this.group = response.data[0];
       })
       .catch((error) => {
+        this.message = error.response.data.message
         console.log("There was an error:", error.response);
       });
     },
@@ -431,6 +436,7 @@ export default {
         this.person = response.data;
       })
       .catch((error) => {
+        this.message = error.response.data.message
         console.log("There was an error:", error.response);
       });
     },
@@ -445,6 +451,7 @@ export default {
         console.log(this.tutor)
       })
       .catch((error) => {
+        this.message = error.response.data.message
         console.log("There was an error:", error.response);
       });
     },
@@ -454,6 +461,7 @@ export default {
         this.roles = response.data;
       })
       .catch((error) => {
+        this.message = error.response.data.message
         console.log("There was an error:", error.response);
       });
     },
@@ -464,6 +472,7 @@ export default {
         this.persontopics = response.data;
       })
       .catch((error) => {
+        this.message = error.response.data.message
         console.log("There was an error:", error.response);
       });
     },
@@ -473,6 +482,7 @@ export default {
         this.topics = response.data;
       })
       .catch((error) => {
+        this.message = error.response.data.message
         console.log("There was an error:", error.response);
       });
     },
@@ -484,6 +494,7 @@ export default {
             this.$router.push({ name: "personList" });
           })
           .catch((error) => {
+            this.message = error.response.data.message
             console.log("There was an error:", error.response);
           });
       }
@@ -494,6 +505,7 @@ export default {
           this.dialogEdit = false;
         })
         .catch((error) => {
+          this.message = error.response.data.message
           console.log(error);
         });
     },
@@ -506,6 +518,7 @@ export default {
         this.getPersonRoles();
       })
       .catch((error) => {
+        this.message = error.response.data.message
         console.log("There was an error:", error.response);
       });
     },
@@ -518,6 +531,7 @@ export default {
         this.getPersonTopics();
       })
       .catch((error) => {
+        this.message = error.response.data.message
         console.log("There was an error:", error.response);
       });
     },
@@ -545,6 +559,7 @@ export default {
           })
         })
         .catch(error => {
+          this.message = error.response.data.message
           console.log("There was an error:", error.response)
         });
       }
@@ -565,6 +580,7 @@ export default {
         this.getPersonRoles();
       })
       .catch((error) => {
+        this.message = error.response.data.message
         console.log(error);
       });
       Object.assign(this.personroles[this.editedRoleIndex], this.personrole)
@@ -589,6 +605,7 @@ export default {
           })
         })
         .catch(error => {
+          this.message = error.response.data.message
           console.log("There was an error:", error.response)
         });
       }
@@ -599,6 +616,7 @@ export default {
           .then(() => {
           })
           .catch(error => {
+            this.message = error.response.data.message
             console.log("There was an error:", error.response)
           });
       
@@ -624,6 +642,7 @@ export default {
         this.getPersonTopics();
       })
       .catch((error) => {
+        this.message = error.response.data.message
         console.log(error);
       });
       Object.assign(this.persontopics[this.editedTopicIndex], this.persontopic)

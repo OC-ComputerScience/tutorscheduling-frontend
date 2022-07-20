@@ -116,6 +116,7 @@ import PersonRoleServices from "@/services/personRoleServices.js";
 
   export default {
     data: () => ({
+      message : 'Approval - click tutor to approve or deny application',
       StatusSelect: ['Applied', 'Approved', 'Denied'],
       dialog: false,
       dialogDelete: false,
@@ -155,6 +156,9 @@ import PersonRoleServices from "@/services/personRoleServices.js";
       .then(() => {
         this.getPersonRoles();
       })
+      .catch (error => {
+        this.message = error.response.data.message
+      })
     },
     methods: {
       async getGroup(name) {
@@ -163,6 +167,7 @@ import PersonRoleServices from "@/services/personRoleServices.js";
           this.group = response.data[0];
         })
         .catch((error) => {
+          this.message = error.response.data.message
           console.log("There was an error:", error.response);
         });
       },
@@ -172,6 +177,7 @@ import PersonRoleServices from "@/services/personRoleServices.js";
           this.personroles = response.data;
         })
         .catch((error) => {
+          this.message = error.response.data.message
           console.log("There was an error:", error.response);
         });
       },
@@ -195,6 +201,7 @@ import PersonRoleServices from "@/services/personRoleServices.js";
           this.getPersonRoles();
         })
         .catch(error => {
+          this.message = error.response.data.message
           console.log("There was an error:", error.response)
         });
         
@@ -223,6 +230,7 @@ import PersonRoleServices from "@/services/personRoleServices.js";
           this.getPersonRoles();
         })
         .catch((error) => {
+          this.message = error.response.data.message
           console.log(error);
         });
         Object.assign(this.personroles[this.editedIndex], this.editedItem)
