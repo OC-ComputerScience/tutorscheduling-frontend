@@ -2,7 +2,7 @@
   <div>
     <v-container>
       <v-toolbar>
-        <v-toolbar-title>Add Request</v-toolbar-title>
+        <v-toolbar-title>{{this.message}}</v-toolbar-title>
       </v-toolbar>
       <br>
     <v-form
@@ -90,6 +90,7 @@ export default {
       roles: [
         'admin'
       ],
+      message :'Add Request - enter data and click Save'
     };
   },
   
@@ -98,6 +99,9 @@ export default {
     await this.getGroup(this.user.selectedGroup.replace(/%20/g, " "))
       .then(() => {
         this.getTopicsForGroup();
+      })
+      .catch ((error)=>{
+        this.message = error.response.data.message
       })
     this.getPerson();
     this.getAllTopics();
@@ -119,6 +123,7 @@ export default {
           this.topics = response.data;
         })
         .catch(error => {
+          this.message = error.response.data.message
           console.log("There was an error:", error.response)
         });
       },
@@ -128,6 +133,7 @@ export default {
         this.group = response.data[0];
       })
       .catch((error) => {
+        this.message = error.response.data.message
         console.log("There was an error:", error.response);
       });
     },
@@ -139,6 +145,7 @@ export default {
           this.$router.go(-1);
         })
         .catch((error) => {
+          this.message = error.response.data.message
           console.log(error);
         });
     },
@@ -154,6 +161,7 @@ export default {
             return;
           })
           .catch(error => {
+            this.message = error.response.data.message
             console.log("There was an error:", error.response)
           });
       }

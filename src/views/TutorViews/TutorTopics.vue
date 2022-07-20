@@ -1,7 +1,7 @@
 <template>
     <v-container>
         <v-toolbar>
-            <v-toolbar-title>Sign up for topics to tutor in:</v-toolbar-title>
+            <v-toolbar-title>{{this.message}}</v-toolbar-title>
         </v-toolbar>
         <br><br>
         <v-item-group
@@ -104,7 +104,8 @@ import PersonTopicServices from '@/services/personTopicServices'
       groups: [],
       colors: ['#47121D', '#EE5044', '#63BAC0', '#196CA2', '#F8C545', '#032F45'],
       dialog: false,
-      levels: ["Freshman", "Sophomore", "Junior", "Senior"]
+      levels: ["Freshman", "Sophomore", "Junior", "Senior"],
+      message : 'Sign up for topics to tutor in:'
     }),
     async created () {
         this.user = Utils.getStore('user');
@@ -148,6 +149,7 @@ import PersonTopicServices from '@/services/personTopicServices'
                 }
             })
             .catch(error => {
+                this.message = error.response.data.message
                 console.log("There was an error:", error.response)
             });
         },
@@ -174,6 +176,7 @@ import PersonTopicServices from '@/services/personTopicServices'
                 }
             })
             .catch(error => {
+                this.message = error.response.data.message
                 console.log("There was an error:", error.response)
             });
         },
@@ -190,6 +193,7 @@ import PersonTopicServices from '@/services/personTopicServices'
                     }
                 })
                 .catch(error => {
+                    this.message = error.response.data.message
                     console.log("There was an error:", error.response)
                 });
             }
@@ -218,14 +222,14 @@ import PersonTopicServices from '@/services/personTopicServices'
                 }
             }
 
-            console.log(this.selectedGroupTopics);
+     
         },
         goToPage() {
             this.$router.push({ name: "contract" });
             this.$router.go();
         },
         savePersonTopics() {
-            console.log(this.selectedGroupTopics);
+        
             for (let i = 0; i < this.selectedGroupTopics.length; i++) {
                 for (let j = 0; j < this.selectedGroupTopics[i].selectedTopics.length; j++) {
                     let topic = this.selectedGroupTopics[i].selectedTopics[j];
@@ -234,7 +238,10 @@ import PersonTopicServices from '@/services/personTopicServices'
                         topicId: topic.id,
                         personId: this.user.userID
                     };
-                    PersonTopicServices.addPersonTopic(this.persontopic);
+                    PersonTopicServices.addPersonTopic(this.persontopic)
+                    .catch(error => {
+                      this.message = error.response.data.message
+                    });
                 }
             }
         },

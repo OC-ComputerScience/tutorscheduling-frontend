@@ -3,7 +3,7 @@
     <v-container>
       <v-toolbar>
         <v-toolbar-title
-          >Providing Feedback for your recent appointment</v-toolbar-title
+          >{{this.message}}</v-toolbar-title
         >
       </v-toolbar>
       <br />
@@ -66,8 +66,9 @@ export default {
       textualfeedback: "",
       personAppointmentId: "",
       appointment: {},
-      message: "Make updates to the PersonAppointment",
+      message: "Provide feedback for your recent session",
       roles: ["admin"],
+
     };
   },
   
@@ -82,6 +83,7 @@ export default {
         console.log(this.personAppointment);
       })
       .catch((error) => {
+        this.message = error.response.data.message
         console.log("There was an error:", error.response);
       });
     await AppointmentServices.getAppointment(this.id)
@@ -90,6 +92,7 @@ export default {
         console.log(response.data);
       })
       .catch((error) => {
+        this.message = error.response.data.message
         console.log("Appointment: " + this);
         console.log("There was an error:", error.response);
       });
@@ -101,7 +104,10 @@ export default {
       this.appointment.status = "complete";
       this.personAppointment.feedbacktext = this.textualfeedback;
       this.personAppointment.feedbacknumber = this.numericalfeedback;
-      AppointmentServices.updateAppointmentStatus(this.id, this.appointment),
+      AppointmentServices.updateAppointmentStatus(this.id, this.appointment)
+      .catch(error =>{
+        this.message = error.response.data.message
+      })
 
       PersonAppointmentServices.updatePersonAppointment(
         this.personAppointment.id,
@@ -112,6 +118,7 @@ export default {
           this.$router.go(-1);
         })
         .catch((error) => {
+          this.message = error.response.data.message
           console.log(error);
         });
       
