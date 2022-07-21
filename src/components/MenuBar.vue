@@ -5,6 +5,7 @@
             color="primary"
             dark
         >
+        <router-link :to="_link">
             <v-img
                 class="mr-4"
                 src="../assets/oc_logo_social.png"
@@ -12,6 +13,7 @@
                 max-width="50"
                 contain
             ></v-img>
+        </router-link>
             <v-toolbar-title class="title">
                 <div>{{ this.title }}</div>    
             </v-toolbar-title>
@@ -350,6 +352,11 @@ export default {
     async mounted() {
         await this.resetMenu();
     },
+    computed: {
+        _link() {
+            return "/" + this.selectedRoles.toLowerCase() + "Home/" + this.currentPersonRoleID;
+        }
+    },
     methods: {
         menuAction(route) {
             //console.log(this.currentPersonRoleID);
@@ -412,9 +419,14 @@ export default {
                                         this.activeMenus = this.menus.filter(menu =>
                                             menu.roles.includes(this.selectedRoles),
                                         );
-                                        console.log(this.selectedRoles);
-                                        console.log(this.activeMenus);
-                                        this.limitTutorMenu();
+                                        //console.log(this.selectedRoles);
+                                        //console.log(this.activeMenus);
+                                        if (this.selectedRoles.includes("Student"))
+                                            this.limitStudentMenu();
+                                        else if (this.selectedRoles.includes("Tutor"))
+                                            this.limitTutorMenu();
+                                        else if (this.selectedRoles.includes("Admin"))
+                                            this.limitAdminMenu();
                                     } 
                                     else {
                                         this.activeMenus = this.menus.filter(menu =>
@@ -539,6 +551,50 @@ export default {
                     // makes only tutor home page show up on menu bar
                     this.activeMenus = this.activeMenus.filter(menu =>
                         menu.name.includes("tutorHome"));
+                    //console.log(this.activeMenus)
+                }
+            }
+        },
+        async limitStudentMenu() {
+            if(this.selectedRoles.includes('student') || this.selectedRoles.includes('Student')) {
+                let approved = false;
+                await PersonRoleServices.getPersonRole(this.currentPersonRoleID)
+                .then((response) => {
+                    if(response.data.status.includes("approved") || response.data.status.includes("Approved"))
+                    {
+                        approved = true;
+                    }
+                })
+                .catch((error) => {
+                    console.log("There was an error:", error.response);
+                });
+
+                if(!approved) {
+                    // makes only tutor home page show up on menu bar
+                    this.activeMenus = this.activeMenus.filter(menu =>
+                        menu.name.includes("studentHome"));
+                    console.log(this.activeMenus)
+                }
+            }
+        },
+        async limitAdminMenu() {
+            if(this.selectedRoles.includes('admin') || this.selectedRoles.includes('Admin')) {
+                let approved = false;
+                await PersonRoleServices.getPersonRole(this.currentPersonRoleID)
+                .then((response) => {
+                    if(response.data.status.includes("approved") || response.data.status.includes("Approved"))
+                    {
+                        approved = true;
+                    }
+                })
+                .catch((error) => {
+                    console.log("There was an error:", error.response);
+                });
+
+                if(!approved) {
+                    // makes only tutor home page show up on menu bar
+                    this.activeMenus = this.activeMenus.filter(menu =>
+                        menu.name.includes("adminHome"));
                     console.log(this.activeMenus)
                 }
             }
