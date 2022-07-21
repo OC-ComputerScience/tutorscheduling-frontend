@@ -78,8 +78,11 @@
         ></v-data-table>
       </v-card>
       </v-container>
-    <v-container v-else>
+    <v-container v-else-if="!disabled">
       <h4>Pending supervisor's approval...</h4>
+    </v-container>
+    <v-container v-else>
+      <h4>This role for {{group.name}} has been disabled. Please contact the group admin for further questions.</h4>
     </v-container>
     </v-container>
   </div>
@@ -108,6 +111,7 @@ import GroupServices from "@/services/groupServices.js";
         group: {},
         currentId: 0,
         approved: false,
+        disabled: false,
         appointments: [],
         appointmentsneedingfeedback: [],
         headers: [{text: 'Date', value: 'date'}, 
@@ -245,6 +249,11 @@ import GroupServices from "@/services/groupServices.js";
           }
           else 
             this.approved = false;
+          if(response.data.status.includes('disabled')){
+            this.disabled = true;
+          }
+          else
+            this.disabled = false; 
         })
         .catch((error) => {
           console.log("There was an error:", error.response);

@@ -14,7 +14,7 @@ import apiClient from "@/services/services.js";
      },
      getOneForType(personId, roleId) {
       return apiClient.get("personrole/person/" + personId + "/role/" + roleId);
-    },
+      },
      getAllForPerson(id) {
         return apiClient.get("personrole/person/" + id);
       },
