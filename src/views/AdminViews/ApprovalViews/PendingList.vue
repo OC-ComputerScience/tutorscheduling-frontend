@@ -12,7 +12,7 @@
       <v-toolbar
         flat
       >
-        <v-toolbar-title>{{this.message}}</v-toolbar-title>
+        <v-toolbar-title>{{message}}</v-toolbar-title>
         <v-divider
           class="mx-4"
           inset
@@ -116,7 +116,7 @@ import PersonRoleServices from "@/services/personRoleServices.js";
 
   export default {
     data: () => ({
-      message : 'Approval - click tutor to approve or deny application',
+      message: 'Approval - click tutor to approve or deny application',
       StatusSelect: ['Applied', 'Approved', 'Denied'],
       dialog: false,
       dialogDelete: false,
