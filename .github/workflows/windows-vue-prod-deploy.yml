@@ -20,7 +20,7 @@ jobs:
                   TWILIO_NUMBER : ${{secrets.TWILIO_NUMBER}}
                   VUE_APP_CLIENT_ID : ${{secrets.VUE_APP_CLIENT_ID}}
                   VUE_APP_API_URL : ${{secrets.VUE_APP_API_URL}}
-                  VUE_APP_CLIENT_URL : ${{VUE_APP_CLIENT_URL}}
+                  VUE_APP_CLIENT_URL : ${{secrets.VUE_APP_CLIENT_URL}}
         steps:
             - uses: actions/checkout@v2
               with:
@@ -30,7 +30,7 @@ jobs:
                     touch .env
                     echo vue_app_client_id="$VUE_APP_CLIENT_ID" >> .env
                     echo vue_app_api_url ="$VUE_APP_API_URL" >> .env
-                    echo vue_app_client_url = "tutorscheduling.oc.edu"
+                    echo vue_app_client_url = "tutorscheduling.oc.edu" >> .env
 
             - run: npm install
             - run: npm run build
