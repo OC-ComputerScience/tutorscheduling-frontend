@@ -8,7 +8,7 @@
     <v-form
       ref="form" 
       v-model="valid"
-      lazy validation
+      lazy-validation
     >
       <v-select
           v-model="request.problem"
@@ -90,7 +90,9 @@ export default {
       roles: [
         'admin'
       ],
-      message :'Add Request - enter data and click Save'
+      message :'Add Request - enter data and click Save',
+      valid : false
+     
     };
   },
   
@@ -104,7 +106,7 @@ export default {
         this.message = error.response.data.message
       })
     this.getPerson();
-    this.getAllTopics();
+    //this.getAllTopics();
   },
   methods: {
     // getAllTopics() {
