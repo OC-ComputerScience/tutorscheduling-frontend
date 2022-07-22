@@ -3,10 +3,10 @@
   <div>
     <v-container>
         <v-toolbar>
-            <v-toolbar-title>Reports</v-toolbar-title>
+            <v-toolbar-title>{{message}}</v-toolbar-title>
         </v-toolbar>
         <br><br>
-        <h4>Filter the table below and then download the csv file.</h4>
+       
         <br><br>
         <v-row>
           <v-col md="4">
@@ -124,6 +124,7 @@ import TopicServices from "@/services/topicServices.js";
     },
     data() {
       return {
+        message : 'Reports - enter the criteria and click Filter then click Download to create CSV file',
         menu: false,
         dates: [],
         group: {},
@@ -188,6 +189,7 @@ import TopicServices from "@/services/topicServices.js";
           this.group = response.data[0];
         })
         .catch((error) => {
+          this.message = error.response.data.message
           console.log("There was an error:", error.response);
         });
       },
@@ -198,7 +200,7 @@ import TopicServices from "@/services/topicServices.js";
           this.selectedAppointments[i].locationName = this.appointments[i].location.name;
           this.selectedAppointments[i].locationBuilding = this.appointments[i].location.building;
         }
-        console.log(this.selectedAppointments);
+       
       },
       async getAppointmentsForGroup() {
         await AppointmentServices.getAppointmentForGroup(this.group.id)
@@ -245,6 +247,7 @@ import TopicServices from "@/services/topicServices.js";
 
           })
           .catch(error => {
+            this.message = error.response.data.message
             console.log("There was an error:", error.response)
           });
       },
@@ -256,6 +259,7 @@ import TopicServices from "@/services/topicServices.js";
           this.topics = response.data
         })
         .catch(error => {
+          this.message = error.response.data.message
           console.log("There was an error:", error.response)
         });
       },
@@ -276,16 +280,16 @@ import TopicServices from "@/services/topicServices.js";
               this.students.push(people[i]);
             }
           }
-            console.log(this.tutors)
-            console.log(this.students)
+
         })
         .catch(error => {
+          this.message = error.response.data.message
           console.log("There was an error:", error.response)
         });
       },
       filter() {
         // filter appointments by date
-        console.log(this.dates);
+
         if(this.dates.length > 0) {
           this.selectedAppointments = this.selectedAppointments.filter(appointment => new Date(appointment.date) >= new Date(this.dates[0]) && new Date(appointment.date) <= new Date(this.dates[1]));
         }
@@ -300,7 +304,6 @@ import TopicServices from "@/services/topicServices.js";
         //   this.selectedAppointments = this.selectedAppointments.filter(appointment => appointment.status === this.selectedStatus);
         // }
 
-        console.log(this.selectedAppointments);
       }
     }
   }
