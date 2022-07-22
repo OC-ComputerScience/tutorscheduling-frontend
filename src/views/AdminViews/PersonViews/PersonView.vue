@@ -307,7 +307,7 @@ export default {
 
   data() {
     return {
-      message : 'click Edit to update or Delete to remove person',
+      message : 'Person - click Edit to update or Delete to remove person',
       person: {},
       persontopics: [],
       persontopic: {},
@@ -501,12 +501,11 @@ export default {
               this.editedRoleIndex = -1;
             });
           })
-        })
-        .catch(error => {
+          .catch(error => {
           this.message = error.response.data.message
           console.log("There was an error:", error.response)
         });
-      }
+        }
     },
     closeRole() {
       this.dialogRole = false;
@@ -550,12 +549,12 @@ export default {
               this.editedTopicIndex = -1;
             });
           })
-        })
-        .catch(error => {
+          .catch(error => {
           this.message = error.response.data.message
           console.log("There was an error:", error.response)
         });
-      }
+        }
+
     },
     deleteTopicConfirm() {
       this.persontopics.splice(this.editedTopicIndex, 1)
