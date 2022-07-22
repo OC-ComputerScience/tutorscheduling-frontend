@@ -3,7 +3,7 @@
   <div style="">
     <v-container>
       <v-toolbar>
-        <v-toolbar-title>{{ this.topic.name }}</v-toolbar-title>
+        <v-toolbar-title>{{ this.message }}</v-toolbar-title>
       </v-toolbar>
       <br>
       <v-btn
@@ -74,6 +74,7 @@ export default {
     return {
       topic: {},
       group: {},
+      message :'View Topic - click Edit to update or Delete to remove topic'
     };
   },
   created() {
@@ -86,6 +87,7 @@ export default {
             console.log(response.data);
           })
           .catch((error) => {
+            this.message = error.response.data.message;
             console.log("There was an error:", error.response);
           });
           console.log(response.data);
@@ -103,6 +105,7 @@ export default {
             this.$router.push({ name: "topicList" });
           })
           .catch((error) => {
+            this.message = error.response.data.message;
             console.log("There was an error:", error.response);
           });
       }

@@ -3,7 +3,7 @@
   <div style="">
     <v-container>
       <v-toolbar>
-        <v-toolbar-title>{{ this.role.type }}</v-toolbar-title>
+        <v-toolbar-title>{{ this.message}}</v-toolbar-title>
       </v-toolbar>
       <br>
       <v-btn
@@ -65,6 +65,7 @@ export default {
     return {
       role: {},
       group: {},
+      message : 'View Role - click Edit to update or Delete to remove topic'
     };
   },
   created() {
@@ -77,11 +78,13 @@ export default {
             console.log(response.data);
           })
           .catch((error) => {
+            this.message = error.response.data.message
             console.log("There was an error:", error.response);
           });
           console.log(response.data);
         })
       .catch((error) => {
+        this.message = error.response.data.message
         console.log("There was an error:", error.response);
       });
   },
@@ -94,6 +97,7 @@ export default {
             this.$router.push({ name: "roleList" });
           })
           .catch((error) => {
+            this.message = error.response.data.message
             console.log("There was an error:", error.response);
           });
       }

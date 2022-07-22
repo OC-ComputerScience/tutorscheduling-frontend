@@ -2,7 +2,7 @@
   <div>
     <v-container>
       <v-toolbar>
-        <v-toolbar-title>Groups</v-toolbar-title>
+        <v-toolbar-title>{{this.message}}</v-toolbar-title>
       </v-toolbar>
       <br><br>
     <v-card>
@@ -51,6 +51,7 @@
     },
     data() {
       return {
+        message :'Groups - click group to view or edit group or click Add to add new group',
         search: '',
         groups: [],
         headers: [{text: 'ID', value: 'id'}, 
@@ -68,6 +69,7 @@
           this.groups = response.data;
         })
         .catch(error => {
+          this.message = error.response.data.message
           console.log("There was an error:", error.response)
         });
       },
@@ -79,6 +81,7 @@
             this.getGroups(this.start, this.length);
           })
           .catch(error => {
+            this.message = error.response.data.message
             console.log("There was an error:", error.response)
           });
         }

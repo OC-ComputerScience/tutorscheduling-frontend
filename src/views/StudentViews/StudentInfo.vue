@@ -2,7 +2,7 @@
   <div>
     <v-container>
       <v-toolbar>
-        <v-toolbar-title>Edit Student Account</v-toolbar-title>
+        <v-toolbar-title>{{this.message}}</v-toolbar-title>
       </v-toolbar>
       <br><br>
       <v-text-field
@@ -79,7 +79,8 @@ import Utils from '@/config/utils.js'
     data() {
       return {
         person: {},
-        fullName: ''
+        fullName: '',
+        message : 'Edit Student Account'
       };
     },
     created() {
@@ -94,6 +95,7 @@ import Utils from '@/config/utils.js'
             this.fullName = this.person.fName + ' ' + this.person.lName;
           })
           .catch(error => {
+            this.message = error.response.data.message
             console.log("There was an error:", error.response)
           });
       },

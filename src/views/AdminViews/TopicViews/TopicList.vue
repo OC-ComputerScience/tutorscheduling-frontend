@@ -3,7 +3,7 @@
   <div>
     <v-container>
       <v-toolbar>
-        <v-toolbar-title>Topics</v-toolbar-title>
+        <v-toolbar-title>{{this.message}}</v-toolbar-title>
       </v-toolbar>
       <br><br>
     <v-card>
@@ -59,7 +59,8 @@
         user: {},
         headers: [{text: 'ID', value: 'id'}, 
                   {text: 'Name', value: 'name'},
-                  {text: 'Abbreviation', value: 'abbr'}]
+                  {text: 'Abbreviation', value: 'abbr'}],
+        message : 'Topics - click topic to view or edit topic or click Add to add new topic'
       }
     },
     async created() {
@@ -86,6 +87,7 @@
           this.topics = response.data;
         })
         .catch(error => {
+          this.message = error.response.data.message;
           console.log("There was an error:", error.response)
         });
       },
@@ -106,6 +108,7 @@
             this.getTopics(this.start, this.length);
           })
           .catch(error => {
+            this.message = error.response.data.message;
             console.log("There was an error:", error.response)
           });
         }

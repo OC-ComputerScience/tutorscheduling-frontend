@@ -12,7 +12,7 @@
       <v-toolbar
         flat
       >
-        <v-toolbar-title>Requests</v-toolbar-title>
+        <v-toolbar-title>{{message}}</v-toolbar-title>
         <v-divider
           class="mx-4"
           inset
@@ -113,27 +113,30 @@
   import RequestServices from "@/services/requestServices.js";
 
   export default {
-    data: () => ({
-      expanded: [],
-      StatusSelect: ['Recieved', 'In-Progress', 'Completed'],
-      dialog: false,
-      dialogDelete: false,
-      user: {},
-      headers: [
-        { text: "Person's Name", value: "fullName" },
-        { text: "Problem", value: "problem" },
-        { text: "Status", value: "status" },
-        { text: 'Actions', value: 'actions', sortable: false },
-      ],
-      requests: [],
-      editedIndex: -1,
-      editedItem: {
-        status: '',
-      },
-      defaultItem: {
-        status: '',
-      },
-    }), 
+     data() {
+        return { 
+        expanded: [],
+        message : 'Request',
+        StatusSelect: ['Recieved', 'In-Progress', 'Completed'],
+        dialog: false,
+        dialogDelete: false,
+        user: {},
+        headers: [
+          { text: "Person's Name", value: "fullName" },
+          { text: "Problem", value: "problem" },
+          { text: "Status", value: "status" },
+          { text: 'Actions', value: 'actions', sortable: false },
+        ],
+        requests: [],
+        editedIndex: -1,
+        editedItem: {
+          status: '',
+        },
+        defaultItem: {
+          status: '',
+        }
+      };
+    },
     computed: {
     },
     watch: {
@@ -150,6 +153,9 @@
       .then(() => {
         this.getRequestsForGroup();
       })
+      .catch(error => {
+        this.message = error.response.data.message
+      })
     },
     methods: {
       async getGroup(name) {
@@ -158,6 +164,7 @@
           this.group = response.data[0];
         })
         .catch((error) => {
+          this.message = error.response.data.message
           console.log("There was an error:", error.response);
         });
       },
@@ -170,6 +177,7 @@
           }
         })
         .catch(error => {
+          this.message = error.response.data.message
           console.log("There was an error:", error.response)
         });
       },
@@ -200,6 +208,7 @@
               this.getTopics(this.start, this.length);
             })
             .catch(error => {
+              this.message = error.response.data.message
               console.log("There was an error:", error.response)
             });
         

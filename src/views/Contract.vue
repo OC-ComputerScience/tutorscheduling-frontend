@@ -2,7 +2,7 @@
   <div>
     <v-container>
       <v-toolbar>
-        <v-toolbar-title>Sign Contract</v-toolbar-title>
+        <v-toolbar-title>{{this.message}}</v-toolbar-title>
       </v-toolbar>
       <br><br>
       <h4>
@@ -78,6 +78,7 @@
     data() {
       return {
         //dialog: [],
+        message :'Sign Contract',
         roles: [],
         completeRole: {},
         colors: ['#47121D', '#EE5044', '#63BAC0', '#196CA2', '#F8C545', '#032F45'],
@@ -121,7 +122,13 @@
               this.$router.go();
             }
           })
+          .catch(error=>{
+            this.message = error.response.data.message
+          })
           
+        })
+        .catch(error=>{
+          this.message = error.response.data.message
         })
       },
       async getPersonRoles() {
@@ -155,6 +162,7 @@
           }
         })
         .catch((error) => {
+          this.message = error.response.data.message
           console.log("There was an error:", error.response);
         });
 
@@ -167,6 +175,7 @@
             this.completeRole = response.data[0];
           })
           .catch((error) => {
+            this.message = error.response.data.message
             console.log("There was an error:", error.response);
           });
         }
@@ -182,7 +191,10 @@
         updatedRole.roleId = role.roleId;
         updatedRole.createdAt = role.createdAt;
         updatedRole.updatedAt = role.updatedAt;
-        await PersonRoleServices.updatePersonRole(role.id, updatedRole);
+        await PersonRoleServices.updatePersonRole(role.id, updatedRole)
+        .catch(error =>{
+          this.message = error.response.data.message
+        });
       }
     }
   }

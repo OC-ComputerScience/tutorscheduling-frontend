@@ -2,7 +2,7 @@
     <div>
         <v-container>
             <v-toolbar>
-                <v-toolbar-title>Apply for more help or another position:</v-toolbar-title>
+                <v-toolbar-title>{{this.message}}</v-toolbar-title>
             </v-toolbar>
             <br><br>
             <v-row justify="center">
@@ -99,6 +99,7 @@ import Utils from '@/config/utils.js'
 export default {
   data () {
     return {
+      message : 'Apply for more help or another position:',
       dialog: false,
       student: true,
       tutor: false, 
@@ -173,6 +174,7 @@ export default {
           }
         })
         .catch((error) => {
+          this.message = error.response.data.message
           console.log("There was an error:", error.response);
         });
 
@@ -186,6 +188,7 @@ export default {
             }
           })
           .catch((error) => {
+            this.message = error.response.data.message
             console.log("There was an error:", error.response);
           });
         }
@@ -196,13 +199,17 @@ export default {
           this.groups = response.data;
         })
         .catch(error => {
+          this.message = error.response.data.message
           console.log("There was an error:", error.response)
         });
     },
     async getGroupRoles() {
       this.roles = [];
       for (let i = 0; i < this.selected.length; i++) {
-        await this.addGroupRoles(this.selected[i].id);
+        await this.addGroupRoles(this.selected[i].id)
+        .catch (error => {
+          this.message = error.response.data.message
+        });
       }
       // for (let i = 0; i < this.groups.length; i++) {
       //   for (let j = 0; j < this.selected.length; j++) {
@@ -224,6 +231,7 @@ export default {
         })
       })
       .catch(error => {
+        this.message = error.response.data.message
         console.log("There was an error:", error.response)
       });
     },
@@ -277,6 +285,7 @@ export default {
         this.goToPage();
       })
       .catch(error => {
+        this.message = error.response.data.message
         console.log("There was an error:", error.response)
       });
     },
@@ -308,6 +317,9 @@ export default {
             }
           }
         } 
+      })
+      .catch(error => {
+        this.message = error.response.data.message
       })
     }
   }

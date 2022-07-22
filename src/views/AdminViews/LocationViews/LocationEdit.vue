@@ -3,7 +3,7 @@
   <div>
     <v-container>
       <v-toolbar>
-        <v-toolbar-title>{{ this.location.name }}</v-toolbar-title>
+        <v-toolbar-title>{{this.message}}</v-toolbar-title>
       </v-toolbar>
       <br>
     <v-form
@@ -83,10 +83,10 @@ export default {
 
   data() {
     return {
+      message :'Edit Location - make updates to the fields and click Save',
       location: {},
       groups: [],
       types: ["Online", "In-Person"],
-      message: "Make updates to the Location",
         roles: [
         'admin'
       ],
@@ -99,6 +99,7 @@ export default {
         console.log(response.data);
       })
       .catch((error) => {
+        this.message = error.response.data.message
         console.log("There was an error:", error.response);
       });
     GroupServices.getAllGroups()
@@ -106,6 +107,7 @@ export default {
           this.groups = response.data;
         })
         .catch((error) => {
+          this.message = error.response.data.message
           console.log("There was an error:", error.response);
       });
   },
@@ -117,6 +119,7 @@ export default {
           this.$router.go(-1);
         })
         .catch((error) => {
+          this.message = error.response.data.message
           console.log(error);
         });
     },

@@ -3,7 +3,7 @@
   <div>
     <v-container>
       <v-toolbar>
-        <v-toolbar-title>Roles</v-toolbar-title>
+        <v-toolbar-title>{{this.message}}</v-toolbar-title>
       </v-toolbar>
       <br><br>
     <v-card>
@@ -61,7 +61,9 @@ import Utils from '@/config/utils.js'
         user: {},
         headers: [{text: 'ID', value: 'id'}, 
                   {text: 'Type', value: 'type'},
-                  {text: 'Group', value: 'group.name'}]
+                  {text: 'Group', value: 'group.name'}],
+        message : 'Roles - click role to view or edit role or click Add to add new role'
+
       }
     },
     async created() {
@@ -69,6 +71,9 @@ import Utils from '@/config/utils.js'
       await this.getGroup(this.user.selectedGroup.replace(/%20/g, " "))
       .then(() => {
         this.getRolesForGroup();
+      })
+      .catch ((error) => {
+        this.message = error.response.data.message
       })
     },
     methods: {
@@ -78,6 +83,7 @@ import Utils from '@/config/utils.js'
           this.group = response.data[0];
         })
         .catch((error) => {
+          this.message = error.response.data.message
           console.log("There was an error:", error.response);
         });
       },
@@ -87,6 +93,7 @@ import Utils from '@/config/utils.js'
           this.roles = response.data;
         })
         .catch(error => {
+          this.message = error.response.data.message
           console.log("There was an error:", error.response)
         });
       },
@@ -107,6 +114,7 @@ import Utils from '@/config/utils.js'
             this.getRoles(this.start, this.length);
           })
           .catch(error => {
+            this.message = error.response.data.message
             console.log("There was an error:", error.response)
           });
         }

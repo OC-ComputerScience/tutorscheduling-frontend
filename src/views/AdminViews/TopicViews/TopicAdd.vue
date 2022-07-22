@@ -3,7 +3,7 @@
   <div>
     <v-container>
       <v-toolbar>
-        <v-toolbar-title>Add Topic</v-toolbar-title>
+        <v-toolbar-title>this.message</v-toolbar-title>
       </v-toolbar>
       <br>
     <v-form
@@ -87,6 +87,7 @@ export default {
       roles: [
         'admin'
       ],
+      message : 'Add Topic - enter data and click Save'
     };
   },
   created() {
@@ -101,6 +102,7 @@ export default {
         this.group = response.data[0];
       })
       .catch((error) => {
+        this.message = error.response.data.message
         console.log("There was an error:", error.response);
       });
     },
@@ -120,6 +122,7 @@ export default {
           this.$router.push({ name: "topicList" });
         })
         .catch((error) => {
+          this.message = error.response.data.message
           console.log(error);
 
         });
