@@ -2,9 +2,7 @@
   <div style="">
     <v-container>
       <v-toolbar>
-        <v-toolbar-title
-          >{{ this.person.fName }} {{ this.person.lName }}</v-toolbar-title
-        >
+        <v-toolbar-title>{{this.message}}</v-toolbar-title>
       </v-toolbar>
       <br />
       <v-btn
@@ -309,6 +307,7 @@ export default {
 
   data() {
     return {
+      message : 'Person - click Edit to update or Delete to remove person',
       person: {},
       persontopics: [],
       persontopic: {},
@@ -349,88 +348,84 @@ export default {
   },
   async created() {
     this.getPerson();
-    this.user = Utils.getStore("user");
-    await this.getGroup(this.user.selectedGroup.replace(/%20/g, " ")).then(
-      async () => {
-        await this.getPersonRoles();  
-        this.getPersonTopics();
-        this.getRolesForGroup();
-        this.getTopicsForGroup();
-      }
-    );
+    this.user = Utils.getStore('user');
+    await this.getGroup(this.user.selectedGroup.replace(/%20/g, " "))
+    .then(() => {
+      this.getPersonRoles();
+      this.getPersonTopics();
+      this.getRolesForGroup();
+      this.getTopicsForGroup();
+    })
+    .catch(error => {
+      this.message = error.response.data.message
+    })
   },
   methods: {
     async getGroup(name) {
       await GroupServices.getGroupByName(name)
-        .then((response) => {
-          this.group = response.data[0];
-        })
-        .catch((error) => {
-          console.log("There was an error:", error.response);
-        });
+      .then((response) => {
+        this.group = response.data[0];
+      })
+      .catch((error) => {
+        this.message = error.response.data.message
+        console.log("There was an error:", error.response);
+      });
     },
     getPerson() {
       PersonServices.getPerson(this.id)
-        .then((response) => {
-          this.person = response.data;
-        })
-        .catch((error) => {
-          console.log("There was an error:", error.response);
-        });
+      .then((response) => {
+        this.person = response.data;
+      })
+      .catch((error) => {
+        this.message = error.response.data.message
+        console.log("There was an error:", error.response);
+      });
     },
     async getPersonRoles() {
       RoleServices.getRoleByGroupForPerson(this.group.id, this.id)
-        .then((response) => {
-          PersonRoleServices.getAllForPerson(this.id)
-            .then((result) => {
-              this.personroles = response.data;
-              let pr = result.data;
-              for(let k = 0; k < pr.length; k++) {
-                for (let i = 0; i < this.personroles.length; i++) {
-                  if (pr[k].roleId == this.personroles[i].id) {
-                    this.personroles[i].status = pr[k].status;
-                  }
-                  if (this.personroles[i].type.includes("Tutor"))
-                    this.tutor = true;
-                  }
-              }
-              //console.log(this.personroles)
-            })
-            .catch((error) => {
-              console.log("There was an error:" + error.response);
-            });
-        })
-        .catch((error) => {
-          console.log("There was an error:" + error.response);
-        });
+      .then((response) => {
+        this.personroles = response.data;
+        for(let i = 0; i < this.personroles.length && !this.tutor; i++) {
+          if(this.personroles[i].type.includes("Tutor"))
+            this.tutor = true;
+        }
+        console.log(this.tutor)
+      })
+      .catch((error) => {
+        this.message = error.response.data.message
+        console.log("There was an error:", error.response);
+      });
     },
     getRolesForGroup() {
       RoleServices.getAllForGroup(this.group.id)
-        .then((response) => {
-          this.roles = response.data;
-        })
-        .catch((error) => {
-          console.log("There was an error:", error.response);
-        });
+      .then((response) => {
+        this.roles = response.data;
+      })
+      .catch((error) => {
+        this.message = error.response.data.message
+        console.log("There was an error:", error.response);
+      });
     },
     getPersonTopics() {
       TopicServices.getTopicByGroupForPerson(this.group.id, this.id)
-        .then((response) => {
-          //console.log(response)
-          this.persontopics = response.data;
-        })
-        .catch((error) => {
-          console.log("There was an error:", error.response);
-        });
+      .then((response) => {
+        console.log(response)
+        this.persontopics = response.data;
+      })
+      .catch((error) => {
+        this.message = error.response.data.message
+        console.log("There was an error:", error.response);
+      });
     },
     getTopicsForGroup() {
       TopicServices.getAllForGroup(this.group.id)
-        .then((response) => {
-          this.topics = response.data;
-        })
-        .catch((error) => {
-          console.log("There was an error:", error.response);
-        });
+      .then((response) => {
+        this.topics = response.data;
+      })
+      .catch((error) => {
+        this.message = error.response.data.message
+        console.log("There was an error:", error.response);
+      });
     },
     deletePerson(id, fName) {
       let confirmed = confirm(`Are you sure you want to delete ${fName}`);
@@ -440,6 +435,7 @@ export default {
             this.$router.push({ name: "personList" });
           })
           .catch((error) => {
+            this.message = error.response.data.message
             console.log("There was an error:", error.response);
           });
       }
@@ -450,6 +446,7 @@ export default {
           this.dialogEdit = false;
         })
         .catch((error) => {
+          this.message = error.response.data.message
           console.log(error);
         });
     },
@@ -457,25 +454,27 @@ export default {
       this.personrole.personId = this.person.id;
       console.log(this.personrole);
       PersonRoleServices.addPersonRole(this.personrole)
-        .then(() => {
-          this.dialogRoleAdd = false;
-          this.getPersonRoles();
-        })
-        .catch((error) => {
-          console.log("There was an error:", error.response);
-        });
+      .then(() => {
+        this.dialogRoleAdd = false;
+        this.getPersonRoles();
+      })
+      .catch((error) => {
+        this.message = error.response.data.message
+        console.log("There was an error:", error.response);
+      });
     },
     addPersonTopic() {
       this.persontopic.personId = this.person.id;
       console.log(this.persontopic);
       PersonTopicServices.addPersonTopic(this.persontopic)
-        .then(() => {
-          this.dialogTopicAdd = false;
-          this.getPersonTopics();
-        })
-        .catch((error) => {
-          console.log("There was an error:", error.response);
-        });
+      .then(() => {
+        this.dialogTopicAdd = false;
+        this.getPersonTopics();
+      })
+      .catch((error) => {
+        this.message = error.response.data.message
+        console.log("There was an error:", error.response);
+      });
     },
     cancel() {
       this.$router.go(-1);
@@ -502,10 +501,11 @@ export default {
               this.editedRoleIndex = -1;
             });
           })
-          .catch((error) => {
-            console.log("There was an error:", error.response);
-          });
-      }
+          .catch(error => {
+          this.message = error.response.data.message
+          console.log("There was an error:", error.response)
+        });
+        }
     },
     closeRole() {
       this.dialogRole = false;
@@ -518,14 +518,15 @@ export default {
       //console.log(this.editedRoleIndex);
       //console.log(this.personrole);
       PersonRoleServices.updatePersonRole(this.personrole.id, this.personrole)
-        .then(() => {
-          this.closeRole();
-          this.getPersonRoles();
-        })
-        .catch((error) => {
-          console.log(error);
-        });
-      Object.assign(this.personroles[this.editedRoleIndex], this.personrole); // error here i think
+      .then(() => {
+        this.closeRole()
+        this.getPersonRoles();
+      })
+      .catch((error) => {
+        this.message = error.response.data.message
+        console.log(error);
+      });
+      Object.assign(this.personroles[this.editedRoleIndex], this.personrole)
     },
     editTopic(item) {
       this.editedTopicIndex = this.persontopics.indexOf(item.id);
@@ -548,20 +549,24 @@ export default {
               this.editedTopicIndex = -1;
             });
           })
-          .catch((error) => {
-            console.log("There was an error:", error.response);
-          });
-      }
+          .catch(error => {
+          this.message = error.response.data.message
+          console.log("There was an error:", error.response)
+        });
+        }
+
     },
     deleteTopicConfirm() {
-      this.persontopics.splice(this.editedTopicIndex, 1);
-      PersonTopicServices.deletePersonTopic(this.persontopic.id)
-        .then(() => {})
-        .catch((error) => {
-          console.log("There was an error:", error.response);
-        });
+      this.persontopics.splice(this.editedTopicIndex, 1)
+        PersonTopicServices.deletePersonTopic(this.persontopic.id)
+          .then(() => {
+          })
+          .catch(error => {
+            this.message = error.response.data.message
+            console.log("There was an error:", error.response)
+          });
 
-      this.closeTopicDelete();
+      this.closeTopicDelete()
     },
     closeTopic() {
       this.dialogTopic = false;
@@ -576,18 +581,16 @@ export default {
     saveTopic() {
       console.log(this.editedTopicIndex);
       console.log(this.persontopic);
-      PersonTopicServices.updatePersonTopic(
-        this.persontopic.id,
-        this.persontopic
-      )
-        .then(() => {
-          this.closeTopic();
-          this.getPersonTopics();
-        })
-        .catch((error) => {
-          console.log(error);
-        });
-      Object.assign(this.persontopics[this.editedTopicIndex], this.persontopic);
+      PersonTopicServices.updatePersonTopic(this.persontopic.id, this.persontopic)
+      .then(() => {
+        this.closeTopic()
+        this.getPersonTopics();
+      })
+      .catch((error) => {
+        this.message = error.response.data.message
+        console.log(error);
+      });
+      Object.assign(this.persontopics[this.editedTopicIndex], this.persontopic)
     },
   },
 };

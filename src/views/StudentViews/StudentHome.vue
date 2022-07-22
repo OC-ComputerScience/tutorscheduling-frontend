@@ -4,7 +4,7 @@
       <v-toolbar>
         <v-toolbar-title>Hello, {{ this.user.fName }}!</v-toolbar-title>
         <v-spacer></v-spacer>
-        <v-toolbar-title>Student</v-toolbar-title>
+        <v-toolbar-title>{{this.message}}</v-toolbar-title>
       </v-toolbar>
       <v-container v-if="!disabled">
       <v-row>
@@ -112,7 +112,8 @@ import PersonRoleServices from "@/services/personRoleServices.js";
         headers: [{text: 'Date', value: 'date'}, 
                   {text: 'Start Time', value: 'startTime'},
                   {text: 'End Time', value: 'endTime'},
-                  {text: 'Topic', value: 'topic.name'}]
+                  {text: 'Topic', value: 'topic.name'}],
+        message : 'Student'
       };
     },
     async created() {
@@ -125,6 +126,9 @@ import PersonRoleServices from "@/services/personRoleServices.js";
           this.getAppointmentsNeedingFeedback();
         }
       })
+      .catch ((error) => {
+        this.message = error.response.data.message
+      })
     },
     methods: {
       async getGroup(name) {
@@ -133,6 +137,7 @@ import PersonRoleServices from "@/services/personRoleServices.js";
           this.group = response.data[0];
         })
         .catch((error) => {
+          this.message = error.response.data.message
           console.log("There was an error:", error.response);
         });
       },
@@ -180,6 +185,7 @@ import PersonRoleServices from "@/services/personRoleServices.js";
 
           })
           .catch(error => {
+            this.message = error.response.data.message
             console.log("There was an error:", error.response)
           });
       },
@@ -227,6 +233,7 @@ import PersonRoleServices from "@/services/personRoleServices.js";
 
           })
           .catch(error => {
+            this.message = error.response.data.message
             console.log("There was an error:", error.response)
           });
       },

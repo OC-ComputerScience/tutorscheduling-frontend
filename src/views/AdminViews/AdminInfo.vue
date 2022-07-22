@@ -2,7 +2,7 @@
   <div>
     <v-container>
       <v-toolbar>
-        <v-toolbar-title>Edit Admin Account</v-toolbar-title>
+        <v-toolbar-title>{{this.message}}</v-toolbar-title>
       </v-toolbar>
       <br><br>
       <v-text-field
@@ -53,7 +53,8 @@ import Utils from '@/config/utils.js'
       return {
         search: '',
         person: {},
-        fullName: ''
+        fullName: '',
+        message :'Edit Admin Account'
       };
     },
     async created() {
@@ -68,11 +69,13 @@ import Utils from '@/config/utils.js'
             this.fullName = this.person.fName + ' ' + this.person.lName;
           })
           .catch(error => {
+            this.message = error.response.data.message
             console.log("There was an error:", error.response)
           });
       },
       savePhoneNum() {
-        PersonServices.updatePerson(this.person.id, this.person);
+        PersonServices.updatePerson(this.person.id, this.person)
+  
       },
     }
   }

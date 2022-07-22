@@ -3,7 +3,7 @@
   <div>
     <v-container>
       <v-toolbar>
-        <v-toolbar-title>Locations</v-toolbar-title>
+        <v-toolbar-title>{{this.message}}</v-toolbar-title>
       </v-toolbar>
       <br><br>
     <v-card>
@@ -55,6 +55,7 @@
     },
     data() {
       return {
+        message : 'Locations - click location to view or edit location or click Add to add new location',
         search: '',
         locations: [],
         user: {},
@@ -79,6 +80,7 @@
           this.group = response.data[0];
         })
         .catch((error) => {
+          this.message = error.response.data.message
           console.log("There was an error:", error.response);
         });
       },
@@ -88,6 +90,7 @@
           this.locations = response.data;
         })
         .catch(error => {
+          this.message = error.response.data.message
           console.log("There was an error:", error.response)
         });
       },
@@ -108,6 +111,7 @@
             this.getLocations(this.start, this.length);
           })
           .catch(error => {
+            this.message = error.response.data.message
             console.log("There was an error:", error.response)
           });
         }

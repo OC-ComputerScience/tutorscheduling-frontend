@@ -2,7 +2,7 @@
   <div>
     <v-container>
     <v-toolbar>
-      <v-toolbar-title>Schedule</v-toolbar-title>
+      <v-toolbar-title>{{this.message}}</v-toolbar-title>
     </v-toolbar>
     <br>
     <v-row class="fill-height">
@@ -544,6 +544,7 @@ import Utils from '@/config/utils.js'
   props: ["id"],
 
   data: () => ({
+    message : 'Schedule',
     mode: 'stack',
     //appointment info
     appointments: [],
@@ -636,6 +637,7 @@ import Utils from '@/config/utils.js'
         })
       })
       .catch(error => {
+        this.message = error.response.data.message
         console.log("There was an error:", error.response)
       });
     },
@@ -648,6 +650,7 @@ import Utils from '@/config/utils.js'
         this.getLocations()
       })
       .catch((error) => {
+        this.message = error.response.data.message
         console.log("There was an error:", error.response);
       });
     },
@@ -659,6 +662,7 @@ import Utils from '@/config/utils.js'
         this.topics = temp
       })
       .catch(error => {
+        this.message = error.response.data.message
         console.log("There was an error:", error.response)
       });
     },
@@ -673,6 +677,7 @@ import Utils from '@/config/utils.js'
           }
         })
       .catch(error => {
+        this.message = error.response.data.message
         console.log("There was an error:", error.response.data)
       });
     },
@@ -697,6 +702,7 @@ import Utils from '@/config/utils.js'
           this.isTutorEvent = false
         })
       .catch(error => {
+        this.message = error.response.data.message
         console.log("There was an error:", error.response.data)
       });
     },
@@ -715,6 +721,7 @@ import Utils from '@/config/utils.js'
           this.isGroupBook = false
           })
         .catch(error => {
+          this.message = error.response.data.message
           console.log("There was an error:", error.response.data)
         });
       }
@@ -731,6 +738,7 @@ import Utils from '@/config/utils.js'
           this.isGroupBook = false
           })
         .catch(error => {
+          this.message = error.response.data.message
           console.log("There was an error:", error.response.data)
         });
       }
@@ -793,12 +801,18 @@ import Utils from '@/config/utils.js'
             this.getAppointments()
             this.selectedEvent.color = 'blue'
           })
+          .catch (error => {
+            this.message = error.response.data.message
+          })
         }
       } else {
         this.selectedAppointment.status = "cancelled"
         await AppointmentServices.updateAppointment(this.selectedAppointment.id, this.selectedAppointment).then(() =>{
           this.getAppointments()
           this.selectedEvent.color = 'red'
+        })
+        .catch (error => {
+          this.message = error.response.data.message
         })
       }
     },
@@ -813,6 +827,12 @@ import Utils from '@/config/utils.js'
           await PersonAppointmentServices.addPersonAppointment(this.person).then(() => {
             this.getAppointments()
           })
+          .catch (error => {
+            this.message = error.response.data.message
+           })
+        })
+        .catch (error => {
+          this.message = error.response.data.message
         })
       }
       else if (this.adminAddStudent && !this.studentNameInput) {
@@ -821,6 +841,9 @@ import Utils from '@/config/utils.js'
         this.person.personId = this.walkInStudent.id
         await PersonAppointmentServices.addPersonAppointment(this.person).then(() => {
           this.getAppointments()
+        })
+        .catch (error => {
+          this.message = error.response.data.message
         })
       }
       else {
@@ -835,6 +858,9 @@ import Utils from '@/config/utils.js'
         //Update stored data
         await PersonAppointmentServices.addPersonAppointment(this.person).then(() => {
           this.getAppointments()
+        })
+        .catch (error => {
+          this.message = error.response.data.message
         })
       }
       
@@ -867,6 +893,12 @@ import Utils from '@/config/utils.js'
             }
             await PersonAppointmentServices.addPersonAppointment(pap)
           })
+          .catch (error => {
+            this.message = error.response.data.message
+          })
+        })
+        .catch (error => {
+          this.message = error.response.data.message
         })
       }
       //If the end of the booked slot isn't the end of the slot, generate an open slot
@@ -890,7 +922,13 @@ import Utils from '@/config/utils.js'
               personId: t.id
             }
             await PersonAppointmentServices.addPersonAppointment(pap)
+            .catch (error => {
+               this.message = error.response.data.message
+             })
           })
+          .catch (error => {
+          this.message = error.response.data.message
+        })
         })
       }
       //Load appointment info
@@ -903,7 +941,13 @@ import Utils from '@/config/utils.js'
       this.person.personId = this.walkInStudent.id
       //Update stored data
       await AppointmentServices.updateAppointment(this.selectedAppointment.id, this.selectedAppointment)
+      .catch (error => {
+        this.message = error.response.data.message
+      })
       await PersonAppointmentServices.addPersonAppointment(this.person)
+      .catch (error => {
+        this.message = error.response.data.message
+      })
       this.adminAddStudent = false
     },
 
@@ -934,6 +978,12 @@ import Utils from '@/config/utils.js'
             }
             await PersonAppointmentServices.addPersonAppointment(pap)
           })
+          .catch (error => {
+          this.message = error.response.data.message
+          })
+        })
+        .catch (error => {
+          this.message = error.response.data.message
         })
       }
       //If the end of the booked slot isn't the end of the slot, generate an open slot
@@ -957,7 +1007,13 @@ import Utils from '@/config/utils.js'
               personId: t.id
             }
             await PersonAppointmentServices.addPersonAppointment(pap)
+            .catch (error => {
+              this.message = error.response.data.message
+            })
           })
+        })
+        .catch (error => {
+          this.message = error.response.data.message
         })
       }
       //Load appointment info
@@ -970,7 +1026,13 @@ import Utils from '@/config/utils.js'
       this.person.personId = this.$store.state.loginUser.userID
       //Update stored data
       await AppointmentServices.updateAppointment(this.selectedAppointment.id, this.selectedAppointment)
+      .catch (error => {
+          this.message = error.response.data.message
+      })
       await PersonAppointmentServices.addPersonAppointment(this.person)
+      .catch (error => {
+          this.message = error.response.data.message
+      })
       this.sendMessage(this.tutors[0], this.user.fName, this.user.lName, this.selectedAppointment.id)
     },
 
@@ -1053,6 +1115,7 @@ import Utils from '@/config/utils.js'
           this.locations = response.data;
         })
         .catch((error) => {
+          this.message = error.response.data.message
           console.log("There was an error:", error.response);
         });
     },
@@ -1172,7 +1235,11 @@ import Utils from '@/config/utils.js'
           this.isStudentofAppointment()
           this.selectedElement = nativeEvent.target
          requestAnimationFrame(() => requestAnimationFrame(() => this.selectedOpen = true))
-        });
+        })
+        .catch(error => {
+          this.message = error.response.data.message
+        })
+        ;
       }
       if (this.selectedOpen) {
         this.selectedOpen = false
@@ -1207,6 +1274,9 @@ import Utils from '@/config/utils.js'
               this.students.push(response.data)
             }
           })
+          .catch(error => {
+            this.message = error.response.data.message
+          })
         }
       })
     },
@@ -1223,6 +1293,9 @@ import Utils from '@/config/utils.js'
           }
         }
         
+      })
+      .catch(error => {
+          this.message = error.response.data.message
       })
      
       return 
@@ -1259,6 +1332,7 @@ import Utils from '@/config/utils.js'
             }
         })
         .catch((error) => {
+          this.message = error.response.data.message
           console.log("There was an error:", error.response);
         })
         return check;
@@ -1309,6 +1383,9 @@ import Utils from '@/config/utils.js'
         await PersonServices.getPerson(studentId).then((response) => {
           this.studentName = response.data.fName + " " + response.data.lName
         })
+        .catch(error => { 
+          this.message = error.response.data.message
+        })
       }
       else{
         this.studentName = 'Open'
@@ -1324,12 +1401,18 @@ import Utils from '@/config/utils.js'
           await PersonServices.getPerson(tutorId).then((response) => {
             this.tutorName = response.data.fName + " " + response.data.lName
           })
+          .catch(error => { 
+            this.message = error.response.data.message
+        })
         }
       }
     },
     async getTopicName(id){
       TopicServices.getTopic(id).then((response) => {
         return response.data.name;
+      })
+      .catch(error => { 
+          this.message = error.response.data.message
       })
     },
     //Load all appointments in backend into calendar events
@@ -1444,6 +1527,9 @@ import Utils from '@/config/utils.js'
         if ((this.appointments[i].type.includes('Private') && this.checkRole('Tutor')) || 
             (this.checkRole('Admin') && (this.appointments[i].status.includes('booked') || this.appointments[i].status.includes('pending')))){
           await this.getStudentNameForAppointment(this.appointments[i])
+          .catch(error => { 
+            this.message = error.response.data.message
+          })
           events.push({
             name: 'P: ' + this.studentName,
             start: startTime,
@@ -1456,6 +1542,9 @@ import Utils from '@/config/utils.js'
         else if(this.appointments[i].type.includes('Private') && !this.appointments[i].status.includes('Cancel') &&
                (this.checkRole('Student') || this.checkRole('Admin'))){
           await this.getTutorNameForAppointment(this.appointments[i])
+          .catch(error => { 
+          this.message = error.response.data.message
+          })
           events.push({
             name: 'P: ' + this.tutorName,
             start: startTime,
@@ -1494,6 +1583,9 @@ import Utils from '@/config/utils.js'
         this.groupColor = false;
         return 
       })
+      .catch(error => { 
+          this.message = error.response.data.message
+       })
     },
     //method for canceling appointments
     async cancelAppointment(){
@@ -1525,6 +1617,9 @@ import Utils from '@/config/utils.js'
             await this.getAppointments()
             //this.$router.go(0);
           })
+          .catch(error => { 
+            this.message = error.response.data.message
+          })
       })
       }
       else if (this.selectedAppointment.type.includes('Private') && this.checkRole('Student') && this.checkStatus('pending')){
@@ -1533,6 +1628,9 @@ import Utils from '@/config/utils.js'
         this.selectedAppointment.topicId = null;
         this.selectedAppointment.preSessionInfo = "";
         await AppointmentServices.updateAppointmentStatus(this.selectedAppointment.id, this.selectedAppointment)
+        .catch(error => { 
+          this.message = error.response.data.message
+        })
         for (let i = 0;i < this.personAppointments.length;i++) {
           if (this.personAppointments[i].appointmentId == this.selectedAppointment.id && !this.personAppointments[i].isTutor
             && this.personAppointments[i].personId == this.user.userID){
@@ -1569,6 +1667,7 @@ import Utils from '@/config/utils.js'
             
               
             await PersonAppointmentServices.deletePersonAppointment(this.personAppointments[i].id)
+   
             await AppointmentServices.deleteAppointment(this.selectedAppointment.id)
           
             await this.getAppointments()
@@ -1585,6 +1684,9 @@ import Utils from '@/config/utils.js'
             .then((response) => {
               this.personAppointments = response.data;
             })
+            .catch(error => { 
+              this.message = error.response.data.message
+            })
             let found = false;
             for (let j = 0;j < this.personAppointments.length;j++) {
               if (this.personAppointments[j].appointmentId == this.selectedAppointment.id && this.personAppointments[j].isTutor &&
@@ -1597,13 +1699,22 @@ import Utils from '@/config/utils.js'
                 this.tutorCancelMessage(this.students[k], this.user.fName, this.user.lName, this.selectedAppointment.id)
               } 
               this.selectedAppointment.status = "tutorCancel"
-              await AppointmentServices.updateAppointmentStatus(this.selectedAppointment.id, this.selectedAppointment)         
+              await AppointmentServices.updateAppointmentStatus(this.selectedAppointment.id, this.selectedAppointment) 
+              .catch(error => { 
+                this.message = error.response.data.message
+              })        
             }
             else if (found){
               await PersonAppointmentServices.deletePersonAppointment(this.personAppointments[i].id)
+              .catch(error => { 
+                this.message = error.response.data.message
+              })
             }
             else {
               await AppointmentServices.deleteAppointment(this.selectedAppointment.id)
+              .catch(error => { 
+                this.message = error.response.data.message
+              })
             }
             await this.getAppointments()
 
@@ -1698,6 +1809,9 @@ import Utils from '@/config/utils.js'
           this.studentlName = ''
         }
       })
+      .catch(error => { 
+          this.message = error.response.data.message
+      })
     },
     // add a student to the system and then to the current group
     async adminAdd() {
@@ -1727,6 +1841,9 @@ import Utils from '@/config/utils.js'
             }
           }
         })
+        .catch(error => { 
+          this.message = error.response.data.message
+        })
       })
     },
     async editAppointment(){
@@ -1735,6 +1852,9 @@ import Utils from '@/config/utils.js'
             this.tutorEditMessage(this.students[i], this.user.fName, this.user.lName, this.selectedAppointment.type)
           }
           await this.getAppointments()
+        })
+        .catch(error => { 
+          this.message = error.response.data.message
         })
     }
   },

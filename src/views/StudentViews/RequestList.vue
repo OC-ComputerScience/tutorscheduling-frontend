@@ -12,7 +12,7 @@
       <v-toolbar
         flat
       >
-        <v-toolbar-title>Requests</v-toolbar-title>
+        <v-toolbar-title>{{this.message}}</v-toolbar-title>
         <v-divider
           class="mx-4"
           inset
@@ -133,6 +133,7 @@ import RequestServices from "@/services/requestServices.js";
         { text: 'Actions', value: 'actions', sortable: false },
       ],
       requests: [],
+      message :'Request - click request to view or edit request',
       editedIndex: -1,
       editedItem: {
         status: '',
@@ -161,7 +162,8 @@ import RequestServices from "@/services/requestServices.js";
                 this.requests = response.data;
                 })
                 .catch((error) => {
-                console.log("There was an error:", error.response);
+                  this.message = error.response.data.message
+                  console.log("There was an error:", error.response);
                 });
             },
       editItem (item) {
@@ -182,6 +184,7 @@ import RequestServices from "@/services/requestServices.js";
               this.getTopics(this.start, this.length);
             })
             .catch(error => {
+              this.message = error.response.data.message
               console.log("There was an error:", error.response)
             });
         
@@ -210,12 +213,11 @@ import RequestServices from "@/services/requestServices.js";
             window.location.reload();
           })
           .catch((error) => {
+            this.message = error.response.data.message
             console.log(error);
           });
           Object.assign(this.requests[this.editedIndex], this.editedItem)
 
-        
-    
       },
     },
   }

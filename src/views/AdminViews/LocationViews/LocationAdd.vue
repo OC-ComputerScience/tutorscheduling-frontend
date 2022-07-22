@@ -3,7 +3,7 @@
   <div>
     <v-container>
       <v-toolbar>
-        <v-toolbar-title>Add Location</v-toolbar-title>
+        <v-toolbar-title>{{this.message}}</v-toolbar-title>
       </v-toolbar>
       <br>
     <v-form
@@ -96,6 +96,7 @@ import GroupServices from "@/services/groupServices.js";
 export default {
   data() {
     return {
+      message : 'Add Location - enter data and click Save',
       valid: true,
       location: {},
       group: {},
@@ -118,6 +119,7 @@ export default {
         this.group = response.data[0];
       })
       .catch((error) => {
+        this.message = error.response.data.message
         console.log("There was an error:", error.response);
       });
     },
@@ -137,6 +139,7 @@ export default {
           this.$router.push({ name: "locationList" });
         })
         .catch((error) => {
+          this.message = error.response.data.message
           console.log(error);
         });
     },

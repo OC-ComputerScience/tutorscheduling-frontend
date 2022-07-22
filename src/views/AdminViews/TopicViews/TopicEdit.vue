@@ -3,7 +3,7 @@
   <div>
     <v-container>
       <v-toolbar>
-        <v-toolbar-title>{{ this.topic.name }}</v-toolbar-title>
+        <v-toolbar-title>{{ this.message }}</v-toolbar-title>
       </v-toolbar>
       <br>
     <v-form
@@ -70,7 +70,7 @@ export default {
       topic: {},
       group: {},
       groups: {},
-      message: "Make updates to the Topic",
+      message: "Edit Topic - make updates to the fields and click Save",
         roles: [
         'admin'
       ],
@@ -83,6 +83,7 @@ export default {
         console.log(response.data);
       })
       .catch((error) => {
+        this.message = error.response.data.message
         console.log("There was an error:", error.response);
       }),
     GroupServices.getGroup(this.groupid)
@@ -91,6 +92,7 @@ export default {
         console.log(response.data);
       })
       .catch((error) => {
+        this.message = error.response.data.message
         console.log("There was an error:", error.response);
       }),
     GroupServices.getAllGroups()
@@ -98,6 +100,7 @@ export default {
           this.groups = response.data;
         })
         .catch((error) => {
+          this.message = error.response.data.message
           console.log("There was an error:", error.response);
       });
   },
@@ -109,7 +112,8 @@ export default {
           this.$router.go(-1);
         })
         .catch((error) => {
-          console.log(error);
+          this.message = error.response.data.message
+          console.log("There was an error:", error.response);
         });
     },
     cancel() {

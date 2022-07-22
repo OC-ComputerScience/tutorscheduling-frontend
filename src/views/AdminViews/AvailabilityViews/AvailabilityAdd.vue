@@ -3,7 +3,7 @@
   <v-container>
 <div>
   <v-toolbar>
-    <v-toolbar-title>Add Availability</v-toolbar-title>
+    <v-toolbar-title>{{this.message}}</v-toolbar-title>
   </v-toolbar>
   <br><br>
   <template>
@@ -270,6 +270,7 @@ import Utils from '@/config/utils.js'
     components: {
     },
     data: () => ({
+      message : 'Availability - select date, times and type and click Save to indicate when you can tutor',
       nowDate: null,
       nowTime: null,
       availability: {},
@@ -460,6 +461,7 @@ import Utils from '@/config/utils.js'
             })
           })
           .catch((error) => {
+            this.message = error.response.data.message
             console.log(error);
           });
         }
@@ -524,6 +526,7 @@ import Utils from '@/config/utils.js'
            
         })
         .catch(error => {
+          this.message = error.response.data.message
           console.log("There was an error:", error.response)
         });
       },
@@ -549,6 +552,7 @@ import Utils from '@/config/utils.js'
         this.getTopicsForGroup()
       })
       .catch((error) => {
+        this.message = error.response.data.message
         console.log("There was an error:", error.response);
       });
     },
@@ -561,6 +565,7 @@ import Utils from '@/config/utils.js'
         })
       })
       .catch(error => {
+        this.message = error.response.data.message
         console.log("There was an error:", error.response)
       });
     },
@@ -589,6 +594,7 @@ import Utils from '@/config/utils.js'
             this.getAvailabilities()      
           })
           .catch(error => {
+            this.message = error.response.data.message
             console.log("There was an error:", error.response)
           });
       
