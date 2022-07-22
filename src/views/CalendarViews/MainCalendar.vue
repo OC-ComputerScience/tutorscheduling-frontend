@@ -610,6 +610,9 @@ import Utils from '@/config/utils.js'
     //editing appointment
     saveChanges: false,
     isPrivateBook: false,
+    personApt : [],
+    allPersonApt : []
+
   }),
   created() {
     this.user = Utils.getStore('user')
@@ -632,12 +635,13 @@ import Utils from '@/config/utils.js'
         await PersonAppointmentServices.getAllPersonAppointments()
         .then(async (response) => {
           this.personAppointments = response.data;
-          
+          await this.loadPersonApt();
+          await this.loadAllPersonApt();
           await this.loadAppointments();
         })
       })
       .catch(error => {
-        this.message = error.response.data.message
+       this.message = error.response.data.message
         console.log("There was an error:", error.response)
       });
     },
@@ -1280,24 +1284,26 @@ import Utils from '@/config/utils.js'
         }
       })
     },
-    async isStudentInGroupAppoint(appointId) {
-      this.studentGroupColor =  false;
+
+    async loadAllPersonApt() {
       await PersonAppointmentServices.getAllPersonAppointments().then(async(response) => {
-        let person = response.data
-        for (let i = 0; i < person.length;i++){
-          if(person[i].appointmentId == appointId) {
-            if(!person[i].isTutor) {
+        this.allPersonApt = response.data
+      })
+      .catch(error => {
+          this.message = error.response.data.message
+      })
+    },
+
+    isStudentInGroupAppoint(appointId) {
+      this.studentGroupColor =  false;
+        for (let i = 0; i < this.allPersonApt.length;i++){
+          if(this.allPersonApt[i].appointmentId == appointId) {
+            if(!this.allPersonApt[i].isTutor) {
               this.studentGroupColor =  true;
               return 
             }
           }
         }
-        
-      })
-      .catch(error => {
-          this.message = error.response.data.message
-      })
-     
       return 
     },
     //Checks if the current session matches the given status, for hiding certain elements
@@ -1420,8 +1426,8 @@ import Utils from '@/config/utils.js'
       const events = []
       let filtered
       for(let i = 0; i < this.appointments.length; i++) {
-        await this.groupBookColor(this.appointments[i].id)
-        await this.isStudentInGroupAppoint(this.appointments[i].id)
+         this.groupBookColor(this.appointments[i].id)
+         this.isStudentInGroupAppoint(this.appointments[i].id)
         //filter events to only add appropriate events
         filtered = true
         //only add appointments from the current group
@@ -1449,7 +1455,7 @@ import Utils from '@/config/utils.js'
         {
           if(!(this.appointments[i].status == "available") || this.checkRole("Tutor")) {
           //only add if user is associated with event
-            if(!this.checkUserInAppointment(this.appointments[i].id)){
+            if(!this.checkTutor(this.appointments[i].id)){
               filtered = false;
             }
             if(this.appointments[i].type.includes('Group') 
@@ -1570,22 +1576,25 @@ import Utils from '@/config/utils.js'
   
       this.events = events
     },
-    async groupBookColor(appointId) {
-      let temp = null
+    async loadPersonApt() {
+      
       await PersonAppointmentServices.getPersonAppointmentForPerson(this.user.userID).then((response) => {
-        temp = response.data
-        for(let i = 0; i < temp.length;i++){
-          if (temp[i].appointmentId == appointId){
+        this.personApt = response.data
+      })
+      .catch(error => { 
+          this.message = error.response.data.message
+       })
+    },
+
+    groupBookColor(appointId) {
+        for(let i = 0; i < this.personApt.length;i++){
+          if (this.personApt[i].appointmentId == appointId){
             this.groupColor = true;
             return
           }
         } 
         this.groupColor = false;
         return 
-      })
-      .catch(error => { 
-          this.message = error.response.data.message
-       })
     },
     //method for canceling appointments
     async cancelAppointment(){
