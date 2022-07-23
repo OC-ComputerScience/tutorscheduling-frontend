@@ -611,7 +611,9 @@ import Utils from '@/config/utils.js'
     saveChanges: false,
     isPrivateBook: false,
     personApt : [],
-    allPersonApt : []
+    allPersonApt : [],
+    allTopics : null,
+    allPeople : null
 
   }),
   created() {
@@ -619,6 +621,8 @@ import Utils from '@/config/utils.js'
     this.getGroupByName(this.user.selectedGroup.replace(/%20/g, " "))
     this.getRole()
     this.getAppointments()
+    this.loadTopics()
+    this.loadPeople()
     this.isTutorOfSelectedEvent()
   },
   methods: {
@@ -1375,6 +1379,9 @@ import Utils from '@/config/utils.js'
       })
       return found
     },
+    getPersonName(id){
+      return this.allPeople.get(id).fName+" "+this.allPeople.get(id).lName
+    },
     //Get the name of the student for the appointments
     async getStudentNameForAppointment(appointId){
       var found = false
@@ -1386,12 +1393,13 @@ import Utils from '@/config/utils.js'
         }
       }
       if(found){
-        await PersonServices.getPerson(studentId).then((response) => {
-          this.studentName = response.data.fName + " " + response.data.lName
-        })
-        .catch(error => { 
-          this.message = error.response.data.message
-        })
+        this.studentName = this.getPersonName(studentId)
+        // await PersonServices.getPerson(studentId).then((response) => {
+        //   this.studentName = response.data.fName + " " + response.data.lName
+        // })
+        // .catch(error => { 
+        //   this.message = error.response.data.message
+        // })
       }
       else{
         this.studentName = 'Open'
@@ -1403,24 +1411,46 @@ import Utils from '@/config/utils.js'
       for (var i = 0;i < this.personAppointments.length;i++){
         if (this.personAppointments[i].appointmentId == appointId.id && this.personAppointments[i].isTutor == '1'){
           tutorId = this.personAppointments[i].personId
-    
-          await PersonServices.getPerson(tutorId).then((response) => {
-            this.tutorName = response.data.fName + " " + response.data.lName
-          })
-          .catch(error => { 
-            this.message = error.response.data.message
-        })
+          this.tutorName= this.getPersonName(tutorId)
+        //   await PersonServices.getPerson(tutorId).then((response) => {
+        //     this.tutorName = response.data.fName + " " + response.data.lName
+        //   })
+        //   .catch(error => { 
+        //     this.message = error.response.data.message
+        // })
         }
       }
     },
-    async getTopicName(id){
-      TopicServices.getTopic(id).then((response) => {
-        return response.data.name;
+    async loadTopics () {
+      this.allTopics = new Map()
+      TopicServices.getAllTopics().then((response) => {
+        let tempTopics = response.data;
+        tempTopics.forEach(topic => {
+          this.allTopic.set(topic.id,topic.name)
+        });
       })
       .catch(error => { 
           this.message = error.response.data.message
       })
     },
+
+    getTopicName(id){
+      return this.allTopics.get(id)
+    },
+    async loadPeople () {
+      this.allPeople = new Map()
+      PersonServices.getAllPersons().then((response) => {
+        let tempPersons = response.data;
+        tempPersons.forEach(person => {
+          this.allPeople.set(person.id,person)
+        });
+      })
+      .catch(error => { 
+          this.message = error.response.data.message
+      })
+    },
+
+
     //Load all appointments in backend into calendar events
     async loadAppointments() {
       const events = []
