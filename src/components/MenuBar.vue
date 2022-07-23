@@ -346,11 +346,21 @@ export default {
         ],
     }),
     async created() {
-        await this.resetMenu();
-
+        // ensures that their name gets set properly from store
+        this.user = Utils.getStore('user');
+        console.log(this.user)
+        if (this.user != null) {
+            this.title = 'OC Tutoring';
+            //console.log(this.initials)
+            this.initials = this.user.fName[0] + this.user.lName[0];
+            //console.log(this.initials)
+            this.name = this.user.fName + ' ' + this.user.lName;
+        }
     },
     async mounted() {
+        console.log("in mounted")
         await this.resetMenu();
+        console.log("done with mounted")
     },
     computed: {
         _link() {
@@ -375,24 +385,17 @@ export default {
                     this.groups.push(element.name);
                 });
                 for (let i = 0; i < this.user.access.length; i++) {
-                    let group = this.user.access[i];
-                    if (group.name.toString() === this.selectedGroup.toString()) {
-                        // save selected group
-                        this.user.selectedGroup = group.name;
-                        //console.log(this.user)
-                        //this.selectedRoles = '';
-                        /*for (let j = 0; j < group.roles.length; j++) {
-                            this.selectedRoles += group.roles[j];
-                            //console.log(this.user.access)
-                        }*/
-                       
-                        if (this.selectedRoles == '') {
-                            this.selectedRoles = this.user.access[0].roles[0]}
-                        this.user.selectedRoles = this.selectedRoles
-                        Utils.setStore("user", this.user);
-                        await this.getPersonRoles();
-                        
+                    if (this.selectedGroup === '' || this.selectedGroup === undefined || this.selectedGroup === null) {
+                            this.selectedGroup = this.user.access[0].name
+                            this.user.selectedGroup = this.selectedGroup
+                            Utils.setStore("user", this.user);
                     }
+                    if (this.selectedRoles === '' || this.selectedRoles === undefined || this.selectedRoles === null) {
+                        this.selectedRoles = this.user.access[0].roles[0]
+                    }
+                    this.user.selectedRoles = this.selectedRoles
+                    Utils.setStore("user", this.user);
+                    await this.getPersonRoles();
                 }
             }
             else this.title = '';
@@ -410,7 +413,11 @@ export default {
                                 .then(() => {
                                     
                                     if (this.selectedGroup === '' && this.user.selectedGroup === undefined)
+                                    {
                                         this.selectedGroup = this.groups[0];
+                                        this.user.selectedGroup = this.selectedGroup
+                                        Utils.setStore("user", this.user);
+                                    }
                                     else if (this.selectedGroup === '')
                                         this.selectedGroup = this.user.selectedGroup;
 
