@@ -611,7 +611,9 @@ import Utils from '@/config/utils.js'
     saveChanges: false,
     isPrivateBook: false,
     personApt : [],
-    allPersonApt : []
+    allPersonApt : [],
+    allTopics : null,
+    allPeople : null
 
   }),
   created() {
@@ -619,6 +621,8 @@ import Utils from '@/config/utils.js'
     this.getGroupByName(this.user.selectedGroup.replace(/%20/g, " "))
     this.getRole()
     this.getAppointments()
+    this.loadTopics()
+    this.loadPeople()
     this.isTutorOfSelectedEvent()
   },
   methods: {
@@ -1375,6 +1379,9 @@ import Utils from '@/config/utils.js'
       })
       return found
     },
+    getPersonName(id){
+      return this.allPeople.get(id).fName+" "+this.allPeople.get(id).lName
+    },
     //Get the name of the student for the appointments
     async getStudentNameForAppointment(appointId){
       var found = false
@@ -1386,12 +1393,13 @@ import Utils from '@/config/utils.js'
         }
       }
       if(found){
-        await PersonServices.getPerson(studentId).then((response) => {
-          this.studentName = response.data.fName + " " + response.data.lName
-        })
-        .catch(error => { 
-          this.message = error.response.data.message
-        })
+        this.studentName = this.getPersonName(studentId)
+        // await PersonServices.getPerson(studentId).then((response) => {
+        //   this.studentName = response.data.fName + " " + response.data.lName
+        // })
+        // .catch(error => { 
+        //   this.message = error.response.data.message
+        // })
       }
       else{
         this.studentName = 'Open'
@@ -1403,24 +1411,46 @@ import Utils from '@/config/utils.js'
       for (var i = 0;i < this.personAppointments.length;i++){
         if (this.personAppointments[i].appointmentId == appointId.id && this.personAppointments[i].isTutor == '1'){
           tutorId = this.personAppointments[i].personId
-    
-          await PersonServices.getPerson(tutorId).then((response) => {
-            this.tutorName = response.data.fName + " " + response.data.lName
-          })
-          .catch(error => { 
-            this.message = error.response.data.message
-        })
+          this.tutorName= this.getPersonName(tutorId)
+        //   await PersonServices.getPerson(tutorId).then((response) => {
+        //     this.tutorName = response.data.fName + " " + response.data.lName
+        //   })
+        //   .catch(error => { 
+        //     this.message = error.response.data.message
+        // })
         }
       }
     },
-    async getTopicName(id){
-      TopicServices.getTopic(id).then((response) => {
-        return response.data.name;
+    async loadTopics () {
+      this.allTopics = new Map()
+      TopicServices.getAllTopics().then((response) => {
+        let tempTopics = response.data;
+        tempTopics.forEach(topic => {
+          this.allTopics.set(topic.id,topic.name)
+        });
       })
       .catch(error => { 
           this.message = error.response.data.message
       })
     },
+
+    getTopicName(id){
+      return this.allTopics.get(id)
+    },
+    async loadPeople () {
+      this.allPeople = new Map()
+      PersonServices.getAllPersons().then((response) => {
+        let tempPersons = response.data;
+        tempPersons.forEach(person => {
+          this.allPeople.set(person.id,person)
+        });
+      })
+      .catch(error => { 
+          this.message = error.response.data.message
+      })
+    },
+
+
     //Load all appointments in backend into calendar events
     async loadAppointments() {
       const events = []
@@ -1514,8 +1544,9 @@ import Utils from '@/config/utils.js'
         endTime.setMinutes(endTime.getMinutes() + parseInt(endTimes[1]))
         //Note the format of each event, what data is associated with it
         if (this.appointments[i].type.includes('Group')){
-          await TopicServices.getTopic(this.appointments[i].topicId).then(async (response) => {
-            let topicName = response.data.name
+            
+//          await TopicServices.getTopic(this.appointments[i].topicId).then(async (response) => {
+            let topicName = this.getTopicName(this.appointments[i].topicId)
             if (this.groupColor && !this.studentGroupColor) {
               topicName = 'Open'
               color = 'grey darken-1'
@@ -1528,7 +1559,7 @@ import Utils from '@/config/utils.js'
               timed: true,
               appointmentId: this.appointments[i].id
             })
-          })
+ //         })
         }
         if ((this.appointments[i].type.includes('Private') && this.checkRole('Tutor')) || 
             (this.checkRole('Admin') && (this.appointments[i].status.includes('booked') || this.appointments[i].status.includes('pending')))){
