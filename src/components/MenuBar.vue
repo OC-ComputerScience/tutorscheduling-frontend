@@ -358,7 +358,9 @@ export default {
         }
     },
     async mounted() {
+        console.log("in mounted")
         await this.resetMenu();
+        console.log("done with mounted")
     },
     computed: {
         _link() {
@@ -386,7 +388,7 @@ export default {
                     if (this.selectedGroup === '' || this.selectedGroup === undefined || this.selectedGroup === null) {
                             this.selectedGroup = this.user.access[0].name
                             this.user.selectedGroup = this.selectedGroup
-                            Utils.setStore("user", this.user);Utils.setStore("user", this.user);
+                            Utils.setStore("user", this.user);
                     }
                     if (this.selectedRoles === '' || this.selectedRoles === undefined || this.selectedRoles === null) {
                         this.selectedRoles = this.user.access[0].roles[0]

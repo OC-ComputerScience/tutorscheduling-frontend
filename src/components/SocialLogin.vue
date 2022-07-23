@@ -179,9 +179,9 @@ export default {
           width: 400
         }
       )
-      global.google.accounts.id.prompt((notification) => {
-        console.log(notification)
-      });  
+      // global.google.accounts.id.prompt((notification) => {
+      //   console.log(notification)
+      // });  
     },
     handleCredentialResponse(response) {
       console.log(response);
@@ -195,10 +195,6 @@ export default {
         this.fName = this.user.fName;
         this.lName = this.user.lName;
         console.log(this.user);
-        if(this.user.userID !== undefined)
-        {
-          console.log("out of google stuff 1")
-        }
         this.openDialogs();
       })
       .catch(error => {
@@ -361,8 +357,10 @@ export default {
       }
     },
     async goToPage() {
+
       await this.getPersonRoles()
       .then(() => {
+
         for (let i = 0; i < this.personroles.length; i++) {
           let role = this.personroles[i];
           console.log(role);

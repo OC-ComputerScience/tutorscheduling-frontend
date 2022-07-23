@@ -6,6 +6,33 @@
         <v-spacer></v-spacer>
         <v-toolbar-title>{{this.message}}</v-toolbar-title>
       </v-toolbar>
+
+      <v-dialog
+        v-model="dialog"
+        persistent
+        max-width="800"
+      >
+        <v-card tile>
+          <v-card-title>
+            <span class="text-h5">Hello, {{this.user.fName}}!</span>
+          </v-card-title>
+          <v-card-text>
+            Tutor Scheduling updates your Google calendar with appointments. You will now be asked to approve that access via Google.
+            You will be presented with a Google login and a Tutor Scheduling access request.
+          </v-card-text>
+          <v-card-actions>
+            <v-spacer></v-spacer>
+            <v-btn
+              color="accent"
+              text
+              @click="dialog = false; doAuthorization()"
+            >
+              Continue
+            </v-btn>
+          </v-card-actions>
+        </v-card>
+      </v-dialog>
+
       <v-container v-if="approved">
       <v-row>
         <v-col>
@@ -110,6 +137,7 @@ import GroupServices from "@/services/groupServices.js";
         search: '',
         user: {},
         group: {},
+        dialog: false,
         currentId: 0,
         approved: false,
         disabled: false,
@@ -123,11 +151,11 @@ import GroupServices from "@/services/groupServices.js";
       };
     },
     async created() {
-      this.testAuthorization();
       this.user = Utils.getStore('user');
       if(this.id !== 0) {
         this.getTutorRole();
       }
+      console.log("selected group = " + this.user.selectedGroup)
       await this.getGroup(this.user.selectedGroup.replace(/%20/g, " "))
       .then(() => {
         this.getAppointments();
@@ -138,23 +166,40 @@ import GroupServices from "@/services/groupServices.js";
       })
     },
     methods: {
-      testAuthorization() {
+      checkForAuthorization() {
+        var now = new Date();
+        if(this.user.refresh_token !== null && this.user.refresh_token !== undefined && this.user.refresh_token !== '') {
+          if(now > this.user.expiration_date) {
+            this.dialog = true;
+          }
+        }
+        else {
+          this.dialog = true;
+        }
+      },
+      doAuthorization() {
         const client = global.google.accounts.oauth2.initCodeClient({
           client_id: process.env.VUE_APP_CLIENT_ID,
+          access_type: "offline",
           scope: 'https://www.googleapis.com/auth/calendar',
           ux_mode: 'popup',
           callback: (response) => {
-            console.log(response);
-            var code_receiver_uri = 'http://localhost/tutoring-api/authorize';
+            var code_receiver_uri = 'http://localhost/tutoring-api/authorize/' + this.user.userID;
             // Send auth code to your backend platform
             const xhr = new XMLHttpRequest();
+            xhr.onreadystatechange = function() {
+              if(this.readyState == 4 && this.status == 200) {
+                let responseData = JSON.parse(this.responseText);
+                let user = Utils.getStore("user");
+                user.refresh_token = responseData.refresh_token;
+                user.expiration_date = responseData.expiration_date;
+                Utils.setStore("user", user);
+              }
+            }
             xhr.open('POST', code_receiver_uri, true);
             xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
             xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
             xhr.setRequestHeader('Access-Control-Allow-Origin', '*');
-            xhr.onload = function() {
-              console.log('Signed in as: ' + xhr.responseText);
-            };
             xhr.send('code=' + response.code);
             // After receipt, the code is exchanged for an access token and
             // refresh token, and the platform then updates this web app
@@ -293,6 +338,10 @@ import GroupServices from "@/services/groupServices.js";
           this.message = error.response.data.message
           console.log("There was an error:", error.response);
         });
+
+        if(this.approved) {
+          this.checkForAuthorization();
+        }
       }
     }
   }
