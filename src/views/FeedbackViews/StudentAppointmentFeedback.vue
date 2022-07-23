@@ -3,7 +3,7 @@
     <v-container>
       <v-toolbar>
         <v-toolbar-title
-          >Providing Feedback for your recent appointment</v-toolbar-title
+          >{{this.message}}</v-toolbar-title
         >
       </v-toolbar>
       <br />
@@ -65,8 +65,9 @@ export default {
       textualfeedback: "",
       personAppointmentId: "",
 
-      message: "Make updates to the PersonAppointment",
+      message: "Provide Feedback for your recent appointment",
       roles: ["admin"],
+
     };
   },
   async created() {
@@ -80,6 +81,7 @@ export default {
         console.log(this.personAppointment);
       })
       .catch((error) => {
+        this.message = error.response.data.message
         console.log("There was an error:", error.response);
       });
   },
@@ -97,6 +99,7 @@ export default {
           this.$router.go(-1);
         })
         .catch((error) => {
+          this.message = error.response.data.message
           console.log(error);
         });
     },

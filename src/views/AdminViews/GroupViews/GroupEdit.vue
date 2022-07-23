@@ -2,7 +2,7 @@
   <div>
     <v-container>
       <v-toolbar>
-        <v-toolbar-title>{{ this.group.name }}</v-toolbar-title>
+        <v-toolbar-title>{{this.message}}</v-toolbar-title>
       </v-toolbar>
       <br>
     <v-form
@@ -56,7 +56,7 @@ export default {
   data() {
     return {
       group: {},
-      message: "Make updates to the Group",
+      message: "Edit Group - make updates to the fields and click Save",
         roles: [
         'admin'
       ],
@@ -69,6 +69,7 @@ export default {
         console.log(response.data);
       })
       .catch((error) => {
+        this.message = error.response.data.message
         console.log("There was an error:", error.response);
       });
   },
@@ -80,6 +81,7 @@ export default {
           this.$router.go(-1);
         })
         .catch((error) => {
+          this.message = error.response.data.message
           console.log(error);
         });
     },

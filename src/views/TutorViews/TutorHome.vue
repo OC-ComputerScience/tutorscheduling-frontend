@@ -4,7 +4,7 @@
       <v-toolbar>
         <v-toolbar-title>Hello, {{ this.user.fName }}!</v-toolbar-title>
         <v-spacer></v-spacer>
-        <v-toolbar-title>Tutor</v-toolbar-title>
+        <v-toolbar-title>{{this.message}}</v-toolbar-title>
       </v-toolbar>
       <v-container v-if="approved">
       <v-row>
@@ -78,8 +78,11 @@
         ></v-data-table>
       </v-card>
       </v-container>
-    <v-container v-else>
+    <v-container v-else-if="!disabled">
       <h4>Pending supervisor's approval...</h4>
+    </v-container>
+    <v-container v-else>
+      <h4>This role for {{group.name}} has been disabled. Please contact the group admin for further questions.</h4>
     </v-container>
     </v-container>
   </div>
@@ -109,12 +112,14 @@ import GroupServices from "@/services/groupServices.js";
         group: {},
         currentId: 0,
         approved: false,
+        disabled: false,
         appointments: [],
         appointmentsneedingfeedback: [],
         headers: [{text: 'Date', value: 'date'}, 
                   {text: 'Start Time', value: 'startTime'},
                   {text: 'End Time', value: 'endTime'},
-                  {text: 'Topic', value: 'topic.name'}]
+                  {text: 'Topic', value: 'topic.name'}],
+        message : 'Tutor'
       };
     },
     async created() {
@@ -127,6 +132,9 @@ import GroupServices from "@/services/groupServices.js";
       .then(() => {
         this.getAppointments();
         this.getAppointmentsNeedingFeedback();
+      })
+      .catch ((error) => {
+        this.message = error.response.data.message
       })
     },
     methods: {
@@ -161,6 +169,7 @@ import GroupServices from "@/services/groupServices.js";
           this.group = response.data[0];
         })
         .catch((error) => {
+          this.message = error.response.data.message
           console.log("There was an error:", error.response);
         });
       },
@@ -208,6 +217,7 @@ import GroupServices from "@/services/groupServices.js";
 
           })
           .catch(error => {
+            this.message = error.response.data.message
             console.log("There was an error:", error.response)
           });
       },
@@ -255,6 +265,7 @@ import GroupServices from "@/services/groupServices.js";
 
           })
           .catch(error => {
+            this.message = error.response.data.message
             console.log("There was an error:", error.response)
           });
       },      
@@ -272,8 +283,14 @@ import GroupServices from "@/services/groupServices.js";
           }
           else 
             this.approved = false;
+          if(response.data.status.includes('disabled')){
+            this.disabled = true;
+          }
+          else
+            this.disabled = false; 
         })
         .catch((error) => {
+          this.message = error.response.data.message
           console.log("There was an error:", error.response);
         });
       }

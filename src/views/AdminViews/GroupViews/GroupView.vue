@@ -2,7 +2,7 @@
   <div style="">
     <v-container>
       <v-toolbar>
-        <v-toolbar-title>{{ this.group.name }}</v-toolbar-title>
+        <v-toolbar-title>{{ this.message }}</v-toolbar-title>
       </v-toolbar>
       <br>
       <v-btn
@@ -59,6 +59,7 @@ export default {
   data() {
     return {
       group: {},
+      message : 'View Topic - click Edit to update or Delete to remove group',
     };
   },
   created() {

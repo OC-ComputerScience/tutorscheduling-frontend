@@ -3,7 +3,7 @@
   <div>
     <v-container>
       <v-toolbar>
-        <v-toolbar-title>Add Person</v-toolbar-title>
+        <v-toolbar-title>{{this.message}}</v-toolbar-title>
       </v-toolbar>
       <br>
     <v-form
@@ -81,6 +81,7 @@ export default {
       roles: [
         'admin'
       ],
+      message : 'Add Person - enter data and click Save'
     };
   },
   methods: {
@@ -90,6 +91,7 @@ export default {
           this.$router.push({ name: "personList" });
         })
         .catch((error) => {
+          this.message = error.response.data.message
           console.log(error);
         });
     },

@@ -2,13 +2,13 @@
   <div>
     <v-container>
       <v-toolbar>
-        <v-toolbar-title>Add Request</v-toolbar-title>
+        <v-toolbar-title>{{this.message}}</v-toolbar-title>
       </v-toolbar>
       <br>
     <v-form
       ref="form" 
       v-model="valid"
-      lazy validation
+      lazy-validation
     >
       <v-select
           v-model="request.problem"
@@ -90,6 +90,9 @@ export default {
       roles: [
         'admin'
       ],
+      message :'Add Request - enter data and click Save',
+      valid : false
+     
     };
   },
   
@@ -99,8 +102,11 @@ export default {
       .then(() => {
         this.getTopicsForGroup();
       })
+      .catch ((error)=>{
+        this.message = error.response.data.message
+      })
     this.getPerson();
-    this.getAllTopics();
+    //this.getAllTopics();
   },
   methods: {
     // getAllTopics() {
@@ -119,6 +125,7 @@ export default {
           this.topics = response.data;
         })
         .catch(error => {
+          this.message = error.response.data.message
           console.log("There was an error:", error.response)
         });
       },
@@ -128,6 +135,7 @@ export default {
         this.group = response.data[0];
       })
       .catch((error) => {
+        this.message = error.response.data.message
         console.log("There was an error:", error.response);
       });
     },
@@ -139,6 +147,7 @@ export default {
           this.$router.go(-1);
         })
         .catch((error) => {
+          this.message = error.response.data.message
           console.log(error);
         });
     },
@@ -154,6 +163,7 @@ export default {
             return;
           })
           .catch(error => {
+            this.message = error.response.data.message
             console.log("There was an error:", error.response)
           });
       }

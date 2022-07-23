@@ -4,8 +4,9 @@
       <v-toolbar>
         <v-toolbar-title>Hello, {{ this.user.fName }}!</v-toolbar-title>
         <v-spacer></v-spacer>
-        <v-toolbar-title>Admin</v-toolbar-title>
+        <v-toolbar-title>{{this.message}}</v-toolbar-title>
       </v-toolbar>
+      <v-container v-if="!disabled">
       <v-row justify="center">
         <v-col md="4">
           <v-card 
@@ -141,6 +142,10 @@
           @click:row="rowClick"
         ></v-data-table>
       </v-card>
+      </v-container>
+    <v-container v-else>
+      <h4>This role for {{group.name}} has been disabled. Please contact the group admin for further questions.</h4>
+    </v-container>
     </v-container>
   </div>
 </template>
@@ -149,6 +154,7 @@
 import Utils from '@/config/utils.js'
 import AppointmentServices from '@/services/appointmentServices.js'
 import GroupServices from "@/services/groupServices.js";
+import PersonRoleServices from "@/services/personRoleServices.js";
 
   export default {
     props: ["id"],
@@ -166,17 +172,24 @@ import GroupServices from "@/services/groupServices.js";
         user: {},
         group: {},
         appointments: [],
+        disabled: false,
         headers: [{text: 'Date', value: 'date'}, 
                   {text: 'Start Time', value: 'startTime'},
                   {text: 'End Time', value: 'endTime'},
-                  {text: 'Topic', value: 'topic.name'}]
+                  {text: 'Topic', value: 'topic.name'}],
+        message :'Admin'
       };
     },
     async created() {
       this.user = Utils.getStore('user');
       await this.getGroup(this.user.selectedGroup.replace(/%20/g, " "))
       .then(() => {
-        this.getAppointmentsForGroup();
+        this.getAdminRole();
+        if(!this.disabled)
+          this.getAppointmentsForGroup();
+      })
+      .catch ((error)=>{
+        this.message = error.response.data.message
       })
     },
     methods: {
@@ -186,6 +199,7 @@ import GroupServices from "@/services/groupServices.js";
           this.group = response.data[0];
         })
         .catch((error) => {
+          this.message = error.response.data.message
           console.log("There was an error:", error.response);
         });
       },
@@ -193,7 +207,6 @@ import GroupServices from "@/services/groupServices.js";
         await AppointmentServices.getUpcomingAppointmentForGroup(this.group.id)
           .then(response => {
             this.appointments = response.data;
-            console.log(response);
 
             for (let index = 0; index < this.appointments.length; ++index) {
               //format date
@@ -234,12 +247,26 @@ import GroupServices from "@/services/groupServices.js";
 
           })
           .catch(error => {
+            this.message = error.response.data.message
             console.log("There was an error:", error.response)
           });
       },
       rowClick: function (item, row) {      
         row.select(true);
         //this.$router.push({ name: 'appointmentView', params: { id: item.id } });
+      },
+      async getAdminRole() {
+        await PersonRoleServices.getPersonRole(this.id)
+        .then((response) => {
+          if(response.data.status.includes('disabled')){
+            this.disabled = true;
+          }
+          else
+            this.disabled = false; 
+        })
+        .catch((error) => {
+          console.log("There was an error:", error.response);
+        });
       }
     }
   }

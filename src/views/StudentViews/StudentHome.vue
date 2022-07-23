@@ -4,8 +4,9 @@
       <v-toolbar>
         <v-toolbar-title>Hello, {{ this.user.fName }}!</v-toolbar-title>
         <v-spacer></v-spacer>
-        <v-toolbar-title>Student</v-toolbar-title>
+        <v-toolbar-title>{{this.message}}</v-toolbar-title>
       </v-toolbar>
+      <v-container v-if="!disabled">
       <v-row>
         <v-col>
           <v-card 
@@ -76,6 +77,10 @@
           @click:row="provideFeedback"
         ></v-data-table>
       </v-card>
+      </v-container>
+    <v-container v-else>
+      <h4>This role for {{group.name}} has been disabled. Please contact the group admin for further questions.</h4>
+    </v-container>
     </v-container>
   </div>
 </template>
@@ -84,6 +89,7 @@
 import Utils from '@/config/utils.js'
 import AppointmentServices from '@/services/appointmentServices.js'
 import GroupServices from "@/services/groupServices.js";
+import PersonRoleServices from "@/services/personRoleServices.js";
 
   export default {
     props: ["id"],
@@ -100,20 +106,28 @@ import GroupServices from "@/services/groupServices.js";
         search: '',
         user: {},
         group: {},
+        disabled: false,
         appointments: [],
         appointmentsneedingfeedback: [],
         headers: [{text: 'Date', value: 'date'}, 
                   {text: 'Start Time', value: 'startTime'},
                   {text: 'End Time', value: 'endTime'},
-                  {text: 'Topic', value: 'topic.name'}]
+                  {text: 'Topic', value: 'topic.name'}],
+        message : 'Student'
       };
     },
     async created() {
       this.user = Utils.getStore('user');
       await this.getGroup(this.user.selectedGroup.replace(/%20/g, " "))
       .then(() => {
-        this.getAppointments();
-        this.getAppointmentsNeedingFeedback();
+        this.getStudentRole();
+        if (!this.disabled) {
+          this.getAppointments();
+          this.getAppointmentsNeedingFeedback();
+        }
+      })
+      .catch ((error) => {
+        this.message = error.response.data.message
       })
     },
     methods: {
@@ -123,6 +137,7 @@ import GroupServices from "@/services/groupServices.js";
           this.group = response.data[0];
         })
         .catch((error) => {
+          this.message = error.response.data.message
           console.log("There was an error:", error.response);
         });
       },
@@ -170,6 +185,7 @@ import GroupServices from "@/services/groupServices.js";
 
           })
           .catch(error => {
+            this.message = error.response.data.message
             console.log("There was an error:", error.response)
           });
       },
@@ -217,6 +233,7 @@ import GroupServices from "@/services/groupServices.js";
 
           })
           .catch(error => {
+            this.message = error.response.data.message
             console.log("There was an error:", error.response)
           });
       },
@@ -225,6 +242,19 @@ import GroupServices from "@/services/groupServices.js";
         row.select(true);
         this.$router.push({ name: 'studentAppointmentFeedback', params: { id: item.id, userId: this.user.userID }});
       },
+      async getStudentRole() {
+        await PersonRoleServices.getPersonRole(this.id)
+        .then((response) => {
+          if(response.data.status.includes('disabled')){
+            this.disabled = true;
+          }
+          else
+            this.disabled = false; 
+        })
+        .catch((error) => {
+          console.log("There was an error:", error.response);
+        });
+      }
     }
   }
 </script>

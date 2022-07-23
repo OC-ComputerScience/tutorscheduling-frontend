@@ -3,7 +3,7 @@
   <div style="">
     <v-container>
       <v-toolbar>
-        <v-toolbar-title>{{ this.location.name }}</v-toolbar-title>
+        <v-toolbar-title>{{this.message}}</v-toolbar-title>
       </v-toolbar>
       <br>
       <v-btn
@@ -86,6 +86,7 @@ export default {
     return {
       location: {},
       group: {},
+      message : 'View Location - click Edit to update or Delete to remove location'
     };
   },
   created() {
@@ -98,12 +99,14 @@ export default {
             console.log(response.data);
           })
           .catch((error) => {
+            this.message = error.response.data.message
             console.log("There was an error:", error.response);
           });
           console.log(response.data);
         console.log(response.data);
       })
       .catch((error) => {
+        this.message = error.response.data.message
         console.log("There was an error:", error.response);
       });
   },
@@ -116,6 +119,7 @@ export default {
             this.$router.push({ name: "locationList" });
           })
           .catch((error) => {
+            this.message = error.response.data.message
             console.log("There was an error:", error.response);
           });
       }

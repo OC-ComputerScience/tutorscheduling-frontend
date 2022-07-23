@@ -2,7 +2,7 @@
   <div>
     <v-container>
       <v-toolbar>
-        <v-toolbar-title>Edit Tutor Account</v-toolbar-title>
+        <v-toolbar-title>{{this.message}}</v-toolbar-title>
       </v-toolbar>
       <br><br>
       <v-text-field
@@ -108,7 +108,8 @@ import Utils from '@/config/utils.js'
         fullName: '',
         topics: [],
         headers: [{text: 'Topic', value: 'name'}, 
-                  {text: 'Skill Level', value: 'persontopic[0].skillLevel'}]
+                  {text: 'Skill Level', value: 'persontopic[0].skillLevel'}],
+        message :'Edit Tutor Account'
       };
     },
     async created() {
@@ -126,6 +127,7 @@ import Utils from '@/config/utils.js'
           this.group = response.data[0];
         })
         .catch((error) => {
+          this.message = error.response.data.message
           console.log("There was an error:", error.response);
         });
       },
@@ -136,6 +138,7 @@ import Utils from '@/config/utils.js'
             this.fullName = this.person.fName + ' ' + this.person.lName;
           })
           .catch(error => {
+            this.message = error.response.data.message
             console.log("There was an error:", error.response)
           });
       },
@@ -144,10 +147,11 @@ import Utils from '@/config/utils.js'
         .then(response => {
           response.data.forEach(data => {
             this.topics.push(data);
-            console.log(data);
+          
           })
         })
         .catch(error => {
+          this.message = error.response.data.message
           console.log("There was an error:", error.response)
         });
       },
