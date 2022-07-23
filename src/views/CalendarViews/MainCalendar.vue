@@ -1426,7 +1426,7 @@ import Utils from '@/config/utils.js'
       TopicServices.getAllTopics().then((response) => {
         let tempTopics = response.data;
         tempTopics.forEach(topic => {
-          this.allTopic.set(topic.id,topic.name)
+          this.allTopics.set(topic.id,topic.name)
         });
       })
       .catch(error => { 
@@ -1544,8 +1544,9 @@ import Utils from '@/config/utils.js'
         endTime.setMinutes(endTime.getMinutes() + parseInt(endTimes[1]))
         //Note the format of each event, what data is associated with it
         if (this.appointments[i].type.includes('Group')){
-          await TopicServices.getTopic(this.appointments[i].topicId).then(async (response) => {
-            let topicName = response.data.name
+            
+//          await TopicServices.getTopic(this.appointments[i].topicId).then(async (response) => {
+            let topicName = this.getTopicName(this.appointments[i].topicId)
             if (this.groupColor && !this.studentGroupColor) {
               topicName = 'Open'
               color = 'grey darken-1'
@@ -1558,7 +1559,7 @@ import Utils from '@/config/utils.js'
               timed: true,
               appointmentId: this.appointments[i].id
             })
-          })
+ //         })
         }
         if ((this.appointments[i].type.includes('Private') && this.checkRole('Tutor')) || 
             (this.checkRole('Admin') && (this.appointments[i].status.includes('booked') || this.appointments[i].status.includes('pending')))){
