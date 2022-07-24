@@ -803,7 +803,7 @@ import Utils from '@/config/utils.js'
       if(confirm) {
         if(this.appointmentType.includes("Private")){
           this.selectedAppointment.status = "booked"
-          await AppointmentServices.updateAppointmentStatus(this.selectedAppointment.id, this.selectedAppointment)
+          await AppointmentServices.updateForGoogle(this.selectedAppointment.id, this.selectedAppointment)
           .then(async () =>{
             await this.tutorConfirmMessage(this.students[0], this.user.fName, this.user.lName, this.selectedAppointment.id)
             this.getAppointments()
@@ -814,8 +814,9 @@ import Utils from '@/config/utils.js'
           })
         }
       } else {
+        // don't need to update google cal because it's not even on there yet
         this.selectedAppointment.status = "cancelled"
-        await AppointmentServices.updateAppointment(this.selectedAppointment.id, this.selectedAppointment).then(() =>{
+        await AppointmentServices.updateAppointmentS(this.selectedAppointment.id, this.selectedAppointment).then(() =>{
           this.getAppointments()
           this.selectedEvent.color = 'red'
         })
@@ -1632,7 +1633,7 @@ import Utils from '@/config/utils.js'
       //delete appointment as a student of a private session
       if (this.selectedAppointment.type.includes('Private') && this.checkRole('Student') && this.checkStatus('booked')){
         this.selectedAppointment.status = "studentCancel"
-        await AppointmentServices.updateAppointmentStatus(this.selectedAppointment.id, this.selectedAppointment)
+        await AppointmentServices.updateForGoogle(this.selectedAppointment.id, this.selectedAppointment)
           .then(async () =>{
             let temp = {
               date: this.selectedAppointment.date,
@@ -1667,7 +1668,7 @@ import Utils from '@/config/utils.js'
         this.selectedAppointment.locationId = null;
         this.selectedAppointment.topicId = null;
         this.selectedAppointment.preSessionInfo = "";
-        await AppointmentServices.updateAppointmentStatus(this.selectedAppointment.id, this.selectedAppointment)
+        await AppointmentServices.updateForGoogle(this.selectedAppointment.id, this.selectedAppointment)
         .catch(error => { 
           this.message = error.response.data.message
         })
@@ -1698,7 +1699,7 @@ import Utils from '@/config/utils.js'
             for(let j = 0; j<this.personAppointments.length;j++){
               if (this.personAppointments[j].appointmentId == this.selectedAppointment.id && !this.personAppointments[j].isTutor){
                 this.selectedAppointment.status = "tutorCancel"
-                await AppointmentServices.updateAppointmentStatus(this.selectedAppointment.id, this.selectedAppointment)
+                await AppointmentServices.updateForGoogle(this.selectedAppointment.id, this.selectedAppointment)
                 this.tutorCancelMessage(this.students[0], this.user.fName, this.user.lName, this.selectedAppointment.id)
                 await this.getAppointments()
                 return
@@ -1739,7 +1740,7 @@ import Utils from '@/config/utils.js'
                 this.tutorCancelMessage(this.students[k], this.user.fName, this.user.lName, this.selectedAppointment.id)
               } 
               this.selectedAppointment.status = "tutorCancel"
-              await AppointmentServices.updateAppointmentStatus(this.selectedAppointment.id, this.selectedAppointment) 
+              await AppointmentServices.updateForGoogle(this.selectedAppointment.id, this.selectedAppointment) 
               .catch(error => { 
                 this.message = error.response.data.message
               })        

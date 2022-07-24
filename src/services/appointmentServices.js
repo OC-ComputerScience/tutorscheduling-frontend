@@ -48,8 +48,8 @@ export default {
     updateAppointment(appointmentId, appointment) {
       return apiClient.put("appointment/" + appointmentId, appointment);
     },
-    updateAppointmentStatus(appointmentId, appointment) {
-      return apiClient.put("appointment/status/" + appointmentId, appointment);
+    updateForGoogle(appointmentId, appointment) {
+      return apiClient.put("appointment/google/" + appointmentId, appointment);
     },
     deleteAppointment(appointmentId) {
       return apiClient.delete("appointment/" + appointmentId);

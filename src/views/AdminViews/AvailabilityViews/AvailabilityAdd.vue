@@ -426,38 +426,45 @@ import Utils from '@/config/utils.js'
         return date
       },
       async addAvailability() {
-      for (var i = 0; i < this.dates.length; i++) {
-        let element = this.dates[i];
-        this.availability.date = element;
-        this.availability.startTime = this.newStart;
-        this.availability.endTime = this.newEnd;
-        this.availability.personId = this.user.userID;
-        await AvailabilityServices.addAvailability(this.availability)
-        .then(async ()=> {
-          let date = new Date(element)
-          date.setHours(date.getHours() + (date.getTimezoneOffset()/60))
-          this.appointment.date = date
-          this.appointment.startTime = this.newStart
-          this.appointment.endTime = this.newEnd
-          if(this.groupSession.includes('Private')){
-            this.appointment.type = "Private"
-            this.appointment.locationId = null
-            this.appointment.topicId = null
-            this.appointment.preSessionInfo = null
-          }
-          else{
-            this.appointment.type = "Group"
-            this.appointment.locationId = this.location
-            this.appointment.topicId = this.topic
-            this.appointment.preSessionInfo = this.preSessionInfo
-          }
-          this.appointment.groupId = this.group.id
-          this.appointment.status = "available"
-          await AppointmentServices.addAppointment(this.appointment).then(async response => {
-            this.personAppointment.isTutor = true
-            this.personAppointment.personId = this.user.userID
-            this.personAppointment.appointmentId = response.data.id
-            await PersonAppointmentServices.addPersonAppointment(this.personAppointment)   
+        for (var i = 0; i < this.dates.length; i++) {
+          let element = this.dates[i];
+          this.availability.date = element;
+          this.availability.startTime = this.newStart;
+          this.availability.endTime = this.newEnd;
+          this.availability.personId = this.user.userID;
+          await AvailabilityServices.addAvailability(this.availability)
+          .then(async () => {
+            let date = new Date(element)
+            date.setHours(date.getHours() + (date.getTimezoneOffset()/60))
+            this.appointment.date = date
+            this.appointment.startTime = this.newStart
+            this.appointment.endTime = this.newEnd
+            if(this.groupSession.includes('Private')){
+              this.appointment.type = "Private"
+              this.appointment.locationId = null
+              this.appointment.topicId = null
+              this.appointment.preSessionInfo = null
+            }
+            else{
+              this.appointment.type = "Group"
+              this.appointment.locationId = this.location
+              this.appointment.topicId = this.topic
+              this.appointment.preSessionInfo = this.preSessionInfo
+            }
+            this.appointment.groupId = this.group.id
+            this.appointment.status = "available"
+            await AppointmentServices.addAppointment(this.appointment)
+            .then(async response => {
+              this.appointment.id = response.data.id;
+              this.personAppointment.isTutor = true
+              this.personAppointment.personId = this.user.userID
+              this.personAppointment.appointmentId = this.appointment.id
+              await PersonAppointmentServices.addPersonAppointment(this.personAppointment) 
+              .then(async () => {
+                console.log(this.appointment)
+                if(this.appointment.type === "Group" || this.appointment.type === "group")
+                  await AppointmentServices.updateForGoogle(this.appointment.id, this.appointment)
+              }) 
             })
           })
           .catch((error) => {
@@ -465,6 +472,8 @@ import Utils from '@/config/utils.js'
             console.log(error);
           });
         }
+
+        
         this.dates =[];
         this.newStart ="00:00";
         this.newEnd = "23:30";
@@ -475,8 +484,6 @@ import Utils from '@/config/utils.js'
         this.secondTime = true;
         this.getAvailabilities();
         this.updateTimes();
-        //this.$router.go();
-        
       },
       async getAvailabilities() {
         await AvailabilityServices.getPersonAvailability(this.user.userID)
