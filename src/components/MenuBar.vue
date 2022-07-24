@@ -389,6 +389,10 @@ export default {
                             this.selectedGroup = this.user.access[0].name
                             this.user.selectedGroup = this.selectedGroup
                             Utils.setStore("user", this.user);
+                    } else
+                    {
+                      this.user.selectedGroup = this.selectedGroup
+                      Utils.setStore("user", this.user);
                     }
                     if (this.selectedRoles === '' || this.selectedRoles === undefined || this.selectedRoles === null) {
                         this.selectedRoles = this.user.access[0].roles[0]
