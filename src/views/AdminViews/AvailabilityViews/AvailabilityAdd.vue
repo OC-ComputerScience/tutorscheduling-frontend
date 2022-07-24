@@ -455,6 +455,7 @@ import Utils from '@/config/utils.js'
             this.appointment.status = "available"
             await AppointmentServices.addAppointment(this.appointment)
             .then(async response => {
+              console.log(response)
               this.appointment.id = response.data.id;
               this.personAppointment.isTutor = true
               this.personAppointment.personId = this.user.userID
@@ -465,7 +466,15 @@ import Utils from '@/config/utils.js'
                 if(this.appointment.type === "Group" || this.appointment.type === "group")
                   await AppointmentServices.updateForGoogle(this.appointment.id, this.appointment)
               }) 
+              .catch((error) => {
+                this.message = error.response.data.message
+                console.log(error);
+              });
             })
+            .catch((error) => {
+              this.message = error.response.data.message
+              console.log(error);
+            });
           })
           .catch((error) => {
             this.message = error.response.data.message
