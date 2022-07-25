@@ -157,16 +157,11 @@ export default {
   methods: {
     async loginWithGoogle() {
       global.handleCredentialResponse = this.handleCredentialResponse;
-      console.log(global.google)
-      console.log("inside button click")
       const client = process.env.VUE_APP_CLIENT_ID;
-      console.log(client)
       global.google.accounts.id.initialize({
         client_id: client,
         cancel_on_tap_outside: false,
         auto_select: true,
-        // prompt_parent_id: 'parent_id',
-        // ux_mode: "redirect",
         callback: global.handleCredentialResponse
       });
       global.google.accounts.id.renderButton(
