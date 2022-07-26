@@ -816,7 +816,7 @@ import Utils from '@/config/utils.js'
       } else {
         // don't need to update google cal because it's not even on there yet
         this.selectedAppointment.status = "cancelled"
-        await AppointmentServices.updateAppointmentS(this.selectedAppointment.id, this.selectedAppointment).then(() =>{
+        await AppointmentServices.updateAppointment(this.selectedAppointment.id, this.selectedAppointment).then(() =>{
           this.getAppointments()
           this.selectedEvent.color = 'red'
         })
@@ -872,7 +872,11 @@ import Utils from '@/config/utils.js'
           this.message = error.response.data.message
         })
       }
-      
+      // need to update group session in google
+      await AppointmentServices.updateForGoogle(this.selectedAppointment.id, this.selectedAppointment)
+      .catch (error => {
+          this.message = error.response.data.message
+      })
     },
     
     //Split appointments into more availablity slots when part of slot is booked by an Admin
@@ -949,7 +953,7 @@ import Utils from '@/config/utils.js'
       this.person.appointmentId = this.selectedAppointment.id
       this.person.personId = this.walkInStudent.id
       //Update stored data
-      await AppointmentServices.updateAppointment(this.selectedAppointment.id, this.selectedAppointment)
+      await AppointmentServices.updateForGoogle(this.selectedAppointment.id, this.selectedAppointment)
       .catch (error => {
         this.message = error.response.data.message
       })
@@ -1668,7 +1672,8 @@ import Utils from '@/config/utils.js'
         this.selectedAppointment.locationId = null;
         this.selectedAppointment.topicId = null;
         this.selectedAppointment.preSessionInfo = "";
-        await AppointmentServices.updateForGoogle(this.selectedAppointment.id, this.selectedAppointment)
+        // don't need to update google event because it doesn't exist
+        await AppointmentServices.updateAppointment(this.selectedAppointment.id, this.selectedAppointment)
         .catch(error => { 
           this.message = error.response.data.message
         })
@@ -1687,6 +1692,10 @@ import Utils from '@/config/utils.js'
           if (this.personAppointments[i].appointmentId == this.selectedAppointment.id && !this.personAppointments[i].isTutor
             && this.personAppointments[i].personId == this.user.userID){
             await PersonAppointmentServices.deletePersonAppointment(this.personAppointments[i].id)
+            await AppointmentServices.updateForGoogle(this.selectedAppointment.id, this.selectedAppointment)
+            .catch(error => { 
+              this.message = error.response.data.message
+            })
             await this.getAppointments()
             //this.$router.go(0);
           }
@@ -1888,7 +1897,7 @@ import Utils from '@/config/utils.js'
       })
     },
     async editAppointment(){
-      await AppointmentServices.updateAppointment(this.selectedAppointment.id, this.selectedAppointment).then(async () =>{
+      await AppointmentServices.updateForGoogle(this.selectedAppointment.id, this.selectedAppointment).then(async () =>{
           for (let i = 0;i < this.students.length;i++){
             this.tutorEditMessage(this.students[i], this.user.fName, this.user.lName, this.selectedAppointment.type)
           }
