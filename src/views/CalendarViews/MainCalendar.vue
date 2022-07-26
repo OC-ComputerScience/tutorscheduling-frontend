@@ -198,7 +198,9 @@
             label="Location"
             required
             dense
-            :disabled="checkStatus('pending') || (checkRole('Tutor') && !checkStatus('booked')) || ((checkRole('Student') || checkRole('Admin')) && (checkStatus('booked')) || selectedAppointment.status.includes('Cancel'))"
+            :disabled="checkStatus('pending') || (checkRole('Tutor') && !checkStatus('booked')) || 
+              ((checkRole('Student') || checkRole('Admin')) && (checkStatus('booked')) || 
+              selectedAppointment.status.includes('Cancel')) || datePast"
             @change="saveChanges = true"
           >
           </v-select>
@@ -211,7 +213,7 @@
             label="Topic"
             required
             dense
-            :disabled="!checkStatus('available') || checkRole('Tutor')"
+            :disabled="!checkStatus('available') || checkRole('Tutor') || datePast"
           >
           </v-select>
           </v-container>
@@ -227,6 +229,7 @@
             label="Location"
             required
             dense
+            :disabled="datePast"
             :readonly="!isTutorEvent || (isTutorEvent && checkRole('Admin'))"
             @change="saveChanges = true"
           >
@@ -240,6 +243,7 @@
             label="Topic"
             required
             dense
+            :disabled="datePast"
             :readonly="!isTutorEvent || (students.length > 0 && isTutorEvent) || (isTutorEvent && checkRole('Admin'))"
             @change="saveChanges = true"
           >
@@ -316,7 +320,7 @@
               required
               auto-grow
               rows="1"
-              :disabled="(!checkRole('Student') && !checkStatus('available')) || (checkRole('Student') && checkStatus('pending')) || checkRole('Tutor')"
+              :disabled="datePast || (!checkRole('Student') && !checkStatus('available')) || (checkRole('Student') && checkStatus('pending')) || checkRole('Tutor')"
               @change="saveChanges = true"
             ></v-textarea>
           </span>
@@ -331,6 +335,7 @@
               auto-grow
               rows="1"
               :readonly="!isTutorEvent"
+              :disabled="datePast"
               @change="saveChanges = true"
             ></v-textarea>
           </span>
@@ -419,8 +424,8 @@
         Save Changes
         </v-btn>
         
-        <v-btn v-if="(checkStatus('booked') && !checkRole('Admin')) || (isGroupBook && !adminAddStudent) || (isTutorEvent && (checkStatus('available') || checkStatus('booked'))) || 
-                    (checkRole('Student') && checkStatus('pending')) && !datePast"
+        <v-btn v-if="((checkStatus('booked') && !checkRole('Admin')) || (isGroupBook && !adminAddStudent) || (isTutorEvent && (checkStatus('available') || checkStatus('booked'))) || 
+                    (checkRole('Student') && checkStatus('pending'))) && !datePast"
           color="red"
           @click="cancelAppointment(); selectedOpen = false;"
         >
@@ -1900,22 +1905,13 @@ import Utils from '@/config/utils.js'
         })
     },
     checkAppointmentIfPast(){
-      let checkDate = new Date().setHours(0,0,0);
-      let checkTime = new Date().toLocaleTimeString('it-IT');
-      console.log(this.selectedAppointment)
-      console.log('in function')
-      if (this.selectedAppointment.date < checkDate){
-        if (this.selectedAppointment.startTime < checkTime){
-          console.log('past appointment')
-          this.datePast = true;
-        }
-        else{
-          console.log('future appointment')
-          this.datePast = false;
-        }
+      let checkDate = new Date();
+      checkDate.setHours(checkDate.getHours() - (checkDate.getTimezoneOffset()/60))
+      checkDate.setHours(0,0,0);
+      if (this.selectedAppointment.date < checkDate.toISOString()){
+        this.datePast = true;
       }
       else {
-        console.log('future appointment')
         this.datePast = false;
       }
     },

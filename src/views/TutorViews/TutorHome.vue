@@ -122,6 +122,7 @@ import PersonRoleServices from "@/services/personRoleServices.js";
 import AppointmentServices from '@/services/appointmentServices.js'
 import GroupServices from "@/services/groupServices.js";
 import PersonAppointmentServices from "@/services/personAppointmentServices.js";
+import LocationServices from "@/services/locationServices.js";
 
   export default {
     props: ["id"],
@@ -147,14 +148,14 @@ import PersonAppointmentServices from "@/services/personAppointmentServices.js";
         headers: [{text: 'Date', value: 'date'}, 
                   {text: 'Start Time', value: 'startTime'},
                   {text: 'End Time', value: 'endTime'},
+                  {text: 'Location', value: 'location'},
                   {text: 'Type', value: 'type'},
                   {text: 'Status', value: 'status'},
                   {text: 'Student(s)', value: 'student'}],
         headerFeedback: [{text: 'Date', value: 'date'}, 
                   {text: 'Start Time', value: 'startTime'},
                   {text: 'End Time', value: 'endTime'},
-                  {text: 'Type', value: 'type'},
-                  {text: 'Status', value: 'status'}],
+                  {text: 'Type', value: 'type'},],
         message : 'Tutor'
       };
     },
@@ -246,7 +247,17 @@ import PersonAppointmentServices from "@/services/personAppointmentServices.js";
                   this.appointments[index].student = 'Open'
                 }
               })
-
+              // get location info 
+              if (this.appointments[index].locationId == null){
+                this.appointments[index].location = 'Not Selected'
+              }
+              else {
+                await LocationServices.getLocation(this.appointments[index].locationId).then((response) => {
+                  let locationData = response.data;
+                  this.appointments[index].location = locationData.name;
+                  
+                })
+              }
               //format date
               let element = this.appointments[index];
               let formattedDate = element.date.toString().substring(5,10) + "-" + element.date.toString().substring(0,4);
