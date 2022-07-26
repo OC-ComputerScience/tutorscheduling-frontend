@@ -1907,9 +1907,18 @@ import Utils from '@/config/utils.js'
     checkAppointmentIfPast(){
       let checkDate = new Date();
       checkDate.setHours(checkDate.getHours() - (checkDate.getTimezoneOffset()/60))
-      checkDate.setHours(0,0,0);
+      checkDate.setHours(0,0,0,0);
+      let checkTime = new Date();
+      checkTime = checkTime.getHours()+":"+ checkTime.getMinutes() +":"+checkTime.getSeconds();
       if (this.selectedAppointment.date < checkDate.toISOString()){
         this.datePast = true;
+      }
+      else if(checkDate.toISOString() === this.selectedAppointment.date) {
+        if(checkTime > this.selectedAppointment.startTime){
+          this.datePast = true;
+        }
+        else  
+          this.datePast = false;
       }
       else {
         this.datePast = false;
