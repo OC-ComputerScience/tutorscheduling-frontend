@@ -97,7 +97,7 @@
           ></v-text-field>
         </v-card-title>
         <v-data-table
-          :headers="headers"
+          :headers="headerFeedback"
           :search="search"
           :items="appointmentsneedingfeedback"
           :items-per-page="50"
@@ -150,6 +150,11 @@ import PersonAppointmentServices from "@/services/personAppointmentServices.js";
                   {text: 'Type', value: 'type'},
                   {text: 'Status', value: 'status'},
                   {text: 'Student(s)', value: 'student'}],
+        headerFeedback: [{text: 'Date', value: 'date'}, 
+                  {text: 'Start Time', value: 'startTime'},
+                  {text: 'End Time', value: 'endTime'},
+                  {text: 'Type', value: 'type'},
+                  {text: 'Status', value: 'status'}],
         message : 'Tutor'
       };
     },
@@ -262,7 +267,6 @@ import PersonAppointmentServices from "@/services/personAppointmentServices.js";
               }
               this.appointments[index].endTime = formattedET;
             } 
-            console.log(this.appointments)
           })
           .catch(error => {
             this.message = error.response.data.message

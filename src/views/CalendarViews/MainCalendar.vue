@@ -420,7 +420,7 @@
         </v-btn>
         
         <v-btn v-if="(checkStatus('booked') && !checkRole('Admin')) || (isGroupBook && !adminAddStudent) || (isTutorEvent && (checkStatus('available') || checkStatus('booked'))) || 
-                    (checkRole('Student') && checkStatus('pending'))"
+                    (checkRole('Student') && checkStatus('pending')) && !datePast"
           color="red"
           @click="cancelAppointment(); selectedOpen = false;"
         >
@@ -613,8 +613,9 @@ import Utils from '@/config/utils.js'
     personApt : [],
     allPersonApt : [],
     allTopics : null,
-    allPeople : null
-
+    allPeople : null,
+    // check if date past
+    datePast: false,
   }),
   created() {
     this.user = Utils.getStore('user')
@@ -1241,6 +1242,7 @@ import Utils from '@/config/utils.js'
           this.updateTimes()
           this.updatePeople()
           this.isStudentofAppointment()
+          this.checkAppointmentIfPast()
           this.selectedElement = nativeEvent.target
          requestAnimationFrame(() => requestAnimationFrame(() => this.selectedOpen = true))
         })
@@ -1896,7 +1898,27 @@ import Utils from '@/config/utils.js'
         .catch(error => { 
           this.message = error.response.data.message
         })
-    }
+    },
+    checkAppointmentIfPast(){
+      let checkDate = new Date().setHours(0,0,0);
+      let checkTime = new Date().toLocaleTimeString('it-IT');
+      console.log(this.selectedAppointment)
+      console.log('in function')
+      if (this.selectedAppointment.date < checkDate){
+        if (this.selectedAppointment.startTime < checkTime){
+          console.log('past appointment')
+          this.datePast = true;
+        }
+        else{
+          console.log('future appointment')
+          this.datePast = false;
+        }
+      }
+      else {
+        console.log('future appointment')
+        this.datePast = false;
+      }
+    },
   },
 }
 </script>
