@@ -228,10 +228,25 @@ import PersonAppointmentServices from "@/services/personAppointmentServices.js";
       },
       async getAppointments() {
         await AppointmentServices.getUpcomingAppointmentForPersonForGroup(this.group.id, this.user.userID)
-          .then(response => {
+          .then(async (response) => {
             this.appointments = response.data;
-            this.addDataToAppoints();
+//            this.addDataToAppoints();
             for (let index = 0; index < this.appointments.length; ++index) {
+              this.appointments[index].student ='x'
+              //  look up students
+              await PersonAppointmentServices.findStudentDataForTable(this.appointments[index].id).then((response) => {
+                let studentData = response.data;
+                if (this.appointments[index].type.includes('Group')){
+                  this.appointments[index].student = studentData.length + " Student(s)";
+                }
+                else if (this.appointments[index].type.includes('Private') && (this.appointments[index].status.includes('booked') || this.appointments[index].status.includes('pending'))){
+                  this.appointments[index].student = studentData[0].person.fName + " " + studentData[0].person.lName;
+                }
+                else {
+                  this.appointments[index].student = 'Open'
+                }
+              })
+
               //format date
               let element = this.appointments[index];
               let formattedDate = element.date.toString().substring(5,10) + "-" + element.date.toString().substring(0,4);
@@ -352,6 +367,7 @@ import PersonAppointmentServices from "@/services/personAppointmentServices.js";
       },
       async addDataToAppoints() {
         for (let i = 0; i < this.appointments.length; i++){
+          this.appointments[i].student =  i;
           await PersonAppointmentServices.findStudentDataForTable(this.appointments[i].id).then((response) => {
             let studentData = response.data;
             if (this.appointments[i].type.includes('Group')){
@@ -364,7 +380,9 @@ import PersonAppointmentServices from "@/services/personAppointmentServices.js";
               this.appointments[i].student = 'Open'
             }
           })
+          console.log(this.appointments[i].student)
         }
+       
       }
     }
   }
