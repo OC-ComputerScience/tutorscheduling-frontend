@@ -1,32 +1,7 @@
 <template>
     <div class="signup-buttons">
-      <v-row>
-        <v-col>
-          <v-card 
-            @click.prevent="loginWithGoogle"
-            height="100"
-            elevation="10"
-            color="primary"
-            class="d-flex justify-center"
-          >
-            <v-card-title class="justify-center white--text">
-              Register
-            </v-card-title>
-          </v-card>
-        </v-col>
-        <v-col>
-          <v-card 
-            @click.prevent="loginWithGoogle"
-            height="100"
-            elevation="10"
-            color="primary"
-            class="d-flex justify-center"
-          >
-            <v-card-title class="justify-center white--text">
-              Login
-            </v-card-title>
-          </v-card>
-        </v-col>
+      <v-row justify="center">
+        <div display="flex" id="parent_id"></div>
       </v-row>
       
       <v-dialog
@@ -36,7 +11,7 @@
       >
         <v-card tile>
           <v-card-title>
-            <span class="text-h5">Hello, {{this.fName}}! Finish setting up your account below:</span>
+            <span class="text-h5">Hello, {{this.user.fName}}! Finish setting up your account below:</span>
           </v-card-title>
           <v-card-text>
             <v-container>
@@ -73,7 +48,7 @@
       >
         <v-card tile>
           <v-card-title>
-            <span class="text-h5">Hello, {{this.fName}}! Select below:</span>
+            <span class="text-h5">Hello, {{this.user.fName}}! Select below:</span>
           </v-card-title>
           <v-container>
             <v-subheader>Choose your action:</v-subheader>
@@ -130,7 +105,6 @@
 
 <script>
 import AuthServices from '@/services/authServices'
-import AppointmentServices from '@/services/appointmentServices'
 import GroupServices from '@/services/groupServices'
 import RoleServices from '@/services/roleServices'
 import PersonServices from '@/services/personServices'
@@ -141,6 +115,7 @@ export default {
   name: 'login_signup_social',
   data () {
     return {
+      value: false,
       dialog: false,
       dialog2: false,
       student: true,
@@ -158,11 +133,17 @@ export default {
       fName: '',
       lName: '',
       roleCounter: 0,
-      user: {}
+      user: {},
+      googleUserData: {},
+      token: ""
     }
   },
   created () {
     this.getGroups();
+    
+  },
+  mounted() {
+    this.loginWithGoogle();
   },
   computed: {
     validateRoleCheckbox() {
@@ -174,37 +155,42 @@ export default {
     }
   },
   methods: {
-    loginWithGoogle() {
-      this.$gAuth
-      .signIn()
-      .then(GoogleUser => {
-        // on success do something
-        console.log('GoogleUser', GoogleUser);
-        console.log('getId', GoogleUser.getId());
-        console.log('basicprofile', GoogleUser.getBasicProfile().getName());
-        console.log('getBasicProfile', GoogleUser.getBasicProfile());
-        console.log('getAuthResponse', GoogleUser.getAuthResponse());
-        var userInfo = {
-          email: GoogleUser.getBasicProfile().getEmail(),
-          idToken: GoogleUser.getAuthResponse().id_token,
-          token: {
-            access_token: GoogleUser.getAuthResponse().access_token,
-            token_type: GoogleUser.getAuthResponse().token_type,
-            expiry_date: GoogleUser.getAuthResponse().expires_at
-          }
+    async loginWithGoogle() {
+      global.handleCredentialResponse = this.handleCredentialResponse;
+      const client = process.env.VUE_APP_CLIENT_ID;
+      global.google.accounts.id.initialize({
+        client_id: client,
+        cancel_on_tap_outside: false,
+        auto_select: true,
+        callback: global.handleCredentialResponse
+      });
+      global.google.accounts.id.renderButton(
+        document.getElementById("parent_id"),
+        { 
+          type: "standard",
+          theme: "outline", 
+          size: "large",
+          text: "signup_with",
+          width: 400
         }
-        AuthServices.loginUser(userInfo)
-        .then(response => {
-          this.user = response.data;
-          Utils.setStore("user", this.user);
-          this.fName = this.user.fName;
-          this.lName = this.user.lName;
-          console.log(this.user);
-          this.openDialogs();
-        })
-        .catch(error => {
-          console.log('error', error);
-        })
+      )
+      // global.google.accounts.id.prompt((notification) => {
+      //   console.log(notification)
+      // });  
+    },
+    handleCredentialResponse(response) {
+      console.log(response);
+      let token = { 
+        credential : response.credential
+      };
+      AuthServices.loginUser(token)
+      .then(response => {
+        this.user = response.data;
+        Utils.setStore("user", this.user);
+        this.fName = this.user.fName;
+        this.lName = this.user.lName;
+        console.log(this.user);
+        this.openDialogs();
       })
       .catch(error => {
         console.log('error', error);
@@ -218,16 +204,6 @@ export default {
         .catch(error => {
           console.log("There was an error:", error.response)
         });
-    },
-    getGoogleCalToken() {
-      AppointmentServices.getGoogleCalPage()
-      .then(response => {
-        console.log(response)
-        window.open(response.data)
-      })
-      .catch(error => {
-        console.log("There was an error:", error.response)
-      });
     },
     async getPersonRoles() {
         await RoleServices.getIncompleteRoleForPerson(this.user.userID)
@@ -376,8 +352,10 @@ export default {
       }
     },
     async goToPage() {
+
       await this.getPersonRoles()
       .then(() => {
+
         for (let i = 0; i < this.personroles.length; i++) {
           let role = this.personroles[i];
           console.log(role);
