@@ -8,7 +8,7 @@
       </v-toolbar>
       <br />
       <br />
-      <v-form ref="form" v-model="valid" lazy validation>
+      <v-form ref="form" >
         <div class="text-xs-center">
           <v-layout justify-center>
             <h4>What would you rate this appointment experience?</h4>
@@ -37,6 +37,14 @@
           required
         ></v-text-field>
 
+        <v-container fluid>
+          <p>{{ selected }}</p>
+          <v-checkbox
+            v-model="selected"
+            label="This student was a no-show"
+            value="No-Show"
+          ></v-checkbox>
+        </v-container>
         <v-btn
           :disabled="!valid"
           color="success"
