@@ -231,7 +231,19 @@ import LocationServices from "@/services/locationServices.js";
         await AppointmentServices.getUpcomingAppointmentForPersonForGroup(this.group.id, this.user.userID)
           .then(async (response) => {
             this.appointments = response.data;
-//            this.addDataToAppoints();
+
+            let temp = this.appointments.length
+            for(let i = 0; i < temp; i++){
+                for(let j = 0; j < temp - i - 1; j++){
+                    if(this.appointments[j + 1].date < this.appointments[j].date){
+                        [this.appointments[j + 1],this.appointments[j]] = [this.appointments[j],this.appointments[j + 1]]
+                    }
+                    else if(this.appointments[j + 1].date === this.appointments[j].date){
+                      if(this.appointments[j + 1].startTime < this.appointments[j].startTime)
+                        [this.appointments[j + 1],this.appointments[j]] = [this.appointments[j],this.appointments[j + 1]]
+                    } 
+                }
+            }
             for (let index = 0; index < this.appointments.length; ++index) {
               this.appointments[index].student ='x'
               //  look up students
@@ -393,7 +405,6 @@ import LocationServices from "@/services/locationServices.js";
           })
           console.log(this.appointments[i].student)
         }
-       
       }
     }
   }
