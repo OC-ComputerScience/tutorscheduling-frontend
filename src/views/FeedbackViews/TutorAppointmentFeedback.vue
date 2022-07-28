@@ -40,13 +40,12 @@
         <v-container fluid>
           <p>{{ selected }}</p>
           <v-checkbox
-            v-model="selected"
+            v-model="status"
             label="This student was a no-show"
             value="No-Show"
           ></v-checkbox>
         </v-container>
         <v-btn
-          :disabled="!valid"
           color="success"
           class="mr-4"
           @click="updatePersonAppointment"
@@ -73,6 +72,7 @@ export default {
       numericalfeedback: null,
       textualfeedback: "",
       personAppointmentId: "",
+      status: "",
       appointment: {},
       message: "Provide feedback for your recent session",
       roles: ["admin"],
@@ -109,10 +109,16 @@ export default {
 
   methods: {
     async updatePersonAppointment() {
-      this.appointment.status = "complete";
+      if (this.status) {
+        console.log('no-show')
+        this.appointment.status = 'no-show'
+      } else {
+        console.log('complete')
+        this.appointment.status = "complete";
+      }
       this.personAppointment.feedbacktext = this.textualfeedback;
       this.personAppointment.feedbacknumber = this.numericalfeedback;
-      AppointmentServices.updateAppointmentStatus(this.id, this.appointment)
+      AppointmentServices.updateAppointment(this.id, this.appointment)
       .catch(error =>{
         this.message = error.response.data.message
       })
