@@ -193,7 +193,8 @@ import LocationServices from "@/services/locationServices.js";
           scope: 'https://www.googleapis.com/auth/calendar',
           ux_mode: 'popup',
           callback: (response) => {
-            var code_receiver_uri = 'http://localhost/tutoring-api/authorize/' + this.user.userID;
+            var code_receiver_uri = (process.env.URL ? process.env.URL : "http://localhost") + '/tutoring-api/authorize/' + this.user.userID;
+  
             // Send auth code to your backend platform
             const xhr = new XMLHttpRequest();
             xhr.onreadystatechange = function() {

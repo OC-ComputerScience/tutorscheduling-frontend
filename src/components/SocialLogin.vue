@@ -24,6 +24,7 @@
                   hint="123-456-7890"
                   persistent-hint
                   required
+                  v-on:keyup.enter="dialog = false; savePhoneNum()"
                 ></v-text-field>
               </v-row>
             </v-container>
