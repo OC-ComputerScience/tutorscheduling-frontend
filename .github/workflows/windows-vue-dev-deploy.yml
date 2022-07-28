@@ -35,6 +35,7 @@ jobs:
                     echo google_audience ="$GOOGLE_AUDIENCE" >> .env
                     echo client_secret = "$CLIENT_SECRET" >> .env
                     echo vue_app_client_url = "tutorschedulingdev.oc.edu" >> .env
+                    echo url = "tutorschedulingdev.oc.edu" >> .env
 
             - run: npm install
             - run: npm run build
