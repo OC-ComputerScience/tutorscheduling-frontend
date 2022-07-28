@@ -36,25 +36,43 @@
                 <v-card-title>
                   <span class="text-h5">Sign a contract for {{ role.groupName }}:</span>
                 </v-card-title> 
-                <pdf :src="role.pdfName"></pdf>
+                <pdf
+                  v-for="i in role.numPages"
+                  :key="i"
+                  :page="i"
+                  :src="role.pdfName"
+                ></pdf>
                 <v-container>
                   <v-text-field
+                    v-model="role.signature"
+                    id="role.signature"
                     label="Digital Signature"
-                    hint="Jane Doe"
+                    :hint="user.fullName"
                     persistent-hint
                     required
+                    v-on:keyup.enter="role.dialog = false; save(role)"
                   ></v-text-field>
-                  <br><br>
+                  <!-- <br><br>
                   <v-btn 
                     class="mr-4"
                     color="success"
-                    @click="save(role)"
+                    @click="role.dialog = false; save(role)"
                   >
                     Agree
                   </v-btn>
-                  <br><br>
-                  <br><br>
+                  <br><br> -->
                 </v-container>
+                <v-card-actions>
+                  <v-spacer></v-spacer>
+                  <v-btn
+                    color="success"
+                    text
+                    @click="role.dialog = false; save(role)"
+                  >
+                    Agree
+                  </v-btn>
+                </v-card-actions>
+                <br>
               </v-card>
             </v-dialog>
           </v-col>
@@ -80,14 +98,25 @@
         //dialog: [],
         message :'Sign Contract',
         roles: [],
+        numPages: 2,
         completeRole: {},
         colors: ['#47121D', '#EE5044', '#63BAC0', '#196CA2', '#F8C545', '#032F45'],
         user: {},
-        contracts: [ "Student.pdf", "NewCollege-Tutor.pdf", "StudentSuccessCenter-Tutor.pdf", "WritingCenter-Tutor.pdf" ]
+        files: [
+          { pdf: "NewCollege-Student.pdf", pages: 1 },
+          { pdf: "StudentSuccessCenter-Student.pdf", pages: 1 },
+          { pdf: "WritingCenter-Student.pdf", pages: 1 },
+          { pdf: "NewCollege-Tutor.pdf", pages: 1 },
+          { pdf: "StudentSuccessCenter-Tutor.pdf", pages: 1 },
+          { pdf: "WritingCenter-Tutor.pdf", pages: 2 }
+        ],
+        studentContracts: [ "NewCollege-Student.pdf", "StudentSuccessCenter-Student.pdf", "WritingCenter-Student.pdf" ],
+        tutorContracts: [ "NewCollege-Tutor.pdf", "StudentSuccessCenter-Tutor.pdf", "WritingCenter-Tutor.pdf" ]
       };
     },
     async created() {
       this.user = Utils.getStore('user');
+      this.user.fullName = this.user.fName + " " + this.user.lName;
       await this.getPersonRoles()
       .then(() => {
         console.log(this.roles)
@@ -142,18 +171,33 @@
               
               for (let k = 0; k < role.personrole.length; k++) {
                 let personrole = role.personrole[k];
-                if (role.type.includes("Student")) {
-                  personrole.pdfName = this.contracts[0];
-                }
-                else {
-                  for (let h = 1; h < this.contracts.length; h++) {
-                    if(this.contracts[h].includes(group.name.replace(/\s/g, ''))) {
-                      personrole.pdfName = this.contracts[h];
-                    }
-                  }
-                }
+                let tempFile = this.files.filter(function(file) { 
+                  return file.pdf.includes(group.name.replace(/\s/g, '')) && file.pdf.includes(role.type.toString())
+                });
+                  console.log(tempFile)
+                personrole.pdfName = tempFile[0].pdf;
+                personrole.numPages = tempFile[0].pages;
+                
+                // if (role.type.includes("Student")) {
+                //   // filter function returns an array--need just the object
+                  
+                //   // for (let h = 0; h < this.studentContracts.length; h++) {
+                //   //   if(this.studentContracts[h].includes(group.name.replace(/\s/g, ''))) {
+                //   //     personrole.pdfName = this.studentContracts[h];
+                //   //   }
+                //   // }
+                // }
+                // else if (role.type.includes("Tutor")) {
+                //   personrole.pdfName = this.tutorContracts.filter(contract => contract.includes(group.name.replace(/\s/g, '')))[0];
+                //   // for (let h = 1; h < this.contracts.length; h++) {
+                //   //   if(this.contracts[h].includes(group.name.replace(/\s/g, ''))) {
+                //   //     personrole.pdfName = this.contracts[h];
+                //   //   }
+                //   // }
+                // }
                 personrole.groupName = group.name;
                 personrole.dialog = false;
+                personrole.signature = null;
                 personrole.color = this.colors[k % this.colors.length];
                 personrole.type = role.type;
                 this.roles.push(personrole);
