@@ -26,6 +26,7 @@
               length="5"
               size="45"
               value="3"
+              
             ></v-rating>
           </v-layout>
         </div>
@@ -34,7 +35,7 @@
           id="description"
           :counter="500"
           label="Provide Feedback..."
-          required
+         
         ></v-text-field>
 
         <v-container fluid>
@@ -43,6 +44,7 @@
             v-model="status"
             label="This student was a no-show"
             value="No-Show"
+           
           ></v-checkbox>
         </v-container>
         <v-btn
@@ -75,9 +77,10 @@ export default {
       status: "",
       appointment: {},
       message: "Provide feedback for your recent session",
-      roles: ["admin"],
+      roles: ["admin"]
 
-    };
+
+    }
   },
   
   async created() {
@@ -109,6 +112,13 @@ export default {
 
   methods: {
     async updatePersonAppointment() {
+
+      if (this.status!= 'No-Show' && (this.numericalfeedback == null) || this.textualfeedback.lenght ==0) {
+         this.message = "Please enter a star value and a comment"
+
+      }
+
+      else {
       if (this.status) {
         console.log('no-show')
         this.appointment.status = 'no-show'
@@ -135,8 +145,9 @@ export default {
           this.message = error.response.data.message
           console.log(error);
         });
-      
+    }
     },
+
    
     cancel() {
       this.$router.go(-1);
