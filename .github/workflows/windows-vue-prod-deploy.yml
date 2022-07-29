@@ -30,9 +30,9 @@ jobs:
             - uses: actions/setup-node@v1
             - run: |
                     touch .env
-                    echo vue_app_client_id="$VUE_APP_CLIENT_ID" >> .env
-                    echo vue_app_api_url="$VUE_APP_API_URL" >> .env
-                    echo vue_app_client_url=tutorscheduling.oc.edu >> .env
+                    echo VUE_APP_CLIENT_ID="$VUE_APP_CLIENT_ID" >> .env
+                    echo VUE_APP_API_URL="$VUE_APP_API_URL" >> .env
+                    echo VUE_APP_CLIENT_URL=tutorscheduling.oc.edu >> .env
                
 
             - run: npm install
