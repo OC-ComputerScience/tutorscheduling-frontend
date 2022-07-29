@@ -33,7 +33,7 @@ jobs:
                     echo VUE_APP_CLIENT_ID="$VUE_APP_CLIENT_ID" >> .env
                     echo VUE_APP_API_URL="$VUE_APP_API_URL" >> .env
                     echo VUE_APP_CLIENT_URL=tutorscheduling.oc.edu >> .env
-               
+                    echo VUE_APP_SITE_URL=tutorschedulingdev.oc.edu >> .env
 
             - run: npm install
             - run: npm run build
