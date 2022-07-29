@@ -186,10 +186,9 @@ import GroupServices from "@/services/groupServices.js";
           access_type: "offline",
           scope: 'https://www.googleapis.com/auth/calendar',
           ux_mode: 'popup',
-          callback: (response, url) => {
-            console.log("url="+process.env.URL)
-            console.log((process.env.URL ? process.env.URL : "http://localhost"))
-            var code_receiver_uri =  url;
+          callback: (response) => {
+   
+            var code_receiver_uri =  "http://tutorschedulingdev.oc.edu/tutoring-api/authorize/" + this.user.userID;
   
             // Send auth code to your backend platform
             const xhr = new XMLHttpRequest();
