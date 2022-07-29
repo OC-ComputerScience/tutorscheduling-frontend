@@ -191,7 +191,8 @@ import LocationServices from "@/services/locationServices.js";
         console.log("doAuth")
         console.log("url:"+process.env.VUE_APP_SITE_URL)
 
-        this.url = (process.env.VUE_APP_SITE_URL ? process.env.VUE_APP_SITE_URL : "http://localhost") + '/tutoring-api/authorize/' + this.user.userID;
+//        this.url = (process.env.VUE_APP_SITE_URL ? process.env.VUE_APP_SITE_URL : "http://localhost") + '/tutoring-api/authorize/' + this.user.userID;
+       this.url = '/tutoring-api/authorize/' + this.user.userID;
         console.log(this.url)
         const client = global.google.accounts.oauth2.initCodeClient({
           client_id: process.env.VUE_APP_CLIENT_ID,
