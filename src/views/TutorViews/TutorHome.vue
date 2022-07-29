@@ -187,15 +187,18 @@ import LocationServices from "@/services/locationServices.js";
         }
       },
       doAuthorization() {
+        console.log("doAuth")
+        let url = (process.env.URL ? process.env.URL : "http://localhost") + '/tutoring-api/authorize/' + this.user.userID;
+        console.log(url)
         const client = global.google.accounts.oauth2.initCodeClient({
           client_id: process.env.VUE_APP_CLIENT_ID,
           access_type: "offline",
           scope: 'https://www.googleapis.com/auth/calendar',
           ux_mode: 'popup',
-          callback: (response) => {
+          callback: (response, url) => {
             console.log("url="+process.env.URL)
             console.log((process.env.URL ? process.env.URL : "http://localhost"))
-            var code_receiver_uri = (process.env.URL ? process.env.URL : "http://localhost") + '/tutoring-api/authorize/' + this.user.userID;
+            var code_receiver_uri =  url;
   
             // Send auth code to your backend platform
             const xhr = new XMLHttpRequest();
