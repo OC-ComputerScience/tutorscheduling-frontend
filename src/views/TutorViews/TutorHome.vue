@@ -189,7 +189,7 @@ import LocationServices from "@/services/locationServices.js";
       },
       doAuthorization() {
         console.log("doAuth")
-  
+        console.log("url:"+process.env.VUE_APP_CLIENT_URL)
 
         this.url = (process.env.VUE_APP_CLIENT_URL ? process.env.VUE_APP_CLIENT_URL : "http://localhost") + '/tutoring-api/authorize/' + this.user.userID;
         console.log(this.url)
