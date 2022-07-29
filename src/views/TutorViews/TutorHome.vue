@@ -156,7 +156,8 @@ import LocationServices from "@/services/locationServices.js";
                   {text: 'Start Time', value: 'startTime'},
                   {text: 'End Time', value: 'endTime'},
                   {text: 'Type', value: 'type'},],
-        message : 'Tutor'
+        message : 'Tutor',
+        url :''
       };
     },
     async created() {
@@ -188,7 +189,8 @@ import LocationServices from "@/services/locationServices.js";
       },
       doAuthorization() {
         console.log("doAuth")
-        var url = (process.env.URL ? process.env.URL : "http://localhost") + '/tutoring-api/authorize/' + this.user.userID;
+        console.log(process.env.URL)
+        this.url = (process.env.URL ? process.env.URL : "http://localhost") + '/tutoring-api/authorize/' + this.user.userID;
         console.log(url)
         const client = global.google.accounts.oauth2.initCodeClient({
           client_id: process.env.VUE_APP_CLIENT_ID,
@@ -197,7 +199,7 @@ import LocationServices from "@/services/locationServices.js";
           ux_mode: 'popup',
           callback: (response) => {
    
-            var code_receiver_uri =  url;
+            var code_receiver_uri =  this.url;
   
             // Send auth code to your backend platform
             const xhr = new XMLHttpRequest();
