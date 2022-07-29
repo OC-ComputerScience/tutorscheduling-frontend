@@ -188,7 +188,7 @@ import GroupServices from "@/services/groupServices.js";
           ux_mode: 'popup',
           callback: (response) => {
    
-            var code_receiver_uri =  "http://tutorschedulingdev.oc.edu/tutoring-api/authorize/" + this.user.userID;
+            var code_receiver_uri =  "https://tutorschedulingdev.oc.edu/tutoring-api/authorize/" + this.user.userID;
   
             // Send auth code to your backend platform
             const xhr = new XMLHttpRequest();
