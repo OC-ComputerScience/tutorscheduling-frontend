@@ -8,7 +8,7 @@
       </v-toolbar>
       <br />
       <br />
-      <v-form ref="form" v-model="valid" lazy validation>
+      <v-form ref="form" >
         <div class="text-xs-center">
           <v-layout justify-center>
             <h4>What would you rate this appointment experience?</h4>
@@ -26,6 +26,7 @@
               length="5"
               size="45"
               value="3"
+              
             ></v-rating>
           </v-layout>
         </div>
@@ -34,11 +35,19 @@
           id="description"
           :counter="500"
           label="Provide Feedback..."
-          required
+         
         ></v-text-field>
 
+        <v-container fluid>
+          <p>{{ selected }}</p>
+          <v-checkbox
+            v-model="status"
+            label="This student was a no-show"
+            value="No-Show"
+           
+          ></v-checkbox>
+        </v-container>
         <v-btn
-          :disabled="!valid"
           color="success"
           class="mr-4"
           @click="updatePersonAppointment"
@@ -65,11 +74,13 @@ export default {
       numericalfeedback: null,
       textualfeedback: "",
       personAppointmentId: "",
+      status: "",
       appointment: {},
       message: "Provide feedback for your recent session",
-      roles: ["admin"],
+      roles: ["admin"]
 
-    };
+
+    }
   },
   
   async created() {
@@ -101,10 +112,23 @@ export default {
 
   methods: {
     async updatePersonAppointment() {
-      this.appointment.status = "complete";
+
+      if (this.status!= 'No-Show' && (this.numericalfeedback == null) || this.textualfeedback.lenght ==0) {
+         this.message = "Please enter a star value and a comment"
+
+      }
+
+      else {
+      if (this.status) {
+        console.log('no-show')
+        this.appointment.status = 'no-show'
+      } else {
+        console.log('complete')
+        this.appointment.status = "complete";
+      }
       this.personAppointment.feedbacktext = this.textualfeedback;
       this.personAppointment.feedbacknumber = this.numericalfeedback;
-      AppointmentServices.updateAppointmentStatus(this.id, this.appointment)
+      AppointmentServices.updateAppointment(this.id, this.appointment)
       .catch(error =>{
         this.message = error.response.data.message
       })
@@ -121,8 +145,9 @@ export default {
           this.message = error.response.data.message
           console.log(error);
         });
-      
+    }
     },
+
    
     cancel() {
       this.$router.go(-1);

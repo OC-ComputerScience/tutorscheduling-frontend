@@ -66,7 +66,7 @@
       </v-row>
       <v-card>
         <v-card-title>
-          Upcoming Appointments for {{this.user.selectedGroup}}
+          Upcoming Appointments for {{this.user.selectedGroup}} as a tutor
           <v-spacer></v-spacer>
           <v-text-field
               v-model="search"
@@ -97,7 +97,7 @@
           ></v-text-field>
         </v-card-title>
         <v-data-table
-          :headers="headers"
+          :headers="headerFeedback"
           :search="search"
           :items="appointmentsneedingfeedback"
           :items-per-page="50"
@@ -121,6 +121,8 @@ import Utils from '@/config/utils.js'
 import PersonRoleServices from "@/services/personRoleServices.js";
 import AppointmentServices from '@/services/appointmentServices.js'
 import GroupServices from "@/services/groupServices.js";
+import PersonAppointmentServices from "@/services/personAppointmentServices.js";
+import LocationServices from "@/services/locationServices.js";
 
   export default {
     props: ["id"],
@@ -146,8 +148,16 @@ import GroupServices from "@/services/groupServices.js";
         headers: [{text: 'Date', value: 'date'}, 
                   {text: 'Start Time', value: 'startTime'},
                   {text: 'End Time', value: 'endTime'},
-                  {text: 'Topic', value: 'topic.name'}],
-        message : 'Tutor'
+                  {text: 'Location', value: 'location'},
+                  {text: 'Type', value: 'type'},
+                  {text: 'Status', value: 'status'},
+                  {text: 'Student(s)', value: 'student'}],
+        headerFeedback: [{text: 'Date', value: 'date'}, 
+                  {text: 'Start Time', value: 'startTime'},
+                  {text: 'End Time', value: 'endTime'},
+                  {text: 'Type', value: 'type'},],
+        message : 'Tutor',
+        url :''
       };
     },
     async created() {
@@ -157,8 +167,8 @@ import GroupServices from "@/services/groupServices.js";
       }
       console.log("selected group = " + this.user.selectedGroup)
       await this.getGroup(this.user.selectedGroup.replace(/%20/g, " "))
-      .then(() => {
-        this.getAppointments();
+      .then(async () => {
+        await this.getAppointments();
         this.getAppointmentsNeedingFeedback();
       })
       .catch ((error) => {
@@ -178,13 +188,21 @@ import GroupServices from "@/services/groupServices.js";
         }
       },
       doAuthorization() {
+        console.log("doAuth")
+        console.log("url:"+process.env.VUE_APP_SITE_URL)
+
+//        this.url = (process.env.VUE_APP_SITE_URL ? process.env.VUE_APP_SITE_URL : "http://localhost") + '/tutoring-api/authorize/' + this.user.userID;
+       this.url = '/tutoring-api/authorize/' + this.user.userID;
+        console.log(this.url)
         const client = global.google.accounts.oauth2.initCodeClient({
           client_id: process.env.VUE_APP_CLIENT_ID,
           access_type: "offline",
           scope: 'https://www.googleapis.com/auth/calendar',
           ux_mode: 'popup',
           callback: (response) => {
-            var code_receiver_uri = 'http://localhost/tutoring-api/authorize/' + this.user.userID;
+   
+            var code_receiver_uri =  this.url;
+  
             // Send auth code to your backend platform
             const xhr = new XMLHttpRequest();
             xhr.onreadystatechange = function() {
@@ -220,10 +238,47 @@ import GroupServices from "@/services/groupServices.js";
       },
       async getAppointments() {
         await AppointmentServices.getUpcomingAppointmentForPersonForGroup(this.group.id, this.user.userID)
-          .then(response => {
+          .then(async (response) => {
             this.appointments = response.data;
 
+            let temp = this.appointments.length
+            for(let i = 0; i < temp; i++){
+                for(let j = 0; j < temp - i - 1; j++){
+                    if(this.appointments[j + 1].date < this.appointments[j].date){
+                        [this.appointments[j + 1],this.appointments[j]] = [this.appointments[j],this.appointments[j + 1]]
+                    }
+                    else if(this.appointments[j + 1].date === this.appointments[j].date){
+                      if(this.appointments[j + 1].startTime < this.appointments[j].startTime)
+                        [this.appointments[j + 1],this.appointments[j]] = [this.appointments[j],this.appointments[j + 1]]
+                    } 
+                }
+            }
             for (let index = 0; index < this.appointments.length; ++index) {
+              this.appointments[index].student ='x'
+              //  look up students
+              await PersonAppointmentServices.findStudentDataForTable(this.appointments[index].id).then((response) => {
+                let studentData = response.data;
+                if (this.appointments[index].type.includes('Group')){
+                  this.appointments[index].student = studentData.length + " Student(s)";
+                }
+                else if (this.appointments[index].type.includes('Private') && (this.appointments[index].status.includes('booked') || this.appointments[index].status.includes('pending'))){
+                  this.appointments[index].student = studentData[0].person.fName + " " + studentData[0].person.lName;
+                }
+                else {
+                  this.appointments[index].student = 'Open'
+                }
+              })
+              // get location info 
+              if (this.appointments[index].locationId == null){
+                this.appointments[index].location = 'Not Selected'
+              }
+              else {
+                await LocationServices.getLocation(this.appointments[index].locationId).then((response) => {
+                  let locationData = response.data;
+                  this.appointments[index].location = locationData.name;
+                  
+                })
+              }
               //format date
               let element = this.appointments[index];
               let formattedDate = element.date.toString().substring(5,10) + "-" + element.date.toString().substring(0,4);
@@ -259,7 +314,6 @@ import GroupServices from "@/services/groupServices.js";
               }
               this.appointments[index].endTime = formattedET;
             } 
-
           })
           .catch(error => {
             this.message = error.response.data.message
@@ -341,6 +395,24 @@ import GroupServices from "@/services/groupServices.js";
 
         if(this.approved) {
           this.checkForAuthorization();
+        }
+      },
+      async addDataToAppoints() {
+        for (let i = 0; i < this.appointments.length; i++){
+          this.appointments[i].student =  i;
+          await PersonAppointmentServices.findStudentDataForTable(this.appointments[i].id).then((response) => {
+            let studentData = response.data;
+            if (this.appointments[i].type.includes('Group')){
+              this.appointments[i].student = studentData.length + " Student(s)";
+            }
+            else if (this.appointments[i].type.includes('Private') && (this.appointments[i].status.includes('booked') || this.appointments[i].status.includes('pending'))){
+              this.appointments[i].student = studentData[0].person.fName + " " + studentData[0].person.lName;
+            }
+            else {
+              this.appointments[i].student = 'Open'
+            }
+          })
+          console.log(this.appointments[i].student)
         }
       }
     }
