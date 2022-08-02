@@ -44,23 +44,13 @@
                 ></pdf>
                 <v-container>
                   <v-text-field
-                    v-model="role.signature"
-                    id="role.signature"
                     label="Digital Signature"
                     :hint="user.fullName"
+                    :rules="[() => !!role.signature || 'This field is required']"
                     persistent-hint
                     required
                     v-on:keyup.enter="role.dialog = false; save(role)"
                   ></v-text-field>
-                  <!-- <br><br>
-                  <v-btn 
-                    class="mr-4"
-                    color="success"
-                    @click="role.dialog = false; save(role)"
-                  >
-                    Agree
-                  </v-btn>
-                  <br><br> -->
                 </v-container>
                 <v-card-actions>
                   <v-spacer></v-spacer>
