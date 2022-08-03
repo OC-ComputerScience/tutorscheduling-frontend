@@ -1477,6 +1477,7 @@ import Utils from '@/config/utils.js'
 
     //Load all appointments in backend into calendar events
     async loadAppointments() {
+      this.overlay = true;
       const events = []
       let filtered
       for(let i = 0; i < this.appointments.length; i++) {
@@ -1629,6 +1630,7 @@ import Utils from '@/config/utils.js'
       }
       }
   
+      this.overlay = false;
       this.events = events
     },
     async loadPersonApt() {
