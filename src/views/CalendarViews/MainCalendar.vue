@@ -524,6 +524,15 @@
       </v-card-actions>
     </v-card>
   </v-dialog>
+
+  <v-overlay
+      :value="overlay"
+    >
+      <v-progress-circular indeterminate size="64">
+        Loading...
+      </v-progress-circular>
+    </v-overlay>
+
   </div>
 </template>
 
@@ -549,6 +558,7 @@ import Utils from '@/config/utils.js'
   props: ["id"],
 
   data: () => ({
+    overlay: true,
     message : 'Schedule',
     mode: 'stack',
     //appointment info
@@ -634,6 +644,7 @@ import Utils from '@/config/utils.js'
   methods: {
     //Initialize data for calendar
    async getAppointments() {
+    this.overlay = true;
     let group;
     await GroupServices.getGroupByName(this.user.selectedGroup.replace(/%20/g, " "))
       .then((response) => {
@@ -654,6 +665,7 @@ import Utils from '@/config/utils.js'
        this.message = error.response.data.message
         console.log("There was an error:", error.response)
       });
+      this.overlay = false;
     },
     getGroupByName(name) {
       GroupServices.getGroupByName(name)
