@@ -146,6 +146,18 @@ import PersonRoleServices from "@/services/personRoleServices.js";
           .then(response => {
             this.appointments = response.data;
 
+            let temp = this.appointments.length
+            for(let i = 0; i < temp; i++){
+                for(let j = 0; j < temp - i - 1; j++){
+                    if(this.appointments[j + 1].date < this.appointments[j].date){
+                        [this.appointments[j + 1],this.appointments[j]] = [this.appointments[j],this.appointments[j + 1]]
+                    }
+                    else if(this.appointments[j + 1].date === this.appointments[j].date){
+                      if(this.appointments[j + 1].startTime < this.appointments[j].startTime)
+                        [this.appointments[j + 1],this.appointments[j]] = [this.appointments[j],this.appointments[j + 1]]
+                    } 
+                }
+            }
             for (let index = 0; index < this.appointments.length; ++index) {
               //format date
               let element = this.appointments[index];

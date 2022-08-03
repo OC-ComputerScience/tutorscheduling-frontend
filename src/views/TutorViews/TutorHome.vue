@@ -156,7 +156,8 @@ import LocationServices from "@/services/locationServices.js";
                   {text: 'Start Time', value: 'startTime'},
                   {text: 'End Time', value: 'endTime'},
                   {text: 'Type', value: 'type'},],
-        message : 'Tutor'
+        message : 'Tutor',
+        url :''
       };
     },
     async created() {
@@ -187,13 +188,20 @@ import LocationServices from "@/services/locationServices.js";
         }
       },
       doAuthorization() {
+        console.log("doAuth")
+        console.log("url:"+process.env.VUE_APP_SITE_URL)
+
+//        this.url = (process.env.VUE_APP_SITE_URL ? process.env.VUE_APP_SITE_URL : "http://localhost") + '/tutoring-api/authorize/' + this.user.userID;
+       this.url = '/tutoring-api/authorize/' + this.user.userID;
+        console.log(this.url)
         const client = global.google.accounts.oauth2.initCodeClient({
           client_id: process.env.VUE_APP_CLIENT_ID,
           access_type: "offline",
           scope: 'https://www.googleapis.com/auth/calendar',
           ux_mode: 'popup',
           callback: (response) => {
-            var code_receiver_uri = (process.env.URL ? process.env.URL : "http://localhost") + '/tutoring-api/authorize/' + this.user.userID;
+   
+            var code_receiver_uri =  this.url;
   
             // Send auth code to your backend platform
             const xhr = new XMLHttpRequest();
@@ -232,7 +240,19 @@ import LocationServices from "@/services/locationServices.js";
         await AppointmentServices.getUpcomingAppointmentForPersonForGroup(this.group.id, this.user.userID)
           .then(async (response) => {
             this.appointments = response.data;
-//            this.addDataToAppoints();
+
+            let temp = this.appointments.length
+            for(let i = 0; i < temp; i++){
+                for(let j = 0; j < temp - i - 1; j++){
+                    if(this.appointments[j + 1].date < this.appointments[j].date){
+                        [this.appointments[j + 1],this.appointments[j]] = [this.appointments[j],this.appointments[j + 1]]
+                    }
+                    else if(this.appointments[j + 1].date === this.appointments[j].date){
+                      if(this.appointments[j + 1].startTime < this.appointments[j].startTime)
+                        [this.appointments[j + 1],this.appointments[j]] = [this.appointments[j],this.appointments[j + 1]]
+                    } 
+                }
+            }
             for (let index = 0; index < this.appointments.length; ++index) {
               this.appointments[index].student ='x'
               //  look up students
@@ -394,7 +414,6 @@ import LocationServices from "@/services/locationServices.js";
           })
           console.log(this.appointments[i].student)
         }
-       
       }
     }
   }
