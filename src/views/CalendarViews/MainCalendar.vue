@@ -1369,9 +1369,7 @@ import Utils from '@/config/utils.js'
     },
     //Get the name of the student for the appointments
     async getStudentNameForAppointment(appoints){
-      console.log(appoints)
       var student = appoints.filter(person => !person.isTutor)
-      console.log(student)
       if(student.length !== 0) {
         var studentId = student[0].personId;
         this.studentName = this.getPersonName(studentId);
