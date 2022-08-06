@@ -53,6 +53,7 @@
 </template>
 
 <script>
+import AppointmentServices from "@/services/appointmentServices.js";
 import PersonAppointmentServices from "@/services/personAppointmentServices.js";
 
 export default {
@@ -61,6 +62,7 @@ export default {
   data() {
     return {
       personAppointment: {},
+      appointment: {},
       numericalfeedback: null,
       textualfeedback: "",
       personAppointmentId: "",
@@ -68,26 +70,43 @@ export default {
       message: "Provide Feedback for your recent appointment",
       roles: ["admin"],
 
-    };
+    }; 
   },
   async created() {
-    await PersonAppointmentServices.findPersonAppointmentByPersonAndAppointment(
-      this.userId,
-      this.id
-    )
-      .then((response) => {
-        this.personAppointment = response.data;
-        this.personAppointmentId = this.personAppointment.id;
-        console.log(this.personAppointment);
-      })
-      .catch((error) => {
-        this.message = error.response.data.message
-        console.log("There was an error:", error.response);
-      });
+    await AppointmentServices.getAppointmentForFeedback(this.id)
+    .then((response) => {
+      this.appointment = response.data;
+      for(let i = 0; i < this.appointment.personappointment.length; i++) {
+        let personApp = this.appointment.personappointment[i];
+        if(personApp.personId === this.userId) {
+          this.personAppointment = personApp;
+          this.personAppointmentId = this.personAppointment.id
+          console.log(this.personAppointment);
+        }
+      }
+    })
+    .catch((error) => {
+      this.message = error.response.data.message
+      console.log("There was an error:", error.response);
+    });
+    // await PersonAppointmentServices.findPersonAppointmentByPersonAndAppointment(
+    //   this.userId,
+    //   this.id
+    // )
+    //   .then((response) => {
+    //     this.personAppointment = response.data;
+    //     this.personAppointmentId = this.personAppointment.id;
+    //     console.log(this.personAppointment);
+    //   })
+    //   .catch((error) => {
+    //     this.message = error.response.data.message
+    //     console.log("There was an error:", error.response);
+    //   });
   },
 
   methods: {
     async updatePersonAppointment() {
+      delete this.personAppointment.person;
       this.personAppointment.feedbacktext = this.textualfeedback;
       this.personAppointment.feedbacknumber = this.numericalfeedback;
       await PersonAppointmentServices.updatePersonAppointment(
