@@ -18,6 +18,9 @@ export default {
     findStudentDataForTable(appointmentId) {
       return apiClient.get("/personappointment/appointment/" + appointmentId)
     },
+    findTutorDataForTable(appointmentId) {
+      return apiClient.get("/personappointment/appointmentTutor/" + appointmentId)
+    },
     addPersonAppointment(personappointment) {
       return apiClient.post("personappointment", personappointment);
     },
