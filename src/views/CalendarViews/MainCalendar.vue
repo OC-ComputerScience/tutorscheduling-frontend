@@ -543,7 +543,7 @@ import AppointmentServices from '@/services/appointmentServices.js'
 import PersonAppointmentServices from '@/services/personAppointmentServices.js'
 //For info on people and their associated roles
 import PersonServices from "@/services/personServices.js"
-import PersonTopicServices from "@/services/personTopicServices.js"
+// import PersonTopicServices from "@/services/personTopicServices.js"
 import PersonRoleServices from "@/services/personRoleServices.js"
 import RoleServices from "@/services/roleServices.js"
 //For info to be shown with appointments
@@ -627,8 +627,6 @@ import Utils from '@/config/utils.js'
     //editing appointment
     saveChanges: false,
     isPrivateBook: false,
-    personApt : [],
-    allPersonApt : [],
     allTopics : null,
     allPeople : null,
     // check if date past
@@ -645,32 +643,31 @@ import Utils from '@/config/utils.js'
   },
   methods: {
     //Initialize data for calendar
-   async getAppointments() {
+  async getAppointments() {
     this.overlay = true;
-    let group;
-    await GroupServices.getGroupByName(this.user.selectedGroup.replace(/%20/g, " "))
-      .then((response) => {
-        group = response.data;
-      })
-      await AppointmentServices.findAppointmentsForGroup(group[0].id)
+    await this.getGroupByName(this.user.selectedGroup.replace(/%20/g, " "));
+    await AppointmentServices.findAppointmentsForGroup(this.group.id)
+    .then(async (response) => {
+      this.appointments = response.data
+      console.log(this.appointments)
+      await PersonAppointmentServices.getAllPersonAppointments()
       .then(async (response) => {
-        this.appointments = response.data
-        await PersonAppointmentServices.getAllPersonAppointments()
-        .then(async (response) => {
-          this.personAppointments = response.data;
-          await this.loadPersonApt();
-          await this.loadAllPersonApt();
-          await this.loadAppointments();
-        })
+        this.personAppointments = response.data;
+        await this.loadAppointments();
       })
       .catch(error => {
-       this.message = error.response.data.message
+        this.message = error.response.data.message
         console.log("There was an error:", error.response)
       });
-      this.overlay = false;
-    },
-    getGroupByName(name) {
-      GroupServices.getGroupByName(name)
+    })
+    .catch(error => {
+      this.message = error.response.data.message
+      console.log("There was an error:", error.response)
+    });
+    this.overlay = false;
+  },
+    async getGroupByName(name) {
+      await GroupServices.getGroupByName(name)
       .then((response) => {
         this.group = response.data[0]
         this.getTopicsForGroup()
@@ -735,7 +732,7 @@ import Utils from '@/config/utils.js'
       });
     },
     //Check if student has already signed up for group appointment
-    async checkGroupBoooking() {
+    async checkGroupBooking() {
       if(this.adminAddStudent) {
         await PersonAppointmentServices.getPersonAppointmentForPerson(this.walkInStudent.id)
         .then(response => {
@@ -868,7 +865,8 @@ import Utils from '@/config/utils.js'
         this.person.isTutor = false
         this.person.appointmentId = this.selectedAppointment.id
         this.person.personId = this.walkInStudent.id
-        await PersonAppointmentServices.addPersonAppointment(this.person).then(() => {
+        await PersonAppointmentServices.addPersonAppointment(this.person)
+        .then(() => {
           this.getAppointments()
         })
         .catch (error => {
@@ -885,7 +883,8 @@ import Utils from '@/config/utils.js'
         this.person.appointmentId = this.selectedAppointment.id
         this.person.personId = this.$store.state.loginUser.userID
         //Update stored data
-        await PersonAppointmentServices.addPersonAppointment(this.person).then(() => {
+        await PersonAppointmentServices.addPersonAppointment(this.person)
+        .then(() => {
           this.getAppointments()
         })
         .catch (error => {
@@ -1267,7 +1266,7 @@ import Utils from '@/config/utils.js'
           this.newEnd = this.selectedAppointment.endTime
           this.appointmentType = this.selectedAppointment.type
           this.isTutorOfSelectedEvent()
-          this.checkGroupBoooking()
+          this.checkGroupBooking()
           this.updateTimes()
           this.updatePeople()
           this.isStudentofAppointment()
@@ -1328,27 +1327,15 @@ import Utils from '@/config/utils.js'
         }
       })
     },
-
-    async loadAllPersonApt() {
-      await PersonAppointmentServices.getAllPersonAppointments().then(async(response) => {
-        this.allPersonApt = response.data
-      })
-      .catch(error => {
-          this.message = error.response.data.message
-      })
-    },
-
-    isStudentInGroupAppoint(appointId) {
+    async isStudentInGroupAppoint(appoints) {
       this.studentGroupColor =  false;
-        for (let i = 0; i < this.allPersonApt.length;i++){
-          if(this.allPersonApt[i].appointmentId == appointId) {
-            if(!this.allPersonApt[i].isTutor) {
-              this.studentGroupColor =  true;
-              return 
-            }
-          }
+      for(let i = 0; i < appoints.length; i++) {
+        if(!appoints[i].isTutor) {
+          this.studentGroupColor = true;
+          return
         }
-      return 
+      }
+      return
     },
     //Checks if the current session matches the given status, for hiding certain elements
     checkStatus(status) {
@@ -1360,46 +1347,29 @@ import Utils from '@/config/utils.js'
       }
     },
     async checkTopic(appoint) {
-      let check=false;
-      var tutorId;
-      if (this.selectedTopic == null) return true;
-      if (this.selectedTopic == appoint.topicId) return true;
-      if (appoint.topicId != null && this.selectedTopic != appoint.topicId) return false;
-      await AppointmentServices.getTutorForAppointment(appoint.id)
-      .then ((response)=> {
-        tutorId = response.data.id;
-      })
-      .catch((error) => {
-        console.log("There was an error:" + error.response);
-      });
-      if (tutorId !=null) {
-        await PersonTopicServices.getTopicForPersonGroup(this.group.id, tutorId)
-        .then ((response)=> {
-          let topics = response.data;
-          for ( let i=0; i < topics.length; i++) {
-            if (topics[i].id == this.selectedTopic)
+      let check = false; 
+      if (this.selectedTopic === null) return true;
+      if (this.selectedTopic === appoint.topicId) return true;
+      if (appoint.topicId !== null && this.selectedTopic !== appoint.topicId) return false;
+      for(let i = 0; i < appoint.personappointment.length && !check; i++) {
+        let personApp = appoint.personappointment[i];
+        if(personApp.isTutor) { 
+          for(let j = 0; j < personApp.person.persontopic.length && !check; j++) {
+            let personTopic = personApp.person.persontopic[j];
+            if(personTopic.topicId === this.selectedTopic) {
               check = true;
             }
-        })
-        .catch((error) => {
-          this.message = error.response.data.message
-          console.log("There was an error:", error.response);
-        })
-        return check;
-      }
-      else
-        return check;
-    },
-    async checkTutor(appointId) {
-      let found = false
-     
-      this.personAppointments.forEach((p) => {
-        
-        if(p.personId == this.selectedTutor && p.appointmentId == appointId && p.isTutor) {
-          found = true
+          }
         }
+      }
+      return check;
+    },
+    async checkTutor(appoints) {
+      let found = false
+      appoints.forEach((p) => {
+        if(p.personId === this.selectedTutor && p.isTutor)
+          found = true;
       })
-
       return found
     },
     checkRole(type) {
@@ -1410,56 +1380,29 @@ import Utils from '@/config/utils.js'
         return false;
       }
     },
-    checkUserInAppointment(appId) {
-      let found = false
-      this.personAppointments.forEach((p) => {
-        if(p.personId == this.user.userID && p.appointmentId == appId) {
-          found = true
-        }
-      })
-      return found
-    },
     getPersonName(id){
       return this.allPeople.get(id).fName+" "+this.allPeople.get(id).lName
     },
     //Get the name of the student for the appointments
-    async getStudentNameForAppointment(appointId){
-      var found = false
-      var studentId 
-      for (var i = 0;i < this.personAppointments.length;i++){
-        if (this.personAppointments[i].appointmentId == appointId.id && this.personAppointments[i].isTutor == '0'){
-          found = true
-          studentId = this.personAppointments[i].personId
-        }
+    async getStudentNameForAppointment(appoints){
+      var student = appoints.filter(person => !person.isTutor)
+      if(student.length !== 0) {
+        var studentId = student[0].personId;
+        this.studentName = this.getPersonName(studentId);
+        console.log(this.studentName)
       }
-      if(found){
-        this.studentName = this.getPersonName(studentId)
-        // await PersonServices.getPerson(studentId).then((response) => {
-        //   this.studentName = response.data.fName + " " + response.data.lName
-        // })
-        // .catch(error => { 
-        //   this.message = error.response.data.message
-        // })
-      }
-      else{
-        this.studentName = 'Open'
-      }
+      else 
+        this.studentName = "Open"
     },
     //Get the name of the tutor for the appointments
-    async getTutorNameForAppointment(appointId){
-      var tutorId 
-      for (var i = 0;i < this.personAppointments.length;i++){
-        if (this.personAppointments[i].appointmentId == appointId.id && this.personAppointments[i].isTutor == '1'){
-          tutorId = this.personAppointments[i].personId
-          this.tutorName= this.getPersonName(tutorId)
-        //   await PersonServices.getPerson(tutorId).then((response) => {
-        //     this.tutorName = response.data.fName + " " + response.data.lName
-        //   })
-        //   .catch(error => { 
-        //     this.message = error.response.data.message
-        // })
-        }
+    async getTutorNameForAppointment(appoints){
+      var tutor = appoints.filter(person => person.isTutor)
+      if(tutor.length !== 0) {
+        var tutorId = tutor[0].personId;
+        this.tutorName = this.getPersonName(tutorId);
       }
+      else 
+        this.tutorName = "Open"
     },
     async loadTopics () {
       this.allTopics = new Map()
@@ -1495,10 +1438,10 @@ import Utils from '@/config/utils.js'
     async loadAppointments() {
       this.overlay = true;
       const events = []
-      let filtered
+      let filtered;
       for(let i = 0; i < this.appointments.length; i++) {
-         this.groupBookColor(this.appointments[i].id)
-         this.isStudentInGroupAppoint(this.appointments[i].id)
+        await this.groupBookColor(this.appointments[i].personappointment)
+        await this.isStudentInGroupAppoint(this.appointments[i].personappointment)
         //filter events to only add appropriate events
         filtered = true
         //only add appointments from the current group
@@ -1516,9 +1459,8 @@ import Utils from '@/config/utils.js'
           filtered = false;
         }
         //filter by tutor
-        let checkedTutor = await this.checkTutor(this.appointments[i].id)
-        if(this.selectedTutor != -1 && 
-          !checkedTutor) 
+        let checkedTutor = await this.checkTutor(this.appointments[i].personappointment)
+        if(this.selectedTutor != -1 && !checkedTutor) 
         {
           filtered = false;
         }
@@ -1526,7 +1468,7 @@ import Utils from '@/config/utils.js'
         {
           if(!(this.appointments[i].status == "available") || this.checkRole("Tutor")) {
           //only add if user is associated with event
-            if(!this.checkTutor(this.appointments[i].id)){
+            if(!this.checkTutor(this.appointments[i].personappointment)){
               filtered = false;
             }
             if(this.appointments[i].type.includes('Group') 
@@ -1545,6 +1487,7 @@ import Utils from '@/config/utils.js'
             }
           }
         }
+
         if(filtered) {
         //Set color for each event
         let color = 'grey darken-1'
@@ -1568,12 +1511,14 @@ import Utils from '@/config/utils.js'
             color = 'grey darken-1'
             break
         }
+
         if (this.appointments[i].type.includes('Group') && this.groupColor && !(this.appointments[i].status.includes('tutorCancel') || this.appointments[i].status.includes('studentCancel'))){
           color = 'blue'
         }
         else if (this.appointments[i].type.includes('Group') && !(this.appointments[i].status.includes('tutorCancel') || this.appointments[i].status.includes('studentCancel'))){
           color = 'purple'
         }
+
         //Format times for each event and need to set minutes for events too
         let startTime = new Date(this.appointments[i].date)
         let startTimes = this.appointments[i].startTime.split(":");
@@ -1583,28 +1528,27 @@ import Utils from '@/config/utils.js'
         let endTimes = this.appointments[i].endTime.split(":");
         endTime.setHours(endTime.getHours() + parseInt(endTimes[0]))
         endTime.setMinutes(endTime.getMinutes() + parseInt(endTimes[1]))
+
         //Note the format of each event, what data is associated with it
-        if (this.appointments[i].type.includes('Group')){
-            
-//          await TopicServices.getTopic(this.appointments[i].topicId).then(async (response) => {
-            let topicName = this.getTopicName(this.appointments[i].topicId)
-            if (this.groupColor && !this.studentGroupColor) {
-              topicName = 'Open'
-              color = 'grey darken-1'
-            }
-            events.push({
-              name: 'G: ' + topicName,
-              start: startTime,
-              end: endTime,
-              color: color,
-              timed: true,
-              appointmentId: this.appointments[i].id
-            })
- //         })
+        if (this.appointments[i].type.includes('Group')) {
+          let topicName = this.appointments[i].topic.name;
+          if (this.groupColor && !this.studentGroupColor) {
+            topicName = 'Open'
+            color = 'grey darken-1'
+          }
+          events.push({
+            name: 'G: ' + topicName,
+            start: startTime,
+            end: endTime,
+            color: color,
+            timed: true,
+            appointmentId: this.appointments[i].id
+          })
         }
+
         if ((this.appointments[i].type.includes('Private') && this.checkRole('Tutor')) || 
-            (this.checkRole('Admin') && (this.appointments[i].status.includes('booked') || this.appointments[i].status.includes('pending')))){
-          await this.getStudentNameForAppointment(this.appointments[i])
+            (this.checkRole('Admin') && (this.appointments[i].status.includes('booked') || this.appointments[i].status.includes('pending')))) {
+          await this.getStudentNameForAppointment(this.appointments[i].personappointment)
           .catch(error => { 
             this.message = error.response.data.message
           })
@@ -1618,8 +1562,8 @@ import Utils from '@/config/utils.js'
           })
         }
         else if(this.appointments[i].type.includes('Private') && !this.appointments[i].status.includes('Cancel') &&
-               (this.checkRole('Student') || this.checkRole('Admin'))){
-          await this.getTutorNameForAppointment(this.appointments[i])
+               (this.checkRole('Student') || this.checkRole('Admin'))) {
+          await this.getTutorNameForAppointment(this.appointments[i].personappointment)
           .catch(error => { 
           this.message = error.response.data.message
           })
@@ -1632,7 +1576,7 @@ import Utils from '@/config/utils.js'
             appointmentId: this.appointments[i].id
           })
         }
-        else if(this.checkRole('Admin') && !this.appointments[i].type.includes('Group')){
+        else if(this.checkRole('Admin') && !this.appointments[i].type.includes('Group')) {
           events.push({
             name: 'S: ' + this.appointments[i].status,
             start: startTime,
@@ -1642,33 +1586,21 @@ import Utils from '@/config/utils.js'
             appointmentId: this.appointments[i].id
           })
         }
-        
       }
-      }
+    }
   
-      this.overlay = false;
-      this.events = events
-    },
-    async loadPersonApt() {
-      
-      await PersonAppointmentServices.getPersonAppointmentForPerson(this.user.userID).then((response) => {
-        this.personApt = response.data
-      })
-      .catch(error => { 
-          this.message = error.response.data.message
-       })
-    },
-
-    groupBookColor(appointId) {
-        for(let i = 0; i < this.personApt.length;i++){
-          if (this.personApt[i].appointmentId == appointId){
-            this.groupColor = true;
-            return
-          }
-        } 
-        this.groupColor = false;
-        return 
-    },
+    this.overlay = false;
+    this.events = events
+  },
+  async groupBookColor(appoints) {
+    this.groupColor = false;
+    for(let i = 0; i < appoints.length; i++) {
+      if(appoints[i].personId === this.user.userID) {
+        this.groupColor = true;
+        return
+      }
+    }
+  },
     //method for canceling appointments
     async cancelAppointment(){
       //delete appointment as a student of a private session
@@ -1862,7 +1794,7 @@ import Utils from '@/config/utils.js'
                 this.emailStatus = 'Student ' + temp.fName + " " + temp.lName + " found!"
                 this.walkInStudent = temp;
                 this.emailFound = true;
-                this.checkGroupBoooking()
+                this.checkGroupBooking()
                 return 
               }
             }
