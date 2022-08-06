@@ -218,7 +218,7 @@
           </v-select>
           </v-container>
           </span>
-          <!-- slots for locaiton and topic to be unchangable if the session type is group-->
+          <!-- slots for location and topic to be unchangable if the session type is group-->
           <span  v-else>
           <v-container>
           <v-select 
@@ -256,7 +256,7 @@
           
           <span v-if="appointmentType.includes('Private')">
             <v-select
-              v-model="newStart"
+              v-model="displayedStart"
               :items="startTimes"
               item-text="timeText"
               item-value="time"
@@ -271,7 +271,7 @@
           <!-- show time as an unchangeable value -->
           <span v-else>
              <v-text-field
-                v-model="newStart"
+                v-model="displayedStart"
                 label="Booked Start"
                 type="time"
                 required
@@ -284,7 +284,7 @@
           <v-container v-if="checkStatus('available')">
           <span v-if="appointmentType.includes('Private')">
           <v-select 
-            v-model="newEnd"
+            v-model="displayedEnd"
             :items="endTimes"
             item-text="timeText"
             item-value="time"
@@ -298,7 +298,7 @@
           </span>
           <span v-else>
           <v-text-field
-                v-model="newEnd"
+                v-model="displayedEnd"
                 label="Booked End"
                 type="time"
                 required
@@ -390,10 +390,10 @@
         <v-card-actions>
           <v-btn v-if="!isTutorEvent || checkRole('Student') || checkRole('Admin')"
             color="primary"
-            @click="bookAppointment(); selectedOpen = false;"
+            @click="bookAppointment(); selectedOpen = false; newStart = displayedStart; newEnd = displayedEnd"
             :disabled="!checkStatus('available') || isGroupBook || ((studentfName == '' || studentlName == '') && !emailFound && checkRole('Admin')) ||
                         (checkRole('Admin') && selectedAppointment.type.includes('Group') && !adminAddStudent) || selectedAppointment.topicId == null 
-                        || selectedAppointment.locationId == null || (isTutorEvent && !checkRole('Admin'))"
+                        || selectedAppointment.locationId == null || (isTutorEvent && !checkRole('Admin')) || (displayedStart === '' || displayedEnd === '')"
           >
           Book
           </v-btn>
@@ -578,6 +578,8 @@ import Utils from '@/config/utils.js'
     endTimes: [],
     newStart: null,
     newEnd: null,
+    displayedStart: '',
+    displayedEnd: '',
     //data for calendar function
     focus: '',
     type: 'month',
@@ -1122,12 +1124,16 @@ import Utils from '@/config/utils.js'
       return times
     },
     updateTimes() {
+      console.log(this.newStart)
+      console.log(this.newEnd)
       this.startTimes = this.generateTimes(this.selectedAppointment.startTime, this.newEnd);
       // adding this to make sure that you can't start an appointment at the end time
       this.startTimes.pop();
       this.endTimes = this.generateTimes(this.newStart, this.selectedAppointment.endTime);
       // adding this to make sure you can't end an appointment at the start time
       this.endTimes.shift();
+      console.log(this.startTimes)
+      console.log(this.endTimes)
     },
     //Load data for info associated with events
     getTopic(topicId) {
@@ -1253,7 +1259,8 @@ import Utils from '@/config/utils.js'
     
       const open = () => {
         this.selectedEvent = event
-        AppointmentServices.getAppointment(event.appointmentId).then(async (response) => {
+        AppointmentServices.getAppointment(event.appointmentId)
+        .then(async (response) => {
           this.selectedAppointment = response.data
           this.newStart = this.selectedAppointment.startTime
           this.newEnd = this.selectedAppointment.endTime
@@ -1264,10 +1271,19 @@ import Utils from '@/config/utils.js'
           this.updatePeople()
           this.isStudentofAppointment()
           this.checkAppointmentIfPast()
+          if(this.selectedAppointment.type.includes("Private") && this.selectedAppointment.status.includes("available")) {
+            this.displayedStart = ''
+            this.displayedEnd = ''
+          }
+          else {
+            this.displayedStart = this.selectedAppointment.startTime
+            this.displayedEnd = this.selectedAppointment.endTime
+          }
           this.selectedElement = nativeEvent.target
-         requestAnimationFrame(() => requestAnimationFrame(() => this.selectedOpen = true))
+          requestAnimationFrame(() => requestAnimationFrame(() => this.selectedOpen = true))
         })
         .catch(error => {
+          console.log(error)
           this.message = error.response.data.message
         })
         ;
