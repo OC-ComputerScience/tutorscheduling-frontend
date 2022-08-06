@@ -643,11 +643,11 @@ import Utils from '@/config/utils.js'
     //Initialize data for calendar
   async getAppointments() {
     this.overlay = true;
-
     await this.getGroupByName(this.user.selectedGroup.replace(/%20/g, " "));
     await AppointmentServices.findAppointmentsForGroup(this.group.id)
     .then(async (response) => {
       this.appointments = response.data
+      console.log(this.appointments)
       await PersonAppointmentServices.getAllPersonAppointments()
       .then(async (response) => {
         this.personAppointments = response.data;
@@ -863,7 +863,8 @@ import Utils from '@/config/utils.js'
         this.person.isTutor = false
         this.person.appointmentId = this.selectedAppointment.id
         this.person.personId = this.walkInStudent.id
-        await PersonAppointmentServices.addPersonAppointment(this.person).then(() => {
+        await PersonAppointmentServices.addPersonAppointment(this.person)
+        .then(() => {
           this.getAppointments()
         })
         .catch (error => {
@@ -880,7 +881,8 @@ import Utils from '@/config/utils.js'
         this.person.appointmentId = this.selectedAppointment.id
         this.person.personId = this.$store.state.loginUser.userID
         //Update stored data
-        await PersonAppointmentServices.addPersonAppointment(this.person).then(() => {
+        await PersonAppointmentServices.addPersonAppointment(this.person)
+        .then(() => {
           this.getAppointments()
         })
         .catch (error => {
@@ -1367,17 +1369,20 @@ import Utils from '@/config/utils.js'
     },
     //Get the name of the student for the appointments
     async getStudentNameForAppointment(appoints){
-      var student = appoints.filter(person => person.isTutor == '0')
+      console.log(appoints)
+      var student = appoints.filter(person => !person.isTutor)
+      console.log(student)
       if(student.length !== 0) {
         var studentId = student[0].personId;
         this.studentName = this.getPersonName(studentId);
+        console.log(this.studentName)
       }
       else 
         this.studentName = "Open"
     },
     //Get the name of the tutor for the appointments
     async getTutorNameForAppointment(appoints){
-      var tutor = appoints.filter(person => person.isTutor == '1')
+      var tutor = appoints.filter(person => person.isTutor)
       if(tutor.length !== 0) {
         var tutorId = tutor[0].personId;
         this.tutorName = this.getPersonName(tutorId);
