@@ -218,7 +218,7 @@
           </v-select>
           </v-container>
           </span>
-          <!-- slots for locaiton and topic to be unchangable if the session type is group-->
+          <!-- slots for location and topic to be unchangable if the session type is group-->
           <span  v-else>
           <v-container>
           <v-select 
@@ -393,7 +393,7 @@
             @click="bookAppointment(); selectedOpen = false; newStart = displayedStart; newEnd = displayedEnd"
             :disabled="!checkStatus('available') || isGroupBook || ((studentfName == '' || studentlName == '') && !emailFound && checkRole('Admin')) ||
                         (checkRole('Admin') && selectedAppointment.type.includes('Group') && !adminAddStudent) || selectedAppointment.topicId == null 
-                        || selectedAppointment.locationId == null || (isTutorEvent && !checkRole('Admin'))"
+                        || selectedAppointment.locationId == null || (isTutorEvent && !checkRole('Admin')) || (displayedStart === '' || displayedEnd === '')"
           >
           Book
           </v-btn>
