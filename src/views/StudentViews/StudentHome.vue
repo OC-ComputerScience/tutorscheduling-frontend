@@ -70,7 +70,7 @@
           ></v-text-field>
         </v-card-title>
         <v-data-table
-          :headers="headers"
+          :headers="headerFeedback"
           :search="search"
           :items="appointmentsneedingfeedback"
           :items-per-page="50"
@@ -90,6 +90,8 @@ import Utils from '@/config/utils.js'
 import AppointmentServices from '@/services/appointmentServices.js'
 import GroupServices from "@/services/groupServices.js";
 import PersonRoleServices from "@/services/personRoleServices.js";
+import PersonAppointmentServices from "@/services/personAppointmentServices.js";
+import LocationServices from "@/services/locationServices.js";
 
   export default {
     props: ["id"],
@@ -112,7 +114,13 @@ import PersonRoleServices from "@/services/personRoleServices.js";
         headers: [{text: 'Date', value: 'date'}, 
                   {text: 'Start Time', value: 'startTime'},
                   {text: 'End Time', value: 'endTime'},
-                  {text: 'Topic', value: 'topic.name'}],
+                  {text: 'Location', value: 'location'},
+                  {text: 'Type', value: 'type'},
+                  {text: 'Tutor', value: 'tutor'}],
+        headerFeedback: [{text: 'Date', value: 'date'}, 
+                  {text: 'Start Time', value: 'startTime'},
+                  {text: 'End Time', value: 'endTime'},
+                  {text: 'Type', value: 'type'},],
         message : 'Student'
       };
     },
@@ -143,7 +151,7 @@ import PersonRoleServices from "@/services/personRoleServices.js";
       },
       async getAppointments() {
         await AppointmentServices.getUpcomingAppointmentForPersonForGroup(this.group.id, this.user.userID)
-          .then(response => {
+          .then(async (response) => {
             this.appointments = response.data;
 
             let temp = this.appointments.length
@@ -159,6 +167,31 @@ import PersonRoleServices from "@/services/personRoleServices.js";
                 }
             }
             for (let index = 0; index < this.appointments.length; ++index) {
+              this.appointments[index].tutor ='x'
+              //  look up students
+              await PersonAppointmentServices.findTutorDataForTable(this.appointments[index].id).then((response) => {
+                let tutorData = response.data;
+                if (this.appointments[index].type.includes('Group')){
+                  this.appointments[index].tutor = tutorData.length + " Tutor(s)";
+                }
+                else if (this.appointments[index].type.includes('Private') && (this.appointments[index].status.includes('booked') || this.appointments[index].status.includes('pending'))){
+                  this.appointments[index].tutor = tutorData[0].person.fName + " " + tutorData[0].person.lName;
+                }
+                else {
+                  this.appointments[index].tutor = 'Open'
+                }
+              })
+              // get location info 
+              if (this.appointments[index].locationId == null){
+                this.appointments[index].location = 'Not Selected'
+              }
+              else {
+                await LocationServices.getLocation(this.appointments[index].locationId).then((response) => {
+                  let locationData = response.data;
+                  this.appointments[index].location = locationData.name;
+                  
+                })
+              }
               //format date
               let element = this.appointments[index];
               let formattedDate = element.date.toString().substring(5,10) + "-" + element.date.toString().substring(0,4);
