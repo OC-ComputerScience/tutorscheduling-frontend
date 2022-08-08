@@ -11,17 +11,15 @@
       <v-row justify="center">
         <v-card
           flat
-          color="accent"
+          color="grey lighten-4"
           min-width="500px"
         >
           <v-card-title
-            class="justify-center white--text"
+            class="justify-center"
           >
             Appointment on {{this.dateText}} with {{this.tutorText}}
           </v-card-title>
-          <v-card-text
-            class="white--text"
-          >
+          <v-card-text>
             <b>Time: </b>{{this.appointment.startTime}} - {{this.appointment.endTime}}
             <br>
             <b>Type: </b>{{this.appointment.type}}
