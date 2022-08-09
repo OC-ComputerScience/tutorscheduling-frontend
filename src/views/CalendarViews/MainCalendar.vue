@@ -3,6 +3,8 @@
     <v-container>
       <v-toolbar>
         <v-toolbar-title>{{this.message}}</v-toolbar-title>
+        <v-spacer></v-spacer>
+        <v-toolbar-title>{{this.role.type}}</v-toolbar-title>
       </v-toolbar>
       <br>
       <v-row class="fill-height">
@@ -554,7 +556,7 @@ import Utils from '@/config/utils.js'
 
   data: () => ({
     overlay: true,
-    message : 'Schedule',
+    message : 'Calendar',
     mode: 'stack',
     //appointment info
     appointments: [],
@@ -1454,11 +1456,6 @@ import Utils from '@/config/utils.js'
       if(this.appointments[i].groupId != this.group.id) {
         filtered = false;
       }
-      // //filter away canceled appointments
-      // if(!this.checkRole('Admin') && (this.appointments[i].status.includes('studentCancel') || 
-      //     this.appointments[i].status.includes('tutorCancel'))) {
-      //   filtered = false;
-      // }
       //filter by topic
       let checkedtopic = await this.checkTopic(this.appointments[i])
       if(this.selectedTopic != -1 && !checkedtopic) {
@@ -1486,37 +1483,13 @@ import Utils from '@/config/utils.js'
           filtered = false;
         }
       }
-      // filter their appointments, all available appointments, all group appointments, and their cancelled appointments for TUTORS
+      //filter their appointments, all available appointments, all group appointments, and their cancelled appointments for TUTORS
       else if(this.checkRole('Tutor')) {
         //filter away cancelled appointments that aren't theirs
         if(!checkedTutor && (this.appointments[i].status.includes('studentCancel') || this.appointments[i].status.includes('tutorCancel'))) {
           filtered = false;
         }
       }
-      // if(!this.checkRole('Admin'))
-      // {
-      //   if(!(this.appointments[i].status == "available") || this.checkRole("Tutor")) {
-      //   //only add if user is associated with event
-      //     if(!this.checkTutor(this.appointments[i].personappointment)){
-      //       filtered = false;
-      //     }
-      //     if(this.appointments[i].type.includes('Group') 
-      //         && !(this.appointments[i].status.includes('tutorCancel') || this.appointments[i].status.includes('studentCancel'))){
-      //       filtered = true
-      //     }
-      //     if (this.appointments[i].type.includes('Group') 
-      //         && !(this.appointments[i].status.includes('tutorCancel') || this.appointments[i].status.includes('studentCancel')) 
-      //         && this.selectedTopic != -1 && !checkedtopic) {
-      //           filtered = false
-      //     }
-      //     if (this.appointments[i].type.includes('Group') 
-      //         && !(this.appointments[i].status.includes('tutorCancel') || this.appointments[i].status.includes('studentCancel')) 
-      //         && this.selectedTutor != -1 && !checkedTutor) {
-      //           filtered = false
-      //     }
-      //   }
-      // }
-
       if(filtered) {
         //Set color for each event
         let color = 'grey darken-1'
