@@ -138,7 +138,7 @@
                                 depressed
                                 rounded
                                 text
-                                :to="{ name: 'help' }"
+                                :to="{ name: 'help', params: { id: currentPersonRoleID }  }"
                                 v-if="!selectedRoles.includes('Admin')"
                             >
                                 Help
@@ -358,9 +358,9 @@ export default {
         }
     },
     async mounted() {
-        console.log("in mounted")
+        // console.log("in mounted")
         await this.resetMenu();
-        console.log("done with mounted")
+        // console.log("done with mounted")
     },
     computed: {
         _link() {
