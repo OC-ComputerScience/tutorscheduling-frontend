@@ -42,6 +42,9 @@ export default {
     getPassedAppointmentForPersonForGroupStudent(groupId, personId) {
       return apiClient.get("appointment/passGroupStudent/" + groupId + "/person/" + personId)
     },
+    getAppointmentForFeedback(appointmentId) {
+      return apiClient.get("appointment/feedback/" + appointmentId)
+    },
     addAppointment(appointment) {
       return apiClient.post("appointment", appointment);
     },
