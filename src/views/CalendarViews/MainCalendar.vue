@@ -263,7 +263,7 @@
               label="Booked Start"
               required
               @change="updateTimes()"
-              :disabled="checkRole('Tutor')"
+              :disabled="checkRole('Tutor') || datePast"
               dense
             >
             </v-select>
@@ -291,7 +291,7 @@
             label="Booked End"
             required
             @change="updateTimes()"
-            :disabled="checkRole('Tutor')"
+            :disabled="checkRole('Tutor') || datePast"
             dense
           >
           </v-select>
@@ -649,7 +649,6 @@ import Utils from '@/config/utils.js'
     await AppointmentServices.findAppointmentsForGroup(this.group.id)
     .then(async (response) => {
       this.appointments = response.data
-      console.log(this.appointments)
       await PersonAppointmentServices.getAllPersonAppointments()
       .then(async (response) => {
         this.personAppointments = response.data;
@@ -1124,16 +1123,12 @@ import Utils from '@/config/utils.js'
       return times
     },
     updateTimes() {
-      console.log(this.newStart)
-      console.log(this.newEnd)
       this.startTimes = this.generateTimes(this.selectedAppointment.startTime, this.newEnd);
       // adding this to make sure that you can't start an appointment at the end time
       this.startTimes.pop();
       this.endTimes = this.generateTimes(this.newStart, this.selectedAppointment.endTime);
       // adding this to make sure you can't end an appointment at the start time
       this.endTimes.shift();
-      console.log(this.startTimes)
-      console.log(this.endTimes)
     },
     //Load data for info associated with events
     getTopic(topicId) {
@@ -1389,7 +1384,6 @@ import Utils from '@/config/utils.js'
       if(student.length !== 0) {
         var studentId = student[0].personId;
         this.studentName = this.getPersonName(studentId);
-        console.log(this.studentName)
       }
       else 
         this.studentName = "Open"
@@ -1879,9 +1873,29 @@ import Utils from '@/config/utils.js'
     checkAppointmentIfPast(){
       let checkDate = new Date();
       checkDate.setHours(checkDate.getHours() - (checkDate.getTimezoneOffset()/60))
+      console.log(checkDate.toISOString());
       checkDate.setHours(0,0,0,0);
       let checkTime = new Date();
-      checkTime = checkTime.getHours()+":"+ checkTime.getMinutes() +":"+checkTime.getSeconds();
+      let tempHours = checkTime.getHours();
+      let tempMins = checkTime.getMinutes();
+      let tempSecs = checkTime.getSeconds();
+      if(tempHours < 10)
+      {
+        tempHours = "0" + tempHours
+      }
+      if(tempMins < 10)
+      {
+        tempMins = "0" + tempMins
+      }
+      if(tempSecs < 10)
+      {
+        tempSecs = "0" + tempSecs
+      }
+      checkTime = tempHours +":"+ tempMins +":"+ tempSecs;
+      
+      console.log(this.selectedAppointment.date);
+      console.log(checkTime)
+      console.log(this.selectedAppointment.startTime)
       if (this.selectedAppointment.date < checkDate.toISOString()){
         this.datePast = true;
       }
