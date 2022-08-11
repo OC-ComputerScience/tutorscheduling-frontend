@@ -1,253 +1,251 @@
 <template>
   <div>
     <v-container>
-    <v-toolbar>
-      <v-toolbar-title>{{this.message}}</v-toolbar-title>
-    </v-toolbar>
-    <br>
-    <v-row class="fill-height">
-    <v-col>
-      <v-sheet height="64">
-      <v-toolbar
-      flat
-      >
-      <!-- Sets focus to current date -->
-      <v-btn
-        outlined
-        class="mr-4"
-        color="grey darken-2"
-        @click="viewMonth()"
-      >
-      Reset
-      </v-btn>
-      <!-- Navigates calendar forward and back -->
-      <v-btn
-        fab
-        text
-        small
-        color="grey darken-2"
-        @click="prev"
-      >
-      <v-icon small>
-      mdi-chevron-left
-      </v-icon>
-      </v-btn>
-      <v-btn
-        fab
-        text
-        small
-        color="grey darken-2"
-        @click="next"
-      >
-      <v-icon small>
-      mdi-chevron-right
-      </v-icon>
-      </v-btn>
-      <!-- Shows current month and year displayed on calendar -->
-      <v-toolbar-title v-if="$refs.calendar">
-          {{ $refs.calendar.title }}
-      </v-toolbar-title>
-      <v-spacer></v-spacer>
-      <v-col cols="3" align-self="start">
-        <v-select
-        dense
-        v-model="selectedTopic"
-        :items="topics"
-        item-text="name"
-        item-value="id"
-        label="Topic"
-        outlined
-        @change="loadAppointments()"
-        ></v-select>
-      </v-col>
-      <v-col cols="3" align-self="start">
-        <v-select
-        dense
-        v-model="selectedTutor"
-        :items="tutorSelect"
-        item-text="name"
-        item-value="id"
-        label="Tutor"
-        outlined
-        @change="loadAppointments()"
-        ></v-select>
-      </v-col>
-      <v-btn
-          outlined
-          class="mr-4"
-          color="grey darken-2"
-          @click="viewKey()"
-          right
-        >
-        Key
-      </v-btn>
-      <!-- Dropdown menu to select format -->
-      <!-- Will modify to only include relevant formats -->
-      <v-menu
-
-        bottom
-        right
-      >
-        <template v-slot:activator="{ on, attrs }">
-        <v-btn
-          outlined
-          color="grey darken-2"
-          v-bind="attrs"
-          v-on="on"
-        >
-        <span>{{ typeToLabel[type] }}</span>
-        <v-icon right>
-        mdi-menu-down
-        </v-icon>
-        </v-btn>
-        </template>
-        <v-list>
-        <v-list-item @click="type = 'day'">
-          <v-list-item-title>Day</v-list-item-title>
-        </v-list-item>
-        <v-list-item @click="type = 'week'">
-          <v-list-item-title>Week</v-list-item-title>
-        </v-list-item>
-        <v-list-item @click="type = 'month'">
-          <v-list-item-title>Month</v-list-item-title>
-        </v-list-item>
-        <v-list-item @click="type = '4day'">
-          <v-list-item-title>4 days</v-list-item-title>
-        </v-list-item>
-        </v-list>
-      </v-menu>
+      <v-toolbar>
+        <v-toolbar-title>{{this.message}}</v-toolbar-title>
+        <v-spacer></v-spacer>
+        <v-toolbar-title>{{this.role.type}}</v-toolbar-title>
       </v-toolbar>
-      </v-sheet>
-      <v-sheet height="600">
-        <!--Calendar element needs a list of events to show -->
-        <!--Type determines calendar format -->
-        <v-calendar
-          ref="calendar"
-          v-model="focus"
-          color="primary"
-          :events="events"
-          :event-color="getEventColor"
-          :event-overlap-mode="mode"
-          :event-overlap-threshold="30"
-          :type="type"
-          @click:event="showEvent"
-          @click:more="viewDay"
-          @click:date="viewDay"
-        ></v-calendar>
+      <br>
+      <v-row class="fill-height">
+        <v-col>
+          <v-sheet height="64">
+            <v-toolbar
+            flat
+            >
+              <!-- Sets focus to current date -->
+              <v-btn
+                outlined
+                class="mr-4"
+                color="grey darken-2"
+                @click="viewMonth()"
+              >
+              Reset
+              </v-btn>
+              <!-- Navigates calendar forward and back -->
+              <v-btn
+                fab
+                text
+                small
+                color="grey darken-2"
+                @click="prev"
+              >
+                <v-icon small>
+                mdi-chevron-left
+                </v-icon>
+              </v-btn>
+              <v-btn
+                fab
+                text
+                small
+                color="grey darken-2"
+                @click="next"
+              >
+                <v-icon small>
+                mdi-chevron-right
+                </v-icon>
+              </v-btn>
+              <!-- Shows current month and year displayed on calendar -->
+              <v-toolbar-title v-if="$refs.calendar">
+                  {{ $refs.calendar.title }}
+              </v-toolbar-title>
+              <v-spacer></v-spacer>
+              <v-col cols="3" align-self="start">
+                <v-select
+                dense
+                v-model="selectedTopic"
+                :items="topics"
+                item-text="name"
+                item-value="id"
+                label="Topic"
+                outlined
+                @change="loadAppointments()"
+                ></v-select>
+              </v-col>
+              <v-col cols="3" align-self="start">
+                <v-select
+                dense
+                v-model="selectedTutor"
+                :items="tutorSelect"
+                item-text="name"
+                item-value="id"
+                label="Tutor"
+                outlined
+                @change="loadAppointments()"
+                ></v-select>
+              </v-col>
+              <v-btn
+                outlined
+                class="mr-4"
+                color="grey darken-2"
+                @click="viewKey()"
+                right
+              >
+                Key
+              </v-btn>
+              <!-- Dropdown menu to select format -->
+              <!-- Will modify to only include relevant formats -->
+              <v-menu
+                bottom
+                right
+              >
+                <template v-slot:activator="{ on, attrs }">
+                  <v-btn
+                    outlined
+                    color="grey darken-2"
+                    v-bind="attrs"
+                    v-on="on"
+                  >
+                    <span>{{ typeToLabel[type] }}</span>
+                    <v-icon right>mdi-menu-down</v-icon>
+                  </v-btn>
+                </template>
+                <v-list>
+                  <v-list-item @click="type = 'day'">
+                    <v-list-item-title>Day</v-list-item-title>
+                  </v-list-item>
+                  <v-list-item @click="type = 'week'">
+                    <v-list-item-title>Week</v-list-item-title>
+                  </v-list-item>
+                  <v-list-item @click="type = 'month'">
+                    <v-list-item-title>Month</v-list-item-title>
+                  </v-list-item>
+                  <v-list-item @click="type = '4day'">
+                    <v-list-item-title>4 days</v-list-item-title>
+                  </v-list-item>
+                </v-list>
+              </v-menu>
+            </v-toolbar>
+          </v-sheet>
+          <v-sheet height="600">
+            <!--Calendar element needs a list of events to show -->
+            <!--Type determines calendar format -->
+            <v-calendar
+              ref="calendar"
+              v-model="focus"
+              color="primary"
+              :events="events"
+              :event-color="getEventColor"
+              :event-overlap-mode="mode"
+              :event-overlap-threshold="30"
+              :type="type"
+              @click:event="showEvent"
+              @click:more="viewDay"
+              @click:date="viewDay"
+            ></v-calendar>
 
-        <!--Pop-up that appears when an event is selected -->
+            <!--Pop-up that appears when an event is selected -->
 
-        <!-- add another v-menu for group session v private-->
-        <v-menu
-        v-model="selectedOpen"
-        :open-on-click="false"
-        :close-on-content-click="false"
-        :activator="selectedElement"
-        offset-x
-        >
-        <v-card
-          color="grey lighten-4"
-          min-width="350px"
-          flat
-        >
-        <v-toolbar
-        :color="selectedEvent.color"
-        dark
-        >
-        <v-btn icon>
-          <v-icon>mdi-pencil</v-icon>
-        </v-btn>
-        <v-toolbar-title v-html="selectedEvent.name"></v-toolbar-title>
-        </v-toolbar>
-        <!--TODO: Clean this up, allow signing up for timeslot -->
-        <!-- How to show tutor? -->
-        <v-card-text v-if="selectedAppointment != null">
-          <b>Time slot:</b>
-          {{calcTime(selectedAppointment.startTime)}}-{{calcTime(selectedAppointment.endTime)}}
-          <br>
-          <b>Tutors: </b>
-          <span v-if="tutors.length > 0">
-            <span v-for="tutor in tutors" :key="tutor.id">
-              <span v-if="tutor == tutors[tutors.length - 1]">{{tutor.fName}} {{tutor.lName}}</span>
-              <span v-else>{{tutor.fName}} {{tutor.lName}}, </span>
-            </span>
-          </span>
-          <span v-else>
-            <span>None</span>
-          </span>
-          <br>
-          <b>Students: </b>
-          <span v-if="students.length > 0">
-            <span v-for="student in students" :key="student.id">
-              <span v-if="student == students[students.length - 1]">{{student.fName}} {{student.lName}}</span>
-              <span v-else>{{student.fName}} {{student.lName}}, </span>
-            </span>
-          </span>
-          <span v-else>
-            <span>None</span>
-          </span>
+            <!-- add another v-menu for group session v private-->
+            <v-menu
+              v-model="selectedOpen"
+              :open-on-click="false"
+              :close-on-content-click="false"
+              :activator="selectedElement"
+              offset-x
+            >
+              <v-card
+                color="grey lighten-4"
+                min-width="350px"
+                flat
+              >
+              <v-toolbar
+                :color="selectedEvent.color"
+                dark
+              >
+                <v-btn icon>
+                  <v-icon>mdi-pencil</v-icon>
+                </v-btn>
+                <v-toolbar-title v-html="selectedEvent.name"></v-toolbar-title>
+              </v-toolbar>
+              <!-- How to show tutor? -->
+              <v-card-text v-if="selectedAppointment != null">
+                <b>Time slot:</b>
+                {{calcTime(selectedAppointment.startTime)}}-{{calcTime(selectedAppointment.endTime)}}
+                <br>
+                <b>Tutors: </b>
+                <span v-if="tutors.length > 0">
+                  <span v-for="tutor in tutors" :key="tutor.id">
+                    <span v-if="tutor == tutors[tutors.length - 1]">{{tutor.fName}} {{tutor.lName}}</span>
+                    <span v-else>{{tutor.fName}} {{tutor.lName}}, </span>
+                  </span>
+                </span>
+                <span v-else>
+                  <span>None</span>
+                </span>
+                <br>
+                <b>Students: </b>
+                <span v-if="students.length > 0">
+                  <span v-for="student in students" :key="student.id">
+                    <span v-if="student == students[students.length - 1]">{{student.fName}} {{student.lName}}</span>
+                    <span v-else>{{student.fName}} {{student.lName}}, </span>
+                  </span>
+                </span>
+                <span v-else>
+                  <span>None</span>
+                </span>
 
-          <!-- make location and topic changable if the appointment type is private-->
-          <span  v-if="appointmentType.includes('Private')">
-          <v-container>
-          <v-select 
-            v-model="selectedAppointment.locationId"
-            :items="locations"
-            item-text="name"
-            item-value="id"
-            label="Location"
-            required
-            dense
-            :disabled="checkStatus('pending') || (checkRole('Tutor') && !checkStatus('booked')) || 
-              ((checkRole('Student') || checkRole('Admin')) && (checkStatus('booked')) || 
-              selectedAppointment.status.includes('Cancel')) || datePast"
-            @change="saveChanges = true"
-          >
-          </v-select>
+                <!-- make location and topic changable if the appointment type is private-->
+                <span  v-if="appointmentType.includes('Private')">
+                <v-container>
+                <v-select 
+                  v-model="selectedAppointment.locationId"
+                  :items="locations"
+                  item-text="name"
+                  item-value="id"
+                  label="Location"
+                  required
+                  dense
+                  :disabled="checkStatus('pending') || (checkRole('Tutor') && !checkStatus('booked')) || 
+                    ((checkRole('Student') || checkRole('Admin')) && (checkStatus('booked')) || 
+                    selectedAppointment.status.includes('Cancel')) || datePast"
+                  @change="saveChanges = true"
+                >
+                </v-select>
 
-          <v-select 
-            v-model="selectedAppointment.topicId"
-            :items="currentTopics"
-            item-text="name"
-            item-value="id"
-            label="Topic"
-            required
-            dense
-            :disabled="!checkStatus('available') || checkRole('Tutor') || datePast"
-          >
-          </v-select>
-          </v-container>
-          </span>
-          <!-- slots for location and topic to be unchangable if the session type is group-->
-          <span  v-else>
-          <v-container>
-          <v-select 
-            v-model="selectedAppointment.locationId"
-            :items="locations"
-            item-text="name"
-            item-value="id"
-            label="Location"
-            required
-            dense
-            :disabled="datePast"
-            :readonly="!isTutorEvent || (isTutorEvent && checkRole('Admin'))"
-            @change="saveChanges = true"
-          >
-          </v-select>
+                <v-select 
+                  v-model="selectedAppointment.topicId"
+                  :items="currentTopics"
+                  item-text="name"
+                  item-value="id"
+                  label="Topic"
+                  required
+                  dense
+                  :disabled="!checkStatus('available') || checkRole('Tutor') || datePast"
+                >
+                </v-select>
+                </v-container>
+                </span>
+                <!-- slots for location and topic to be unchangable if the session type is group-->
+                <span  v-else>
+                <v-container>
+                <v-select 
+                  v-model="selectedAppointment.locationId"
+                  :items="locations"
+                  item-text="name"
+                  item-value="id"
+                  label="Location"
+                  required
+                  dense
+                  :disabled="datePast"
+                  :readonly="!isTutorEvent || (isTutorEvent && checkRole('Admin'))"
+                  @change="saveChanges = true"
+                >
+                </v-select>
 
-          <v-select 
-            v-model="selectedAppointment.topicId"
-            :items="currentTopics"
-            item-text="name"
-            item-value="id"
-            label="Topic"
-            required
-            dense
-            :disabled="datePast"
-            :readonly="!isTutorEvent || (students.length > 0 && isTutorEvent) || (isTutorEvent && checkRole('Admin'))"
-            @change="saveChanges = true"
-          >
-          </v-select>
+                <v-select 
+                  v-model="selectedAppointment.topicId"
+                  :items="currentTopics"
+                  item-text="name"
+                  item-value="id"
+                  label="Topic"
+                  required
+                  dense
+                  :disabled="datePast"
+                  :readonly="!isTutorEvent || (students.length > 0 && isTutorEvent) || (isTutorEvent && checkRole('Admin'))"
+                  @change="saveChanges = true"
+                >
+                </v-select>
 
           </v-container>
           </span>
@@ -263,7 +261,7 @@
               label="Booked Start"
               required
               @change="updateTimes()"
-              :disabled="checkRole('Tutor')"
+              :disabled="checkRole('Tutor') || datePast"
               dense
             >
             </v-select>
@@ -291,7 +289,7 @@
             label="Booked End"
             required
             @change="updateTimes()"
-            :disabled="checkRole('Tutor')"
+            :disabled="checkRole('Tutor') || datePast"
             dense
           >
           </v-select>
@@ -432,70 +430,69 @@
         Cancel Appointment
         </v-btn>
 
-        <v-btn v-if="checkRole('Admin') && checkStatus('available')"
-          color="green"
-          @click="adminAddStudent = true"
-          :disabled="adminAddStudent"
-        >
-        Sign Up Student
-        </v-btn>
-        </v-card-actions>
-        </v-card>
-        </v-menu>
-      </v-sheet>
-    </v-col>
-    </v-row>
+                  <v-btn v-if="checkRole('Admin') && checkStatus('available')"
+                    color="green"
+                    @click="adminAddStudent = true"
+                    :disabled="adminAddStudent"
+                  >
+                  Sign Up Student
+                  </v-btn>
+                </v-card-actions>
+              </v-card>
+            </v-menu>
+          </v-sheet>
+        </v-col>
+      </v-row>
     </v-container>
     <v-dialog v-model="keyVisible" max-width="600px">
-    <v-card
-    >
+    <v-card>
       <v-card-title class="text-h5">Color Meanings</v-card-title>
       <v-card-text class="text-h6">
         <v-btn
-        elevation="0"
-        color="grey darken-1"
-        class="white--text"
-        width="100"
+          elevation="0"
+          color="grey darken-1"
+          class="white--text"
+          width="100"
         > 
         Grey
         </v-btn>
         <span> - This event marks an open timeslot that is available to be booked by any student.</span>
         <br>
         <v-btn
-        elevation="0"
-        color="yellow"
-        class="white--text"
-        width="100"
+          elevation="0"
+          color="yellow"
+          class="white--text"
+          width="100"
         > 
         Yellow
         </v-btn>
         <span> - This event marks that a set time has been requested and is pending tutor approval.</span>
         <br>
         <v-btn
-        elevation="0"
-        color="red"
-        class="white--text"
-        width="100"
+          elevation="0"
+          color="red"
+          class="white--text"
+          width="100"
         > 
         Red
         </v-btn>
         <span> - This event marks a requested timeslot that has been cancelled by the tutor.</span>
         <br>
         <v-btn
-        elevation="0"
-        color="blue"
-        class="white--text"
-        width="100"
+          elevation="0"
+          color="blue"
+          class="white--text"
+          width="100"
         > 
         Blue
         </v-btn>
         <span> - This event marks a timeslot that has been booked and notes an upcoming meeting.</span>
         <br>
         <v-btn
-        elevation="0"
-        color="green"
-        class="white--text"
-        width="100"
+          elevation="0"
+          color="green"
+          class="white--text"
+          width="100"
         > 
         Green
         </v-btn>
@@ -503,10 +500,10 @@
           and is used for keeping track of user reviews.</span>
         <br>
         <v-btn
-        elevation="0"
-        color="purple"
-        class="white--text"
-        width="100"
+          elevation="0"
+          color="purple"
+          class="white--text"
+          width="100"
         > 
         Purple
         </v-btn>
@@ -526,12 +523,12 @@
   </v-dialog>
 
   <v-overlay
-      :value="overlay"
-    >
-      <v-progress-circular indeterminate size="64">
-        Loading...
-      </v-progress-circular>
-    </v-overlay>
+    :value="overlay"
+  >
+    <v-progress-circular indeterminate size="64">
+      Loading...
+    </v-progress-circular>
+  </v-overlay>
 
   </div>
 </template>
@@ -559,7 +556,7 @@ import Utils from '@/config/utils.js'
 
   data: () => ({
     overlay: true,
-    message : 'Schedule',
+    message : 'Calendar',
     mode: 'stack',
     //appointment info
     appointments: [],
@@ -649,7 +646,6 @@ import Utils from '@/config/utils.js'
     await AppointmentServices.findAppointmentsForGroup(this.group.id)
     .then(async (response) => {
       this.appointments = response.data
-      console.log(this.appointments)
       await PersonAppointmentServices.getAllPersonAppointments()
       .then(async (response) => {
         this.personAppointments = response.data;
@@ -715,6 +711,7 @@ import Utils from '@/config/utils.js'
     },
     // Check to see if the tutor in question is the tutor of the selected event
     async isTutorOfSelectedEvent(){
+      console.log(this.selectedAppointment)
       await PersonAppointmentServices.getPersonAppointmentForPerson(this.user.userID)
       .then(response => {
         let temp = response.data
@@ -832,7 +829,7 @@ import Utils from '@/config/utils.js'
         }
       } else {
         // don't need to update google cal because it's not even on there yet
-        this.selectedAppointment.status = "cancelled"
+        this.selectedAppointment.status = "tutorCancel"
         await AppointmentServices.updateAppointment(this.selectedAppointment.id, this.selectedAppointment).then(() =>{
           this.getAppointments()
           this.selectedEvent.color = 'red'
@@ -1124,16 +1121,12 @@ import Utils from '@/config/utils.js'
       return times
     },
     updateTimes() {
-      console.log(this.newStart)
-      console.log(this.newEnd)
       this.startTimes = this.generateTimes(this.selectedAppointment.startTime, this.newEnd);
       // adding this to make sure that you can't start an appointment at the end time
       this.startTimes.pop();
       this.endTimes = this.generateTimes(this.newStart, this.selectedAppointment.endTime);
       // adding this to make sure you can't end an appointment at the start time
       this.endTimes.shift();
-      console.log(this.startTimes)
-      console.log(this.endTimes)
     },
     //Load data for info associated with events
     getTopic(topicId) {
@@ -1283,7 +1276,6 @@ import Utils from '@/config/utils.js'
           requestAnimationFrame(() => requestAnimationFrame(() => this.selectedOpen = true))
         })
         .catch(error => {
-          console.log(error)
           this.message = error.response.data.message
         })
         ;
@@ -1372,6 +1364,22 @@ import Utils from '@/config/utils.js'
       })
       return found
     },
+    async isTutor(appoints) {
+      let found = false
+      appoints.forEach((p) => {
+        if(p.personId === this.user.userID && p.isTutor)
+          found = true;
+      })
+      return found
+    },
+    async isStudent(appoints) {
+      let found = false
+      appoints.forEach((p) => {
+        if(p.personId === this.user.userID && !p.isTutor)
+          found = true;
+      })
+      return found
+    },
     checkRole(type) {
       if(this.role != null && this.role.type == type) {
         return true;
@@ -1389,7 +1397,6 @@ import Utils from '@/config/utils.js'
       if(student.length !== 0) {
         var studentId = student[0].personId;
         this.studentName = this.getPersonName(studentId);
-        console.log(this.studentName)
       }
       else 
         this.studentName = "Open"
@@ -1434,61 +1441,59 @@ import Utils from '@/config/utils.js'
     },
 
 
-    //Load all appointments in backend into calendar events
-    async loadAppointments() {
-      this.overlay = true;
-      const events = []
-      let filtered;
-      for(let i = 0; i < this.appointments.length; i++) {
-        await this.groupBookColor(this.appointments[i].personappointment)
-        await this.isStudentInGroupAppoint(this.appointments[i].personappointment)
-        //filter events to only add appropriate events
-        filtered = true
-        //only add appointments from the current group
-        if(this.appointments[i].groupId != this.group.id) {
+  //Load all appointments in backend into calendar events
+  async loadAppointments() {
+    let today = new Date();
+    today.setHours(today.getHours() - (today.getTimezoneOffset()/60))
+    today.setHours(0,0,0,0);
+    this.overlay = true;
+    const events = [];
+    let filtered;
+    for(let i = 0; i < this.appointments.length; i++) {
+      await this.groupBookColor(this.appointments[i].personappointment)
+      await this.isStudentInGroupAppoint(this.appointments[i].personappointment)
+      //filter events to only add appropriate events
+      filtered = true
+      //only add appointments from the current group
+      if(this.appointments[i].groupId != this.group.id) {
+        filtered = false;
+      }
+      //filter by topic
+      let checkedtopic = await this.checkTopic(this.appointments[i])
+      if(this.selectedTopic != -1 && !checkedtopic) {
+        filtered = false;
+      }
+      //filter by tutor
+      let checkedTutor = await this.checkTutor(this.appointments[i].personappointment)
+      if(this.selectedTutor != -1 && !checkedTutor) 
+      {
+        filtered = false;
+      }
+      //filter all available appointments, their appointments, and all group appointments for STUDENTS
+      let isStudent = await this.isStudent(this.appointments[i].personappointment);
+      let isTutor = await this.isTutor(this.appointments[i].personappointment);
+      if(this.checkRole('Student')) {
+        //filter away private appointments that aren't a student's
+        if(this.appointments[i].type.includes('Private') && !isStudent && !(this.appointments[i].status === "available")) {
+          filtered = false; 
+        }
+        //filter away group appointments that have passed that aren't a student's
+        if(this.appointments[i].type.includes('Group') && !isStudent && this.appointments[i].date < today.toISOString()) {
           filtered = false;
         }
-        //filter away canceled appointments
-        if(!this.checkRole('Admin') && (this.appointments[i].status.includes('studentCancel') || 
-            this.appointments[i].status.includes('tutorCancel'))) {
+        //filter away cancelled appointments
+        if(this.appointments[i].status.includes('studentCancel') || this.appointments[i].status.includes('tutorCancel')) {
           filtered = false;
         }
-        //filter by topic
-        let checkedtopic = await this.checkTopic(this.appointments[i])
-        if(this.selectedTopic != -1 && !checkedtopic) {
+      }
+      //filter their appointments, all available appointments, all group appointments, and their cancelled appointments for TUTORS
+      else if(this.checkRole('Tutor')) {
+        //filter away cancelled appointments that aren't theirs
+        if(!isTutor && (this.appointments[i].status.includes('studentCancel') || this.appointments[i].status.includes('tutorCancel'))) {
           filtered = false;
         }
-        //filter by tutor
-        let checkedTutor = await this.checkTutor(this.appointments[i].personappointment)
-        if(this.selectedTutor != -1 && !checkedTutor) 
-        {
-          filtered = false;
-        }
-        if(!this.checkRole('Admin'))
-        {
-          if(!(this.appointments[i].status == "available") || this.checkRole("Tutor")) {
-          //only add if user is associated with event
-            if(!this.checkTutor(this.appointments[i].personappointment)){
-              filtered = false;
-            }
-            if(this.appointments[i].type.includes('Group') 
-                && !(this.appointments[i].status.includes('tutorCancel') || this.appointments[i].status.includes('studentCancel'))){
-              filtered = true
-            }
-            if (this.appointments[i].type.includes('Group') 
-                && !(this.appointments[i].status.includes('tutorCancel') || this.appointments[i].status.includes('studentCancel')) 
-                && this.selectedTopic != -1 && !checkedtopic) {
-                  filtered = false
-            }
-            if (this.appointments[i].type.includes('Group') 
-                && !(this.appointments[i].status.includes('tutorCancel') || this.appointments[i].status.includes('studentCancel')) 
-                && this.selectedTutor != -1 && !checkedTutor) {
-                  filtered = false
-            }
-          }
-        }
-
-        if(filtered) {
+      }
+      if(filtered) {
         //Set color for each event
         let color = 'grey darken-1'
         switch (this.appointments[i].status) {
@@ -1562,7 +1567,7 @@ import Utils from '@/config/utils.js'
           })
         }
         else if(this.appointments[i].type.includes('Private') && !this.appointments[i].status.includes('Cancel') &&
-               (this.checkRole('Student') || this.checkRole('Admin'))) {
+              (this.checkRole('Student') || this.checkRole('Admin'))) {
           await this.getTutorNameForAppointment(this.appointments[i].personappointment)
           .catch(error => { 
           this.message = error.response.data.message
@@ -1879,9 +1884,29 @@ import Utils from '@/config/utils.js'
     checkAppointmentIfPast(){
       let checkDate = new Date();
       checkDate.setHours(checkDate.getHours() - (checkDate.getTimezoneOffset()/60))
+      console.log(checkDate.toISOString());
       checkDate.setHours(0,0,0,0);
       let checkTime = new Date();
-      checkTime = checkTime.getHours()+":"+ checkTime.getMinutes() +":"+checkTime.getSeconds();
+      let tempHours = checkTime.getHours();
+      let tempMins = checkTime.getMinutes();
+      let tempSecs = checkTime.getSeconds();
+      if(tempHours < 10)
+      {
+        tempHours = "0" + tempHours
+      }
+      if(tempMins < 10)
+      {
+        tempMins = "0" + tempMins
+      }
+      if(tempSecs < 10)
+      {
+        tempSecs = "0" + tempSecs
+      }
+      checkTime = tempHours +":"+ tempMins +":"+ tempSecs;
+      
+      console.log(this.selectedAppointment.date);
+      console.log(checkTime)
+      console.log(this.selectedAppointment.startTime)
       if (this.selectedAppointment.date < checkDate.toISOString()){
         this.datePast = true;
       }
