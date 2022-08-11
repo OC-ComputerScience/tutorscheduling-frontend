@@ -815,7 +815,7 @@ import Utils from '@/config/utils.js'
         }
       } else {
         // don't need to update google cal because it's not even on there yet
-        this.selectedAppointment.status = "cancelled"
+        this.selectedAppointment.status = "tutorCancel"
         await AppointmentServices.updateAppointment(this.selectedAppointment.id, this.selectedAppointment).then(() =>{
           this.getAppointments()
           this.selectedEvent.color = 'red'
