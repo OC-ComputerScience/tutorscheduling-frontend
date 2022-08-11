@@ -646,7 +646,6 @@ import Utils from '@/config/utils.js'
     await AppointmentServices.findAppointmentsForGroup(this.group.id)
     .then(async (response) => {
       this.appointments = response.data
-      console.log(this.appointments)
       await PersonAppointmentServices.getAllPersonAppointments()
       .then(async (response) => {
         this.personAppointments = response.data;
@@ -712,6 +711,7 @@ import Utils from '@/config/utils.js'
     },
     // Check to see if the tutor in question is the tutor of the selected event
     async isTutorOfSelectedEvent(){
+      console.log(this.selectedAppointment)
       await PersonAppointmentServices.getPersonAppointmentForPerson(this.user.userID)
       .then(response => {
         let temp = response.data
@@ -1121,16 +1121,12 @@ import Utils from '@/config/utils.js'
       return times
     },
     updateTimes() {
-      console.log(this.newStart)
-      console.log(this.newEnd)
       this.startTimes = this.generateTimes(this.selectedAppointment.startTime, this.newEnd);
       // adding this to make sure that you can't start an appointment at the end time
       this.startTimes.pop();
       this.endTimes = this.generateTimes(this.newStart, this.selectedAppointment.endTime);
       // adding this to make sure you can't end an appointment at the start time
       this.endTimes.shift();
-      console.log(this.startTimes)
-      console.log(this.endTimes)
     },
     //Load data for info associated with events
     getTopic(topicId) {
@@ -1280,7 +1276,6 @@ import Utils from '@/config/utils.js'
           requestAnimationFrame(() => requestAnimationFrame(() => this.selectedOpen = true))
         })
         .catch(error => {
-          console.log(error)
           this.message = error.response.data.message
         })
         ;
@@ -1369,7 +1364,15 @@ import Utils from '@/config/utils.js'
       })
       return found
     },
-    async checkStudent(appoints) {
+    async isTutor(appoints) {
+      let found = false
+      appoints.forEach((p) => {
+        if(p.personId === this.user.userID && p.isTutor)
+          found = true;
+      })
+      return found
+    },
+    async isStudent(appoints) {
       let found = false
       appoints.forEach((p) => {
         if(p.personId === this.user.userID && !p.isTutor)
@@ -1394,7 +1397,6 @@ import Utils from '@/config/utils.js'
       if(student.length !== 0) {
         var studentId = student[0].personId;
         this.studentName = this.getPersonName(studentId);
-        console.log(this.studentName)
       }
       else 
         this.studentName = "Open"
@@ -1468,7 +1470,8 @@ import Utils from '@/config/utils.js'
         filtered = false;
       }
       //filter all available appointments, their appointments, and all group appointments for STUDENTS
-      let isStudent = await this.checkStudent(this.appointments[i].personappointment)
+      let isStudent = await this.isStudent(this.appointments[i].personappointment);
+      let isTutor = await this.isTutor(this.appointments[i].personappointment);
       if(this.checkRole('Student')) {
         //filter away private appointments that aren't a student's
         if(this.appointments[i].type.includes('Private') && !isStudent && !(this.appointments[i].status === "available")) {
@@ -1486,7 +1489,7 @@ import Utils from '@/config/utils.js'
       //filter their appointments, all available appointments, all group appointments, and their cancelled appointments for TUTORS
       else if(this.checkRole('Tutor')) {
         //filter away cancelled appointments that aren't theirs
-        if(!checkedTutor && (this.appointments[i].status.includes('studentCancel') || this.appointments[i].status.includes('tutorCancel'))) {
+        if(!isTutor && (this.appointments[i].status.includes('studentCancel') || this.appointments[i].status.includes('tutorCancel'))) {
           filtered = false;
         }
       }
