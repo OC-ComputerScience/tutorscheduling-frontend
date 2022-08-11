@@ -348,19 +348,14 @@ export default {
     async created() {
         // ensures that their name gets set properly from store
         this.user = Utils.getStore('user');
-        console.log(this.user)
         if (this.user != null) {
             this.title = 'OC Tutoring';
-            //console.log(this.initials)
             this.initials = this.user.fName[0] + this.user.lName[0];
-            //console.log(this.initials)
             this.name = this.user.fName + ' ' + this.user.lName;
         }
     },
     async mounted() {
-        console.log("in mounted")
         await this.resetMenu();
-        console.log("done with mounted")
     },
     computed: {
         _link() {
@@ -369,16 +364,13 @@ export default {
     },
     methods: {
         menuAction(route) {
-            //console.log(this.currentPersonRoleID);
             this.$router.push({ name: route, params: { id: this.currentPersonRoleID }  });
         },
         async setGroupsAndRoles() {
             this.user = Utils.getStore('user');
             if (this.user != null) {
                 this.title = 'OC Tutoring';
-                //console.log(this.initials)
                 this.initials = this.user.fName[0] + this.user.lName[0];
-                //console.log(this.initials)
                 this.name = this.user.fName + ' ' + this.user.lName;
                 this.groups = [];
                 this.user.access.forEach(element => {
@@ -430,8 +422,6 @@ export default {
                                         this.activeMenus = this.menus.filter(menu =>
                                             menu.roles.includes(this.selectedRoles),
                                         );
-                                        //console.log(this.selectedRoles);
-                                        //console.log(this.activeMenus);
                                         if (this.selectedRoles.includes("Student"))
                                             this.limitStudentMenu();
                                         else if (this.selectedRoles.includes("Tutor"))
@@ -450,9 +440,7 @@ export default {
                             else {
                                 if (this.user != null) {
                                     this.title = 'OC Tutoring';
-                                    //console.log(this.initials)
                                     this.initials = this.user.fName[0] + this.user.lName[0];
-                                    //console.log(this.initials)
                                     this.name = this.user.fName + ' ' + this.user.lName;
                                 }
                                 this.$router.push({ name: "tutorTopics" });
@@ -462,9 +450,7 @@ export default {
                     else if(this.incompleteGroups.length !== 0) {
                         if (this.user != null) {
                             this.title = 'OC Tutoring';
-                            //console.log(this.initials)
                             this.initials = this.user.fName[0] + this.user.lName[0];
-                            //console.log(this.initials)
                             this.name = this.user.fName + ' ' + this.user.lName;
                         }
                         this.$router.push({ name: "contract" });
@@ -476,10 +462,8 @@ export default {
             await GroupServices.getIncompleteGroupsForPerson(this.user.userID)
             .then((response) => {
                 this.incompleteGroups = [];
-                //console.log(response)
                 for (let i = 0; i < response.data.length; i++) {
                     let group = response.data[i];
-                    //console.log(group);
                     this.incompleteGroups.push(group);
                 }
             })
@@ -491,10 +475,8 @@ export default {
             await GroupServices.getGroupTopicsForTutor(this.user.userID)
             .then(response => {
                 this.hasTopics = true;
-                //console.log(response)
                 for (let i = 0; i < response.data.length && this.hasTopics; i++) {
                     let group = response.data[i];
-                    //console.log(group.topic)
                     if (group.topic.length === 0) {
                         this.hasTopics = false;
                     }
@@ -532,7 +514,6 @@ export default {
                 this.$router.push({ name: "adminInfo"});
         },
         logout() {
-            console.log("in logout function")
             AuthServices.logoutUser(this.user)
             .then(response => {
                 console.log(response);
@@ -562,7 +543,6 @@ export default {
                     // makes only tutor home page show up on menu bar
                     this.activeMenus = this.activeMenus.filter(menu =>
                         menu.name.includes("tutorHome"));
-                    //console.log(this.activeMenus)
                 }
             }
         },
@@ -581,10 +561,9 @@ export default {
                 });
 
                 if(!approved) {
-                    // makes only tutor home page show up on menu bar
+                    // makes only student home page show up on menu bar
                     this.activeMenus = this.activeMenus.filter(menu =>
                         menu.name.includes("studentHome"));
-                    console.log(this.activeMenus)
                 }
             }
         },
@@ -603,10 +582,9 @@ export default {
                 });
 
                 if(!approved) {
-                    // makes only tutor home page show up on menu bar
+                    // makes only admin home page show up on menu bar
                     this.activeMenus = this.activeMenus.filter(menu =>
                         menu.name.includes("adminHome"));
-                    console.log(this.activeMenus)
                 }
             }
         }

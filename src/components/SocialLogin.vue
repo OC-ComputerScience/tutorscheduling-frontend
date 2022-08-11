@@ -175,12 +175,8 @@ export default {
           width: 400
         }
       )
-      // global.google.accounts.id.prompt((notification) => {
-      //   console.log(notification)
-      // });  
     },
     handleCredentialResponse(response) {
-      console.log(response);
       let token = { 
         credential : response.credential
       };
@@ -190,7 +186,6 @@ export default {
         Utils.setStore("user", this.user);
         this.fName = this.user.fName;
         this.lName = this.user.lName;
-        console.log(this.user);
         this.openDialogs();
       })
       .catch(error => {
@@ -218,7 +213,6 @@ export default {
           console.log("There was an error:", error.response);
         });
 
-        console.log(this.personroles)
         // if the user doesn't have any incomplete roles, get normal roles
         if(this.personroles.length === 0) {
           await RoleServices.getRoleForPerson(this.user.userID)
@@ -246,16 +240,6 @@ export default {
       for (let i = 0; i < this.selected.length; i++) {
         await this.addGroupRoles(this.selected[i].id);
       }
-      // for (let i = 0; i < this.groups.length; i++) {
-      //   for (let j = 0; j < this.selected.length; j++) {
-      //     if(this.selected[j] === i) {
-      //         this.checkedGroups.push(this.groups[i]);
-      //         const group = this.groups[i];
-      //         await this.addGroupRoles(group.id);
-      //     }
-      //   }
-      // }
-      // console.log(this.checkedGroups)
     },
     async savePhoneNum() {
       // use this to also update name if it's the first time a student is logging in
@@ -278,7 +262,6 @@ export default {
       .then(response => {
         response.data.forEach(data => {
           this.roles.push(data);
-          console.log(data);
         })
       })
       .catch(error => {
@@ -288,10 +271,8 @@ export default {
     async savePersonRoles() {
       await this.getGroupRoles()
       .then(() => {
-        console.log(this.roles);
         for (let i = 0; i < this.roles.length; i++) {
           const role = this.roles[i];
-          console.log(role);
           if((this.student && role.type.toLowerCase() === 'student') ||
               (this.tutor && role.type.toLowerCase() === 'tutor')) {
               this.personrole = {
@@ -311,15 +292,12 @@ export default {
       // reset the access after a new role is added to a person
       await GroupServices.getGroupsForPerson(this.user.userID)
       .then(response => {
-        //console.log(response);
         this.user.access = [];
         for (let i = 0; i < response.data.length; i++) {
             let element = response.data[i];
             let roles = [];
-            //console.log(element)
             for (let j = 0; j < element.role.length; j++) {
                 let item = element.role[j];
-                //console.log(item)
                 let role = item.type;
                 roles.push(role);
             }
@@ -329,7 +307,6 @@ export default {
             }
             this.user.access.push(group);
         }
-        console.log(this.user.access);
         // resave user in store
         Utils.setStore("user", this.user);
         this.goToPage();
@@ -340,8 +317,6 @@ export default {
     },
     openDialogs() {
       // if this person doesn't have any roles, do this
-      // console.log(this.roleCounter)
-      console.log(this.user);
       if(this.user.phoneNum === '' || this.user.phoneNum === undefined || this.user.phoneNum === null) {
         this.dialog = true
       }
@@ -356,13 +331,10 @@ export default {
 
       await this.getPersonRoles()
       .then(() => {
-
         for (let i = 0; i < this.personroles.length; i++) {
           let role = this.personroles[i];
-          console.log(role);
           for (let j = 0; j < role.personrole.length; j++) {
             let pRole = role.personrole[j];
-            console.log(pRole);
             if(role.type.includes("Admin")) {
               this.$router.push({ name: "adminHome", params: { id: pRole.id } });
             }

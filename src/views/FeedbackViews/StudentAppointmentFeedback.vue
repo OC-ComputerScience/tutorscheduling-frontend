@@ -8,51 +8,81 @@
       </v-toolbar>
       <br />
       <br />
-      <v-form ref="form" v-model="valid" lazy validation>
-        <div class="text-xs-center">
-          <v-layout justify-center>
-            <h4>What would you rate this appointment experience?</h4>
-          </v-layout>
-          <br />
-          <v-layout justify-center>
-            <v-rating
-              class="justify-center"
-              v-model="numericalfeedback"
-              background-color="grey"
-              color="primary"
-              empty-icon="mdi-star-outline"
-              full-icon="mdi-star"
-              hover
-              length="5"
-              size="45"
-              value="3"
-            ></v-rating>
-          </v-layout>
-        </div>
-        <v-text-field
-          v-model="textualfeedback"
-          id="description"
-          :counter="500"
-          label="Provide Feedback..."
-          required
-        ></v-text-field>
-
-        <v-btn
-          :disabled="!valid"
-          color="success"
-          class="mr-4"
-          @click="updatePersonAppointment"
+      <v-row justify="center">
+        <v-card
+          flat
+          color="grey lighten-4"
+          min-width="500px"
         >
-          Save
-        </v-btn>
+          <v-card-title
+            class="justify-center"
+          >
+            Appointment on {{this.dateText}} with {{this.tutorText}}
+          </v-card-title>
+          <v-card-text>
+            <b>Time: </b>{{this.appointment.startTime}} - {{this.appointment.endTime}}
+            <br>
+            <b>Type: </b>{{this.appointment.type}}
+            <br>
+            <b>Location: </b>{{this.appointment.location.name}}
+            <br>
+            <b>Topic: </b>{{this.appointment.topic.name}}
+            <br>
+            <b>Pre-Session Info: </b>{{this.appointment.preSessionInfo}}
+          </v-card-text>
+        </v-card>
+      </v-row>
+      <br><br>
+      <v-row justify="center">
+        <v-form ref="form" v-model="valid" lazy validation>
+          <div class="text-xs-center">
+            <v-layout justify-center>
+              <h2>What would you rate this appointment experience?</h2>
+            </v-layout>
+            <br />
+            <v-layout justify-center>
+              <v-rating
+                class="justify-center"
+                v-model="numericalfeedback"
+                background-color="grey"
+                color="primary"
+                empty-icon="mdi-star-outline"
+                full-icon="mdi-star"
+                hover
+                length="5"
+                size="45"
+                value="3"
+              ></v-rating>
+            </v-layout>
+          </div>
+          <v-text-field
+            v-model="textualfeedback"
+            id="description"
+            :counter="500"
+            label="Provide Feedback..."
+            required
+          ></v-text-field>
 
-        <v-btn color="error" class="mr-4" @click="cancel"> Cancel </v-btn>
-      </v-form>
+          <v-btn
+            :disabled="!valid"
+            color="success"
+            class="mr-4"
+            @click="updatePersonAppointment"
+          >
+            Save
+          </v-btn>
+
+          <v-btn color="error" class="mr-4" @click="cancel"> Cancel </v-btn>
+        </v-form>
+      </v-row>
+      <br><br>
+      
     </v-container>
   </div>
 </template>
 
 <script>
+import AppointmentServices from "@/services/appointmentServices.js";
 import PersonAppointmentServices from "@/services/personAppointmentServices.js";
 
 export default {
@@ -60,34 +90,49 @@ export default {
 
   data() {
     return {
+      valid: false,
       personAppointment: {},
+      appointment: {},
+      dateText: '',
+      tutorText: '',
       numericalfeedback: null,
       textualfeedback: "",
       personAppointmentId: "",
-
       message: "Provide Feedback for your recent appointment",
       roles: ["admin"],
-
-    };
+    }; 
   },
   async created() {
-    await PersonAppointmentServices.findPersonAppointmentByPersonAndAppointment(
-      this.userId,
-      this.id
-    )
+    await this.getAppointment();
+    this.dateText = this.appointment.date.toString().substring(5,10) + "-" + this.appointment.date.toString().substring(0,4)
+  },
+  methods: {
+    async getAppointment() {
+      await AppointmentServices.getAppointmentForFeedback(this.id)
       .then((response) => {
-        this.personAppointment = response.data;
-        this.personAppointmentId = this.personAppointment.id;
-        console.log(this.personAppointment);
+        this.appointment = response.data[0];
+        for(let i = 0; i < this.appointment.personappointment.length; i++) {
+          let personApp = this.appointment.personappointment[i];
+          if(personApp.personId === this.userId) {
+            this.personAppointment = personApp;
+            this.personAppointmentId = this.personAppointment.id
+          }
+          else {
+            if(personApp.isTutor) {
+              if(this.tutorText !== '')
+                this.tutorText += ", ";
+              this.tutorText += personApp.person.fName + " " + personApp.person.lName;
+            }
+          }
+        }
       })
       .catch((error) => {
         this.message = error.response.data.message
         console.log("There was an error:", error.response);
       });
-  },
-
-  methods: {
+    },
     async updatePersonAppointment() {
+      delete this.personAppointment.person;
       this.personAppointment.feedbacktext = this.textualfeedback;
       this.personAppointment.feedbacknumber = this.numericalfeedback;
       await PersonAppointmentServices.updatePersonAppointment(
