@@ -261,7 +261,7 @@
                     label="Booked Start"
                     required
                     @change="updateTimes()"
-                    :disabled="checkRole('Tutor')"
+                    :disabled="checkRole('Tutor') || datePast"
                     dense
                   >
                   </v-select>
@@ -289,7 +289,7 @@
                   label="Booked End"
                   required
                   @change="updateTimes()"
-                  :disabled="checkRole('Tutor')"
+                  :disabled="checkRole('Tutor') || datePast"
                   dense
                 >
                 </v-select>
@@ -835,7 +835,7 @@ import Utils from '@/config/utils.js'
         }
       } else {
         // don't need to update google cal because it's not even on there yet
-        this.selectedAppointment.status = "cancelled"
+        this.selectedAppointment.status = "tutorCancel"
         await AppointmentServices.updateAppointment(this.selectedAppointment.id, this.selectedAppointment).then(() =>{
           this.getAppointments()
           this.selectedEvent.color = 'red'
@@ -1890,9 +1890,29 @@ import Utils from '@/config/utils.js'
     checkAppointmentIfPast(){
       let checkDate = new Date();
       checkDate.setHours(checkDate.getHours() - (checkDate.getTimezoneOffset()/60))
+      console.log(checkDate.toISOString());
       checkDate.setHours(0,0,0,0);
       let checkTime = new Date();
-      checkTime = checkTime.getHours()+":"+ checkTime.getMinutes() +":"+checkTime.getSeconds();
+      let tempHours = checkTime.getHours();
+      let tempMins = checkTime.getMinutes();
+      let tempSecs = checkTime.getSeconds();
+      if(tempHours < 10)
+      {
+        tempHours = "0" + tempHours
+      }
+      if(tempMins < 10)
+      {
+        tempMins = "0" + tempMins
+      }
+      if(tempSecs < 10)
+      {
+        tempSecs = "0" + tempSecs
+      }
+      checkTime = tempHours +":"+ tempMins +":"+ tempSecs;
+      
+      console.log(this.selectedAppointment.date);
+      console.log(checkTime)
+      console.log(this.selectedAppointment.startTime)
       if (this.selectedAppointment.date < checkDate.toISOString()){
         this.datePast = true;
       }
