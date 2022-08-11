@@ -395,14 +395,14 @@
                   >
                   Book
                   </v-btn>
-                  <v-btn v-if="checkRole('Tutor') && !appointmentType.includes('Group')"
+                  <v-btn v-if="checkRole('Tutor') && !appointmentType.includes('Group') && isTutorEvent"
                     color="#12f000"
                     @click="confirmAppointment(true)"
                     :disabled="!checkStatus('pending')"
                   >
                   Confirm
                   </v-btn>
-                  <v-btn v-if="checkRole('Tutor') && !appointmentType.includes('Group')"
+                  <v-btn v-if="checkRole('Tutor') && !appointmentType.includes('Group') && isTutorEvent"
                     color="error"
                     @click="confirmAppointment(false)"
                     :disabled="!checkStatus('pending')"
