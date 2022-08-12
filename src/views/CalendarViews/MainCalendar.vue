@@ -728,10 +728,6 @@ import Utils from '@/config/utils.js'
         this.message = error.response.data.message
         console.log("There was an error:", error.response.data)
       });
-      if(this.selectedAppointment.id === 205) {
-        console.log("in appointment 205")
-        console.log(this.isTutorEvent)
-      }
     },
     //Check if student has already signed up for group appointment
     async checkGroupBooking() {

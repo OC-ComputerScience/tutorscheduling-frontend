@@ -34,7 +34,7 @@
                     {{ item.text }}
                 </v-btn>
             </v-toolbar-items>
-            <v-menu v-if="this.user != null && selectedGroup != ''" offset-y
+            <v-menu v-if="user != null && selectedGroup != '' && currentPersonRoleID !== 0 && (selectedRoles !== '' && selectedRoles !== undefined && selectedRoles !== null)" offset-y
             >
                 <template v-slot:activator="{ on, attrs }">
                     <v-btn
@@ -84,7 +84,7 @@
                 min-width="200px"
                 rounded
                 offset-y
-                v-if="user != null"
+                v-if="user != null && currentPersonRoleID !== 0 && (selectedRoles !== '' && selectedRoles !== undefined && selectedRoles !== null)"
             >
                 <template v-slot:activator="{ on, attrs }">
                     <v-btn
@@ -94,7 +94,7 @@
                         v-bind="attrs"
                     >
                         <v-avatar 
-                            v-if="user != null"
+                            v-if="user != null && currentPersonRoleID !== 0 && (selectedRoles !== '' && selectedRoles !== undefined && selectedRoles !== null)"
                             color="secondary"
                         >
                             <span class="accent--text font-weight-bold">{{ initials }}</span>
@@ -157,31 +157,15 @@
                 </v-card>
             </v-menu>
             <v-app-bar-nav-icon
+                v-if="user !== null && currentPersonRoleID !== 0 && (selectedRoles !== '' && selectedRoles !== undefined && selectedRoles !== null)"
                 dark
                 class="hidden-lg-and-up"
                 @click="drawer = !drawer"
             ></v-app-bar-nav-icon>
         </v-app-bar>
 
-        <!-- <v-app-bar color="primary" dark class="hidden-lg-and-up">
-            <v-img
-                class="mx-2"
-                src="../assets/oc_logo_social.png"
-                max-height="40"
-                max-width="40"
-                contain
-            ></v-img>
-            <v-toolbar-title class="title">
-                <div>{{ this.title }}</div>    
-            </v-toolbar-title>
-            <v-spacer></v-spacer>
-            <v-app-bar-nav-icon
-                dark
-                @click="drawer = !drawer"
-            ></v-app-bar-nav-icon>
-        </v-app-bar> -->
         <v-navigation-drawer
-            v-if="drawer"
+            v-if="drawer && user !== null && currentPersonRoleID !== 0 && (selectedRoles !== '' && selectedRoles !== undefined && selectedRoles !== null)"
             class="hidden-lg-and-up"
             v-model="drawer"
             app            
@@ -364,7 +348,10 @@ export default {
     },
     methods: {
         menuAction(route) {
-            this.$router.push({ name: route, params: { id: this.currentPersonRoleID }  });
+            if(this.currentPersonRoleID === 0 && (this.selectedRoles === '' || this.selectedRoles === undefined || this.selectedRoles === null))
+                this.$router.push({ name: "login" })
+            else
+                this.$router.push({ name: route, params: { id: this.currentPersonRoleID }  });
         },
         async setGroupsAndRoles() {
             this.user = Utils.getStore('user');
@@ -407,7 +394,6 @@ export default {
                             if (this.hasTopics) {
                                 await this.setGroupsAndRoles()
                                 .then(() => {
-                                    
                                     if (this.selectedGroup === '' && this.user.selectedGroup === undefined)
                                     {
                                         this.selectedGroup = this.groups[0];
@@ -417,7 +403,7 @@ export default {
                                     else if (this.selectedGroup === '')
                                         this.selectedGroup = this.user.selectedGroup;
 
-                                    if (this.user != null) {
+                                    if (this.user != null && this.currentPersonRoleID !== 0 && (this.selectedRoles !== '' && this.selectedRoles !== undefined && this.selectedRoles !== null)) {
                                         this.activeMenus = this.menus;
                                         this.activeMenus = this.menus.filter(menu =>
                                             menu.roles.includes(this.selectedRoles),
