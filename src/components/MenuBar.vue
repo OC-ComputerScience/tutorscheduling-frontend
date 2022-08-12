@@ -403,7 +403,7 @@ export default {
                                     else if (this.selectedGroup === '')
                                         this.selectedGroup = this.user.selectedGroup;
 
-                                    if (this.user != null) {
+                                    if (this.user != null && this.currentPersonRoleID !== 0 && (this.selectedRoles !== '' && this.selectedRoles !== undefined && this.selectedRoles !== null)) {
                                         this.activeMenus = this.menus;
                                         this.activeMenus = this.menus.filter(menu =>
                                             menu.roles.includes(this.selectedRoles),
