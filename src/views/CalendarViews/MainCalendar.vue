@@ -246,7 +246,6 @@
                   @change="saveChanges = true"
                 >
                 </v-select>
-
           </v-container>
           </span>
           <!-- show time ad an changeable value for private lessons-->
@@ -423,8 +422,10 @@
         Save Changes
         </v-btn>
         
-        <v-btn v-if="((checkStatus('booked') && !checkRole('Admin')) || (isGroupBook && !adminAddStudent) || (isTutorEvent && (checkStatus('available') || checkStatus('booked'))) || 
-                    (checkRole('Student') && checkStatus('pending'))) && !datePast"
+        <v-btn v-if="((checkStatus('booked') && !checkRole('Admin') && (isTutorEvent || isPrivateBook)) || 
+                      (isGroupBook && !adminAddStudent) || 
+                      (isTutorEvent && (checkStatus('available') || checkStatus('booked'))) || 
+                      (checkRole('Student') && checkStatus('pending'))) && !datePast"
           color="red"
           @click="cancelAppointment(); selectedOpen = false;"
         >
@@ -727,6 +728,10 @@ import Utils from '@/config/utils.js'
         this.message = error.response.data.message
         console.log("There was an error:", error.response.data)
       });
+      if(this.selectedAppointment.id === 205) {
+        console.log("in appointment 205")
+        console.log(this.isTutorEvent)
+      }
     },
     //Check if student has already signed up for group appointment
     async checkGroupBooking() {
