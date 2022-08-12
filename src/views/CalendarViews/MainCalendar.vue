@@ -246,191 +246,191 @@
                   @change="saveChanges = true"
                 >
                 </v-select>
-
-                </v-container>
-                </span>
-                <!-- show time ad an changeable value for private lessons-->
-                <v-container v-if="checkStatus('available')">
-                
-                <span v-if="appointmentType.includes('Private')">
-                  <v-select
-                    v-model="displayedStart"
-                    :items="startTimes"
-                    item-text="timeText"
-                    item-value="time"
-                    label="Booked Start"
-                    required
-                    @change="updateTimes()"
-                    :disabled="checkRole('Tutor') || datePast"
-                    dense
-                  >
-                  </v-select>
-                </span>
-                <!-- show time as an unchangeable value -->
-                <span v-else>
-                  <v-text-field
-                      v-model="displayedStart"
-                      label="Booked Start"
-                      type="time"
-                      required
-                      dense
-                      readonly
-                    >
-                  </v-text-field>
-                </span>
-                </v-container>
-                <v-container v-if="checkStatus('available')">
-                <span v-if="appointmentType.includes('Private')">
-                <v-select 
-                  v-model="displayedEnd"
-                  :items="endTimes"
-                  item-text="timeText"
-                  item-value="time"
-                  label="Booked End"
-                  required
-                  @change="updateTimes()"
-                  :disabled="checkRole('Tutor') || datePast"
-                  dense
-                >
-                </v-select>
-                </span>
-                <span v-else>
-                <v-text-field
-                      v-model="displayedEnd"
-                      label="Booked End"
-                      type="time"
-                      required
-                      dense
-                      readonly
-                    >
-                  </v-text-field>
-                </span>
-                </v-container>
-                <!-- put in presession-info for appointment for private appointments/ add a readonly if  group-->
-                <span v-if="appointmentType.includes('Private')">
-                  <v-textarea
-                    v-model="selectedAppointment.preSessionInfo"
-                    id="preSession"
-                    :counter="130"
-                    label="Pre-Session Info"
-                    hint="Enter Info About What You Need Help With..."
-                    persistent-hint
-                    required
-                    auto-grow
-                    rows="1"
-                    :disabled="datePast || (!checkRole('Student') && !checkStatus('available')) || (checkRole('Student') && checkStatus('pending')) || checkRole('Tutor')"
-                    @change="saveChanges = true"
-                  ></v-textarea>
-                </span>
-                <span v-else>
-                  <v-textarea
-                    v-model="selectedAppointment.preSessionInfo"
-                    :counter="130"
-                    label="Pre-Session Info"
-                    hint="Enter Info About What You Need Help With..."
-                    persistent-hint
-                    required
-                    auto-grow
-                    rows="1"
-                    :readonly="!isTutorEvent"
-                    :disabled="datePast"
-                    @change="saveChanges = true"
-                  ></v-textarea>
-                </span>
-                <!-- admin signing a student up -->
-                <span v-if="adminAddStudent">
-                  <v-text-field 
-                    v-model="studentEmail"
-                    label="Student's Email"
-                    required
-                    dense
-                    max-width="300px"
-                    :rules="[rules.required, rules.email]"
-                  >
-                  </v-text-field>
-                  <v-row>
-                  <v-btn
-                    color="green"
-                    text
-                    @click="findEmail()"
-                    :disabled="!validateEmail()"
-                  >
-                    Search
-                  </v-btn>
-                  <v-text-field
-                    v-if="emailStatus != ''"
-                    v-model="emailStatus"
-                    readonly
-                    dense
-                  ></v-text-field>
-                  </v-row>
-                </span>
-                <span v-if="studentNameInput">
-                  <v-text-field 
-                    v-model="studentfName"
-                    label="Student's First Name"
-                    required
-                    dense
-                    max-width="300px"
-                  >
-                  </v-text-field>
-                  <v-text-field 
-                    v-model="studentlName"
-                    label="Student's Last Name"
-                    required
-                    dense
-                    max-width="300px"
-                  >
-                  </v-text-field>
-                </span>
-                <!-- User sign up here -->
-              </v-card-text>
-                <v-card-actions>
-                  <v-btn v-if="!isTutorEvent || checkRole('Student') || checkRole('Admin')"
-                    color="primary"
-                    @click="bookAppointment(); selectedOpen = false; newStart = displayedStart; newEnd = displayedEnd"
-                    :disabled="!checkStatus('available') || isGroupBook || ((studentfName == '' || studentlName == '') && !emailFound && checkRole('Admin')) ||
-                                (checkRole('Admin') && selectedAppointment.type.includes('Group') && !adminAddStudent) || selectedAppointment.topicId == null 
-                                || selectedAppointment.locationId == null || (isTutorEvent && !checkRole('Admin')) || (displayedStart === '' || displayedEnd === '')"
-                  >
-                  Book
-                  </v-btn>
-                  <v-btn v-if="checkRole('Tutor') && !appointmentType.includes('Group') && isTutorEvent"
-                    color="#12f000"
-                    @click="confirmAppointment(true)"
-                    :disabled="!checkStatus('pending')"
-                  >
-                  Confirm
-                  </v-btn>
-                  <v-btn v-if="checkRole('Tutor') && !appointmentType.includes('Group') && isTutorEvent"
-                    color="error"
-                    @click="confirmAppointment(false)"
-                    :disabled="!checkStatus('pending')"
-                  >
-                  Reject
-                  </v-btn>
-                  <v-btn
-                    color="accent"
-                    @click="selectedOpen = false"
-                  >
-                  Close
-                  </v-btn>
-                  <v-btn v-if="(isTutorEvent || isPrivateBook) && saveChanges && checkRole('Tutor')"
-                    color="accent"
-                    @click="editAppointment(); selectedOpen = false;"
-                  >
-                  Save Changes
-                  </v-btn>
-                  
-                  <v-btn v-if="((checkStatus('booked') && !checkRole('Admin') && (isTutorEvent || isPrivateBook)) || 
-                                (isGroupBook && !adminAddStudent) || 
-                                (isTutorEvent && (checkStatus('available') || checkStatus('booked'))) || 
-                                (checkRole('Student') && checkStatus('pending'))) && !datePast"
-                    color="red"
-                    @click="cancelAppointment(); selectedOpen = false;"
-                  >
-                  Cancel Appointment
-                  </v-btn>
+          </v-container>
+          </span>
+          <!-- show time ad an changeable value for private lessons-->
+          <v-container v-if="checkStatus('available')">
+          
+          <span v-if="appointmentType.includes('Private')">
+            <v-select
+              v-model="displayedStart"
+              :items="startTimes"
+              item-text="timeText"
+              item-value="time"
+              label="Booked Start"
+              required
+              @change="newStart = displayedStart; updateTimes()"
+              :disabled="checkRole('Tutor') || datePast"
+              dense
+            >
+            </v-select>
+          </span>
+          <!-- show time as an unchangeable value -->
+          <span v-else>
+             <v-text-field
+                v-model="displayedStart"
+                label="Booked Start"
+                type="time"
+                required
+                dense
+                readonly
+              >
+             </v-text-field>
+          </span>
+          </v-container>
+          <v-container v-if="checkStatus('available')">
+          <span v-if="appointmentType.includes('Private')">
+          <v-select 
+            v-model="displayedEnd"
+            :items="endTimes"
+            item-text="timeText"
+            item-value="time"
+            label="Booked End"
+            required
+            @change="newEnd = displayedEnd; updateTimes()"
+            :disabled="checkRole('Tutor') || datePast"
+            dense
+          >
+          </v-select>
+          </span>
+          <span v-else>
+          <v-text-field
+                v-model="displayedEnd"
+                label="Booked End"
+                type="time"
+                required
+                dense
+                readonly
+              >
+             </v-text-field>
+          </span>
+          </v-container>
+          <!-- put in presession-info for appointment for private appointments/ add a readonly if  group-->
+          <span v-if="appointmentType.includes('Private')">
+            <v-textarea
+              v-model="selectedAppointment.preSessionInfo"
+              id="preSession"
+              :counter="130"
+              label="Pre-Session Info"
+              hint="Enter Info About What You Need Help With..."
+              persistent-hint
+              required
+              auto-grow
+              rows="1"
+              :disabled="datePast || (!checkRole('Student') && !checkStatus('available')) || (checkRole('Student') && checkStatus('pending')) || checkRole('Tutor')"
+              @change="saveChanges = true"
+            ></v-textarea>
+          </span>
+          <span v-else>
+            <v-textarea
+              v-model="selectedAppointment.preSessionInfo"
+              :counter="130"
+              label="Pre-Session Info"
+              hint="Enter Info About What You Need Help With..."
+              persistent-hint
+              required
+              auto-grow
+              rows="1"
+              :readonly="!isTutorEvent"
+              :disabled="datePast"
+              @change="saveChanges = true"
+            ></v-textarea>
+          </span>
+          <!-- admin signing a student up -->
+          <span v-if="adminAddStudent">
+            <v-text-field 
+              v-model="studentEmail"
+              label="Student's Email"
+              required
+              dense
+              max-width="300px"
+              :rules="[rules.required, rules.email]"
+            >
+            </v-text-field>
+            <v-row>
+            <v-btn
+              color="green"
+              text
+              @click="findEmail()"
+              :disabled="!validateEmail()"
+            >
+              Search
+            </v-btn>
+            <v-text-field
+              v-if="emailStatus != ''"
+              v-model="emailStatus"
+              readonly
+              dense
+            ></v-text-field>
+            </v-row>
+          </span>
+          <span v-if="studentNameInput">
+            <v-text-field 
+              v-model="studentfName"
+              label="Student's First Name"
+              required
+              dense
+              max-width="300px"
+            >
+            </v-text-field>
+            <v-text-field 
+              v-model="studentlName"
+              label="Student's Last Name"
+              required
+              dense
+              max-width="300px"
+            >
+            </v-text-field>
+          </span>
+          <!-- User sign up here -->
+        </v-card-text>
+        <v-card-actions>
+          <v-btn v-if="!isTutorEvent || checkRole('Student') || checkRole('Admin')"
+            color="primary"
+            @click="bookAppointment(); selectedOpen = false;"
+            :disabled="!checkStatus('available') || isGroupBook || ((studentfName == '' || studentlName == '') && !emailFound && checkRole('Admin')) ||
+                        (checkRole('Admin') && selectedAppointment.type.includes('Group') && !adminAddStudent) || selectedAppointment.topicId == null 
+                        || selectedAppointment.locationId == null || (isTutorEvent && !checkRole('Admin')) || (displayedStart === '' || displayedEnd === '')
+                        || (selectedAppointment.type.includes('Group') && datePast)"
+          >
+          Book
+          </v-btn>
+        <v-btn v-if="checkRole('Tutor') && !appointmentType.includes('Group')"
+          color="#12f000"
+          @click="confirmAppointment(true)"
+          :disabled="!checkStatus('pending') || datePast"
+        >
+        Confirm
+        </v-btn>
+        <v-btn v-if="checkRole('Tutor') && !appointmentType.includes('Group')"
+          color="error"
+          @click="confirmAppointment(false)"
+          :disabled="!checkStatus('pending') || datePast"
+        >
+        Reject
+        </v-btn>
+        <v-btn
+          color="accent"
+          @click="selectedOpen = false"
+        >
+        Close
+        </v-btn>
+        <v-btn v-if="(isTutorEvent || isPrivateBook) && saveChanges && checkRole('Tutor')"
+          color="accent"
+          @click="editAppointment(); selectedOpen = false;"
+        >
+        Save Changes
+        </v-btn>
+        
+        <v-btn v-if="((checkStatus('booked') && !checkRole('Admin') && (isTutorEvent || isPrivateBook)) || 
+                      (isGroupBook && !adminAddStudent) || 
+                      (isTutorEvent && (checkStatus('available') || checkStatus('booked'))) || 
+                      (checkRole('Student') && checkStatus('pending'))) && !datePast"
+          color="red"
+          @click="cancelAppointment(); selectedOpen = false;"
+        >
+        Cancel Appointment
+        </v-btn>
 
                   <v-btn v-if="checkRole('Admin') && checkStatus('available')"
                     color="green"
@@ -713,7 +713,6 @@ import Utils from '@/config/utils.js'
     },
     // Check to see if the tutor in question is the tutor of the selected event
     async isTutorOfSelectedEvent(){
-      console.log(this.selectedAppointment)
       await PersonAppointmentServices.getPersonAppointmentForPerson(this.user.userID)
       .then(response => {
         let temp = response.data
@@ -993,6 +992,8 @@ import Utils from '@/config/utils.js'
       }
       //If the start of the booked slot isn't the start of the slot, generate an open slot
       if(this.selectedAppointment.startTime < this.newStart) {
+        console.log(this.selectedAppointment.startTime)
+        console.log(this.newStart)
         let temp = {
           date: this.selectedAppointment.date,
           startTime: this.selectedAppointment.startTime,
@@ -1001,10 +1002,9 @@ import Utils from '@/config/utils.js'
           status: this.selectedAppointment.status,
           preSessionInfo: "",
           groupId: this.selectedAppointment.groupId,
-          //locationId: this.selectedAppointment.locationId,
-          //topicId: this.selectedAppointment.topicId,
         }
-        await AppointmentServices.addAppointment(temp).then((response)=> {
+        await AppointmentServices.addAppointment(temp)
+        .then((response)=> {
           this.tutors.forEach(async(t) => {
             let pap = {
               isTutor: true,
@@ -1012,12 +1012,14 @@ import Utils from '@/config/utils.js'
               personId: t.id
             }
             await PersonAppointmentServices.addPersonAppointment(pap)
-          })
-          .catch (error => {
-          this.message = error.response.data.message
+            .catch (error => {
+              
+              this.message = error.response.data.message
+            })
           })
         })
         .catch (error => {
+          console.log(error)
           this.message = error.response.data.message
         })
       }
@@ -1088,49 +1090,95 @@ import Utils from '@/config/utils.js'
       return "" + hours + ":" + minutes + " " + dayTime
     },
     //Create time slots for users to select from
-    generateTimes(start, end) {
-      let startInfo = start.split(":")
-      let endInfo = end.split(":")
-      let loop = (parseInt(endInfo[0]) - parseInt(startInfo[0])) * 2 + 1
-      let hours = parseInt(startInfo[0])
-      let minutes = startInfo[1]
-      let seconds = "00"
+    generateTimeslots(startTime, endTime) {
+      let timeInterval = this.group.timeInterval;
+      // get the total minutes between the start and end times.
+      var totalMins = this.subtractTimes(startTime, endTime);
+      
+      // set the initial timeSlots array to just the start time
+      var timeSlots = [startTime];
+      
+      // get the rest of the time slots.
+      let generatedTimes = this.getTimeSlots(timeInterval, totalMins, timeSlots);
 
-      let newTime = start
       let newTimeText = ""
-      let j = 0
 
       let times = []
-
-      if(startInfo[1] == "30") {
-        loop -= 1
-        j = 1
-      }
-      if(endInfo[1] == "30") {
-        loop += 1
-      }
-      let temp
-      for(let i = 0; i < loop; i++) {
-        temp = (hours + Math.floor((i + j)/2))
-        if(temp < 10)
-        {
-          temp = "0" + temp
-        }
-        newTime = temp + ":" + minutes + ":" + seconds
-        newTimeText = this.calcTime(newTime)
-        minutes = (minutes == "00" ? "30":"00")
+      for(let i = 0; i < generatedTimes.length; i++) {
+        if(generatedTimes[i].length < 8)
+          generatedTimes[i] = generatedTimes[i] + ':00'
+        newTimeText = this.calcTime(generatedTimes[i])
         times.push({
-          time: newTime,
+          time: generatedTimes[i],
           timeText: newTimeText
         })
       }
       return times
     },
+    getTimeSlots(timeInterval, totalMins, timeSlots) {
+      // base case - there are still more minutes
+      if (totalMins - timeInterval >= 0) {
+        // get the previous time slot to add interval to
+        var prevTimeSlot = timeSlots[timeSlots.length - 1];
+        // add timeInterval to previousTimeSlot to get nextTimeSlot
+        var nextTimeSlot = this.addMinsToTime(timeInterval, prevTimeSlot);
+        timeSlots.push(nextTimeSlot);
+        
+        // update totalMins
+        totalMins -= timeInterval;
+        
+        // get next time slot
+        return this.getTimeSlots(timeInterval, totalMins, timeSlots);
+      } else {
+        // all done!
+        return timeSlots;
+      }
+    },
+    subtractTimes(t2, t1) {
+      // get each time's hour and min values
+      var [t1Hrs, t1Mins] = this.getHoursAndMinsFromTime(t1);
+      var [t2Hrs, t2Mins] = this.getHoursAndMinsFromTime(t2);
+      
+      // time arithmetic (subtraction)
+      if (t1Mins < t2Mins) {
+        t1Hrs--;
+        t1Mins += 60;
+      }
+      var mins = t1Mins - t2Mins;
+      var hrs = t1Hrs - t2Hrs;
+      
+      return (hrs * 60) + mins;
+    },
+    getHoursAndMinsFromTime(time) {
+      return time.split(':').map(function(str) {
+        return parseInt(str);
+      });
+    },
+    addMinsToTime(mins, time) {
+      // get the times hour and min value
+      var [timeHrs, timeMins] = this.getHoursAndMinsFromTime(time);
+      
+      // time arithmetic (addition)
+      if (timeMins + mins >= 60) {
+        var addedHrs = parseInt((timeMins + mins) / 60);
+        timeMins = (timeMins + mins) % 60
+        if (timeHrs + addedHrs > 23) {
+          timeHrs = (timeHrs + addedHrs) % 24;
+        } else {
+          timeHrs += addedHrs;
+        }
+      } else {
+        timeMins += mins;
+      }
+      
+      // make sure the time slots are padded correctly
+      return String("00" + timeHrs).slice(-2) + ":" + String("00" + timeMins).slice(-2);
+    },
     updateTimes() {
-      this.startTimes = this.generateTimes(this.selectedAppointment.startTime, this.newEnd);
+      this.startTimes = this.generateTimeslots(this.selectedAppointment.startTime, this.newEnd);
       // adding this to make sure that you can't start an appointment at the end time
       this.startTimes.pop();
-      this.endTimes = this.generateTimes(this.newStart, this.selectedAppointment.endTime);
+      this.endTimes = this.generateTimeslots(this.newStart, this.selectedAppointment.endTime);
       // adding this to make sure you can't end an appointment at the start time
       this.endTimes.shift();
     },
@@ -1890,7 +1938,6 @@ import Utils from '@/config/utils.js'
     checkAppointmentIfPast(){
       let checkDate = new Date();
       checkDate.setHours(checkDate.getHours() - (checkDate.getTimezoneOffset()/60))
-      console.log(checkDate.toISOString());
       checkDate.setHours(0,0,0,0);
       let checkTime = new Date();
       let tempHours = checkTime.getHours();
@@ -1909,10 +1956,6 @@ import Utils from '@/config/utils.js'
         tempSecs = "0" + tempSecs
       }
       checkTime = tempHours +":"+ tempMins +":"+ tempSecs;
-      
-      console.log(this.selectedAppointment.date);
-      console.log(checkTime)
-      console.log(this.selectedAppointment.startTime)
       if (this.selectedAppointment.date < checkDate.toISOString()){
         this.datePast = true;
       }

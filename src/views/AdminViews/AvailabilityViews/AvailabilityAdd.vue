@@ -157,14 +157,14 @@
       sm="5"
     >
       <v-select
-        v-model="newStart"
+        v-model="displayedStart"
         :items="startTimes"
         label="Start Time"
         prepend-icon="mdi-clock-time-four-outline"
         item-text="timeText"
         item-value="time"
         required
-        @change="updateTimes(); secondTime = false;"
+        @change="newStart = displayedStart; updateTimes(); secondTime = false;"
         dense
       >
       </v-select>
@@ -174,14 +174,14 @@
       sm="5"
     >
       <v-select 
-        v-model="newEnd"
+        v-model="displayedEnd"
         :items="endTimes"
         label="End Time"
         prepend-icon="mdi-clock-time-four-outline"
         item-text="timeText"
         item-value="time"
         required
-        @change="updateTimes()"
+        @change="newEnd = displayedEnd; updateTimes();"
         :disabled="secondTime"
         dense
       >
@@ -202,9 +202,13 @@
         color="success"
         class="mr-4"
         @click="groupHandler"
+        :disabled="displayedEnd === '' || displayedEnd === null || displayedEnd === undefined || 
+                   displayedStart === '' || displayedStart === null || displayedStart === undefined || 
+                   groupSession === '' || groupSession === null || groupSession === undefined || 
+                   dates.length === 0"
       >
         Save
-      </v-btn> <!-- have combo box here asking if the availabilities being added are group sessions or private -->
+      </v-btn>
     </v-container>
     
   </v-row>
@@ -224,8 +228,6 @@
       <v-toolbar
         flat
       >
-
-
         <!--  popup for deleting an availability  -->
         <v-dialog v-model="dialogDelete" max-width="500px">
           <v-card>
@@ -285,8 +287,10 @@ import Utils from '@/config/utils.js'
       //used for generating time slots
       startTimes: [],
       endTimes: [],
+      displayedStart: '',
+      displayedEnd: '',
       newStart: "00:00",
-      newEnd: "23:30",
+      newEnd: "",
       startTime: null,
       endTime: null,
       menu: false,
@@ -294,7 +298,7 @@ import Utils from '@/config/utils.js'
       menu3: false,
       menu4: false,
       menu5: false,
-      groupSession: {},
+      groupSession: '',
       person: {},
       user: {},
       group: {},
@@ -326,16 +330,11 @@ import Utils from '@/config/utils.js'
     },
     async created() {
       this.user = Utils.getStore('user')
+      await this.getGroupByName(this.user.selectedGroup.replace(/%20/g, " "))
+      // below generates the latest time a day can have an appointment based on the group's time interval
+      this.newEnd = "23:" + (59 - (this.group.timeInterval - 1)).toString();
       this.getAvailabilities()
       this.updateTimes();
-      await this.getGroupByName(this.user.selectedGroup.replace(/%20/g, " "))
-  
-      // this.getPerson()
-      // .then(() => {
-      //      })
-      // console.log(this.person);
-      // this.getAvailabilities();
-
     },
     methods: {
       calcTime(time) {
@@ -353,44 +352,87 @@ import Utils from '@/config/utils.js'
         let dayTime = (~~(milHours / 12) > 0 ? "PM":"AM")
         return "" + hours + ":" + minutes + " " + dayTime
       },
-      //Create time slots for users to select from
-      generateTimes(start, end) {
-        let startInfo = start.split(":")
-        let endInfo = end.split(":")
-        let loop = (parseInt(endInfo[0]) - parseInt(startInfo[0])) * 2 + 1
-        let hours = parseInt(startInfo[0])
-        let minutes = startInfo[1]
-        let seconds = "00"
+      generateTimeslots(startTime, endTime) {
+        let timeInterval = this.group.timeInterval;
+        // get the total minutes between the start and end times.
+        var totalMins = this.subtractTimes(startTime, endTime);
+        
+        // set the initial timeSlots array to just the start time
+        var timeSlots = [startTime];
+        
+        // get the rest of the time slots.
+        let generatedTimes = this.getTimeSlots(timeInterval, totalMins, timeSlots);
 
-        let newTime = start
         let newTimeText = ""
-        let j = 0
 
         let times = []
-
-        if(startInfo[1] == "30") {
-          loop -= 1
-          j = 1
-        }
-        if(endInfo[1] == "30") {
-          loop += 1
-        }
-        let temp
-        for(let i = 0; i < loop; i++) {
-          temp = (hours + Math.floor((i + j)/2))
-          if(temp < 10)
-          {
-            temp = "0" + temp
-          }
-          newTime = temp + ":" + minutes + ":" + seconds
-          newTimeText = this.calcTime(newTime)
-          minutes = (minutes == "00" ? "30":"00")
+        for(let i = 0; i < generatedTimes.length; i++) {
+          newTimeText = this.calcTime(generatedTimes[i])
           times.push({
-            time: newTime,
+            time: generatedTimes[i],
             timeText: newTimeText
           })
         }
         return times
+      },
+      getTimeSlots(timeInterval, totalMins, timeSlots) {
+        // base case - there are still more minutes
+        if (totalMins - timeInterval >= 0) {
+          // get the previous time slot to add interval to
+          var prevTimeSlot = timeSlots[timeSlots.length - 1];
+          // add timeInterval to previousTimeSlot to get nextTimeSlot
+          var nextTimeSlot = this.addMinsToTime(timeInterval, prevTimeSlot);
+          timeSlots.push(nextTimeSlot);
+          
+          // update totalMins
+          totalMins -= timeInterval;
+          
+          // get next time slot
+          return this.getTimeSlots(timeInterval, totalMins, timeSlots);
+        } else {
+          // all done!
+          return timeSlots;
+        }
+      },
+      subtractTimes(t2, t1) {
+        // get each time's hour and min values
+        var [t1Hrs, t1Mins] = this.getHoursAndMinsFromTime(t1);
+        var [t2Hrs, t2Mins] = this.getHoursAndMinsFromTime(t2);
+        
+        // time arithmetic (subtraction)
+        if (t1Mins < t2Mins) {
+          t1Hrs--;
+          t1Mins += 60;
+        }
+        var mins = t1Mins - t2Mins;
+        var hrs = t1Hrs - t2Hrs;
+        
+        return (hrs * 60) + mins;
+      },
+      getHoursAndMinsFromTime(time) {
+        return time.split(':').map(function(str) {
+          return parseInt(str);
+        });
+      },
+      addMinsToTime(mins, time) {
+        // get the times hour and min value
+        var [timeHrs, timeMins] = this.getHoursAndMinsFromTime(time);
+        
+        // time arithmetic (addition)
+        if (timeMins + mins >= 60) {
+          var addedHrs = parseInt((timeMins + mins) / 60);
+          timeMins = (timeMins + mins) % 60
+          if (timeHrs + addedHrs > 23) {
+            timeHrs = (timeHrs + addedHrs) % 24;
+          } else {
+            timeHrs += addedHrs;
+          }
+        } else {
+          timeMins += mins;
+        }
+        
+        // make sure the time slots are padded correctly
+        return String("00" + timeHrs).slice(-2) + ":" + String("00" + timeMins).slice(-2);
       },
       getLocalDateString() {
         let date = new Date();
@@ -398,9 +440,10 @@ import Utils from '@/config/utils.js'
         return date.toISOString().slice(0,10)
       },
       updateTimes() {
+        let maxEndTime = "23:" + (59 - (this.group.timeInterval - 1)).toString();
         // setting the minimum date and time for the picker components
         this.nowDate = this.getLocalDateString();
-        let temp = this.roundToNearest30(new Date());
+        let temp = this.roundToNearestInterval(new Date());
         // see if selected dates includes today -- if not, allow all times
         const test = this.dates.filter(date => date === this.nowDate);
         if (test.length > 0) {
@@ -409,17 +452,15 @@ import Utils from '@/config/utils.js'
         else {
           this.nowTime = "00:00"
         }
-        console.log("nowTime="+this.nowTime)
-     //   this.newStart = this.nowTime; - caused problem with saving startDate in availabilityß
-        this.startTimes = this.generateTimes(this.nowTime, this.newEnd)
-        // adding this to make sure thxat you can't start an appointment at the end time
+        this.startTimes = this.generateTimeslots(this.nowTime, this.newEnd)
+        // adding this to make sure that you can't start an appointment at the end time
         this.startTimes.pop();
-        this.endTimes = this.generateTimes(this.newStart, "23:30")
+        this.endTimes = this.generateTimeslots(this.newStart, maxEndTime)
         // adding this to make sure you can't end an appointment at the start time
         this.endTimes.shift();
       },
-      roundToNearest30(date) {
-        const minutes = 30;
+      roundToNearestInterval(date) {
+        const minutes = this.group.timeInterval;
         const ms = 1000 * 60 * minutes;
         let newHours = Math.ceil(date.getTime() / ms) * ms
         date.setTime(newHours);
@@ -484,8 +525,10 @@ import Utils from '@/config/utils.js'
 
         
         this.dates =[];
+        this.displayedStart = '';
+        this.displayedEnd = '';
         this.newStart ="00:00";
-        this.newEnd = "23:30";
+        this.newEnd = "23:" + (59 - (this.group.timeInterval - 1)).toString();
         this.groupSession = '';
         this.topic = ''
         this.location = ''
@@ -546,37 +589,22 @@ import Utils from '@/config/utils.js'
           console.log("There was an error:", error.response)
         });
       },
-      // don't need this since we can get all needed info from the store by using Utils
-    // async getPerson() {
-    //   if (this.$store.state.loginUser.userID !== undefined && this.$store.state.loginUser !== null) {
-    //     await PersonServices.getPerson(this.$store.state.loginUser.userID)
-    //       .then(response => {
-    //         this.person = response.data;
-  
-    //         return;
-    //       })
-    //       .catch(error => {
-    //         console.log("There was an error:", error.response)
-    //       });
-    //   }
-    // },
-    getGroupByName(name) {
-      GroupServices.getGroupByName(name)
-      .then((response) => {
+    async getGroupByName(name) {
+      await GroupServices.getGroupByName(name)
+      .then(async (response) => {
         this.group = response.data[0]
-        // console.log(this.group)
-        this.getTopicsForGroup()
+        await this.getTopicsForGroup()
       })
       .catch((error) => {
         this.message = error.response.data.message
         console.log("There was an error:", error.response);
       });
     },
-    getTopicsForGroup() {
-      TopicServices.getTopicByGroupForPerson(this.group.id, this.user.userID)
-      .then(response => {
+    async getTopicsForGroup() {
+      await TopicServices.getTopicByGroupForPerson(this.group.id, this.user.userID)
+      .then(async response => {
         this.topics = response.data
-        LocationServices.getAllForGroup(this.group.id).then(response => {
+        await LocationServices.getAllForGroup(this.group.id).then(response => {
           this.locations = response.data
         })
       })
