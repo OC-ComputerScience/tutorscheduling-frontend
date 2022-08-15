@@ -34,7 +34,7 @@
                     {{ item.text }}
                 </v-btn>
             </v-toolbar-items>
-            <v-menu v-if="this.user != null && selectedGroup != ''" offset-y
+            <v-menu v-if="user != null && selectedGroup != '' && currentPersonRoleID !== 0 && (selectedRoles !== '' && selectedRoles !== undefined && selectedRoles !== null)" offset-y
             >
                 <template v-slot:activator="{ on, attrs }">
                     <v-btn
@@ -84,7 +84,7 @@
                 min-width="200px"
                 rounded
                 offset-y
-                v-if="user != null"
+                v-if="user != null && currentPersonRoleID !== 0 && (selectedRoles !== '' && selectedRoles !== undefined && selectedRoles !== null)"
             >
                 <template v-slot:activator="{ on, attrs }">
                     <v-btn
@@ -94,7 +94,7 @@
                         v-bind="attrs"
                     >
                         <v-avatar 
-                            v-if="user != null"
+                            v-if="user != null && currentPersonRoleID !== 0 && (selectedRoles !== '' && selectedRoles !== undefined && selectedRoles !== null)"
                             color="secondary"
                         >
                             <span class="accent--text font-weight-bold">{{ initials }}</span>
@@ -157,31 +157,15 @@
                 </v-card>
             </v-menu>
             <v-app-bar-nav-icon
+                v-if="user !== null && currentPersonRoleID !== 0 && (selectedRoles !== '' && selectedRoles !== undefined && selectedRoles !== null)"
                 dark
                 class="hidden-lg-and-up"
                 @click="drawer = !drawer"
             ></v-app-bar-nav-icon>
         </v-app-bar>
 
-        <!-- <v-app-bar color="primary" dark class="hidden-lg-and-up">
-            <v-img
-                class="mx-2"
-                src="../assets/oc_logo_social.png"
-                max-height="40"
-                max-width="40"
-                contain
-            ></v-img>
-            <v-toolbar-title class="title">
-                <div>{{ this.title }}</div>    
-            </v-toolbar-title>
-            <v-spacer></v-spacer>
-            <v-app-bar-nav-icon
-                dark
-                @click="drawer = !drawer"
-            ></v-app-bar-nav-icon>
-        </v-app-bar> -->
         <v-navigation-drawer
-            v-if="drawer"
+            v-if="drawer && user !== null && currentPersonRoleID !== 0 && (selectedRoles !== '' && selectedRoles !== undefined && selectedRoles !== null)"
             class="hidden-lg-and-up"
             v-model="drawer"
             app            
@@ -220,7 +204,7 @@ export default {
     data: () => ({
         user: {},
         drawer: false,
-        title: '',
+        title: 'OC Tutoring',
         initials: '',
         name: '',
         roles: [],
@@ -348,19 +332,14 @@ export default {
     async created() {
         // ensures that their name gets set properly from store
         this.user = Utils.getStore('user');
-        console.log(this.user)
         if (this.user != null) {
             this.title = 'OC Tutoring';
-            //console.log(this.initials)
             this.initials = this.user.fName[0] + this.user.lName[0];
-            //console.log(this.initials)
             this.name = this.user.fName + ' ' + this.user.lName;
         }
     },
     async mounted() {
-        // console.log("in mounted")
         await this.resetMenu();
-        // console.log("done with mounted")
     },
     computed: {
         _link() {
@@ -369,16 +348,16 @@ export default {
     },
     methods: {
         menuAction(route) {
-            //console.log(this.currentPersonRoleID);
-            this.$router.push({ name: route, params: { id: this.currentPersonRoleID }  });
+            if(this.currentPersonRoleID === 0 && (this.selectedRoles === '' || this.selectedRoles === undefined || this.selectedRoles === null))
+                this.$router.push({ name: "login" })
+            else
+                this.$router.push({ name: route, params: { id: this.currentPersonRoleID }  });
         },
         async setGroupsAndRoles() {
             this.user = Utils.getStore('user');
             if (this.user != null) {
                 this.title = 'OC Tutoring';
-                //console.log(this.initials)
                 this.initials = this.user.fName[0] + this.user.lName[0];
-                //console.log(this.initials)
                 this.name = this.user.fName + ' ' + this.user.lName;
                 this.groups = [];
                 this.user.access.forEach(element => {
@@ -415,7 +394,6 @@ export default {
                             if (this.hasTopics) {
                                 await this.setGroupsAndRoles()
                                 .then(() => {
-                                    
                                     if (this.selectedGroup === '' && this.user.selectedGroup === undefined)
                                     {
                                         this.selectedGroup = this.groups[0];
@@ -425,13 +403,11 @@ export default {
                                     else if (this.selectedGroup === '')
                                         this.selectedGroup = this.user.selectedGroup;
 
-                                    if (this.user != null) {
+                                    if (this.user != null && this.currentPersonRoleID !== 0 && (this.selectedRoles !== '' && this.selectedRoles !== undefined && this.selectedRoles !== null)) {
                                         this.activeMenus = this.menus;
                                         this.activeMenus = this.menus.filter(menu =>
                                             menu.roles.includes(this.selectedRoles),
                                         );
-                                        //console.log(this.selectedRoles);
-                                        //console.log(this.activeMenus);
                                         if (this.selectedRoles.includes("Student"))
                                             this.limitStudentMenu();
                                         else if (this.selectedRoles.includes("Tutor"))
@@ -450,9 +426,7 @@ export default {
                             else {
                                 if (this.user != null) {
                                     this.title = 'OC Tutoring';
-                                    //console.log(this.initials)
                                     this.initials = this.user.fName[0] + this.user.lName[0];
-                                    //console.log(this.initials)
                                     this.name = this.user.fName + ' ' + this.user.lName;
                                 }
                                 this.$router.push({ name: "tutorTopics" });
@@ -462,13 +436,17 @@ export default {
                     else if(this.incompleteGroups.length !== 0) {
                         if (this.user != null) {
                             this.title = 'OC Tutoring';
-                            //console.log(this.initials)
                             this.initials = this.user.fName[0] + this.user.lName[0];
-                            //console.log(this.initials)
                             this.name = this.user.fName + ' ' + this.user.lName;
                         }
                         this.$router.push({ name: "contract" });
                     }
+                })
+                .catch ((error) => {
+                  if (error == 401) {
+                    console.log("Not authorized")
+                    this.$router.push({ name: "login" })
+                  }
                 })
             }
         },
@@ -476,31 +454,35 @@ export default {
             await GroupServices.getIncompleteGroupsForPerson(this.user.userID)
             .then((response) => {
                 this.incompleteGroups = [];
-                //console.log(response)
                 for (let i = 0; i < response.data.length; i++) {
                     let group = response.data[i];
-                    //console.log(group);
                     this.incompleteGroups.push(group);
                 }
             })
             .catch((error) => {
-                console.log("There was an error:", error.response);
+                if (error.response.status == 401) {
+                  console.log("error: "+error.response.status)
+                  throw 401;
+                }
+                console.log("There was an real error:",error.response.status);
             });
         },
         async getIncompleteTopics() {
             await GroupServices.getGroupTopicsForTutor(this.user.userID)
             .then(response => {
                 this.hasTopics = true;
-                //console.log(response)
                 for (let i = 0; i < response.data.length && this.hasTopics; i++) {
                     let group = response.data[i];
-                    //console.log(group.topic)
                     if (group.topic.length === 0) {
                         this.hasTopics = false;
                     }
                 }
             })
             .catch(error => {
+              if (error.response.status == 401) {
+                  console.log("error: "+error.response.status)
+                  throw 401;
+                }
                 console.log("There was an error:", error.response)
             });
         },
@@ -520,6 +502,10 @@ export default {
                 }
             })
             .catch((error) => {
+                if (error.response.status == 401) {
+                  console.log("error: "+error.response.status)
+                  throw 401;
+                }
                 console.log("There was an error:", error.response);
             });
         },
@@ -532,7 +518,6 @@ export default {
                 this.$router.push({ name: "adminInfo"});
         },
         logout() {
-            console.log("in logout function")
             AuthServices.logoutUser(this.user)
             .then(response => {
                 console.log(response);
@@ -562,7 +547,6 @@ export default {
                     // makes only tutor home page show up on menu bar
                     this.activeMenus = this.activeMenus.filter(menu =>
                         menu.name.includes("tutorHome"));
-                    //console.log(this.activeMenus)
                 }
             }
         },
@@ -581,10 +565,9 @@ export default {
                 });
 
                 if(!approved) {
-                    // makes only tutor home page show up on menu bar
+                    // makes only student home page show up on menu bar
                     this.activeMenus = this.activeMenus.filter(menu =>
                         menu.name.includes("studentHome"));
-                    console.log(this.activeMenus)
                 }
             }
         },
@@ -603,10 +586,9 @@ export default {
                 });
 
                 if(!approved) {
-                    // makes only tutor home page show up on menu bar
+                    // makes only admin home page show up on menu bar
                     this.activeMenus = this.activeMenus.filter(menu =>
                         menu.name.includes("adminHome"));
-                    console.log(this.activeMenus)
                 }
             }
         }
