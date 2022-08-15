@@ -204,7 +204,7 @@ export default {
     data: () => ({
         user: {},
         drawer: false,
-        title: '',
+        title: 'OC Tutoring',
         initials: '',
         name: '',
         roles: [],
@@ -442,6 +442,12 @@ export default {
                         this.$router.push({ name: "contract" });
                     }
                 })
+                .catch ((error) => {
+                  if (error == 401) {
+                    console.log("Not authorized")
+                    this.$router.push({ name: "login" })
+                  }
+                })
             }
         },
         async getIncompletePersonRoles() {
@@ -454,7 +460,11 @@ export default {
                 }
             })
             .catch((error) => {
-                console.log("There was an error:", error.response);
+                if (error.response.status == 401) {
+                  console.log("error: "+error.response.status)
+                  throw 401;
+                }
+                console.log("There was an real error:",error.response.status);
             });
         },
         async getIncompleteTopics() {
@@ -469,6 +479,10 @@ export default {
                 }
             })
             .catch(error => {
+              if (error.response.status == 401) {
+                  console.log("error: "+error.response.status)
+                  throw 401;
+                }
                 console.log("There was an error:", error.response)
             });
         },
@@ -488,6 +502,10 @@ export default {
                 }
             })
             .catch((error) => {
+                if (error.response.status == 401) {
+                  console.log("error: "+error.response.status)
+                  throw 401;
+                }
                 console.log("There was an error:", error.response);
             });
         },
