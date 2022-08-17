@@ -922,9 +922,9 @@ import Utils from '@/config/utils.js'
               personId: t.id
             }
             await PersonAppointmentServices.addPersonAppointment(pap)
-          })
-          .catch (error => {
-            this.message = error.response.data.message
+            .catch (error => {
+              this.message = error.response.data.message
+            })
           })
         })
         .catch (error => {
@@ -956,9 +956,9 @@ import Utils from '@/config/utils.js'
                this.message = error.response.data.message
              })
           })
-          .catch (error => {
-          this.message = error.response.data.message
         })
+        .catch (error => {
+          this.message = error.response.data.message
         })
       }
       //Load appointment info
@@ -1937,7 +1937,23 @@ import Utils from '@/config/utils.js'
       checkDate.setHours(0,0,0,0);
       let checkTime = new Date();
       let tempHours = checkTime.getHours();
+      // check minutes for group's booking buffer
       let tempMins = checkTime.getMinutes();
+      if(this.checkRole('Admin') && this.group.bookPastMinutes > 0) {
+        tempMins -= this.group.bookPastMinutes;
+        if(tempMins < 0) {
+          tempMins += 60
+          tempHours--;
+        }
+      }
+      else if(this.group.bookPastMinutes < 0) {
+        tempMins -= this.group.bookPastMinutes;
+        if(tempMins > 59) {
+          tempMins -= 60;
+          tempHours++;
+        }
+      }
+      console.log(tempMins)
       let tempSecs = checkTime.getSeconds();
       if(tempHours < 10)
       {
@@ -1965,6 +1981,7 @@ import Utils from '@/config/utils.js'
       else {
         this.datePast = false;
       }
+      console.log(this.datePast)
     },
   },
 }
