@@ -1941,14 +1941,14 @@ import Utils from '@/config/utils.js'
       let tempMins = checkTime.getMinutes();
       if(this.checkRole('Admin') && this.group.bookPastMinutes > 0) {
         tempMins -= this.group.bookPastMinutes;
-        if(tempMins < 0) {
+        while(tempMins < 0) {
           tempMins += 60
           tempHours--;
         }
       }
       else if(this.group.bookPastMinutes < 0) {
         tempMins -= this.group.bookPastMinutes;
-        if(tempMins > 59) {
+        while(tempMins > 59) {
           tempMins -= 60;
           tempHours++;
         }
