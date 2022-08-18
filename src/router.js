@@ -94,9 +94,10 @@ const router =  new Router({
       component: Apply
     },
     {
-      path: '/help',
+      path: '/help/:id',
       name: 'help',
-      component: Help
+      component: Help,
+      props: true
     },
     {
       path: '/groupList',

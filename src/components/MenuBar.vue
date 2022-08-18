@@ -138,7 +138,7 @@
                                 depressed
                                 rounded
                                 text
-                                :to="{ name: 'help' }"
+                                :to="{ name: 'help', params: { id: currentPersonRoleID }  }"
                                 v-if="!selectedRoles.includes('Admin')"
                             >
                                 Help

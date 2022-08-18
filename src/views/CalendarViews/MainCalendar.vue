@@ -127,7 +127,7 @@
               :events="events"
               :event-color="getEventColor"
               :event-overlap-mode="mode"
-              :event-overlap-threshold="30"
+              :event-overlap-threshold="15"
               :type="type"
               @click:event="showEvent"
               @click:more="viewDay"
