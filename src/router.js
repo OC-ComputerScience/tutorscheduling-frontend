@@ -9,6 +9,7 @@ import Help from './views/Help.vue';
 // Admin Views. Views are sorted into sections for this project, so check that the path is correct below.
 import AdminHome from './views/AdminViews/AdminHome.vue'
 import AdminInfo from './views/AdminViews/AdminInfo.vue'
+import AdminDashboard from './views/AdminViews/AdminDashboard.vue'
 
 //Groups
 import GroupList    from './views/AdminViews/GroupViews/GroupList.vue';
@@ -275,6 +276,12 @@ const router =  new Router({
       path: '/adminHome/:id',
       name: 'adminHome',
       component: AdminHome,
+      props: true
+    },
+    {
+      path: '/adminDashboard/:id',
+      name: 'adminDashboard',
+      component: AdminDashboard,
       props: true
     },
     {

@@ -336,7 +336,7 @@ export default {
           for (let j = 0; j < role.personrole.length; j++) {
             let pRole = role.personrole[j];
             if(role.type.includes("Admin")) {
-              this.$router.push({ name: "adminHome", params: { id: pRole.id } });
+              this.$router.push({ name: "adminDashboard", params: { id: pRole.id } });
             }
             else if((role.type.includes("Student") && !pRole.status.includes("approved") && !pRole.agree) ||
                 ((role.type.includes("Tutor") && !pRole.agree))) {

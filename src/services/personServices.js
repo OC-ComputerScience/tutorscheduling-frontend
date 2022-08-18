@@ -21,6 +21,9 @@ export default {
     getApprovedTutorsForGroup(groupId) {
       return apiClient.get("person/appTutor/" + groupId);
     },
+    getHoursPerTutor(groupId, currWeek){
+      return apiClient.get("person/group/" + groupId + "/hours/week/" + currWeek);
+    },
     getPersonForEmail(email) {
       return apiClient.get("person/email/" + email);
     },
