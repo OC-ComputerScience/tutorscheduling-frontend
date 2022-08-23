@@ -15,6 +15,9 @@ export default {
     getAppointment(id) {
       return apiClient.get("appointment/" + id);
     },
+    getUpcomingForPerson(personId) {
+      return apiClient.get("appointment/upcoming/person/" + personId)
+    },
     getTutorForAppointment(id) {
       return apiClient.get("appointment/tutorAppointment/" + id);
     },

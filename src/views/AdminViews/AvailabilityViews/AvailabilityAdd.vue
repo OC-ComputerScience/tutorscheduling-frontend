@@ -8,6 +8,45 @@
   <br><br>
   <template>
     <v-dialog
+      v-model="doubleBookedDialog"
+      max-width="600px"
+    >
+      <v-card>
+        <v-card-title>
+          <span class="text-h5">You already have an appointment during this time:</span>
+        </v-card-title>
+        <v-card-text> 
+          <br>
+          <v-row>
+            <v-col>
+              <h3>Existing Appointment:</h3>
+              <br>
+              <p>Date: {{conflictAvailability.existing.date}}</p>
+              <p>Start Time: {{conflictAvailability.existing.startTime}}</p>
+              <p>End Time: {{conflictAvailability.existing.endTime}}</p>
+            </v-col>
+            <v-col>
+              <h3>Conflicting Appointment:</h3>
+              <br>
+              <p>Date: {{conflictAvailability.conflicting.date}}</p>
+              <p>Start Time: {{conflictAvailability.conflicting.startTime}}</p>
+              <p>End Time: {{conflictAvailability.conflicting.endTime}}</p>
+            </v-col>
+          </v-row>
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn
+            color="blue darken-1"
+            text
+            @click="doubleBookedDialog = false"
+          >
+            Close
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+    <v-dialog
       v-model="groupDialog"
       persistent
       max-width="600px"
@@ -229,9 +268,19 @@
         flat
       >
         <!--  popup for deleting an availability  -->
-        <v-dialog v-model="dialogDelete" max-width="500px">
+        <v-dialog v-model="dialogDelete" max-width="800px">
           <v-card>
-            <v-card-title class="text-h5">Are you sure you want to delete this item?</v-card-title>
+            <v-card-title class="text-h5">Are you sure you want to delete this availability?</v-card-title>
+            <v-card-text> 
+              <br>
+              <v-row>
+                <v-col>
+                  <p>Date: {{editedItem.date}}</p>
+                  <p>Start Time: {{editedItem.startTime}}</p>
+                  <p>End Time: {{editedItem.endTime}}</p>
+                </v-col>
+              </v-row>
+            </v-card-text>
             <v-card-actions>
               <v-spacer></v-spacer>
               <v-btn color="blue darken-1" text @click="closeDelete">Cancel</v-btn>
@@ -276,13 +325,27 @@ import Utils from '@/config/utils.js'
       nowDate: null,
       nowTime: null,
       availability: {},
+      conflictAvailability: { 
+        conflicting: {
+          date: '',
+          startTime: '',
+          endTime: ''
+        },
+        existing: {
+          date: '',
+          startTime: '',
+          endTime: ''
+        }
+      },
       appointment: {},
       personAppointment: {},
       availabilities: [],
+      upcoming: [],
       dates: [],
       dialog: false,
       dialogDelete: false,
       groupDialog: false,
+      doubleBookedDialog: false,
       secondTime: true,
       //used for generating time slots
       startTimes: [],
@@ -294,11 +357,8 @@ import Utils from '@/config/utils.js'
       startTime: null,
       endTime: null,
       menu: false,
-      menu2: false,
-      menu3: false,
-      menu4: false,
-      menu5: false,
       groupSession: '',
+      editedItem: {},
       person: {},
       user: {},
       group: {},
@@ -466,19 +526,28 @@ import Utils from '@/config/utils.js'
         date.setTime(newHours);
         return date
       },
-      checkIfAvailable(availability) {
-        this.getAvailabilities();
+      async checkIfAvailable(tempAvail) {
+        await this.getUpcoming();
         let isAvail = true;
-        for(let i = 0; i < this.availabilities.length && isAvail; i++) {
-          let avail = this.availabilities[i];
-          if ((availability.startTime < avail.startTime && availability.endTime > avail.startTime)  // new availability starts before and ends during existing
-            || (availability.startTime > avail.startTime && availability.endTime < avail.endTime)   // new availability is in the middle of an existing
-            || (availability.startTime < avail.startTime && availability.endTime > avail.endTime)   // new availability starts before and ends after existing
-            || (availability.startTime > avail.startTime && availability.endTime > avail.endTime && availability.startTime < avail.endTime)   // new availability starts during and ends after existing 
-          )
-          {  
-            isAvail = false;
-            return;
+        console.log(tempAvail)
+        console.log(this.upcoming[0])
+        for(let i = 0; i < this.upcoming.length && isAvail; i++) {
+          let appoint = this.upcoming[i];
+          appoint.date = appoint.date.substring(0, 10);
+          appoint.startTime = appoint.startTime.substring(0, 5);          
+          appoint.endTime = appoint.endTime.substring(0, 5);
+          if(tempAvail.date === appoint.date) {
+            if ((tempAvail.startTime < appoint.startTime && tempAvail.endTime > appoint.startTime)  // new availability starts before and ends during existing
+              || (tempAvail.startTime >= appoint.startTime && tempAvail.endTime <= appoint.endTime)   // new availability is in the middle of an existing
+              || (tempAvail.startTime < appoint.startTime && tempAvail.endTime > appoint.endTime)   // new availability starts before and ends after existing
+              || (tempAvail.startTime > appoint.startTime && tempAvail.endTime > appoint.endTime && tempAvail.startTime < appoint.endTime)   // new availability starts during and ends after existing 
+            )
+            {  
+              isAvail = false;
+              this.conflictAvailability.conflicting = tempAvail;
+              this.conflictAvailability.existing = appoint;
+              return;
+            }
           }
         }
         return isAvail;
@@ -543,9 +612,11 @@ import Utils from '@/config/utils.js'
               console.log(error);
             });
           }
+          else {
+            this.doubleBookedDialog = true;
+          }
         }
 
-        
         this.dates =[];
         this.displayedStart = '';
         this.displayedEnd = '';
@@ -559,52 +630,51 @@ import Utils from '@/config/utils.js'
         this.getAvailabilities();
         this.updateTimes();
       },
+      formatDate(date) {
+        let formattedDate = date.toString().substring(5,10) + "-" + date.toString().substring(0,4);
+        return formattedDate;
+      },
+      formatTime(time) {
+        let modST = time.toString().substring(0,2) % 12;
+        let formattedTime = modST + ":" + time.toString().substring(3,5);
+
+        if (time.toString().substring(0,2) > 12){
+          formattedTime = formattedTime + " P.M.";}
+        else if(modST == 0 && time.toString().substring(0,2) == "12"){
+          formattedTime = "12:" + time.toString().substring(3,5) + " P.M.";
+        }
+        else if(modST == 0){
+          formattedTime = "12:" + time.toString().substring(3,5) + " A.M.";
+        }
+        else{
+          formattedTime = formattedTime + " A.M.";
+        }
+
+        return formattedTime;
+      },
+      async getUpcoming() {
+        await AppointmentServices.getUpcomingForPerson(this.user.userID)
+        .then(response => {
+          this.upcoming = response.data;
+          console.log(this.upcoming)
+        })
+        .catch(error => {
+          this.message = error.response.data.message
+          console.log("There was an error:", error.response)
+        });
+      },
       async getAvailabilities() {
         await AvailabilityServices.getPersonAvailability(this.user.userID)
         .then(response => {
           this.availabilities = response.data;
 
           for (let index = 0; index < this.availabilities.length; ++index) {
-            //format date
+            //format date, start time, and end time
             let element = this.availabilities[index];
-            let formattedDate = element.date.toString().substring(5,10) + "-" + element.date.toString().substring(0,4);
-            this.availabilities[index].date = formattedDate;
-
-            // format start time
-            let modST = element.startTime.toString().substring(0,2) % 12;
-            let formattedST = modST + ":" + element.startTime.toString().substring(3,5);
-
-            if (element.startTime.toString().substring(0,2) > 12){
-              formattedST = formattedST + " P.M.";}
-            else if(modST == 0 && element.startTime.toString().substring(0,2) == "12"){
-              formattedST = "12:" + element.startTime.toString().substring(3,5) + " P.M.";
-            }
-            else if(modST == 0){
-              formattedST = "12:" + element.startTime.toString().substring(3,5) + " A.M.";
-            }
-            else{
-              formattedST = formattedST + " A.M.";
-            }
-            this.availabilities[index].startTime = formattedST;
-
-            // format end time
-            let modET = element.endTime.toString().substring(0,2) % 12;
-            let formattedET = modET + ":" + element.endTime.toString().substring(3,5);
-
-            if (element.endTime.toString().substring(0,2) > 12){
-              formattedET = formattedET + " P.M.";}
-            else if(modET == 0 && element.endTime.toString().substring(0,2) == "12"){
-              formattedET = "12:" + element.endTime.toString().substring(3,5) + " P.M.";
-            }
-            else if(modET == 0){
-              formattedET = "12:" + element.endTime.toString().substring(3,5) + " A.M.";
-            }
-            else{
-              formattedET = formattedET + " A.M.";
-            }
-            this.availabilities[index].endTime = formattedET;
+            this.availabilities[index].date = this.formatDate(element.date);
+            this.availabilities[index].startTime = this.formatTime(element.startTime);
+            this.availabilities[index].endTime = this.formatTime(element.endTime);
           } 
-           
         })
         .catch(error => {
           this.message = error.response.data.message
