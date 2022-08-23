@@ -64,7 +64,6 @@
               </v-col>
             </v-row>
           </v-container>
-          <small>*indicates required field</small>
         </v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
@@ -79,6 +78,8 @@
             color="blue darken-1"
             text
             @click="addAvailability(); groupDialog = false;"
+            :disabled="location === '' || location === null || location === undefined
+                    || topic === '' || topic === null || topic === undefined"
           >
             Save
           </v-btn>
@@ -613,8 +614,6 @@ import Utils from '@/config/utils.js'
         console.log("There was an error:", error.response)
       });
     },
-
-    allowedStep: m => m % 30 === 0,
 
     // popup functions
     groupHandler() {
