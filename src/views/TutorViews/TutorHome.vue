@@ -280,7 +280,6 @@ import PersonAppointmentServices from "@/services/personAppointmentServices.js";
               //  look up students
               await PersonAppointmentServices.findStudentDataForTable(this.appointments[index].id)
               .then((response) => {
-                console.log(response)
                 let studentData = response.data;
                 if (this.appointments[index].type.includes('Group')){
                   this.appointments[index].student = studentData.length + " Student(s)";
