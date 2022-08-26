@@ -238,7 +238,6 @@ import LocationServices from "@/services/locationServices.js";
         await AppointmentServices.getPassedAppointmentForPersonForGroupStudent(this.group.id, this.user.userID)
           .then(response => {
             this.appointmentsneedingfeedback = response.data;
-            console.log(this.appointmentsneedingfeedback);
             for (let index = 0; index < this.appointmentsneedingfeedback.length; ++index) {
               //format date
               let element = this.appointmentsneedingfeedback[index];

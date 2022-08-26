@@ -17,18 +17,18 @@
           <v-card-title
             class="justify-center"
           >
-            Appointment on {{this.dateText}} with {{this.tutorText}}
+            Appointment on {{dateText}} with {{tutorText}}
           </v-card-title>
           <v-card-text>
-            <b>Time: </b>{{this.appointment.startTime}} - {{this.appointment.endTime}}
+            <b>Time: </b>{{appointment.startTime}} - {{appointment.endTime}}
             <br>
-            <b>Type: </b>{{this.appointment.type}}
+            <b>Type: </b>{{appointment.type}}
             <br>
-            <b>Location: </b>{{this.appointment.location.name}}
+            <b>Location: </b>{{appointment.location.name}}
             <br>
-            <b>Topic: </b>{{this.appointment.topic.name}}
+            <b>Topic: </b>{{appointment.topic.name}}
             <br>
-            <b>Pre-Session Info: </b>{{this.appointment.preSessionInfo}}
+            <b>Pre-Session Info: </b>{{appointment.preSessionInfo}}
           </v-card-text>
         </v-card>
       </v-row>
