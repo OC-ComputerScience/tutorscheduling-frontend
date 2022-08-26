@@ -224,6 +224,8 @@ import TopicServices from "@/services/topicServices.js";
       },
       async setSelectedAppointments() {
         this.selectedAppointments = this.appointments;
+        let biggestTutors = 0;
+        let biggestStudents = 0;
 
         for(let i = 0; i < this.appointments.length; i++) {
           let appoint = this.appointments[i]
@@ -279,6 +281,12 @@ import TopicServices from "@/services/topicServices.js";
               }
             }
           }
+
+          if(biggestTutors < appoint.tutors.length)
+            biggestTutors = appoint.tutors.length
+          
+          if(biggestStudents < appoint.students.length)
+            biggestStudents = appoint.students.length
           
           // dynamically adds columns to the csv file depending on how many tutors/students were in the appointment
           for(let j = 0; j < appoint.tutors.length; j++) {
@@ -290,8 +298,8 @@ import TopicServices from "@/services/topicServices.js";
 
             if(appoint.tutors[j].feedbacktext !== undefined && appoint.tutors[j].feedbacktext !== null && appoint.tutors[j].feedbacktext !== '')
               this.selectedAppointments[i][`tutor${j+1}Feedback`] += ": " + appoint.tutors[j].feedbacktext;
-            else if(appoint.tutors[j].feedbacknumber !== undefined && appoint.tutors[j].feedbacknumber !== null)
-              this.selectedAppointments[i][`tutor${j+1}Feedback`] += "";
+            // else if(appoint.tutors[j].feedbacknumber !== undefined && appoint.tutors[j].feedbacknumber !== null)
+            //   this.selectedAppointments[i][`tutor${j+1}Feedback`] += "";
 
             if(this.labels[`tutor${j+1}`] === undefined || this.labels[`tutor${j+1}`] === null) {
               this.labels[`tutor${j+1}`] = {};
@@ -312,8 +320,8 @@ import TopicServices from "@/services/topicServices.js";
 
             if(appoint.students[j].feedbacktext !== undefined && appoint.students[j].feedbacktext !== null && appoint.students[j].feedbacktext !== '')
               this.selectedAppointments[i][`student${j+1}Feedback`] += ": " + appoint.students[j].feedbacktext;
-            else if(appoint.students[j].feedbacknumber !== undefined && appoint.students[j].feedbacknumber !== null)
-              this.selectedAppointments[i][`student${j+1}Feedback`] += "";
+            // else if(appoint.students[j].feedbacknumber !== undefined && appoint.students[j].feedbacknumber !== null)
+            //   this.selectedAppointments[i][`student${j+1}Feedback`] += "";
 
             if(this.labels[`student${j+1}`] === undefined || this.labels[`student${j+1}`] === null) {
               this.labels[`student${j+1}`] = {};
@@ -321,6 +329,23 @@ import TopicServices from "@/services/topicServices.js";
 
               this.labels[`student${j+1}Feedback`] = {};
               this.labels[`student${j+1}Feedback`].title = appoint.students[j].title + " Feedback";
+            }
+          }
+        }
+
+        // set any undefined variables as empty strings
+        for(let i = 0; i < this.selectedAppointments.length; i++) {
+          let appoint = this.selectedAppointments[i]
+          for(let j = 0; j < biggestTutors; j++) {
+            if(appoint[`tutor${j+1}`] === undefined || appoint[`tutor${j+1}`] === null) {
+              appoint[`tutor${j+1}`] = ''
+              appoint[`tutor${j+1}Feedback`] = ''
+            }
+          }
+          for(let j = 0; j < biggestStudents; j++) {
+            if(appoint[`student${j+1}`] === undefined || appoint[`student${j+1}`] === null) {
+              appoint[`student${j+1}`] = ''
+              appoint[`student${j+1}Feedback`] = ''
             }
           }
         }
@@ -433,11 +458,11 @@ import TopicServices from "@/services/topicServices.js";
         if(this.selectedTopic > 0) {
           this.selectedAppointments = this.selectedAppointments.filter(appointment => appointment.topicId === this.selectedTopic);
         }
-        // filter by status
-        if(this.selectedStatus > 0) {
+        // filter by status, >= 0 since the array starts at 0
+        if(this.selectedStatus >= 0) {
           this.selectedAppointments = this.selectedAppointments.filter(appointment => appointment.status === this.status[this.selectedStatus].name);
         }
-        // need to filter by tutors/students
+        // filter by tutors
         if(this.selectedTutors.length > 0) {
           let tempTutors = this.selectedTutors
           this.selectedAppointments = this.selectedAppointments.filter(function (appoint) {
