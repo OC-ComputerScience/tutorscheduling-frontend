@@ -126,7 +126,7 @@
                 color="success"
                 class="mr-4"
                 :disabled="!isFiltered"
-                @click="isFiltered = false"
+                @click="isFiltered = false; selectedStudents = []; selectedTutors = []; getAllAppointmentsForGroup()"
             >
                 Download CSV
             </v-btn>
@@ -199,7 +199,7 @@ import TopicServices from "@/services/topicServices.js";
       this.user = Utils.getStore('user');
       await this.getGroup(this.user.selectedGroup.replace(/%20/g, " "))
       .then(async () => {
-        this.getTopicsForGroup();
+        await this.getTopicsForGroup();
         await this.getAllAppointmentsForGroup()
         .catch((error) => {
           this.message = error.response.data.message
@@ -226,6 +226,15 @@ import TopicServices from "@/services/topicServices.js";
         this.selectedAppointments = this.appointments;
         let biggestTutors = 0;
         let biggestStudents = 0;
+        // let tutorFeedback = {
+        //   num: 0,
+        //   sum: 0
+        // }
+
+        // let studentFeedback = {
+        //   num: 0,
+        //   sum: 0
+        // }
 
         for(let i = 0; i < this.appointments.length; i++) {
           let appoint = this.appointments[i]
@@ -253,9 +262,11 @@ import TopicServices from "@/services/topicServices.js";
           // need to fix this for all undefined columns
           if(appoint.personappointment === undefined || appoint.personappointment === null) {
             this.selectedAppointments[i].tutor1 = ""
-            this.selectedAppointments[i].tutor1Feedback = ""
+            this.selectedAppointments[i].tutor1FeedbackNum = ""
+            this.selectedAppointments[i].tutor1FeedbackText = ""
             this.selectedAppointments[i].student1 = ""
-            this.selectedAppointments[i].student1Feedback = ""
+            this.selectedAppointments[i].student1FeedbackNum = ""
+            this.selectedAppointments[i].student1FeedbackText = ""
           }
           else {
             let tutIndex = 0, stuIndex = 0;
@@ -292,21 +303,27 @@ import TopicServices from "@/services/topicServices.js";
           for(let j = 0; j < appoint.tutors.length; j++) {
             this.selectedAppointments[i][`tutor${j+1}`] = appoint.tutors[j].name;
             if(appoint.tutors[j].feedbacknumber === undefined || appoint.tutors[j].feedbacknumber === null)
-              this.selectedAppointments[i][`tutor${j+1}Feedback`] = ""
-            else  
-              this.selectedAppointments[i][`tutor${j+1}Feedback`] = appoint.tutors[j].feedbacknumber
+              this.selectedAppointments[i][`tutor${j+1}FeedbackNum`] = ""
+            else {
+              this.selectedAppointments[i][`tutor${j+1}FeedbackNum`] = appoint.tutors[j].feedbacknumber
+              // tutorFeedback.num++;
+              // tutorFeedback.sum += appoint.tutors[j].feedbacknumber
+            }
 
-            if(appoint.tutors[j].feedbacktext !== undefined && appoint.tutors[j].feedbacktext !== null && appoint.tutors[j].feedbacktext !== '')
-              this.selectedAppointments[i][`tutor${j+1}Feedback`] += ": " + appoint.tutors[j].feedbacktext;
-            // else if(appoint.tutors[j].feedbacknumber !== undefined && appoint.tutors[j].feedbacknumber !== null)
-            //   this.selectedAppointments[i][`tutor${j+1}Feedback`] += "";
+            if(appoint.tutors[j].feedbacktext === undefined || appoint.tutors[j].feedbacktext === null)
+              this.selectedAppointments[i][`tutor${j+1}FeedbackText`] = ""
+            else  
+              this.selectedAppointments[i][`tutor${j+1}FeedbackText`] = appoint.tutors[j].feedbacktext
 
             if(this.labels[`tutor${j+1}`] === undefined || this.labels[`tutor${j+1}`] === null) {
               this.labels[`tutor${j+1}`] = {};
               this.labels[`tutor${j+1}`].title = appoint.tutors[j].title;
 
-              this.labels[`tutor${j+1}Feedback`] = {};
-              this.labels[`tutor${j+1}Feedback`].title = appoint.tutors[j].title + " Feedback";
+              this.labels[`tutor${j+1}FeedbackNum`] = {};
+              this.labels[`tutor${j+1}FeedbackNum`].title = appoint.tutors[j].title + " Feedback Number";
+
+              this.labels[`tutor${j+1}FeedbackText`] = {};
+              this.labels[`tutor${j+1}FeedbackText`].title = appoint.tutors[j].title + " Feedback Text";
             }
           }
 
@@ -314,12 +331,17 @@ import TopicServices from "@/services/topicServices.js";
             this.selectedAppointments[i][`student${j+1}`] = appoint.students[j].name;
 
             if(appoint.students[j].feedbacknumber === undefined || appoint.students[j].feedbacknumber === null)
-              this.selectedAppointments[i][`student${j+1}Feedback`] = ""
+              this.selectedAppointments[i][`student${j+1}FeedbackNum`] = ""
             else  
-              this.selectedAppointments[i][`student${j+1}Feedback`] = appoint.students[j].feedbacknumber
+              this.selectedAppointments[i][`student${j+1}FeedbackNum`] = appoint.students[j].feedbacknumber
 
-            if(appoint.students[j].feedbacktext !== undefined && appoint.students[j].feedbacktext !== null && appoint.students[j].feedbacktext !== '')
-              this.selectedAppointments[i][`student${j+1}Feedback`] += ": " + appoint.students[j].feedbacktext;
+            if(appoint.students[j].feedbacktext === undefined || appoint.students[j].feedbacktext === null)
+              this.selectedAppointments[i][`student${j+1}FeedbackText`] = ""
+            else  
+              this.selectedAppointments[i][`student${j+1}FeedbackText`] = appoint.students[j].feedbacktext
+
+            // if(appoint.students[j].feedbacktext !== undefined && appoint.students[j].feedbacktext !== null && appoint.students[j].feedbacktext !== '')
+            //   this.selectedAppointments[i][`student${j+1}Feedback`] += ": " + appoint.students[j].feedbacktext;
             // else if(appoint.students[j].feedbacknumber !== undefined && appoint.students[j].feedbacknumber !== null)
             //   this.selectedAppointments[i][`student${j+1}Feedback`] += "";
 
@@ -327,8 +349,11 @@ import TopicServices from "@/services/topicServices.js";
               this.labels[`student${j+1}`] = {};
               this.labels[`student${j+1}`].title = appoint.students[j].title;
 
-              this.labels[`student${j+1}Feedback`] = {};
-              this.labels[`student${j+1}Feedback`].title = appoint.students[j].title + " Feedback";
+              this.labels[`student${j+1}FeedbackNum`] = {};
+              this.labels[`student${j+1}FeedbackNum`].title = appoint.students[j].title + " Feedback Number";
+
+              this.labels[`student${j+1}FeedbackText`] = {};
+              this.labels[`student${j+1}FeedbackText`].title = appoint.students[j].title + " Feedback Text";
             }
           }
         }
@@ -339,16 +364,20 @@ import TopicServices from "@/services/topicServices.js";
           for(let j = 0; j < biggestTutors; j++) {
             if(appoint[`tutor${j+1}`] === undefined || appoint[`tutor${j+1}`] === null) {
               appoint[`tutor${j+1}`] = ''
-              appoint[`tutor${j+1}Feedback`] = ''
+              appoint[`tutor${j+1}FeedbackNum`] = ''
+              appoint[`tutor${j+1}FeedbackText`] = ''
             }
           }
           for(let j = 0; j < biggestStudents; j++) {
             if(appoint[`student${j+1}`] === undefined || appoint[`student${j+1}`] === null) {
               appoint[`student${j+1}`] = ''
-              appoint[`student${j+1}Feedback`] = ''
+              appoint[`student${j+1}FeedbackNum`] = ''
+              appoint[`student${j+1}FeedbackText`] = ''
             }
           }
         }
+
+        console.log(this.labels)
       },
       formatDate(date) {
          let formattedDate = date.toString().substring(5,10) + "-" + date.toString().substring(0,4);
@@ -412,10 +441,11 @@ import TopicServices from "@/services/topicServices.js";
             console.log("There was an error:", error.response)
           });
       },
-      getTopicsForGroup() {
-        TopicServices.getAllForGroup(this.group.id)
+      async getTopicsForGroup() {
+        await TopicServices.getAllForGroup(this.group.id)
         .then(response => {
           this.topics = response.data
+          console.log(this.topics)
           this.topics.push({name:"Any", id: -1})
           this.status.push({name: "Any", id: -1})
         })
