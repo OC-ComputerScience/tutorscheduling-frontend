@@ -122,9 +122,10 @@ const router =  new Router({
       props: true
     },
     {
-      path: '/personList',
+      path: '/personList/:id',
       name: 'personList',
-      component: PersonList
+      component: PersonList,
+      props: true
     },
     {
       path: '/personAdd',
