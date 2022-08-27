@@ -235,9 +235,10 @@ const router =  new Router({
       component: RequestAdd,
     },
     {
-      path: '/availabilityAdd',
+      path: '/availabilityAdd/:id',
       name: 'availabilityAdd',
-      component: AvailabilityAdd
+      component: AvailabilityAdd,
+      props: true
     },
     {
       path: '/calendar/:id',
