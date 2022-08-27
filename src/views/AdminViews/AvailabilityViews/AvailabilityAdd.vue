@@ -529,8 +529,6 @@ import Utils from '@/config/utils.js'
       async checkIfAvailable(tempAvail) {
         await this.getUpcoming();
         let isAvail = true;
-        console.log(tempAvail)
-        console.log(this.upcoming[0])
         for(let i = 0; i < this.upcoming.length && isAvail; i++) {
           let appoint = this.upcoming[i];
           appoint.date = appoint.date.substring(0, 10);
@@ -546,6 +544,11 @@ import Utils from '@/config/utils.js'
               isAvail = false;
               this.conflictAvailability.conflicting = tempAvail;
               this.conflictAvailability.existing = appoint;
+              // format time of conflict availability
+              this.conflictAvailability.conflicting.startTime = this.formatTime(this.conflictAvailability.conflicting.startTime);
+              this.conflictAvailability.conflicting.endTime = this.formatTime(this.conflictAvailability.conflicting.endTime);
+              this.conflictAvailability.existing.startTime = this.formatTime(this.conflictAvailability.existing.startTime);
+              this.conflictAvailability.existing.endTime = this.formatTime(this.conflictAvailability.existing.endTime);
               return;
             }
           }
@@ -607,7 +610,6 @@ import Utils from '@/config/utils.js'
               });
             })
             .catch((error) => {
-              console.log(error)
               this.message = error.response.data.message
               console.log(error);
             });
@@ -656,7 +658,6 @@ import Utils from '@/config/utils.js'
         await AppointmentServices.getUpcomingForPerson(this.user.userID)
         .then(response => {
           this.upcoming = response.data;
-          console.log(this.upcoming)
         })
         .catch(error => {
           this.message = error.response.data.message
