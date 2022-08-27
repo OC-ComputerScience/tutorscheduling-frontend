@@ -59,7 +59,7 @@
       return {
         user: {},
         search: '',
-        message : 'People - click person to view or edit person or click Add to add new person',
+        message : 'People - click person to view or edit person.',
         persons: [],
         group: {},
         isSuperAdmin: false,
