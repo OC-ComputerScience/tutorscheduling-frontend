@@ -238,7 +238,6 @@ import PersonAppointmentServices from "@/services/personAppointmentServices.js";
         await AppointmentServices.getPassedAppointmentForPersonForGroupStudent(this.group.id, this.user.userID)
           .then(response => {
             this.appointmentsneedingfeedback = response.data;
-            console.log(this.appointmentsneedingfeedback);
             for (let index = 0; index < this.appointmentsneedingfeedback.length; ++index) {
                 //format date, start time, and end time
               let element = this.appointmentsneedingfeedback[index];

@@ -6,7 +6,7 @@ export default {
     getAllAppointments() {
       return apiClient.get("appointment");
     },
-    getAllForGroup(id) {
+    getAllForGroup(id) {  // used to get all appointments for reporting
       return apiClient.get("appointment/group/" + id);
     },
     getGoogleCalPage() {
