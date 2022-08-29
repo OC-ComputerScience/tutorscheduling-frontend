@@ -8,6 +8,45 @@
   <br><br>
   <template>
     <v-dialog
+      v-model="doubleBookedDialog"
+      max-width="600px"
+    >
+      <v-card>
+        <v-card-title>
+          <span class="text-h5">You already have an appointment during this time:</span>
+        </v-card-title>
+        <v-card-text> 
+          <br>
+          <v-row>
+            <v-col>
+              <h3>Existing Appointment:</h3>
+              <br>
+              <p>Date: {{conflictAvailability.existing.date}}</p>
+              <p>Start Time: {{conflictAvailability.existing.startTime}}</p>
+              <p>End Time: {{conflictAvailability.existing.endTime}}</p>
+            </v-col>
+            <v-col>
+              <h3>Conflicting Appointment:</h3>
+              <br>
+              <p>Date: {{conflictAvailability.conflicting.date}}</p>
+              <p>Start Time: {{conflictAvailability.conflicting.startTime}}</p>
+              <p>End Time: {{conflictAvailability.conflicting.endTime}}</p>
+            </v-col>
+          </v-row>
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn
+            color="blue darken-1"
+            text
+            @click="doubleBookedDialog = false"
+          >
+            Close
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+    <v-dialog
       v-model="groupDialog"
       persistent
       max-width="600px"
@@ -64,7 +103,6 @@
               </v-col>
             </v-row>
           </v-container>
-          <small>*indicates required field</small>
         </v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
@@ -79,6 +117,8 @@
             color="blue darken-1"
             text
             @click="addAvailability(); groupDialog = false;"
+            :disabled="location === '' || location === null || location === undefined
+                    || topic === '' || topic === null || topic === undefined"
           >
             Save
           </v-btn>
@@ -229,9 +269,19 @@
         flat
       >
         <!--  popup for deleting an availability  -->
-        <v-dialog v-model="dialogDelete" max-width="500px">
+        <v-dialog v-model="dialogDelete" max-width="800px">
           <v-card>
-            <v-card-title class="text-h5">Are you sure you want to delete this item?</v-card-title>
+            <v-card-title class="text-h5">Are you sure you want to delete this availability?</v-card-title>
+            <v-card-text> 
+              <br>
+              <v-row>
+                <v-col>
+                  <p>Date: {{editedItem.date}}</p>
+                  <p>Start Time: {{editedItem.startTime}}</p>
+                  <p>End Time: {{editedItem.endTime}}</p>
+                </v-col>
+              </v-row>
+            </v-card-text>
             <v-card-actions>
               <v-spacer></v-spacer>
               <v-btn color="blue darken-1" text @click="closeDelete">Cancel</v-btn>
@@ -260,7 +310,7 @@
 
 <script>
 import AvailabilityServices from "@/services/availabilityServices.js"
-import GroupServices from "@/services/groupServices.js"
+import PersonRoleServices from "@/services/personRoleServices.js"
 import TopicServices from "@/services/topicServices.js"
 import LocationServices from "@/services/locationServices.js"
 import AppointmentServices from "@/services/appointmentServices.js"
@@ -269,6 +319,7 @@ import Utils from '@/config/utils.js'
 
   export default {
     name: 'App',
+    props: ["id"],
     components: {
     },
     data: () => ({
@@ -276,13 +327,27 @@ import Utils from '@/config/utils.js'
       nowDate: null,
       nowTime: null,
       availability: {},
+      conflictAvailability: { 
+        conflicting: {
+          date: '',
+          startTime: '',
+          endTime: ''
+        },
+        existing: {
+          date: '',
+          startTime: '',
+          endTime: ''
+        }
+      },
       appointment: {},
       personAppointment: {},
       availabilities: [],
+      upcoming: [],
       dates: [],
       dialog: false,
       dialogDelete: false,
       groupDialog: false,
+      doubleBookedDialog: false,
       secondTime: true,
       //used for generating time slots
       startTimes: [],
@@ -294,11 +359,8 @@ import Utils from '@/config/utils.js'
       startTime: null,
       endTime: null,
       menu: false,
-      menu2: false,
-      menu3: false,
-      menu4: false,
-      menu5: false,
       groupSession: '',
+      editedItem: {},
       person: {},
       user: {},
       group: {},
@@ -330,7 +392,12 @@ import Utils from '@/config/utils.js'
     },
     async created() {
       this.user = Utils.getStore('user')
-      await this.getGroupByName(this.user.selectedGroup.replace(/%20/g, " "))
+      await this.getGroupByPersonRoleId()
+      // await this.getGroupByName(this.user.selectedGroup.replace(/%20/g, " "))
+      // .catch((error) => {
+      //   this.message = error.response.data.message
+      //   console.log(error);
+      // });
       // below generates the latest time a day can have an appointment based on the group's time interval
       this.newEnd = "23:" + (59 - (this.group.timeInterval - 1)).toString();
       this.getAvailabilities()
@@ -466,7 +533,44 @@ import Utils from '@/config/utils.js'
         date.setTime(newHours);
         return date
       },
+      async checkIfAvailable(tempAvail) {
+        await this.getUpcoming();
+        let isAvail = true;
+        for(let i = 0; i < this.upcoming.length && isAvail; i++) {
+          let appoint = this.upcoming[i];
+          appoint.date = appoint.date.substring(0, 10);
+          appoint.startTime = appoint.startTime.substring(0, 5);          
+          appoint.endTime = appoint.endTime.substring(0, 5);
+          if(tempAvail.date === appoint.date) {
+            if ((tempAvail.startTime < appoint.startTime && tempAvail.endTime > appoint.startTime)  // new availability starts before and ends during existing
+              || (tempAvail.startTime >= appoint.startTime && tempAvail.endTime <= appoint.endTime)   // new availability is in the middle of an existing
+              || (tempAvail.startTime < appoint.startTime && tempAvail.endTime > appoint.endTime)   // new availability starts before and ends after existing
+              || (tempAvail.startTime > appoint.startTime && tempAvail.endTime > appoint.endTime && tempAvail.startTime < appoint.endTime)   // new availability starts during and ends after existing 
+            )
+            {  
+              isAvail = false;
+              this.conflictAvailability.conflicting = tempAvail;
+              this.conflictAvailability.existing = appoint;
+              // format time of conflict availability
+              this.conflictAvailability.conflicting.startTime = this.formatTime(this.conflictAvailability.conflicting.startTime);
+              this.conflictAvailability.conflicting.endTime = this.formatTime(this.conflictAvailability.conflicting.endTime);
+              this.conflictAvailability.existing.startTime = this.formatTime(this.conflictAvailability.existing.startTime);
+              this.conflictAvailability.existing.endTime = this.formatTime(this.conflictAvailability.existing.endTime);
+              return;
+            }
+          }
+        }
+        return isAvail;
+      },
       async addAvailability() {
+        if(this.group.id === null || this.group.id === undefined || this.group.id === '') {
+          console.log("group id wasn't set")
+          await this.getGroupByName(this.user.selectedGroup.replace(/%20/g, " "))
+          .catch((error) => {
+            this.message = error.response.data.message
+            console.log(error);
+          });
+        }
         for (var i = 0; i < this.dates.length; i++) {
           let tempApp = {};
           let element = this.dates[i];
@@ -474,38 +578,47 @@ import Utils from '@/config/utils.js'
           this.availability.startTime = this.newStart;
           this.availability.endTime = this.newEnd;
           this.availability.personId = this.user.userID;
-          await AvailabilityServices.addAvailability(this.availability)
-          .then(async () => {
-            let date = new Date(element)
-            date.setHours(date.getHours() + (date.getTimezoneOffset()/60))
-            this.appointment.date = date
-            this.appointment.startTime = this.newStart
-            this.appointment.endTime = this.newEnd
-            if(this.groupSession.includes('Private')) {
-              this.appointment.type = "Private"
-              this.appointment.locationId = null
-              this.appointment.topicId = null
-              this.appointment.preSessionInfo = null
-            }
-            else {
-              this.appointment.type = "Group"
-              this.appointment.locationId = this.location
-              this.appointment.topicId = this.topic
-              this.appointment.preSessionInfo = this.preSessionInfo
-            }
-            this.appointment.groupId = this.group.id
-            this.appointment.status = "available"
-            await AppointmentServices.addAppointment(this.appointment)
-            .then(async response => {
-              tempApp = response.data;
-              this.personAppointment.isTutor = true
-              this.personAppointment.personId = this.user.userID
-              this.personAppointment.appointmentId = tempApp.id;
-              await PersonAppointmentServices.addPersonAppointment(this.personAppointment) 
-              .then(async () => {
-                if(this.appointment.type === "Group" || this.appointment.type === "group")
-                  await AppointmentServices.updateForGoogle(tempApp.id, tempApp)
-              }) 
+
+          let checkAvailable = await this.checkIfAvailable(this.availability);
+
+          if(checkAvailable) {
+            await AvailabilityServices.addAvailability(this.availability)
+            .then(async () => {
+              let date = new Date(element)
+              date.setHours(date.getHours() + (date.getTimezoneOffset()/60))
+              this.appointment.date = date
+              this.appointment.startTime = this.newStart
+              this.appointment.endTime = this.newEnd
+              if(this.groupSession.includes('Private')) {
+                this.appointment.type = "Private"
+                this.appointment.locationId = null
+                this.appointment.topicId = null
+                this.appointment.preSessionInfo = null
+              }
+              else {
+                this.appointment.type = "Group"
+                this.appointment.locationId = this.location
+                this.appointment.topicId = this.topic
+                this.appointment.preSessionInfo = this.preSessionInfo
+              }
+              this.appointment.groupId = this.group.id
+              this.appointment.status = "available"
+              await AppointmentServices.addAppointment(this.appointment)
+              .then(async response => {
+                tempApp = response.data;
+                this.personAppointment.isTutor = true
+                this.personAppointment.personId = this.user.userID
+                this.personAppointment.appointmentId = tempApp.id;
+                await PersonAppointmentServices.addPersonAppointment(this.personAppointment) 
+                .then(async () => {
+                  if(this.appointment.type === "Group" || this.appointment.type === "group")
+                    await AppointmentServices.updateForGoogle(tempApp.id, tempApp)
+                }) 
+                .catch((error) => {
+                  this.message = error.response.data.message
+                  console.log(error);
+                });
+              })
               .catch((error) => {
                 this.message = error.response.data.message
                 console.log(error);
@@ -515,15 +628,12 @@ import Utils from '@/config/utils.js'
               this.message = error.response.data.message
               console.log(error);
             });
-          })
-          .catch((error) => {
-            console.log(error)
-            this.message = error.response.data.message
-            console.log(error);
-          });
+          }
+          else {
+            this.doubleBookedDialog = true;
+          }
         }
 
-        
         this.dates =[];
         this.displayedStart = '';
         this.displayedEnd = '';
@@ -537,62 +647,71 @@ import Utils from '@/config/utils.js'
         this.getAvailabilities();
         this.updateTimes();
       },
-      async getAvailabilities() {
-        await AvailabilityServices.getPersonAvailability(this.user.userID)
+      formatDate(date) {
+        let formattedDate = date.toString().substring(5,10) + "-" + date.toString().substring(0,4);
+        return formattedDate;
+      },
+      formatTime(time) {
+        let modST = time.toString().substring(0,2) % 12;
+        let formattedTime = modST + ":" + time.toString().substring(3,5);
+
+        if (time.toString().substring(0,2) > 12){
+          formattedTime = formattedTime + " P.M.";}
+        else if(modST == 0 && time.toString().substring(0,2) == "12"){
+          formattedTime = "12:" + time.toString().substring(3,5) + " P.M.";
+        }
+        else if(modST == 0){
+          formattedTime = "12:" + time.toString().substring(3,5) + " A.M.";
+        }
+        else{
+          formattedTime = formattedTime + " A.M.";
+        }
+
+        return formattedTime;
+      },
+      async getUpcoming() {
+        await AppointmentServices.getUpcomingForPerson(this.user.userID)
         .then(response => {
-          this.availabilities = response.data;
-
-          for (let index = 0; index < this.availabilities.length; ++index) {
-            //format date
-            let element = this.availabilities[index];
-            let formattedDate = element.date.toString().substring(5,10) + "-" + element.date.toString().substring(0,4);
-            this.availabilities[index].date = formattedDate;
-
-            // format start time
-            let modST = element.startTime.toString().substring(0,2) % 12;
-            let formattedST = modST + ":" + element.startTime.toString().substring(3,5);
-
-            if (element.startTime.toString().substring(0,2) > 12){
-              formattedST = formattedST + " P.M.";}
-            else if(modST == 0 && element.startTime.toString().substring(0,2) == "12"){
-              formattedST = "12:" + element.startTime.toString().substring(3,5) + " P.M.";
-            }
-            else if(modST == 0){
-              formattedST = "12:" + element.startTime.toString().substring(3,5) + " A.M.";
-            }
-            else{
-              formattedST = formattedST + " A.M.";
-            }
-            this.availabilities[index].startTime = formattedST;
-
-            // format end time
-            let modET = element.endTime.toString().substring(0,2) % 12;
-            let formattedET = modET + ":" + element.endTime.toString().substring(3,5);
-
-            if (element.endTime.toString().substring(0,2) > 12){
-              formattedET = formattedET + " P.M.";}
-            else if(modET == 0 && element.endTime.toString().substring(0,2) == "12"){
-              formattedET = "12:" + element.endTime.toString().substring(3,5) + " P.M.";
-            }
-            else if(modET == 0){
-              formattedET = "12:" + element.endTime.toString().substring(3,5) + " A.M.";
-            }
-            else{
-              formattedET = formattedET + " A.M.";
-            }
-            this.availabilities[index].endTime = formattedET;
-          } 
-           
+          this.upcoming = response.data;
         })
         .catch(error => {
           this.message = error.response.data.message
           console.log("There was an error:", error.response)
         });
       },
-    async getGroupByName(name) {
-      await GroupServices.getGroupByName(name)
+      async getAvailabilities() {
+        await AvailabilityServices.getPersonAvailability(this.user.userID)
+        .then(response => {
+          this.availabilities = response.data;
+
+          for (let index = 0; index < this.availabilities.length; ++index) {
+            //format date, start time, and end time
+            let element = this.availabilities[index];
+            this.availabilities[index].date = this.formatDate(element.date);
+            this.availabilities[index].startTime = this.formatTime(element.startTime);
+            this.availabilities[index].endTime = this.formatTime(element.endTime);
+          } 
+        })
+        .catch(error => {
+          this.message = error.response.data.message
+          console.log("There was an error:", error.response)
+        });
+      },
+    // async getGroupByName(name) {
+    //   await GroupServices.getGroupByName(name)
+    //   .then(async (response) => {
+    //     this.group = response.data[0]
+    //     await this.getTopicsForGroup()
+    //   })
+    //   .catch((error) => {
+    //     this.message = error.response.data.message
+    //     console.log("There was an error:", error.response);
+    //   });
+    // },
+    async getGroupByPersonRoleId() {
+      await PersonRoleServices.getGroupForPersonRole(this.id)
       .then(async (response) => {
-        this.group = response.data[0]
+        this.group = response.data[0].role.group
         await this.getTopicsForGroup()
       })
       .catch((error) => {
@@ -601,6 +720,7 @@ import Utils from '@/config/utils.js'
       });
     },
     async getTopicsForGroup() {
+      console.log(this.group)
       await TopicServices.getTopicByGroupForPerson(this.group.id, this.user.userID)
       .then(async response => {
         this.topics = response.data
@@ -613,8 +733,6 @@ import Utils from '@/config/utils.js'
         console.log("There was an error:", error.response)
       });
     },
-
-    allowedStep: m => m % 30 === 0,
 
     // popup functions
     groupHandler() {

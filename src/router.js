@@ -122,9 +122,10 @@ const router =  new Router({
       props: true
     },
     {
-      path: '/personList',
+      path: '/personList/:id',
       name: 'personList',
-      component: PersonList
+      component: PersonList,
+      props: true
     },
     {
       path: '/personAdd',
@@ -235,9 +236,10 @@ const router =  new Router({
       component: RequestAdd,
     },
     {
-      path: '/availabilityAdd',
+      path: '/availabilityAdd/:id',
       name: 'availabilityAdd',
-      component: AvailabilityAdd
+      component: AvailabilityAdd,
+      props: true
     },
     {
       path: '/calendar/:id',

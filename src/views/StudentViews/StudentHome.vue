@@ -91,7 +91,6 @@ import AppointmentServices from '@/services/appointmentServices.js'
 import GroupServices from "@/services/groupServices.js";
 import PersonRoleServices from "@/services/personRoleServices.js";
 import PersonAppointmentServices from "@/services/personAppointmentServices.js";
-import LocationServices from "@/services/locationServices.js";
 
   export default {
     props: ["id"],
@@ -114,7 +113,8 @@ import LocationServices from "@/services/locationServices.js";
         headers: [{text: 'Date', value: 'date'}, 
                   {text: 'Start Time', value: 'startTime'},
                   {text: 'End Time', value: 'endTime'},
-                  {text: 'Location', value: 'location'},
+                  {text: 'Topic', value: 'topic.name'},
+                  {text: 'Location', value: 'location.name'},
                   {text: 'Type', value: 'type'},
                   {text: 'Tutor', value: 'tutor'}],
         headerFeedback: [{text: 'Date', value: 'date'}, 
@@ -149,6 +149,28 @@ import LocationServices from "@/services/locationServices.js";
           console.log("There was an error:", error.response);
         });
       },
+      formatDate(date) {
+        let formattedDate = date.toString().substring(5,10) + "-" + date.toString().substring(0,4);
+        return formattedDate;
+      },
+      formatTime(time) {
+        let modST = time.toString().substring(0,2) % 12;
+        let formattedTime = modST + ":" + time.toString().substring(3,5);
+
+        if (time.toString().substring(0,2) > 12){
+          formattedTime = formattedTime + " P.M.";}
+        else if(modST == 0 && time.toString().substring(0,2) == "12"){
+          formattedTime = "12:" + time.toString().substring(3,5) + " P.M.";
+        }
+        else if(modST == 0){
+          formattedTime = "12:" + time.toString().substring(3,5) + " A.M.";
+        }
+        else{
+          formattedTime = formattedTime + " A.M.";
+        }
+
+        return formattedTime;
+      },
       async getAppointments() {
         await AppointmentServices.getUpcomingAppointmentForPersonForGroup(this.group.id, this.user.userID)
           .then(async (response) => {
@@ -181,53 +203,31 @@ import LocationServices from "@/services/locationServices.js";
                   this.appointments[index].tutor = 'Open'
                 }
               })
-              // get location info 
-              if (this.appointments[index].locationId == null){
-                this.appointments[index].location = 'Not Selected'
-              }
-              else {
-                await LocationServices.getLocation(this.appointments[index].locationId).then((response) => {
-                  let locationData = response.data;
-                  this.appointments[index].location = locationData.name;
-                  
-                })
-              }
-              //format date
-              let element = this.appointments[index];
-              let formattedDate = element.date.toString().substring(5,10) + "-" + element.date.toString().substring(0,4);
-              this.appointments[index].date = formattedDate;
-              // format start time
-              let modST = element.startTime.toString().substring(0,2) % 12;
-              let formattedST = modST + ":" + element.startTime.toString().substring(3,5);
-              if (element.startTime.toString().substring(0,2) > 12){
-                formattedST = formattedST + " P.M.";}
-              else if(modST == 0 && element.startTime.toString().substring(0,2) == "12"){
-                formattedST = "12:" + element.startTime.toString().substring(3,5) + " P.M.";
-              }
-              else if(modST == 0){
-                formattedST = "12:" + element.startTime.toString().substring(3,5) + " A.M.";
-              }
-              else{
-                formattedST = formattedST + " A.M.";
-              }
-              this.appointments[index].startTime = formattedST;
-              // format end time
-              let modET = element.endTime.toString().substring(0,2) % 12;
-              let formattedET = modET + ":" + element.endTime.toString().substring(3,5);
-              if (element.endTime.toString().substring(0,2) > 12){
-                formattedET = formattedET + " P.M.";}
-              else if(modET == 0 && element.endTime.toString().substring(0,2) == "12"){
-                formattedET = "12:" + element.endTime.toString().substring(3,5) + " P.M.";
-              }
-              else if(modET == 0){
-                formattedET = "12:" + element.endTime.toString().substring(3,5) + " A.M.";
-              }
-              else{
-                formattedET = formattedET + " A.M.";
-              }
-              this.appointments[index].endTime = formattedET;
-            } 
+              .catch(error => {
+                this.message = error.response.data.message
+                console.log("There was an error:", error.response)
+              });
 
+              // set null location info 
+              if (this.appointments[index].locationId === null){
+                this.appointments[index].location = {
+                  name: 'Not Selected'
+                }
+              }
+
+              // set null topic info 
+              if (this.appointments[index].topicId === null){
+                this.appointments[index].topic = {
+                  name: 'Not Selected'
+                }
+              }
+
+                //format date, start time, and end time
+              let element = this.appointments[index];
+              this.appointments[index].date = this.formatDate(element.date);
+              this.appointments[index].startTime = this.formatTime(element.startTime);
+              this.appointments[index].endTime = this.formatTime(element.endTime);
+            } 
           })
           .catch(error => {
             this.message = error.response.data.message
@@ -238,42 +238,12 @@ import LocationServices from "@/services/locationServices.js";
         await AppointmentServices.getPassedAppointmentForPersonForGroupStudent(this.group.id, this.user.userID)
           .then(response => {
             this.appointmentsneedingfeedback = response.data;
-            console.log(this.appointmentsneedingfeedback);
             for (let index = 0; index < this.appointmentsneedingfeedback.length; ++index) {
-              //format date
+                //format date, start time, and end time
               let element = this.appointmentsneedingfeedback[index];
-              let formattedDate = element.date.toString().substring(5,10) + "-" + element.date.toString().substring(0,4);
-              this.appointmentsneedingfeedback[index].date = formattedDate;
-              // format start time
-              let modST = element.startTime.toString().substring(0,2) % 12;
-              let formattedST = modST + ":" + element.startTime.toString().substring(3,5);
-              if (element.startTime.toString().substring(0,2) > 12){
-                formattedST = formattedST + " P.M.";}
-              else if(modST == 0 && element.startTime.toString().substring(0,2) == "12"){
-                formattedST = "12:" + element.startTime.toString().substring(3,5) + " P.M.";
-              }
-              else if(modST == 0){
-                formattedST = "12:" + element.startTime.toString().substring(3,5) + " A.M.";
-              }
-              else{
-                formattedST = formattedST + " A.M.";
-              }
-              this.appointmentsneedingfeedback[index].startTime = formattedST;
-              // format end time
-              let modET = element.endTime.toString().substring(0,2) % 12;
-              let formattedET = modET + ":" + element.endTime.toString().substring(3,5);
-              if (element.endTime.toString().substring(0,2) > 12){
-                formattedET = formattedET + " P.M.";}
-              else if(modET == 0 && element.endTime.toString().substring(0,2) == "12"){
-                formattedET = "12:" + element.endTime.toString().substring(3,5) + " P.M.";
-              }
-              else if(modET == 0){
-                formattedET = "12:" + element.endTime.toString().substring(3,5) + " A.M.";
-              }
-              else{
-                formattedET = formattedET + " A.M.";
-              }
-              this.appointmentsneedingfeedback[index].endTime = formattedET;
+              this.appointmentsneedingfeedback[index].date = this.formatDate(element.date);
+              this.appointmentsneedingfeedback[index].startTime = this.formatTime(element.startTime);
+              this.appointmentsneedingfeedback[index].endTime = this.formatTime(element.endTime);
             } 
 
           })

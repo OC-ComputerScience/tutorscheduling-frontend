@@ -6,6 +6,9 @@ import apiClient from "@/services/services.js";
      getAllPersonRoles() {
        return apiClient.get("personrole");
      },
+     getGroupForPersonRole(id) {
+      return apiClient.get("personrole/group/" + id)
+     },
      getPersonRole(id) {
        return apiClient.get("personrole/" + id);
      },
