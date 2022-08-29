@@ -226,20 +226,13 @@ import TopicServices from "@/services/topicServices.js";
         this.selectedAppointments = this.appointments;
         let biggestTutors = 0;
         let biggestStudents = 0;
-        // let tutorFeedback = {
-        //   num: 0,
-        //   sum: 0
-        // }
-
-        // let studentFeedback = {
-        //   num: 0,
-        //   sum: 0
-        // }
 
         for(let i = 0; i < this.appointments.length; i++) {
           let appoint = this.appointments[i]
           appoint.students = []
           appoint.tutors = []
+          appoint.sumStuFeedback = 0;
+          appoint.numStuFeedback = 0;
           if(appoint.topic !== undefined && appoint.topic !== null && appoint.topic !== '')
             this.selectedAppointments[i].topicName = appoint.topic.name;
           else
@@ -287,7 +280,12 @@ import TopicServices from "@/services/topicServices.js";
                 appoint.students[stuIndex].name = pa.person.fName + ' ' + pa.person.lName;
                 appoint.students[stuIndex].feedbacknumber = pa.feedbacknumber;
                 appoint.students[stuIndex].feedbacktext = pa.feedbacktext;
-                
+
+                if(pa.feedbacknumber !== undefined && pa.feedbacknumber !== null) {
+                  appoint.sumStuFeedback += pa.feedbacknumber;
+                  appoint.numStuFeedback++;
+                }
+
                 stuIndex++;
               }
             }
@@ -306,8 +304,6 @@ import TopicServices from "@/services/topicServices.js";
               this.selectedAppointments[i][`tutor${j+1}FeedbackNum`] = ""
             else {
               this.selectedAppointments[i][`tutor${j+1}FeedbackNum`] = appoint.tutors[j].feedbacknumber
-              // tutorFeedback.num++;
-              // tutorFeedback.sum += appoint.tutors[j].feedbacknumber
             }
 
             if(appoint.tutors[j].feedbacktext === undefined || appoint.tutors[j].feedbacktext === null)
@@ -327,6 +323,10 @@ import TopicServices from "@/services/topicServices.js";
             }
           }
 
+          // add average student feedback label
+          this.labels.avgStuFeedback = {};
+          this.labels.avgStuFeedback.title = "Average Student Feedback";
+
           for(let j = 0; j < appoint.students.length; j++) {
             this.selectedAppointments[i][`student${j+1}`] = appoint.students[j].name;
 
@@ -339,11 +339,6 @@ import TopicServices from "@/services/topicServices.js";
               this.selectedAppointments[i][`student${j+1}FeedbackText`] = ""
             else  
               this.selectedAppointments[i][`student${j+1}FeedbackText`] = appoint.students[j].feedbacktext
-
-            // if(appoint.students[j].feedbacktext !== undefined && appoint.students[j].feedbacktext !== null && appoint.students[j].feedbacktext !== '')
-            //   this.selectedAppointments[i][`student${j+1}Feedback`] += ": " + appoint.students[j].feedbacktext;
-            // else if(appoint.students[j].feedbacknumber !== undefined && appoint.students[j].feedbacknumber !== null)
-            //   this.selectedAppointments[i][`student${j+1}Feedback`] += "";
 
             if(this.labels[`student${j+1}`] === undefined || this.labels[`student${j+1}`] === null) {
               this.labels[`student${j+1}`] = {};
@@ -361,6 +356,11 @@ import TopicServices from "@/services/topicServices.js";
         // set any undefined variables as empty strings
         for(let i = 0; i < this.selectedAppointments.length; i++) {
           let appoint = this.selectedAppointments[i]
+          if (appoint.sumStuFeedback !== 0 && appoint.numStuFeedback !== 0)
+            appoint.avgStuFeedback = parseInt(appoint.sumStuFeedback) / appoint.numStuFeedback;
+          else 
+            appoint.avgStuFeedback = "";
+        
           for(let j = 0; j < biggestTutors; j++) {
             if(appoint[`tutor${j+1}`] === undefined || appoint[`tutor${j+1}`] === null) {
               appoint[`tutor${j+1}`] = ''
@@ -376,8 +376,6 @@ import TopicServices from "@/services/topicServices.js";
             }
           }
         }
-
-        console.log(this.labels)
       },
       formatDate(date) {
          let formattedDate = date.toString().substring(5,10) + "-" + date.toString().substring(0,4);
@@ -445,7 +443,6 @@ import TopicServices from "@/services/topicServices.js";
         await TopicServices.getAllForGroup(this.group.id)
         .then(response => {
           this.topics = response.data
-          console.log(this.topics)
           this.topics.push({name:"Any", id: -1})
           this.status.push({name: "Any", id: -1})
         })
