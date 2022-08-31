@@ -3,19 +3,22 @@ import apiClient from "@/services/services.js";
  export default {
 
      ///Persons CRUD commands
-     getAllPersonRolePrivileges() {
+     getAllPrivileges() {
        return apiClient.get("personroleprivilege");
      },
-     getPersonRole(id) {
+     getPrivilege(id) {
        return apiClient.get("personroleprivilege/" + id);
      },
-     addPersonRolePrivilege(personroleprivilege) {
+     getPrivilegeByPersonRole(personroleId) {
+      return apiClient.get("personroleprivilege/personrole/" + personroleId);
+     },
+     addPrivilege(personroleprivilege) {
        return apiClient.post("personroleprivilege", personroleprivilege);
      },
-     updatePersonRolePrivilege(personRolePrivilegeId, personroleprivilege) {
+     updatePrivilege(personRolePrivilegeId, personroleprivilege) {
        return apiClient.put("personroleprivilege/" + personRolePrivilegeId, personroleprivilege);
      },
-     deletePersonRolePrivilege(personRolePrivilegeId) {
+     deletePrivilege(personRolePrivilegeId) {
        return apiClient.delete("personroleprivilege/" + personRolePrivilegeId);
      }
    }; 
