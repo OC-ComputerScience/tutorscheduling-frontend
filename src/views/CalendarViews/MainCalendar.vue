@@ -415,7 +415,7 @@
         >
         Close
         </v-btn>
-        <v-btn v-if="(isTutorEvent || isPrivateBook) && saveChanges && checkRole('Tutor')"
+        <v-btn v-if="(isTutorEvent || isPrivateBook) && saveChanges && checkRole('Tutor') && !checkStatus('available')"
           color="accent"
           @click="editAppointment(); selectedOpen = false;"
         >
