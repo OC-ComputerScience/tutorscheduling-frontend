@@ -250,24 +250,23 @@
           </span>
           <!-- show time ad an changeable value for private lessons-->
           <v-container v-if="checkStatus('available')">
-          
-          <span v-if="appointmentType.includes('Private')">
-            <v-select
-              v-model="displayedStart"
-              :items="startTimes"
-              item-text="timeText"
-              item-value="time"
-              label="Booked Start"
-              required
-              @change="newStart = displayedStart; updateTimes()"
-              :disabled="checkRole('Tutor') || datePast"
-              dense
-            >
-            </v-select>
-          </span>
-          <!-- show time as an unchangeable value -->
-          <span v-else>
-             <v-text-field
+            <span v-if="appointmentType.includes('Private') && group.allowSplittingAppointments">
+              <v-select
+                v-model="displayedStart"
+                :items="startTimes"
+                item-text="timeText"
+                item-value="time"
+                label="Booked Start"
+                required
+                @change="newStart = displayedStart; updateTimes()"
+                :disabled="checkRole('Tutor') || datePast"
+                dense
+              >
+              </v-select>
+            </span>
+            <!-- show time as an unchangeable value -->
+            <span v-else>
+              <v-text-field
                 v-model="displayedStart"
                 label="Booked Start"
                 type="time"
@@ -275,26 +274,26 @@
                 dense
                 readonly
               >
-             </v-text-field>
-          </span>
+              </v-text-field>
+            </span>
           </v-container>
           <v-container v-if="checkStatus('available')">
-          <span v-if="appointmentType.includes('Private')">
-          <v-select 
-            v-model="displayedEnd"
-            :items="endTimes"
-            item-text="timeText"
-            item-value="time"
-            label="Booked End"
-            required
-            @change="newEnd = displayedEnd; updateTimes()"
-            :disabled="checkRole('Tutor') || datePast"
-            dense
-          >
-          </v-select>
-          </span>
-          <span v-else>
-          <v-text-field
+            <span v-if="appointmentType.includes('Private') && group.allowSplittingAppointments">
+              <v-select 
+                v-model="displayedEnd"
+                :items="endTimes"
+                item-text="timeText"
+                item-value="time"
+                label="Booked End"
+                required
+                @change="newEnd = displayedEnd; updateTimes()"
+                :disabled="checkRole('Tutor') || datePast"
+                dense
+              >
+              </v-select>
+            </span>
+            <span v-else>
+              <v-text-field
                 v-model="displayedEnd"
                 label="Booked End"
                 type="time"
@@ -302,8 +301,8 @@
                 dense
                 readonly
               >
-             </v-text-field>
-          </span>
+              </v-text-field>
+            </span>
           </v-container>
           <!-- put in presession-info for appointment for private appointments/ add a readonly if  group-->
           <span v-if="appointmentType.includes('Private')">
@@ -631,9 +630,10 @@ import Utils from '@/config/utils.js'
     // check if date past
     datePast: false,
   }),
-  created() {
+  async created() {
     this.user = Utils.getStore('user')
-    this.getGroupByName(this.user.selectedGroup.replace(/%20/g, " "))
+    await this.getGroupByName(this.user.selectedGroup.replace(/%20/g, " "))
+    console.log(this.group)
     this.getRole()
     this.getAppointments()
     this.loadTopics()
@@ -1314,7 +1314,7 @@ import Utils from '@/config/utils.js'
           this.updatePeople()
           this.isStudentofAppointment()
           this.checkAppointmentIfPast()
-          if(this.selectedAppointment.type.includes("Private") && this.selectedAppointment.status.includes("available")) {
+          if(this.selectedAppointment.type.includes("Private") && this.selectedAppointment.status.includes("available") && this.group.allowSplittingAppointments) {
             this.displayedStart = ''
             this.displayedEnd = ''
           }
