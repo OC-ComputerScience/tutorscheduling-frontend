@@ -348,11 +348,10 @@ export default {
     },
     methods: {
         menuAction(route) {
-            if(this.currentPersonRoleID === 0 && (this.selectedRoles === '' || this.selectedRoles === undefined || this.selectedRoles === null)) {
+            if(this.currentPersonRoleID === 0 && (this.selectedRoles === '' || this.selectedRoles === undefined || this.selectedRoles === null))
                 this.$router.push({ name: "login" })
             else
                 this.$router.push({ name: route, params: { id: this.currentPersonRoleID }  });
-            }
         },
         async setGroupsAndRoles() {
             this.user = Utils.getStore('user');
