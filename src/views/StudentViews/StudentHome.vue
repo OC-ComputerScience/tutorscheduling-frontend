@@ -75,8 +75,10 @@
                 item-text="name"
                 item-value="id"
                 label="Topic"
-                disabled
+                :disabled="selectedAppt.status === 'booked'"
+                required
                 dense
+                @change="saveChanges = true"
               >
               </v-select>
             </span>
