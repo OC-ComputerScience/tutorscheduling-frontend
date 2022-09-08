@@ -350,8 +350,7 @@ export default {
         menuAction(route) {
             if(this.currentPersonRoleID === 0 && (this.selectedRoles === '' || this.selectedRoles === undefined || this.selectedRoles === null)) {
                 this.$router.push({ name: "login" })
-            }
-            else {
+            else
                 this.$router.push({ name: route, params: { id: this.currentPersonRoleID }  });
             }
         },
