@@ -295,7 +295,6 @@
 
 <script>
 import Utils from "@/config/utils.js";
-import GroupServices from "@/services/groupServices.js";
 import PersonServices from "@/services/personServices.js";
 import PersonRoleServices from "@/services/personRoleServices.js";
 import RoleServices from "@/services/roleServices.js";
@@ -303,7 +302,7 @@ import PersonTopicServices from "@/services/personTopicServices.js";
 import TopicServices from "@/services/topicServices.js";
 
 export default {
-  props: ["id"],
+  props: ["id", "personId"],
 
   data() {
     return {
@@ -349,7 +348,7 @@ export default {
   async created() {
     this.getPerson();
     this.user = Utils.getStore('user');
-    await this.getGroup(this.user.selectedGroup.replace(/%20/g, " "))
+    await this.getGroupByPersonRoleId()
     .then(() => {
       this.getPersonRoles();
       this.getPersonTopics();
@@ -361,10 +360,10 @@ export default {
     })
   },
   methods: {
-    async getGroup(name) {
-      await GroupServices.getGroupByName(name)
-      .then((response) => {
-        this.group = response.data[0];
+    async getGroupByPersonRoleId() {
+      await PersonRoleServices.getGroupForPersonRole(this.id)
+      .then(async (response) => {
+        this.group = response.data[0].role.group
       })
       .catch((error) => {
         this.message = error.response.data.message
@@ -372,7 +371,7 @@ export default {
       });
     },
     getPerson() {
-      PersonServices.getPerson(this.id)
+      PersonServices.getPerson(this.personId)
       .then((response) => {
         this.person = response.data;
       })
@@ -382,14 +381,13 @@ export default {
       });
     },
     async getPersonRoles() {
-      RoleServices.getRoleByGroupForPerson(this.group.id, this.id)
+      RoleServices.getRoleByGroupForPerson(this.group.id, this.personId)
       .then((response) => {
         this.personroles = response.data;
         for(let i = 0; i < this.personroles.length && !this.tutor; i++) {
           if(this.personroles[i].type.includes("Tutor"))
             this.tutor = true;
         }
-        console.log(this.tutor)
       })
       .catch((error) => {
         this.message = error.response.data.message
@@ -407,9 +405,8 @@ export default {
       });
     },
     getPersonTopics() {
-      TopicServices.getTopicByGroupForPerson(this.group.id, this.id)
+      TopicServices.getTopicByGroupForPerson(this.group.id, this.personId)
       .then((response) => {
-        console.log(response)
         this.persontopics = response.data;
       })
       .catch((error) => {
@@ -441,7 +438,7 @@ export default {
       }
     },
     updatePerson() {
-      PersonServices.updatePerson(this.id, this.person)
+      PersonServices.updatePerson(this.personId, this.person)
         .then(() => {
           this.dialogEdit = false;
         })
@@ -452,7 +449,6 @@ export default {
     },
     addPersonRole() {
       this.personrole.personId = this.person.id;
-      console.log(this.personrole);
       PersonRoleServices.addPersonRole(this.personrole)
       .then(() => {
         this.dialogRoleAdd = false;
@@ -465,7 +461,6 @@ export default {
     },
     addPersonTopic() {
       this.persontopic.personId = this.person.id;
-      console.log(this.persontopic);
       PersonTopicServices.addPersonTopic(this.persontopic)
       .then(() => {
         this.dialogTopicAdd = false;
@@ -482,9 +477,7 @@ export default {
     editRole(item) {
       this.editedRoleIndex = this.personroles.indexOf(item.id);
       this.personrole = Object.assign({}, item.personrole[0]);
-      //console.log(this.personrole);
       this.dialogRole = true;
-      //console.log(this.dialogRole);
     },
     deleteRole(item) {
       let confirmed = confirm(
@@ -515,8 +508,6 @@ export default {
       });
     },
     saveRole() {
-      //console.log(this.editedRoleIndex);
-      //console.log(this.personrole);
       PersonRoleServices.updatePersonRole(this.personrole.id, this.personrole)
       .then(() => {
         this.closeRole()
@@ -531,7 +522,6 @@ export default {
     editTopic(item) {
       this.editedTopicIndex = this.persontopics.indexOf(item.id);
       this.persontopic = Object.assign({}, item.persontopic[0]);
-      console.log(this.persontopic);
       this.dialogTopic = true;
     },
     deleteTopic(item) {
@@ -579,8 +569,6 @@ export default {
       });
     },
     saveTopic() {
-      console.log(this.editedTopicIndex);
-      console.log(this.persontopic);
       PersonTopicServices.updatePersonTopic(this.persontopic.id, this.persontopic)
       .then(() => {
         this.closeTopic()

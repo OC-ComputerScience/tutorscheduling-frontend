@@ -74,9 +74,10 @@ import RequestServices from "@/services/requestServices.js";
 import TopicServices from "@/services/topicServices.js";
 import PersonServices from "@/services/personServices.js";
 import Utils from '@/config/utils.js'
-import GroupServices from "@/services/groupServices.js";
+import PersonRoleServices from "@/services/personRoleServices.js";
 
 export default {
+  props: ["id"],
   data() {
     return {
       Problems: ["No times work for me.", "The topic I am looking for is not here.", "Report an issue", "Other"],
@@ -98,7 +99,7 @@ export default {
   
   async created() {
     this.user = Utils.getStore('user');
-    await this.getGroup(this.user.selectedGroup.replace(/%20/g, " "))
+    await this.getGroupByPersonRoleId()
       .then(() => {
         this.getTopicsForGroup();
       })
@@ -109,16 +110,16 @@ export default {
     //this.getAllTopics();
   },
   methods: {
-    // getAllTopics() {
-    //   TopicServices.getAllTopics()
-    //     .then((response) => {
-    //       this.topics = response.data;
-
-    //     })
-    //     .catch((error) => {
-    //       console.log("There was an error:", error.response);
-    //     });
-    // },
+    async getGroupByPersonRoleId() {
+      await PersonRoleServices.getGroupForPersonRole(this.id)
+      .then(async (response) => {
+        this.group = response.data[0].role.group
+      })
+      .catch((error) => {
+        this.message = error.response.data.message
+        console.log("There was an error:", error.response);
+      });
+    },
     getTopicsForGroup() {
         TopicServices.getAllForGroup(this.group.id)
         .then(response => {
@@ -129,16 +130,6 @@ export default {
           console.log("There was an error:", error.response)
         });
       },
-    async getGroup(name) {
-      await GroupServices.getGroupByName(name)
-      .then((response) => {
-        this.group = response.data[0];
-      })
-      .catch((error) => {
-        this.message = error.response.data.message
-        console.log("There was an error:", error.response);
-      });
-    },
     async addRequest() {
       this.request.personId = this.person.id;
       this.request.groupId = this.group.id;

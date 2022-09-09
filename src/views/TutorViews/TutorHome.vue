@@ -119,7 +119,6 @@
 import Utils from '@/config/utils.js'
 import PersonRoleServices from "@/services/personRoleServices.js";
 import AppointmentServices from '@/services/appointmentServices.js'
-import GroupServices from "@/services/groupServices.js";
 import PersonAppointmentServices from "@/services/personAppointmentServices.js";
 
   export default {
@@ -164,8 +163,7 @@ import PersonAppointmentServices from "@/services/personAppointmentServices.js";
       if(this.id !== 0) {
         this.getTutorRole();
       }
-      console.log("selected group = " + this.user.selectedGroup)
-      await this.getGroup(this.user.selectedGroup.replace(/%20/g, " "))
+      await this.getGroupByPersonRoleId()
       .then(async () => {
         await this.getAppointments();
         this.getAppointmentsNeedingFeedback();
@@ -187,12 +185,12 @@ import PersonAppointmentServices from "@/services/personAppointmentServices.js";
         }
       },
       doAuthorization() {
-        console.log("doAuth")
-        console.log("url:"+process.env.VUE_APP_SITE_URL)
+        // console.log("doAuth")
+        // console.log("url:"+process.env.VUE_APP_SITE_URL)
 
 //        this.url = (process.env.VUE_APP_SITE_URL ? process.env.VUE_APP_SITE_URL : "http://localhost") + '/tutoring-api/authorize/' + this.user.userID;
        this.url = '/tutoring-api/authorize/' + this.user.userID;
-        console.log(this.url)
+        // console.log(this.url)
         const client = global.google.accounts.oauth2.initCodeClient({
           client_id: process.env.VUE_APP_CLIENT_ID,
           access_type: "offline",
@@ -225,10 +223,10 @@ import PersonAppointmentServices from "@/services/personAppointmentServices.js";
         });
         client.requestCode();
       },
-      async getGroup(name) {
-        await GroupServices.getGroupByName(name)
-        .then((response) => {
-          this.group = response.data[0];
+      async getGroupByPersonRoleId() {
+        await PersonRoleServices.getGroupForPersonRole(this.id)
+        .then(async (response) => {
+          this.group = response.data[0].role.group
         })
         .catch((error) => {
           this.message = error.response.data.message
@@ -261,7 +259,6 @@ import PersonAppointmentServices from "@/services/personAppointmentServices.js";
         await AppointmentServices.getUpcomingAppointmentForPersonForGroup(this.group.id, this.user.userID)
           .then(async (response) => {
             this.appointments = response.data;
-            console.log(response.data)
             let temp = this.appointments.length
             for(let i = 0; i < temp; i++){
                 for(let j = 0; j < temp - i - 1; j++){
@@ -370,24 +367,6 @@ import PersonAppointmentServices from "@/services/personAppointmentServices.js";
           this.checkForAuthorization();
         }
       },
-      async addDataToAppoints() {
-        for (let i = 0; i < this.appointments.length; i++){
-          this.appointments[i].student =  i;
-          await PersonAppointmentServices.findStudentDataForTable(this.appointments[i].id).then((response) => {
-            let studentData = response.data;
-            if (this.appointments[i].type.includes('Group')){
-              this.appointments[i].student = studentData.length + " Student(s)";
-            }
-            else if (this.appointments[i].type.includes('Private') && (this.appointments[i].status.includes('booked') || this.appointments[i].status.includes('pending'))){
-              this.appointments[i].student = studentData[0].person.fName + " " + studentData[0].person.lName;
-            }
-            else {
-              this.appointments[i].student = 'Open'
-            }
-          })
-          console.log(this.appointments[i].student)
-        }
-      }
     }
   }
 </script>

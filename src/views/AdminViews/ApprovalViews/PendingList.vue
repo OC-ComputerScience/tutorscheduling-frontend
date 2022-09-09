@@ -110,11 +110,11 @@
 
 <script>
 import Utils from '@/config/utils.js'
-import GroupServices from "@/services/groupServices.js";
 import PersonServices from "@/services/personServices.js";
 import PersonRoleServices from "@/services/personRoleServices.js";
 
   export default {
+    props: ["id"],
     data: () => ({
       message: 'Approval - click tutor to approve or deny application',
       StatusSelect: ['Applied', 'Approved', 'Denied'],
@@ -152,7 +152,7 @@ import PersonRoleServices from "@/services/personRoleServices.js";
     },
     async created () {
       this.user = Utils.getStore('user');
-      await this.getGroup(this.user.selectedGroup.replace(/%20/g, " "))
+      await this.getGroupByPersonRoleId()
       .then(() => {
         this.getPersonRoles();
       })
@@ -161,10 +161,10 @@ import PersonRoleServices from "@/services/personRoleServices.js";
       })
     },
     methods: {
-      async getGroup(name) {
-        await GroupServices.getGroupByName(name)
-        .then((response) => {
-          this.group = response.data[0];
+      async getGroupByPersonRoleId() {
+        await PersonRoleServices.getGroupForPersonRole(this.id)
+        .then(async (response) => {
+          this.group = response.data[0].role.group
         })
         .catch((error) => {
           this.message = error.response.data.message

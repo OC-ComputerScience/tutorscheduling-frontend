@@ -88,7 +88,6 @@
 <script>
 import Utils from '@/config/utils.js'
 import AppointmentServices from '@/services/appointmentServices.js'
-import GroupServices from "@/services/groupServices.js";
 import PersonRoleServices from "@/services/personRoleServices.js";
 import PersonAppointmentServices from "@/services/personAppointmentServices.js";
 
@@ -126,7 +125,7 @@ import PersonAppointmentServices from "@/services/personAppointmentServices.js";
     },
     async created() {
       this.user = Utils.getStore('user');
-      await this.getGroup(this.user.selectedGroup.replace(/%20/g, " "))
+      await this.getGroupByPersonRoleId()
       .then(() => {
         this.getStudentRole();
         if (!this.disabled) {
@@ -139,10 +138,10 @@ import PersonAppointmentServices from "@/services/personAppointmentServices.js";
       })
     },
     methods: {
-      async getGroup(name) {
-        await GroupServices.getGroupByName(name)
-        .then((response) => {
-          this.group = response.data[0];
+      async getGroupByPersonRoleId() {
+        await PersonRoleServices.getGroupForPersonRole(this.id)
+        .then(async (response) => {
+          this.group = response.data[0].role.group
         })
         .catch((error) => {
           this.message = error.response.data.message
