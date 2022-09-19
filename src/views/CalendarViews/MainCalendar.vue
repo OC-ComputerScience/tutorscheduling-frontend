@@ -279,7 +279,7 @@
             </span>
           </v-container>
           <v-container v-if="checkStatus('available')">
-          <span v-if="appointmentType.includes('Private')">
+          <span v-if="appointmentType.includes('Private') && group.allowSplittingAppointments">
           <v-select 
             v-model="displayedEnd"
             :items="endTimes"
@@ -288,7 +288,7 @@
             label="Booked End"
             required
             @change="newEnd = displayedEnd; updateTimes()"
-            :disabled="checkRole('Tutor') || datePast"
+            :disabled="(checkRole('Tutor') && (!checkPrivilege('Sign up students for appointments') || !adminAddStudent)) || datePast"
             dense
           >
           </v-select>
