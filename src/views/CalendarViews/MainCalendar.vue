@@ -251,7 +251,7 @@
           <!-- show time ad an changeable value for private lessons-->
           <v-container v-if="checkStatus('available')">
           
-          <span v-if="appointmentType.includes('Private')">
+          <span v-if="appointmentType.includes('Private') && group.allowSplittingAppointments">
             <v-select
               v-model="displayedStart"
               :items="startTimes"
@@ -275,8 +275,8 @@
                 dense
                 readonly
               >
-             </v-text-field>
-          </span>
+              </v-text-field>
+            </span>
           </v-container>
           <v-container v-if="checkStatus('available')">
           <span v-if="appointmentType.includes('Private')">
@@ -288,7 +288,7 @@
             label="Booked End"
             required
             @change="newEnd = displayedEnd; updateTimes()"
-            :disabled="(checkRole('Tutor') && (!checkPrivilege('Sign up students for appointments') || !adminAddStudent)) || datePast"
+            :disabled="checkRole('Tutor') || datePast"
             dense
           >
           </v-select>
@@ -302,8 +302,8 @@
                 dense
                 readonly
               >
-             </v-text-field>
-          </span>
+              </v-text-field>
+            </span>
           </v-container>
           <!-- put in presession-info for appointment for private appointments/ add a readonly if  group-->
           <span v-if="appointmentType.includes('Private')">
@@ -632,9 +632,10 @@ import Utils from '@/config/utils.js'
     // check if date past
     datePast: false,
   }),
-  created() {
+  async created() {
     this.user = Utils.getStore('user')
-    this.getGroupByName(this.user.selectedGroup.replace(/%20/g, " "))
+    await this.getGroupByName(this.user.selectedGroup.replace(/%20/g, " "))
+    console.log(this.group)
     this.getRole()
     this.getPrivilegesForPersonRole()
     this.getAppointments()
@@ -1328,7 +1329,7 @@ import Utils from '@/config/utils.js'
           this.updatePeople()
           this.isStudentofAppointment()
           this.checkAppointmentIfPast()
-          if(this.selectedAppointment.type.includes("Private") && this.selectedAppointment.status.includes("available")) {
+          if(this.selectedAppointment.type.includes("Private") && this.selectedAppointment.status.includes("available") && this.group.allowSplittingAppointments) {
             this.displayedStart = ''
             this.displayedEnd = ''
           }
