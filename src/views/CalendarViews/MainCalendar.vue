@@ -196,7 +196,7 @@
                   label="Location"
                   required
                   dense
-                  :disabled="checkStatus('pending') || (checkRole('Tutor') && !checkStatus('booked')) || 
+                  :disabled="checkStatus('pending') || (checkRole('Tutor') && !checkStatus('booked') && (!checkPrivilege('Sign up students for appointments') || !adminAddStudent)) || 
                     ((checkRole('Student') || checkRole('Admin')) && (checkStatus('booked')) || 
                     selectedAppointment.status.includes('Cancel')) || datePast"
                   @change="saveChanges = true"
@@ -211,7 +211,7 @@
                   label="Topic"
                   required
                   dense
-                  :disabled="!checkStatus('available') || checkRole('Tutor') || datePast"
+                  :disabled="!checkStatus('available') || (checkRole('Tutor') && (!checkPrivilege('Sign up students for appointments') || !adminAddStudent)) || datePast"
                 >
                 </v-select>
                 </v-container>
@@ -251,7 +251,7 @@
           <!-- show time ad an changeable value for private lessons-->
           <v-container v-if="checkStatus('available')">
           
-          <span v-if="appointmentType.includes('Private')">
+          <span v-if="appointmentType.includes('Private') && group.allowSplittingAppointments">
             <v-select
               v-model="displayedStart"
               :items="startTimes"
@@ -260,7 +260,7 @@
               label="Booked Start"
               required
               @change="newStart = displayedStart; updateTimes()"
-              :disabled="checkRole('Tutor') || datePast"
+              :disabled="(checkRole('Tutor') && (!checkPrivilege('Sign up students for appointments') || !adminAddStudent)) || datePast"
               dense
             >
             </v-select>
@@ -275,11 +275,11 @@
                 dense
                 readonly
               >
-             </v-text-field>
-          </span>
+              </v-text-field>
+            </span>
           </v-container>
           <v-container v-if="checkStatus('available')">
-          <span v-if="appointmentType.includes('Private')">
+          <span v-if="appointmentType.includes('Private') && group.allowSplittingAppointments">
           <v-select 
             v-model="displayedEnd"
             :items="endTimes"
@@ -288,7 +288,7 @@
             label="Booked End"
             required
             @change="newEnd = displayedEnd; updateTimes()"
-            :disabled="checkRole('Tutor') || datePast"
+            :disabled="(checkRole('Tutor') && (!checkPrivilege('Sign up students for appointments') || !adminAddStudent)) || datePast"
             dense
           >
           </v-select>
@@ -302,8 +302,8 @@
                 dense
                 readonly
               >
-             </v-text-field>
-          </span>
+              </v-text-field>
+            </span>
           </v-container>
           <!-- put in presession-info for appointment for private appointments/ add a readonly if  group-->
           <span v-if="appointmentType.includes('Private')">
@@ -317,7 +317,7 @@
               required
               auto-grow
               rows="1"
-              :disabled="datePast || (!checkRole('Student') && !checkStatus('available')) || (checkRole('Student') && checkStatus('pending')) || checkRole('Tutor')"
+              :disabled="datePast || (!checkRole('Student') && !checkStatus('available')) || (checkRole('Student') && checkStatus('pending')) || (checkRole('Tutor') && (!checkPrivilege('Sign up students for appointments') || !adminAddStudent))"
               @change="saveChanges = true"
             ></v-textarea>
           </span>
@@ -385,12 +385,12 @@
           <!-- User sign up here -->
         </v-card-text>
         <v-card-actions>
-          <v-btn v-if="!isTutorEvent || checkRole('Student') || checkRole('Admin')"
+          <v-btn v-if="!isTutorEvent || checkRole('Student') || checkRole('Admin') || checkPrivilege('Sign up students for appointments')"
             color="primary"
             @click="bookAppointment(); selectedOpen = false;"
-            :disabled="!checkStatus('available') || isGroupBook || ((studentfName == '' || studentlName == '') && !emailFound && checkRole('Admin')) ||
+            :disabled="!checkStatus('available') || isGroupBook || ((studentfName == '' || studentlName == '') && !emailFound && (checkRole('Admin') || checkPrivilege('Sign up students for appointments'))) ||
                         (checkRole('Admin') && selectedAppointment.type.includes('Group') && !adminAddStudent) || selectedAppointment.topicId == null 
-                        || selectedAppointment.locationId == null || (isTutorEvent && !checkRole('Admin')) || (displayedStart === '' || displayedEnd === '')
+                        || selectedAppointment.locationId == null || (isTutorEvent && !(checkRole('Admin') || checkPrivilege('Sign up students for appointments'))) || (displayedStart === '' || displayedEnd === '')
                         || (selectedAppointment.type.includes('Group') && datePast)"
           >
           Book
@@ -415,7 +415,7 @@
         >
         Close
         </v-btn>
-        <v-btn v-if="(isTutorEvent || isPrivateBook) && saveChanges && checkRole('Tutor')"
+        <v-btn v-if="(isTutorEvent || isPrivateBook) && saveChanges && checkRole('Tutor') && !checkStatus('available')"
           color="accent"
           @click="editAppointment(); selectedOpen = false;"
         >
@@ -432,7 +432,7 @@
         Cancel Appointment
         </v-btn>
 
-                  <v-btn v-if="checkRole('Admin') && checkStatus('available')"
+                  <v-btn v-if="(checkRole('Admin') || checkPrivilege('Sign up students for appointments')) && checkStatus('available') && !datePast"
                     color="green"
                     @click="adminAddStudent = true"
                     :disabled="adminAddStudent"
@@ -542,8 +542,8 @@ import AppointmentServices from '@/services/appointmentServices.js'
 import PersonAppointmentServices from '@/services/personAppointmentServices.js'
 //For info on people and their associated roles
 import PersonServices from "@/services/personServices.js"
-// import PersonTopicServices from "@/services/personTopicServices.js"
 import PersonRoleServices from "@/services/personRoleServices.js"
+import PersonRolePrivilegeServices from "@/services/personRolePrivilegeServices.js"
 import RoleServices from "@/services/roleServices.js"
 //For info to be shown with appointments
 import GroupServices from "@/services/groupServices.js"
@@ -568,6 +568,7 @@ import Utils from '@/config/utils.js'
     //info related to current appointment
     group: {},
     person: {},
+    personroleprivileges: [],
     tutors: [],
     students: [],
     currentTopics: [],
@@ -631,10 +632,12 @@ import Utils from '@/config/utils.js'
     // check if date past
     datePast: false,
   }),
-  created() {
+  async created() {
     this.user = Utils.getStore('user')
-    this.getGroupByName(this.user.selectedGroup.replace(/%20/g, " "))
+    await this.getGroupByName(this.user.selectedGroup.replace(/%20/g, " "))
+    console.log(this.group)
     this.getRole()
+    this.getPrivilegesForPersonRole()
     this.getAppointments()
     this.loadTopics()
     this.loadPeople()
@@ -699,6 +702,18 @@ import Utils from '@/config/utils.js'
             this.tutorSelect.push(temp[i])
           }
         })
+      .catch(error => {
+        this.message = error.response.data.message
+        console.log("There was an error:", error.response.data)
+      });
+    },
+    getPrivilegesForPersonRole() {
+      PersonRolePrivilegeServices.getPrivilegeByPersonRole(this.id)
+      .then(response => {
+        console.log(response)
+        this.personroleprivileges = response.data
+        console.log(this.personroleprivileges)
+      })
       .catch(error => {
         this.message = error.response.data.message
         console.log("There was an error:", error.response.data)
@@ -783,7 +798,7 @@ import Utils from '@/config/utils.js'
     //Update on a session being booked
     async bookAppointment() {
       await AppointmentServices.getAppointment(this.selectedAppointment.id).then(async response => {
-        if(response.data.status == "available" && response.data.type.includes('Private') && !this.checkRole('Admin')) {
+        if(response.data.status == "available" && response.data.type.includes('Private') && !this.checkRole('Admin') && !this.adminAddStudent) {
           await this.splitAppointment().then(() => {
             this.getAppointments()
             this.selectedEvent.color = 'yellow'
@@ -1314,7 +1329,7 @@ import Utils from '@/config/utils.js'
           this.updatePeople()
           this.isStudentofAppointment()
           this.checkAppointmentIfPast()
-          if(this.selectedAppointment.type.includes("Private") && this.selectedAppointment.status.includes("available")) {
+          if(this.selectedAppointment.type.includes("Private") && this.selectedAppointment.status.includes("available") && this.group.allowSplittingAppointments) {
             this.displayedStart = ''
             this.displayedEnd = ''
           }
@@ -1437,6 +1452,14 @@ import Utils from '@/config/utils.js'
       else {
         return false;
       }
+    },
+    checkPrivilege(privilege) {
+      let hasPriv = false;
+      this.personroleprivileges.forEach(priv => {
+        if(priv.privilege === privilege)
+          hasPriv = true;
+      })
+      return hasPriv
     },
     getPersonName(id){
       return this.allPeople.get(id).fName+" "+this.allPeople.get(id).lName
@@ -1939,7 +1962,7 @@ import Utils from '@/config/utils.js'
       let tempHours = checkTime.getHours();
       // check minutes for group's booking buffer
       let tempMins = checkTime.getMinutes();
-      if(this.checkRole('Admin') && this.group.bookPastMinutes > 0) {
+      if((this.checkRole('Admin') || this.checkPrivilege('Sign up students for appointments')) && this.group.bookPastMinutes > 0) {
         tempMins -= this.group.bookPastMinutes;
         while(tempMins < 0) {
           tempMins += 60
@@ -1953,7 +1976,6 @@ import Utils from '@/config/utils.js'
           tempHours++;
         }
       }
-      console.log(tempMins)
       let tempSecs = checkTime.getSeconds();
       if(tempHours < 10)
       {
@@ -1981,7 +2003,6 @@ import Utils from '@/config/utils.js'
       else {
         this.datePast = false;
       }
-      console.log(this.datePast)
     },
   },
 }
