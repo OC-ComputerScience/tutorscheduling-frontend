@@ -132,7 +132,7 @@
               required
               auto-grow
               rows="1"
-              :disabled="checkStatus('pending') || (selectedAppt.type === 'Group')"
+              :readonly="(selectedAppt.type === 'Group')"
               @change="saveChanges = true"
             ></v-textarea>
           

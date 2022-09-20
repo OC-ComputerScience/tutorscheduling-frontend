@@ -122,7 +122,7 @@
               readonly
             >
             </v-text-field>
-            <!-- put in presession-info for appointment for private appointments/ add a readonly if  group -->
+            <!-- put in presession-info for appointment for private appointments/ add a readonly if private -->
             <v-textarea
               v-model="selectedAppt.preSessionInfo"
               :counter="130"
@@ -132,7 +132,8 @@
               required
               auto-grow
               rows="1"
-              readonly
+              :readonly="selectedAppt.type === 'Private'"
+              @change="saveChanges = true"
             ></v-textarea>
           
           </v-card-text>
@@ -158,7 +159,7 @@
             >
             Close
             </v-btn>
-            <v-btn v-if="selectedAppt.type === 'Private' && saveChanges"
+            <v-btn v-if="saveChanges"
               color="accent"
               @click="editAppointment(); apptDialog = false;"
             >
