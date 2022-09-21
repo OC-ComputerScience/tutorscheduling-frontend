@@ -5,6 +5,8 @@
   <v-toolbar>
     <v-toolbar-title>{{this.message}}</v-toolbar-title>
   </v-toolbar>
+  <br>
+  <b v-if="!group.allowSplittingAppointments">Please create availabilities with specific appointments times, not big blocks of time.</b>
   <br><br>
   <template>
     <v-dialog
