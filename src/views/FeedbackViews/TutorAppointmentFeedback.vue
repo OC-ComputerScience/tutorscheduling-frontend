@@ -73,7 +73,7 @@
             ></v-checkbox>
           </v-container>
           <v-btn
-            :disabled="!valid"
+            :disabled="!valid || !textualfeedback"
             color="success"
             class="mr-4"
             @click="updatePersonAppointment"

@@ -46,12 +46,14 @@
 
 <script>
   import Utils from '@/config/utils.js'
-  import GroupServices from "@/services/groupServices.js";
+  import PersonRoleServices from "@/services/personRoleServices.js";
   import TopicServices from '@/services/topicServices.js'
+
   export default {
     name: 'App',
     components: {
     },
+    props: ["id"],
     data() {
       return {
         search: '',
@@ -66,18 +68,19 @@
     async created() {
       // this.getTopics();
       this.user = Utils.getStore('user');
-      await this.getGroup(this.user.selectedGroup.replace(/%20/g, " "))
+      await this.getGroupByPersonRoleId()
       .then(() => {
         this.getTopicsForGroup();
       })
     },
     methods: {
-      async getGroup(name) {
-        await GroupServices.getGroupByName(name)
-        .then((response) => {
-          this.group = response.data[0];
+      async getGroupByPersonRoleId() {
+        await PersonRoleServices.getGroupForPersonRole(this.id)
+        .then(async (response) => {
+          this.group = response.data[0].role.group
         })
         .catch((error) => {
+          this.message = error.response.data.message
           console.log("There was an error:", error.response);
         });
       },
@@ -91,15 +94,6 @@
           console.log("There was an error:", error.response)
         });
       },
-      // getTopics() {
-      //   TopicServices.getAllTopics()
-      //   .then(response => {
-      //     this.topics = response.data;
-      //   })
-      //   .catch(error => {
-      //     console.log("There was an error:", error.response)
-      //   });
-      // },
       deleteTopic(id, name) {
         let confirmed = confirm(`Are you sure you want to delete ${name}`);
         if(confirmed) {
@@ -113,24 +107,12 @@
           });
         }
       },
-      getPrevious() {
-        if(this.start >= this.length) {
-          this.start -= this.length;
-          this.getTopics(this.start, this.length);
-        }
-      },
-      getNext() {
-        if(this.courses.length === this.length) {
-          this.start += this.length;
-          this.getTopics(this.start, this.length);
-        }
-      },
       rowClick: function (item, row) {      
         row.select(true);
-        this.$router.push({ name: 'topicView', params: { id: item.id } });
+        this.$router.push({ name: 'topicView', params: { id: this.id, topicId: item.id } });
       },
       addTopic() {
-        this.$router.push({ name: 'topicAdd'});
+        this.$router.push({ name: 'topicAdd', params: { id: this.id }});
       },
       cancel() {
         this.$router.go(-1);
