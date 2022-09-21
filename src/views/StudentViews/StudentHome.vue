@@ -239,9 +239,10 @@
           @click:row="provideFeedback"
         ></v-data-table>
       </v-card>
-    </v-container>
-    <v-container v-else>
-      <h4>This role for {{group.name}} has been disabled. Please contact the group admin for further questions.</h4>
+      </v-container>
+      <v-container v-else>
+        <h4>This role for {{group.name}} has been disabled. Please contact the group admin for further questions.</h4>
+      </v-container>
     </v-container>
   </div>
 </template>
