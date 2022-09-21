@@ -48,7 +48,6 @@ import ReportList    from './views/AdminViews/ReportViews/ReportList.vue';
 
 // Approvals
 import PendingList    from './views/AdminViews/ApprovalViews/PendingList.vue';
-import PendingView    from './views/AdminViews/ApprovalViews/PendingView.vue';
 
 // Availability
 import AvailabilityAdd    from './views/AdminViews/AvailabilityViews/AvailabilityAdd.vue';
@@ -84,14 +83,16 @@ const router =  new Router({
       component: Login
     },
     {
-      path: '/contract',
+      path: '/contract/:id',
       name: 'contract',
-      component: Contract
+      component: Contract,
+      props: true
     },
     {
-      path: '/apply',
+      path: '/apply/:id',
       name: 'apply',
-      component: Apply
+      component: Apply,
+      props: true
     },
     {
       path: '/help/:id',
@@ -100,9 +101,10 @@ const router =  new Router({
       props: true
     },
     {
-      path: '/groupList',
+      path: '/groupList/:id',
       name: 'groupList',
-      component: GroupList
+      component: GroupList,
+      props: true
     },
     {
       path: '/groupEdit/:id',
@@ -111,12 +113,13 @@ const router =  new Router({
       props: true
     },
     {
-      path: '/groupAdd',
+      path: '/groupAdd/:id',
       name: 'groupAdd',
-      component: GroupAdd
+      component: GroupAdd,
+      props: true
     },
     {
-      path: '/GroupView/:id',
+      path: '/GroupView/:id/:groupId',
       name: 'groupView',
       component: GroupView,
       props: true
@@ -128,20 +131,22 @@ const router =  new Router({
       props: true
     },
     {
-      path: '/personAdd',
+      path: '/personAdd/:id',
       name: 'personAdd',
-      component: PersonAdd
+      component: PersonAdd,
+      props: true
     },
     {
-      path: '/personView/:id',
+      path: '/personView/:id/:personId',
       name: 'personView',
       component: PersonView,
       props: true
     },
     {
-      path: '/topicList',
+      path: '/topicList/:id',
       name: 'topicList',
-      component: TopicList
+      component: TopicList,
+      props: true
     },
     {
       path: '/topicEdit/:id',
@@ -150,21 +155,22 @@ const router =  new Router({
       props: true
     },
     {
-      path: '/topicAdd',
+      path: '/topicAdd/:id',
       name: 'topicAdd',
       component: TopicAdd,
       props: true
     },
     {
-      path: '/topicView/:id',
+      path: '/topicView/:id/:topicId',
       name: 'topicView',
       component:TopicView,
       props: true
     },
     {
-      path: '/locationList',
+      path: '/locationList/:id',
       name: 'locationList',
-      component: LocationList
+      component: LocationList,
+      props: true
     },
     {
       path: '/locationEdit/:id',
@@ -173,21 +179,22 @@ const router =  new Router({
       props: true
     },
     {
-      path: '/locationAdd',
+      path: '/locationAdd/:id',
       name: 'locationAdd',
       component: LocationAdd,
       props: true
     },
     {
-      path: '/locationView/:id',
+      path: '/locationView/:id/:locationId',
       name: 'locationView',
       component:LocationView,
       props: true
     },
     {
-      path: '/roleList',
+      path: '/roleList/:id',
       name: 'roleList',
-      component: RoleList
+      component: RoleList,
+      props: true
     },
     {
       path: '/roleEdit/:id',
@@ -196,44 +203,40 @@ const router =  new Router({
       props: true
     },
     {
-      path: '/roleAdd',
+      path: '/roleAdd/:id',
       name: 'roleAdd',
       component: RoleAdd,
       props: true
     },
     {
-      path: '/roleView/:id',
+      path: '/roleView/:id/:roleId',
       name: 'roleView',
       component: RoleView,
       props: true
     },
     {
-      path: '/pendingView/:id',
-      name: 'pendingView',
-      component: PendingView,
-      props: true
-    },
-    {
-      path: '/pendingList',
+      path: '/pendingList/:id',
       name: 'pendingList',
       component: PendingList,
       props: true
     },
     {
-      path: '/reportList',
+      path: '/reportList/:id',
       name: 'reportList',
       component: ReportList,
       props: true
     },
     {
-      path: '/requestList',
+      path: '/requestList/:id',
       name: 'requestList',
-      component: RequestList
+      component: RequestList,
+      props: true
     },
     {
-      path: '/requestAdd',
+      path: '/requestAdd/:id',
       name: 'requestAdd',
       component: RequestAdd,
+      props: true
     },
     {
       path: '/availabilityAdd/:id',
@@ -254,14 +257,16 @@ const router =  new Router({
       props: true
     },
     {
-      path: '/tutorInfo',
+      path: '/tutorInfo/:id',
       name: 'tutorInfo',
-      component: TutorInfo
+      component: TutorInfo,
+      props: true
     },
     {
-      path: '/tutorTopics',
+      path: '/tutorTopics/:id',
       name: 'tutorTopics',
-      component: TutorTopics
+      component: TutorTopics,
+      props: true
     },
     {
       path: '/studentHome/:id',
@@ -270,9 +275,10 @@ const router =  new Router({
       props: true
     },
     {
-      path: '/studentInfo',
+      path: '/studentInfo/:id',
       name: 'studentInfo',
-      component: StudentInfo
+      component: StudentInfo,
+      props: true
     },
     {
       path: '/adminHome/:id',
@@ -281,9 +287,10 @@ const router =  new Router({
       props: true
     },
     {
-      path: '/adminInfo',
+      path: '/adminInfo/:id',
       name: 'adminInfo',
-      component: AdminInfo
+      component: AdminInfo,
+      props: true
     },
     {
       path: '/studentAppointmentFeedback/:id/:userId',

@@ -395,11 +395,6 @@ import Utils from '@/config/utils.js'
     async created() {
       this.user = Utils.getStore('user')
       await this.getGroupByPersonRoleId()
-      // await this.getGroupByName(this.user.selectedGroup.replace(/%20/g, " "))
-      // .catch((error) => {
-      //   this.message = error.response.data.message
-      //   console.log(error);
-      // });
       // below generates the latest time a day can have an appointment based on the group's time interval
       this.newEnd = "23:" + (59 - (this.group.timeInterval - 1)).toString();
       this.getAvailabilities()
@@ -567,7 +562,7 @@ import Utils from '@/config/utils.js'
       async addAvailability() {
         if(this.group.id === null || this.group.id === undefined || this.group.id === '') {
           console.log("group id wasn't set")
-          await this.getGroupByName(this.user.selectedGroup.replace(/%20/g, " "))
+          await this.getGroupByPersonRoleId()
           .catch((error) => {
             this.message = error.response.data.message
             console.log(error);
@@ -699,17 +694,6 @@ import Utils from '@/config/utils.js'
           console.log("There was an error:", error.response)
         });
       },
-    // async getGroupByName(name) {
-    //   await GroupServices.getGroupByName(name)
-    //   .then(async (response) => {
-    //     this.group = response.data[0]
-    //     await this.getTopicsForGroup()
-    //   })
-    //   .catch((error) => {
-    //     this.message = error.response.data.message
-    //     console.log("There was an error:", error.response);
-    //   });
-    // },
     async getGroupByPersonRoleId() {
       await PersonRoleServices.getGroupForPersonRole(this.id)
       .then(async (response) => {

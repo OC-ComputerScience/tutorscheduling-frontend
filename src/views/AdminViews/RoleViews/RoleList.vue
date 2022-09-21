@@ -47,10 +47,11 @@
 <script>
 import Utils from '@/config/utils.js'
   import RoleServices from '@/services/roleServices.js'
-  import GroupServices from "@/services/groupServices.js";
+  import PersonRoleServices from "@/services/personRoleServices.js";
 
   export default {
     name: 'App',
+    props: ["id"],
     components: {
     },
     data() {
@@ -68,7 +69,7 @@ import Utils from '@/config/utils.js'
     },
     async created() {
       this.user = Utils.getStore('user');
-      await this.getGroup(this.user.selectedGroup.replace(/%20/g, " "))
+      await this.getGroupByPersonRoleId()
       .then(() => {
         this.getRolesForGroup();
       })
@@ -77,10 +78,10 @@ import Utils from '@/config/utils.js'
       })
     },
     methods: {
-      async getGroup(name) {
-        await GroupServices.getGroupByName(name)
-        .then((response) => {
-          this.group = response.data[0];
+      async getGroupByPersonRoleId() {
+        await PersonRoleServices.getGroupForPersonRole(this.id)
+        .then(async (response) => {
+          this.group = response.data[0].role.group
         })
         .catch((error) => {
           this.message = error.response.data.message
@@ -97,15 +98,6 @@ import Utils from '@/config/utils.js'
           console.log("There was an error:", error.response)
         });
       },
-      // getRoles() {
-      //   RoleServices.getAllRoles()
-      //   .then(response => {
-      //     this.roles = response.data;
-      //   })
-      //   .catch(error => {
-      //     console.log("There was an error:", error.response)
-      //   });
-      // },
       deleteRole(id, name) {
         let confirmed = confirm(`Are you sure you want to delete ${name}`);
         if(confirmed) {
@@ -133,7 +125,7 @@ import Utils from '@/config/utils.js'
       },
       rowClick: function (item, row) {      
         row.select(true);
-        this.$router.push({ name: 'roleView', params: { id: item.id } });
+        this.$router.push({ name: 'roleView', params: { id: this.id, roleId: item.id } });
       },
       addRole() {
         this.$router.push({ name: 'roleAdd'});

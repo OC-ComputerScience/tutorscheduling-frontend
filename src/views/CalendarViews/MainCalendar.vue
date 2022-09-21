@@ -546,7 +546,6 @@ import PersonRoleServices from "@/services/personRoleServices.js"
 import PersonRolePrivilegeServices from "@/services/personRolePrivilegeServices.js"
 import RoleServices from "@/services/roleServices.js"
 //For info to be shown with appointments
-import GroupServices from "@/services/groupServices.js"
 import LocationServices from "@/services/locationServices.js"
 import TopicServices from "@/services/topicServices.js"
 //Plugin functions
@@ -634,8 +633,7 @@ import Utils from '@/config/utils.js'
   }),
   async created() {
     this.user = Utils.getStore('user')
-    await this.getGroupByName(this.user.selectedGroup.replace(/%20/g, " "))
-    console.log(this.group)
+    this.getGroupByPersonRoleId()
     this.getRole()
     this.getPrivilegesForPersonRole()
     this.getAppointments()
@@ -647,7 +645,7 @@ import Utils from '@/config/utils.js'
     //Initialize data for calendar
   async getAppointments() {
     this.overlay = true;
-    await this.getGroupByName(this.user.selectedGroup.replace(/%20/g, " "));
+    await this.getGroupByPersonRoleId()
     await AppointmentServices.findAppointmentsForGroup(this.group.id)
     .then(async (response) => {
       this.appointments = response.data
@@ -667,19 +665,19 @@ import Utils from '@/config/utils.js'
     });
     this.overlay = false;
   },
-    async getGroupByName(name) {
-      await GroupServices.getGroupByName(name)
-      .then((response) => {
-        this.group = response.data[0]
-        this.getTopicsForGroup()
-        this.getTutorsForGroup()
-        this.getLocations()
-      })
-      .catch((error) => {
-        this.message = error.response.data.message
-        console.log("There was an error:", error.response);
-      });
-    },
+  async getGroupByPersonRoleId() {
+    await PersonRoleServices.getGroupForPersonRole(this.id)
+    .then(async (response) => {
+      this.group = response.data[0].role.group
+      this.getTopicsForGroup()
+      this.getTutorsForGroup()
+      this.getLocations()
+    })
+    .catch((error) => {
+      this.message = error.response.data.message
+      console.log("There was an error:", error.response);
+    });
+  },
     getTopicsForGroup() {
       TopicServices.getAllForGroup(this.group.id)
       .then(response => {

@@ -59,28 +59,27 @@ export default {
 
   data() {
     return {
+      valid: false,
       role: {},
       group: {},
-      groups: {},
-      message: "Edit Topic - make updates to the fields and click Save",
+      groups: [],
+      message: "Edit Role - make updates to the fields and click Save",
         roles: [
         'admin'
       ],
     };
   },
-  created() {
-    RoleServices.getRole(this.id)
+  async created() {
+    await RoleServices.getRole(this.id)
       .then((response) => {
         this.role = response.data;
-        console.log(response.data);
       })
       .catch((error) => {
         console.log("There was an error:", error.response);
       }),
-    GroupServices.getGroup(this.groupid)
+    GroupServices.getGroup(this.role.id)
       .then((response) => {
         this.group = response.data;
-        console.log(response.data);
       })
       .catch((error) => {
         this.message = error.response.data.message
@@ -97,6 +96,8 @@ export default {
   },
 
   methods: {
+    // only updating this replace issue once edits can be done on view page
+    // also this.id is role id
     updateRole() {
       RoleServices.updateRole(this.id, this.role)
         .then(() => {

@@ -367,7 +367,6 @@
 
 <script>
 import Utils from "@/config/utils.js";
-import GroupServices from "@/services/groupServices.js";
 import PersonServices from "@/services/personServices.js";
 import PersonRoleServices from "@/services/personRoleServices.js";
 import PersonRolePrivilegeServices from "@/services/personRolePrivilegeServices.js";
@@ -376,7 +375,7 @@ import PersonTopicServices from "@/services/personTopicServices.js";
 import TopicServices from "@/services/topicServices.js";
 
 export default {
-  props: ["id"],
+  props: ["id", "personId"],
 
   data() {
     return {
@@ -436,7 +435,7 @@ export default {
   async created() {
     this.getPerson();
     this.user = Utils.getStore('user');
-    await this.getGroup(this.user.selectedGroup.replace(/%20/g, " "))
+    await this.getGroupByPersonRoleId()
     .then(() => {
       this.getPersonRoles();
       this.getPersonTopics();
@@ -448,10 +447,10 @@ export default {
     })
   },
   methods: {
-    async getGroup(name) {
-      await GroupServices.getGroupByName(name)
-      .then((response) => {
-        this.group = response.data[0];
+    async getGroupByPersonRoleId() {
+      await PersonRoleServices.getGroupForPersonRole(this.id)
+      .then(async (response) => {
+        this.group = response.data[0].role.group
       })
       .catch((error) => {
         this.message = error.response.data.message
@@ -459,7 +458,7 @@ export default {
       });
     },
     getPerson() {
-      PersonServices.getPerson(this.id)
+      PersonServices.getPerson(this.personId)
       .then((response) => {
         this.person = response.data;
       })
@@ -469,7 +468,7 @@ export default {
       });
     },
     async getPersonRoles() {
-      RoleServices.getRoleByGroupForPerson(this.group.id, this.id)
+      RoleServices.getRoleByGroupForPerson(this.group.id, this.personId)
       .then((response) => {
         this.personroles = response.data;
         console.log(this.personroles)
@@ -505,7 +504,7 @@ export default {
       });
     },
     getPersonTopics() {
-      TopicServices.getTopicByGroupForPerson(this.group.id, this.id)
+      TopicServices.getTopicByGroupForPerson(this.group.id, this.personId)
       .then((response) => {
         this.persontopics = response.data;
       })
@@ -531,7 +530,7 @@ export default {
       this.dialogDelete = true;
     },
     updatePerson() {
-      PersonServices.updatePerson(this.id, this.person)
+      PersonServices.updatePerson(this.personId, this.person)
         .then(() => {
           this.dialogEdit = false;
         })

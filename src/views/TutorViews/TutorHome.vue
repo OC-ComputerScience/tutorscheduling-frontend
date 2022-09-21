@@ -299,7 +299,6 @@ import Utils from '@/config/utils.js'
 import PersonRoleServices from "@/services/personRoleServices.js";
 import PersonTopicServices from "@/services/personTopicServices.js";
 import AppointmentServices from '@/services/appointmentServices.js'
-import GroupServices from "@/services/groupServices.js";
 import LocationServices from "@/services/locationServices.js";
 import PersonAppointmentServices from "@/services/personAppointmentServices.js";
 import TwilioServices from "@/services/twilioServices.js";
@@ -353,7 +352,7 @@ import TwilioServices from "@/services/twilioServices.js";
       if(this.id !== 0) {
         this.getTutorRole();
       }
-      await this.getGroup(this.user.selectedGroup.replace(/%20/g, " "))
+      await this.getGroupByPersonRoleId()
       .then(async () => {
         await this.getAppointments();
         this.getAppointmentsNeedingFeedback();
@@ -415,10 +414,10 @@ import TwilioServices from "@/services/twilioServices.js";
         });
         client.requestCode();
       },
-      async getGroup(name) {
-        await GroupServices.getGroupByName(name)
-        .then((response) => {
-          this.group = response.data[0];
+      async getGroupByPersonRoleId() {
+        await PersonRoleServices.getGroupForPersonRole(this.id)
+        .then(async (response) => {
+          this.group = response.data[0].role.group
         })
         .catch((error) => {
           this.message = error.response.data.message
