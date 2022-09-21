@@ -196,7 +196,7 @@
                   label="Location"
                   required
                   dense
-                  :disabled="checkStatus('pending') || (checkRole('Tutor') && !checkStatus('booked') && (!checkPrivilege('Sign up students for appointments') || !adminAddStudent)) || 
+                  :disabled="(checkRole('Tutor') && !checkStatus('booked') && (!checkPrivilege('Sign up students for appointments') || !adminAddStudent)) || 
                     ((checkRole('Student') || checkRole('Admin')) && (checkStatus('booked')) || 
                     selectedAppointment.status.includes('Cancel')) || datePast"
                   @change="saveChanges = true"
@@ -211,7 +211,7 @@
                   label="Topic"
                   required
                   dense
-                  :disabled="!checkStatus('available') || (checkRole('Tutor') && (!checkPrivilege('Sign up students for appointments') || !adminAddStudent)) || datePast"
+                  :disabled="checkStatus('booked') || (checkRole('Tutor') && (!checkPrivilege('Sign up students for appointments') || !adminAddStudent)) || datePast"
                 >
                 </v-select>
                 </v-container>
@@ -317,7 +317,7 @@
               required
               auto-grow
               rows="1"
-              :disabled="datePast || (!checkRole('Student') && !checkStatus('available')) || (checkRole('Student') && checkStatus('pending')) || (checkRole('Tutor') && (!checkPrivilege('Sign up students for appointments') || !adminAddStudent))"
+              :disabled="datePast || (checkRole('Tutor') && (!checkPrivilege('Sign up students for appointments') || !adminAddStudent))"
               @change="saveChanges = true"
             ></v-textarea>
           </span>
@@ -415,7 +415,7 @@
         >
         Close
         </v-btn>
-        <v-btn v-if="(isTutorEvent || isPrivateBook) && saveChanges && checkRole('Tutor') && !checkStatus('available')"
+        <v-btn v-if="(isTutorEvent || isPrivateBook) && saveChanges && !checkStatus('available')"
           color="accent"
           @click="editAppointment(); selectedOpen = false;"
         >
