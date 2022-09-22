@@ -126,7 +126,7 @@
                 color="success"
                 class="mr-4"
                 :disabled="!isFiltered"
-                @click="isFiltered = false; selectedStudents = []; selectedTutors = []; getAllAppointmentsForGroup()"
+                @click="isFiltered = false; selectedStudents = []; selectedTutors = []; dates = []; selectedTopic = -1; selectedStatus = -1; getAllAppointmentsForGroup()"
             >
                 Download CSV
             </v-btn>
@@ -180,7 +180,7 @@ import TopicServices from "@/services/topicServices.js";
                   startTime: { title: 'Start' },
                   endTime: { title: 'End' },
                   type: { title: 'Type' },
-                  status: { title: 'Status' },
+                  statusName: { title: 'Status' },
                   topicName: { title: 'Topic' },
                   locationName: { title: 'Location' },
                   locationBuilding: { title: 'Building' },
@@ -237,11 +237,11 @@ import TopicServices from "@/services/topicServices.js";
 
           //make status field look nicer
           if(appoint.status === "booked")
-            appoint.status = "Booked"
+            appoint.statusName = "Booked"
           else if(appoint.status === "complete")
-            appoint.status = "Complete"
+            appoint.statusName = "Complete"
           else
-            appoint.status = this.status.find(status => status.name === appoint.status).title
+            appoint.statusName = this.status.find(status => status.name === appoint.status).title
 
           if(appoint.topic !== undefined && appoint.topic !== null && appoint.topic !== '')
             this.selectedAppointments[i].topicName = appoint.topic.name;
@@ -499,7 +499,8 @@ import TopicServices from "@/services/topicServices.js";
         }
         // filter by status, >= 0 since the array starts at 0
         if(this.selectedStatus >= 0) {
-          this.selectedAppointments = this.selectedAppointments.filter(appointment => this.status[this.selectedStatus].name.includes(appointment.status));
+          console.log(this.status[this.selectedStatus].name.toLowerCase())
+          this.selectedAppointments = this.selectedAppointments.filter(appointment => this.status[this.selectedStatus].name.toLowerCase().includes(appointment.status.toLowerCase()));
         }
         // filter by tutors
         if(this.selectedTutors.length > 0) {
