@@ -139,12 +139,13 @@
 import VueJsonToCsv from 'vue-json-to-csv'
 import Utils from '@/config/utils.js'
 import AppointmentServices from '@/services/appointmentServices.js'
-import GroupServices from "@/services/groupServices.js";
+import PersonRoleServices from "@/services/personRoleServices.js";
 import PersonServices from "@/services/personServices.js";
 import TopicServices from "@/services/topicServices.js";
 
   export default {
     name: 'App',
+    props: ["id"],
     components: {
         VueJsonToCsv
     },
@@ -197,7 +198,7 @@ import TopicServices from "@/services/topicServices.js";
     },
     async created() {
       this.user = Utils.getStore('user');
-      await this.getGroup(this.user.selectedGroup.replace(/%20/g, " "))
+      await this.getGroupByPersonRoleId()
       .then(async () => {
         await this.getTopicsForGroup();
         await this.getAllAppointmentsForGroup()
@@ -212,10 +213,10 @@ import TopicServices from "@/services/topicServices.js";
       });
     },
     methods: {
-      async getGroup(name) {
-        await GroupServices.getGroupByName(name)
-        .then((response) => {
-          this.group = response.data[0];
+      async getGroupByPersonRoleId() {
+        await PersonRoleServices.getGroupForPersonRole(this.id)
+        .then(async (response) => {
+          this.group = response.data[0].role.group
         })
         .catch((error) => {
           this.message = error.response.data.message

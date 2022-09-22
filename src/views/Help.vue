@@ -33,8 +33,8 @@ export default {
             tutorial: {},
             currentRole: {},
             files: [
-                { pdf: "StudentTutorial.pdf", pages: 23 },
-                { pdf: "TutorTutorial.pdf", pages: 30 }
+                { pdf: "StudentTutorial.pdf", pages: 24 },
+                { pdf: "TutorTutorial.pdf", pages: 29 }
             ],
         }
     },

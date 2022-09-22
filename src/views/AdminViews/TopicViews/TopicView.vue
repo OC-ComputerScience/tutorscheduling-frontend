@@ -64,11 +64,10 @@
 
 <script>
 import TopicServices from "@/services/topicServices.js";
-import GroupServices from "@/services/groupServices.js";
+import PersonRoleServices from "@/services/personRoleServices.js";
 
-//import UserDisplay from '@/components/UserDisplay.vue'
 export default {
-  props: ["id"],
+  props: ["id", "topicId"],
 
   data() {
     return {
@@ -78,31 +77,35 @@ export default {
     };
   },
   created() {
-    TopicServices.getTopic(this.id)
+    this.getGroupByPersonRoleId()
+    this.getTopic()
+  },
+  methods: {
+    async getGroupByPersonRoleId() {
+      await PersonRoleServices.getGroupForPersonRole(this.id)
+      .then(async (response) => {
+        this.group = response.data[0].role.group
+      })
+      .catch((error) => {
+        this.message = error.response.data.message
+        console.log("There was an error:", error.response);
+      });
+    },
+    getTopic() {
+      TopicServices.getTopic(this.topicId)
       .then((response) => {
         this.topic = response.data;
-        GroupServices.getGroup(this.topic.groupId)
-          .then((response) => {
-            this.group = response.data;
-            console.log(response.data);
-          })
-          .catch((error) => {
-            this.message = error.response.data.message;
-            console.log("There was an error:", error.response);
-          });
-          console.log(response.data);
-        })
+      })
       .catch((error) => {
         console.log("There was an error:", error.response);
       });
-  },
-  methods: {
+    },
     deleteTopic(id, name) {
       let confirmed = confirm(`Are you sure you want to delete ${name}`);
       if (confirmed) {
         TopicServices.deleteTopic(id)
           .then(() => {
-            this.$router.push({ name: "topicList" });
+            this.$router.push({ name: "topicList", params: { id: this.id } });
           })
           .catch((error) => {
             this.message = error.response.data.message;

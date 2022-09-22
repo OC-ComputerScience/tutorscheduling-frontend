@@ -73,11 +73,12 @@
 <script>
 import Utils from '@/config/utils.js'
 import TopicServices from "@/services/topicServices.js";
-import GroupServices from "@/services/groupServices.js";
+import PersonRoleServices from "@/services/personRoleServices.js";
 
 export default {
   components: {
   },
+  props: ["id"],
   data() {
     return {
       valid: true,
@@ -91,30 +92,20 @@ export default {
     };
   },
   created() {
-    // this.getAllGroups();
     this.user = Utils.getStore('user');
-    this.getGroup(this.user.selectedGroup.replace(/%20/g, " "));
+    this.getGroupByPersonRoleId();
   },
   methods: {
-    getGroup(name) {
-      GroupServices.getGroupByName(name)
-      .then((response) => {
-        this.group = response.data[0];
+    async getGroupByPersonRoleId() {
+      await PersonRoleServices.getGroupForPersonRole(this.id)
+      .then(async (response) => {
+        this.group = response.data[0].role.group
       })
       .catch((error) => {
         this.message = error.response.data.message
         console.log("There was an error:", error.response);
       });
     },
-    // getAllGroups() {
-    //   GroupServices.getAllGroups()
-    //     .then((response) => {
-    //       this.groups = response.data;
-    //     })
-    //     .catch((error) => {
-    //       console.log("There was an error:", error.response);
-    //     });
-    // },
     addTopic() {
       this.topic.groupId = this.group.id;
       TopicServices.addTopic(this.topic)
@@ -128,7 +119,7 @@ export default {
         });
     },
     cancel() {
-      this.$router.push({ name: "topicList" });
+      this.$router.push({ name: "topicList", params: { id: this.id } });
     }
   },
 };

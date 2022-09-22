@@ -46,11 +46,12 @@
 
 <script>
   import Utils from '@/config/utils.js'
-  import GroupServices from "@/services/groupServices.js";
+  import PersonRoleServices from "@/services/personRoleServices.js";
   import LocationServices from '@/services/locationServices.js'
   
   export default {
     name: 'App',
+    props: ["id"],
     components: {
     },
     data() {
@@ -68,16 +69,16 @@
     },
     async created() {
       this.user = Utils.getStore('user');
-      await this.getGroup(this.user.selectedGroup.replace(/%20/g, " "))
+      await this.getGroupByPersonRoleId()
       .then(() => {
         this.getLocationsForGroup();
       })
     },
     methods: {
-      async getGroup(name) {
-        await GroupServices.getGroupByName(name)
-        .then((response) => {
-          this.group = response.data[0];
+      async getGroupByPersonRoleId() {
+        await PersonRoleServices.getGroupForPersonRole(this.id)
+        .then(async (response) => {
+          this.group = response.data[0].role.group
         })
         .catch((error) => {
           this.message = error.response.data.message
@@ -94,15 +95,6 @@
           console.log("There was an error:", error.response)
         });
       },
-      // getLocations() {
-      //   LocationServices.getAllLocations()
-      //   .then(response => {
-      //     this.locations = response.data;
-      //   })
-      //   .catch(error => {
-      //     console.log("There was an error:", error.response)
-      //   });
-      // },
       deleteLocation(id, name) {
         let confirmed = confirm(`Are you sure you want to delete ${name}`);
         if(confirmed) {
@@ -118,10 +110,10 @@
       },
       rowClick: function (item, row) {      
         row.select(true);
-        this.$router.push({ name: 'locationView', params: { id: item.id } });
+        this.$router.push({ name: 'locationView', params: { id: this.id, locationId: item.id } });
       },
       addLocation() {
-        this.$router.push({ name: 'locationAdd'});
+        this.$router.push({ name: 'locationAdd', params: { id: this.id } });
       },
       cancel() {
         this.$router.go(-1);

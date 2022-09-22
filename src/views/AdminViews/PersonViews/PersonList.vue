@@ -47,7 +47,7 @@
 
 <script>
   import Utils from '@/config/utils.js'
-  import GroupServices from "@/services/groupServices.js";
+  import PersonRoleServices from "@/services/personRoleServices.js";
   import PersonServices from '@/services/personServices.js';
 
   export default {
@@ -70,7 +70,7 @@
     },
     async created() {
       this.user = Utils.getStore('user');
-      await this.getGroup(this.user.selectedGroup.replace(/%20/g, " "))
+      await this.getGroupByPersonRoleId()
       .then(() => {
         this.getPeopleForGroup();
       })
@@ -79,16 +79,15 @@
     methods: {
       findIfSuperAdmin() {
         let current = this.user.access.filter(access => access.name.includes(this.group.name))
-        console.log(current)
         for(let i = 0; i < current.length; i++) {
           if (current[i] === 'superadmin' || current[i] === 'Superadmin') 
             this.isSuperAdmin = true;
         }
       },
-      async getGroup(name) {
-        await GroupServices.getGroupByName(name)
-        .then((response) => {
-          this.group = response.data[0];
+      async getGroupByPersonRoleId() {
+        await PersonRoleServices.getGroupForPersonRole(this.id)
+        .then(async (response) => {
+          this.group = response.data[0].role.group
         })
         .catch((error) => {
           this.message = error.response.data.message
@@ -98,7 +97,6 @@
       getPeopleForGroup() {
         PersonServices.getAllForGroup(this.group.id)
         .then(response => {
-          console.log(response)
           this.persons = response.data;
           for(let i = 0; i < this.persons.length; i++) {
             this.persons[i].fullName = this.persons[i].fName + " " + this.persons[i].lName;
@@ -123,10 +121,10 @@
       },
       rowClick: function (item, row) {      
         row.select(true);
-        this.$router.push({ name: 'personView', params: { id: item.id } });
+        this.$router.push({ name: 'personView', params: { id: this.id, personId: item.id } });
       },
       addPerson() {
-        this.$router.push({ name: 'personAdd'});
+        this.$router.push({ name: 'personAdd', params: { id: this.id }});
       },
       cancel() {
         this.$router.go(-1);

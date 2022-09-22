@@ -64,7 +64,7 @@
           ></v-text-field>
 
           <v-btn
-            :disabled="!valid"
+            :disabled="!valid || !textualfeedback"
             color="success"
             class="mr-4"
             @click="updatePersonAppointment"

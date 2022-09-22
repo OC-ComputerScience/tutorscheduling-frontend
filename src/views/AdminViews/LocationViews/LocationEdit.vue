@@ -83,6 +83,7 @@ export default {
 
   data() {
     return {
+      valid: false,
       message :'Edit Location - make updates to the fields and click Save',
       location: {},
       groups: [],
@@ -96,7 +97,6 @@ export default {
     LocationServices.getLocation(this.id)
       .then((response) => {
         this.location = response.data;
-        console.log(response.data);
       })
       .catch((error) => {
         this.message = error.response.data.message
@@ -113,6 +113,8 @@ export default {
   },
 
   methods: {
+    // only updating this replace issue once edits can be done on view page
+    // also this.id is location id
     updateLocation() {
       LocationServices.updateLocation(this.location.id, this.location)
         .then(() => {

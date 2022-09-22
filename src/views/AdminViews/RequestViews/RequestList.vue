@@ -109,14 +109,15 @@
 
 <script>
   import Utils from '@/config/utils.js'
-  import GroupServices from "@/services/groupServices.js";
+  import PersonRoleServices from "@/services/personRoleServices.js";
   import RequestServices from "@/services/requestServices.js";
 
   export default {
+    props: ["id"],
      data() {
         return { 
         expanded: [],
-        message : 'Request',
+        message : 'Requests',
         StatusSelect: ['Recieved', 'In-Progress', 'Completed'],
         dialog: false,
         dialogDelete: false,
@@ -149,7 +150,7 @@
     },
     async created () {
       this.user = Utils.getStore('user');
-      await this.getGroup(this.user.selectedGroup.replace(/%20/g, " "))
+      await this.getGroupByPersonRoleId()
       .then(() => {
         this.getRequestsForGroup();
       })
@@ -158,10 +159,10 @@
       })
     },
     methods: {
-      async getGroup(name) {
-        await GroupServices.getGroupByName(name)
-        .then((response) => {
-          this.group = response.data[0];
+      async getGroupByPersonRoleId() {
+        await PersonRoleServices.getGroupForPersonRole(this.id)
+        .then(async (response) => {
+          this.group = response.data[0].role.group
         })
         .catch((error) => {
           this.message = error.response.data.message
@@ -181,19 +182,9 @@
           console.log("There was an error:", error.response)
         });
       },
-        // getRequests() {
-        //     RequestServices.getAllRequests()
-        //         .then((response) => {
-        //         this.requests = response.data;
-        //         })
-        //         .catch((error) => {
-        //         console.log("There was an error:", error.response);
-        //         });
-        //     },
       editItem (item) {
         this.editedIndex = this.requests.indexOf(item.id)
         this.editedItem = Object.assign({}, item)
-        console.log(this.editedItem);
         this.dialog = true
       },
       deleteItem (item) {
@@ -229,8 +220,6 @@
         })
       },
       save () {
-        console.log(this.editedIndex);
-        console.log(this.editedItem);
         RequestServices.updateRequest(this.editedItem.id, this.editedItem)
           .then(() => {
             this.close()
