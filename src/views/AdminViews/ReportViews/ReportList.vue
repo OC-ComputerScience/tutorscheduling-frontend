@@ -70,7 +70,7 @@
             <v-select
               v-model="selectedStatus"
               :items="status"
-              item-text="name"
+              item-text="title"
               item-value="id"
               label="Status"
             >
@@ -126,7 +126,7 @@
                 color="success"
                 class="mr-4"
                 :disabled="!isFiltered"
-                @click="isFiltered = false; selectedStudents = []; selectedTutors = []; getAllAppointmentsForGroup()"
+                @click="isFiltered = false; selectedStudents = []; selectedTutors = []; dates = []; selectedTopic = -1; selectedStatus = -1; getAllAppointmentsForGroup()"
             >
                 Download CSV
             </v-btn>
@@ -160,13 +160,13 @@ import TopicServices from "@/services/topicServices.js";
         user: {},
         topics: [],
         selectedTopic: -1,
-        status: [{id: 0, name: "available"}, 
-                {id: 1, name: "pending"},
-                {id: 2, name: "booked"},
-                {id: 3, name: "complete"},
-                {id: 4, name: "studentCancel"},
-                {id: 5, name: "tutorCancel"},
-                {id: 6, name: "no-show"}],
+        status: [{id: 0, name: "available", title: "Available"}, 
+                {id: 1, name: "pending", title: "Pending"},
+                {id: 2, name: "booked,complete", title: "Complete"},
+                {id: 3, name: "studentCancel,tutorCancel", title: "Canceled"},
+                {id: 4, name: "studentCancel", title: "Student Cancel"},
+                {id: 5, name: "tutorCancel", title: "Tutor Cancel"},
+                {id: 6, name: "no-show", title: "No Show"}],
         selectedStatus: -1,
         selectedTutors: [],
         tutors: [],
@@ -180,7 +180,7 @@ import TopicServices from "@/services/topicServices.js";
                   startTime: { title: 'Start' },
                   endTime: { title: 'End' },
                   type: { title: 'Type' },
-                  status: { title: 'Status' },
+                  statusName: { title: 'Status' },
                   topicName: { title: 'Topic' },
                   locationName: { title: 'Location' },
                   locationBuilding: { title: 'Building' },
@@ -234,6 +234,15 @@ import TopicServices from "@/services/topicServices.js";
           appoint.tutors = []
           appoint.sumStuFeedback = 0;
           appoint.numStuFeedback = 0;
+
+          //make status field look nicer
+          if(appoint.status === "booked")
+            appoint.statusName = "Booked"
+          else if(appoint.status === "complete")
+            appoint.statusName = "Complete"
+          else
+            appoint.statusName = this.status.find(status => status.name === appoint.status).title
+
           if(appoint.topic !== undefined && appoint.topic !== null && appoint.topic !== '')
             this.selectedAppointments[i].topicName = appoint.topic.name;
           else
@@ -445,7 +454,7 @@ import TopicServices from "@/services/topicServices.js";
         .then(response => {
           this.topics = response.data
           this.topics.push({name:"Any", id: -1})
-          this.status.push({name: "Any", id: -1})
+          this.status.push({name: "Any", title: "Any", id: -1})
         })
         .catch(error => {
           this.message = error.response.data.message
@@ -461,14 +470,16 @@ import TopicServices from "@/services/topicServices.js";
           let people = response.data;
           for(let i = 0; i < people.length; i++) {
             people[i].fullName = people[i].fName + " " + people[i].lName;
-            if(people[i].personrole[0].role.type.includes("Tutor")) {
-              this.tutors.push(people[i]);
-            }
-            else if (people[i].personrole[0].role.type.includes("Student")) {
-              this.students.push(people[i]);
+            // makes sure to add people to both arrays if they have both roles
+            for(let j = 0; j < people[i].personrole.length; j++) {
+              if(people[i].personrole[j].role.type.includes("Tutor")) {
+                this.tutors.push(people[i]);
+              }
+              else if (people[i].personrole[j].role.type.includes("Student")) {
+                this.students.push(people[i]);
+              }
             }
           }
-
         })
         .catch(error => {
           this.message = error.response.data.message
@@ -488,7 +499,8 @@ import TopicServices from "@/services/topicServices.js";
         }
         // filter by status, >= 0 since the array starts at 0
         if(this.selectedStatus >= 0) {
-          this.selectedAppointments = this.selectedAppointments.filter(appointment => appointment.status === this.status[this.selectedStatus].name);
+          console.log(this.status[this.selectedStatus].name.toLowerCase())
+          this.selectedAppointments = this.selectedAppointments.filter(appointment => this.status[this.selectedStatus].name.toLowerCase().includes(appointment.status.toLowerCase()));
         }
         // filter by tutors
         if(this.selectedTutors.length > 0) {
