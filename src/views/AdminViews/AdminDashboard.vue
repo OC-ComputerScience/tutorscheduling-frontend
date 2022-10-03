@@ -117,10 +117,10 @@
 import Utils from "@/config/utils.js";
 import AppointmentServices from "@/services/appointmentServices.js";
 import AvailabilityServices from "@/services/availabilityServices.js";
-import GroupServices from "@/services/groupServices.js";
 import RequestServices from "@/services/requestServices.js";
 import TopicServices from "@/services/topicServices.js";
 import PersonServices from "@/services/personServices.js";
+import PersonRoleServices from "@/services/personRoleServices.js";
 import "@/plugins/apexcharts";
 
 export default {
@@ -277,42 +277,42 @@ export default {
         var totalNoShowList = [];
 
         let element = this.weeklist[index];
-        await AppointmentServices.getAppointmentHourCount(
-          this.group.id,
-          element
-        )
-          .then((responseHour) => {
-            currWeek = element.slice(0, 10);
-            apptCount = responseHour.data[0].count;
-            hourCount = responseHour.data[0].diff;
-            availableCount = responseHour.data[0].available;
-            bookedCount = responseHour.data[0].booked;
-            completeCount = responseHour.data[0].complete;
+        console.log(element)
+        await AppointmentServices.getAppointmentHourCount(this.group.id, element)
+        .then((responseHour) => {
+          currWeek = element.slice(0, 10);
+          apptCount = responseHour.data[0].count;
+          hourCount = responseHour.data[0].diff;
+          availableCount = responseHour.data[0].available;
+          bookedCount = responseHour.data[0].booked;
+          completeCount = responseHour.data[0].complete;
 
-            if (index == 0) {
-              this.week = currWeek;
-              this.appt_count = apptCount;
-              this.hour_count = hourCount;
-              this.available_count = availableCount;
-              this.booked_count = bookedCount;
-              this.complete_count = completeCount;
-              this.noShowCount = responseHour.data[0].no-show;
+          console.log(responseHour)
+          if (index == 0) {
+            this.week = currWeek;
+            this.appt_count = apptCount;
+            this.hour_count = hourCount;
+            this.available_count = availableCount;
+            this.booked_count = bookedCount;
+            this.complete_count = completeCount;
+            this.noShowCount = responseHour.data[0].noshow;
 
-              this.hour_series = [
-                parseInt(availableCount),
-                parseInt(bookedCount),
-                parseInt(completeCount),
-                parseInt(noShowCount)
-              ];
-              this.loaded = true;
-            }
-          })
-          .catch((error) => {
-            console.log(
-              "There was an error getting hour count:",
-              error.responseHour
-            );
-          });
+            this.hour_series = [
+              parseInt(availableCount),
+              parseInt(bookedCount),
+              parseInt(completeCount),
+              parseInt(noShowCount)
+            ];
+            this.loaded = true;
+          }
+        })
+        .catch((error) => {
+          console.log(error)
+          console.log(
+            "There was an error getting hour count:",
+            error.responseHour
+          );
+        });
 
         this.weeks.push(
           JSON.parse(
