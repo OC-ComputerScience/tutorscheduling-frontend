@@ -233,17 +233,26 @@ export default {
   },
   async created() {
     this.user = Utils.getStore("user");
-    await this.getGroup(this.user.selectedGroup.replace(/%20/g, " ")).then(
-      () => {
-        this.setWeeks();
-        this.setTutorHours();
-        this.getTopics();
-        this.getRequests();
-        this.getAvailabilities();
-      }
-    );
+    await this.getGroupByPersonRoleId()
+    .then(() => {
+      this.setWeeks();
+      this.setTutorHours();
+      this.getTopics();
+      this.getRequests();
+      this.getAvailabilities();
+    });
   },
   methods: {
+    async getGroupByPersonRoleId() {
+      await PersonRoleServices.getGroupForPersonRole(this.id)
+      .then(async (response) => {
+        this.group = response.data[0].role.group
+      })
+      .catch((error) => {
+        this.message = error.response.data.message
+        console.log("There was an error:", error.response);
+      });
+    },
     async addData() {
       this.dataset.push(this.dataentry);
       this.labels.push(this.datalabel);
@@ -482,15 +491,6 @@ export default {
             '"}'
         )
       );
-    },
-    async getGroup(name) {
-      await GroupServices.getGroupByName(name)
-        .then((response) => {
-          this.group = response.data[0];
-        })
-        .catch((error) => {
-          console.log("There was an error:", error.response);
-        });
     },
     async setWeekList() {
       var currentDate = new Date();
