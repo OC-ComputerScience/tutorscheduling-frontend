@@ -2,13 +2,13 @@ import apiClient from "@/services/services.js";
 
  export default {
 
-     ///Persons CRUD commands
+     ///Personrole CRUD commands
      getAllPersonRoles() {
        return apiClient.get("personrole");
      },
-     // getPersons(start, length) {
-     //   return apiClient.get(`persons?start=${start}&length=${length}`);
-     // },
+     getGroupForPersonRole(id) {
+      return apiClient.get("personrole/group/" + id)
+     },
      getPersonRole(id) {
        return apiClient.get("personrole/" + id);
      },

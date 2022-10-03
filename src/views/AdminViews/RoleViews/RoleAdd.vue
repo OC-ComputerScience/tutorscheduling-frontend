@@ -28,16 +28,6 @@
         label="Group"
         readonly
       ></v-text-field>
-      
-      <!-- <v-select
-        v-model="role.groupId"
-        :items="groups"
-        item-text="name"
-        item-value="id"
-        label="Group"
-        required
-      >
-      </v-select> -->
 
       <v-btn
         :disabled="!valid"
@@ -63,11 +53,12 @@
 <script>
 import Utils from '@/config/utils.js'
 import RoleServices from "@/services/roleServices.js";
-import GroupServices from "@/services/groupServices.js";
+import PersonRoleServices from "@/services/personRoleServices.js";
 
 export default {
   components: {
   },
+  props: ["id"],
   data() {
     return {
       valid: true,
@@ -82,35 +73,25 @@ export default {
   },
   created() {
     this.user = Utils.getStore('user');
-    this.getGroup(this.user.selectedGroup.replace(/%20/g, " "));
+    this.getGroupByPersonRoleId()
     //this.getAllGroups();
   },
   methods: {
-    getGroup(name) {
-      GroupServices.getGroupByName(name)
-      .then((response) => {
-        this.group = response.data[0];
+    async getGroupByPersonRoleId() {
+      await PersonRoleServices.getGroupForPersonRole(this.id)
+      .then(async (response) => {
+        this.group = response.data[0].role.group
       })
       .catch((error) => {
-   
+        this.message = error.response.data.message
         console.log("There was an error:", error.response);
       });
     },
-    // getAllGroups() {
-    //   GroupServices.getAllGroups()
-    //     .then((response) => {
-    //       this.groups = response.data;
-    //     })
-    //     .catch((error) => {
-    //       console.log("There was an error:", error.response);
-    //     });
-    // },
     addRole() {
-      console.log(this.group);
       this.role.groupId = this.group.id;
       RoleServices.addRole(this.role)
         .then(() => {
-          this.$router.push({ name: "roleList" });
+          this.$router.push({ name: "roleList", params: { id: this.id } });
         })
         .catch((error) => {
           this.message = error.response.data.message
@@ -118,7 +99,7 @@ export default {
         });
     },
     cancel() {
-      this.$router.push({ name: "roleList" });
+      this.$router.push({ name: "roleList", params: { id: this.id } });
     }
   },
 };

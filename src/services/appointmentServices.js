@@ -6,7 +6,7 @@ export default {
     getAllAppointments() {
       return apiClient.get("appointment");
     },
-    getAllForGroup(id) {
+    getAllForGroup(id) {  // used to get all appointments for reporting
       return apiClient.get("appointment/group/" + id);
     },
     getAppointmentHourCount(id, currWeek) {
@@ -14,6 +14,9 @@ export default {
     },
     getAppointment(id) {
       return apiClient.get("appointment/" + id);
+    },
+    getUpcomingForPerson(personId) {
+      return apiClient.get("appointment/upcoming/person/" + personId)
     },
     getTutorForAppointment(id) {
       return apiClient.get("appointment/tutorAppointment/" + id);

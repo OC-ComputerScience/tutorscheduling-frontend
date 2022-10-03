@@ -77,10 +77,10 @@
 
 <script>
 import LocationServices from "@/services/locationServices.js";
-import GroupServices from "@/services/groupServices.js";
-//import UserDisplay from '@/components/UserDisplay.vue'
+import PersonRoleServices from "@/services/personRoleServices.js";
+
 export default {
-  props: ["id"],
+  props: ["id", "locationId"],
 
   data() {
     return {
@@ -89,28 +89,31 @@ export default {
       message : 'View Location - click Edit to update or Delete to remove location'
     };
   },
-  created() {
-    LocationServices.getLocation(this.id)
-      .then((response) => {
-        this.location = response.data;
-        GroupServices.getGroup(this.location.groupId)
-          .then((response) => {
-            this.group = response.data;
-            console.log(response.data);
-          })
-          .catch((error) => {
-            this.message = error.response.data.message
-            console.log("There was an error:", error.response);
-          });
-          console.log(response.data);
-        console.log(response.data);
+  async created() {
+    await this.getGroupByPersonRoleId();
+    this.getLocation();
+  },
+  methods: {
+    async getGroupByPersonRoleId() {
+      await PersonRoleServices.getGroupForPersonRole(this.id)
+      .then(async (response) => {
+        this.group = response.data[0].role.group
       })
       .catch((error) => {
         this.message = error.response.data.message
         console.log("There was an error:", error.response);
       });
-  },
-  methods: {
+    },
+    async getLocation() {
+      LocationServices.getLocation(this.locationId)
+      .then((response) => {
+        this.location = response.data;
+      })
+      .catch((error) => {
+        this.message = error.response.data.message
+        console.log("There was an error:", error.response);
+      });
+    },
     deleteLocation(id, name) {
       let confirmed = confirm(`Are you sure you want to delete ${name}`);
       if (confirmed) {
