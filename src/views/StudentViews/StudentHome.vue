@@ -7,6 +7,7 @@
         <v-toolbar-title>{{this.message}}</v-toolbar-title>
       </v-toolbar>
       <v-container v-if="!disabled">
+        <b>Click on "View Calendar" to see available appointments!</b>
 
       <v-dialog
         v-model="apptDialog"
@@ -239,9 +240,9 @@
         ></v-data-table>
       </v-card>
       </v-container>
-    <v-container v-else>
-      <h4>This role for {{group.name}} has been disabled. Please contact the group admin for further questions.</h4>
-    </v-container>
+      <v-container v-else>
+        <h4>This role for {{group.name}} has been disabled. Please contact the group admin for further questions.</h4>
+      </v-container>
     </v-container>
   </div>
 </template>
