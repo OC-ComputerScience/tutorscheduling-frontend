@@ -10,7 +10,7 @@
       <v-row justify="center">
         <v-col md="4">
           <v-card 
-            :to="{ name: 'mainCalendar' }"
+            :to="{ name: 'mainCalendar', params: { id: id } }"
             class="mx-auto my-12 d-flex justify-center"
             max-width="400"
             height="100"
@@ -24,7 +24,7 @@
         </v-col>
         <v-col md="4">
           <v-card 
-            :to="{ name: 'requestList' }"
+            :to="{ name: 'requestList', params: { id: id } }"
             class="mx-auto my-12 d-flex justify-center"
             max-width="400"
             height="100"
@@ -38,7 +38,7 @@
         </v-col>
         <v-col md="4">
           <v-card 
-            :to="{ name: 'personList' }"
+            :to="{ name: 'personList', params: { id: id } }"
             class="mx-auto my-12 d-flex justify-center"
             max-width="400"
             height="100"
@@ -52,7 +52,7 @@
         </v-col>
         <v-col md="4">
           <v-card 
-            :to="{ name: 'topicList' }"
+            :to="{ name: 'topicList', params: { id: id } }"
             class="mx-auto my-12 d-flex justify-center"
             max-width="400"
             height="100"
@@ -66,7 +66,7 @@
         </v-col>
         <v-col md="4">
           <v-card 
-            :to="{ name: 'roleList' }"
+            :to="{ name: 'roleList', params: { id: id } }"
             class="mx-auto my-12 d-flex justify-center"
             max-width="400"
             height="100"
@@ -80,7 +80,7 @@
         </v-col>
         <v-col md="4">
           <v-card 
-            :to="{ name: 'locationList' }"
+            :to="{ name: 'locationList', params: { id: id } }"
             class="mx-auto my-12 d-flex justify-center"
             max-width="400"
             height="100"
@@ -94,7 +94,7 @@
         </v-col>
         <v-col md="4">
           <v-card 
-            :to="{ name: 'pendingList' }"
+            :to="{ name: 'pendingList', params: { id: id } }"
             class="mx-auto my-12 d-flex justify-center"
             max-width="400"
             height="100"
@@ -108,7 +108,7 @@
         </v-col>
         <v-col md="4">
           <v-card 
-            :to="{ name: 'reportList' }"
+            :to="{ name: 'reportList', params: { id: id } }"
             class="mx-auto my-12 d-flex justify-center"
             max-width="400"
             height="100"
@@ -153,7 +153,6 @@
 <script>
 import Utils from '@/config/utils.js'
 import AppointmentServices from '@/services/appointmentServices.js'
-import GroupServices from "@/services/groupServices.js";
 import PersonRoleServices from "@/services/personRoleServices.js";
 
   export default {
@@ -182,7 +181,7 @@ import PersonRoleServices from "@/services/personRoleServices.js";
     },
     async created() {
       this.user = Utils.getStore('user');
-      await this.getGroup(this.user.selectedGroup.replace(/%20/g, " "))
+      await this.getGroupByPersonRoleId()
       .then(() => {
         this.getAdminRole();
         if(!this.disabled)
@@ -193,10 +192,10 @@ import PersonRoleServices from "@/services/personRoleServices.js";
       })
     },
     methods: {
-      async getGroup(name) {
-        await GroupServices.getGroupByName(name)
-        .then((response) => {
-          this.group = response.data[0];
+      async getGroupByPersonRoleId() {
+        await PersonRoleServices.getGroupForPersonRole(this.id)
+        .then(async (response) => {
+          this.group = response.data[0].role.group
         })
         .catch((error) => {
           this.message = error.response.data.message

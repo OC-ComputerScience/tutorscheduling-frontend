@@ -217,6 +217,14 @@ export default {
         currentPersonRoleID: 0,
         menus: [
             {
+                link: 'adminHome',
+                name: 'adminHome',
+                color: 'white',
+                text: 'Home',
+                icon: 'mdi-home',
+                roles: 'HeadAdmin,Admin,Supervisor'
+            },
+            {
                 link: 'tutorHome',
                 name: 'tutorHome',
                 color: 'white',
@@ -231,14 +239,6 @@ export default {
                 text: 'Home',
                 icon: 'mdi-home',
                 roles: 'Student'
-            },
-            {
-                link: 'adminHome',
-                name: 'adminHome',
-                color: 'white',
-                text: 'Home',
-                icon: 'mdi-home',
-                roles: 'HeadAdmin,Admin,Supervisor'
             },
             {
                 link: 'mainCalendar',
@@ -348,8 +348,9 @@ export default {
     },
     methods: {
         menuAction(route) {
-            if(this.currentPersonRoleID === 0 && (this.selectedRoles === '' || this.selectedRoles === undefined || this.selectedRoles === null))
+            if(this.currentPersonRoleID === 0 && (this.selectedRoles === '' || this.selectedRoles === undefined || this.selectedRoles === null)) {
                 this.$router.push({ name: "login" })
+            }
             else
                 this.$router.push({ name: route, params: { id: this.currentPersonRoleID }  });
         },
@@ -445,6 +446,7 @@ export default {
                 .catch ((error) => {
                   if (error == 401) {
                     console.log("Not authorized")
+                    this.logout();
                     this.$router.push({ name: "login" })
                   }
                 })
@@ -461,8 +463,10 @@ export default {
             })
             .catch((error) => {
                 if (error.response.status == 401) {
-                  console.log("error: "+error.response.status)
-                  throw 401;
+                    console.log("error: "+error.response.status)
+                    this.logout();
+                    this.$router.push({ name: "login" })
+                    throw 401;
                 }
                 console.log("There was an real error:",error.response.status);
             });
@@ -480,8 +484,10 @@ export default {
             })
             .catch(error => {
               if (error.response.status == 401) {
-                  console.log("error: "+error.response.status)
-                  throw 401;
+                    console.log("error: "+error.response.status)
+                    this.logout();
+                    this.$router.push({ name: "login" })
+                    throw 401;
                 }
                 console.log("There was an error:", error.response)
             });
@@ -503,8 +509,10 @@ export default {
             })
             .catch((error) => {
                 if (error.response.status == 401) {
-                  console.log("error: "+error.response.status)
-                  throw 401;
+                    console.log("error: "+error.response.status)
+                    this.logout();
+                    this.$router.push({ name: "login" })
+                    throw 401;
                 }
                 console.log("There was an error:", error.response);
             });

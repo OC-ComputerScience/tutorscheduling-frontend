@@ -55,11 +55,11 @@
 
 <script>
 import RoleServices from "@/services/roleServices.js";
-import GroupServices from "@/services/groupServices.js";
+import PersonRoleServices from "@/services/personRoleServices.js";
 
 //import UserDisplay from '@/components/UserDisplay.vue'
 export default {
-  props: ["id"],
+  props: ["id", "roleId"],
 
   data() {
     return {
@@ -69,26 +69,30 @@ export default {
     };
   },
   created() {
-    RoleServices.getRole(this.id)
-      .then((response) => {
-        this.role = response.data;
-        GroupServices.getGroup(this.role.groupId)
-          .then((response) => {
-            this.group = response.data;
-            console.log(response.data);
-          })
-          .catch((error) => {
-            this.message = error.response.data.message
-            console.log("There was an error:", error.response);
-          });
-          console.log(response.data);
-        })
+    this.getRole()
+    this.getGroupByPersonRoleId();
+  },
+  methods: {
+    async getGroupByPersonRoleId() {
+      await PersonRoleServices.getGroupForPersonRole(this.id)
+      .then(async (response) => {
+        this.group = response.data[0].role.group
+      })
       .catch((error) => {
         this.message = error.response.data.message
         console.log("There was an error:", error.response);
       });
-  },
-  methods: {
+    },
+    getRole() {
+      RoleServices.getRole(this.roleId)
+      .then((response) => {
+        this.role = response.data;
+      })
+      .catch((error) => {
+        this.message = error.response.data.message
+        console.log("There was an error:", error.response);
+      });
+    },
     deleteRole(id, name) {
       let confirmed = confirm(`Are you sure you want to delete ${name}`);
       if (confirmed) {

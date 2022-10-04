@@ -8,6 +8,177 @@
       </v-toolbar>
 
       <v-dialog
+        v-model="apptDialog"
+        max-width="800px"
+      >
+        <v-card>
+          <v-toolbar 
+            :color="selectedAppt.color"
+            dark
+          >
+            <v-card-title>
+              <span v-if="selectedAppt.type === 'Group'" class="text-h5">Upcoming Group Appointment on {{selectedAppt.date}}</span>
+              <span v-else-if="selectedAppt.type === 'Private'" class="text-h5">Upcoming Private Appointment on {{selectedAppt.date}}</span>
+            </v-card-title>
+          </v-toolbar>
+          <v-card-text> 
+            <br>
+            <b>Time slot:</b>
+            {{(selectedAppt.startTime)}} - {{(selectedAppt.endTime)}}
+            <br>
+            <b>Status:</b>
+            {{selectedAppt.status}}
+            <br>
+            <b>Tutors: </b>
+            <span v-if="tutors.length > 0">
+              <span v-for="tutor in tutors" :key="tutor.id">
+                <span v-if="tutor == tutors[tutors.length - 1]">{{tutor.person.fName}} {{tutor.person.lName}}</span>
+                <span v-else>{{tutor.person.fName}} {{tutor.person.lName}}, </span>
+              </span>
+            </span>
+            <span v-else>
+              <span>None</span>
+            </span>
+            <br>
+            <b>Students: </b>
+            <span v-if="students.length > 0">
+              <span v-for="student in students" :key="student.id">
+                <span v-if="student == students[students.length - 1]">{{student.person.fName}} {{student.person.lName}}</span>
+                <span v-else>{{student.person.fName}} {{student.person.lName}}, </span>
+              </span>
+            </span>
+            <span v-else>
+              <span>None</span>
+            </span>
+            <br>
+            <br>
+
+            <!-- make location and topic changable if the appointment type is private-->
+            <span  v-if="selectedAppt.type === 'Private'">
+              <v-select 
+                v-model="selectedAppt.locationId"
+                :items="locations"
+                item-text="name"
+                item-value="id"
+                label="Location"
+                required
+                dense
+                :disabled="!checkStatus('booked') || selectedAppt.status === 'studentCancel' || selectedAppt.status === 'tutorCancel'"
+                @change="saveChanges = true"
+              >
+              </v-select>
+
+              <v-select 
+                v-model="selectedAppt.topicId"
+                :items="topics"
+                item-text="name"
+                item-value="id"
+                label="Topic"
+                disabled
+                dense
+              >
+              </v-select>
+            </span>
+            <!-- slots for location and topic to be unchangable if the session type is group -->
+            <span  v-else>
+              <v-select 
+                v-model="selectedAppt.locationId"
+                :items="locations"
+                item-text="name"
+                item-value="id"
+                label="Location"
+                required
+                dense
+                @change="saveChanges = true"
+              >
+              </v-select>
+
+              <v-select 
+                v-model="selectedAppt.topicId"
+                :items="topics"
+                item-text="name"
+                item-value="id"
+                label="Topic"
+                required
+                dense
+                :readonly="students.length > 0"
+                @change="saveChanges = true"
+              >
+              </v-select>
+            </span>
+            <!-- show time ad an changeable value for private lessons-->
+          
+            <v-text-field
+              v-model="selectedAppt.startTime"
+              label="Booked Start"
+              dense
+              readonly
+            >
+            </v-text-field>
+            <v-text-field
+              v-model="selectedAppt.endTime"
+              label="Booked End"
+              dense
+              readonly
+            >
+            </v-text-field>
+            <!-- put in presession-info for appointment for private appointments/ add a readonly if private -->
+            <v-textarea
+              v-model="selectedAppt.preSessionInfo"
+              :counter="130"
+              label="Pre-Session Info"
+              hint="Enter Info About What You Need Help With..."
+              persistent-hint
+              required
+              auto-grow
+              rows="1"
+              :readonly="selectedAppt.type === 'Private'"
+              @change="saveChanges = true"
+            ></v-textarea>
+          
+          </v-card-text>
+          <v-card-actions>
+            <v-spacer></v-spacer>
+            <v-btn v-if="!(selectedAppt.type === 'Group')"
+              color="#12f000"
+              @click="confirmAppointment(true)"
+              :disabled="!checkStatus('pending')"
+            >
+            Confirm
+            </v-btn>
+            <v-btn v-if="!(selectedAppt.type === 'Group')"
+              color="error"
+              @click="confirmAppointment(false); apptDialog = false"
+              :disabled="!checkStatus('pending')"
+            >
+            Reject
+            </v-btn>
+            <v-btn
+              color="accent"
+              @click="apptDialog = false; getAppointments()"
+            >
+            Close
+            </v-btn>
+            <v-btn v-if="saveChanges"
+              color="accent"
+              @click="editAppointment(); apptDialog = false;"
+            >
+            Save Changes
+            </v-btn>
+            
+            <v-btn v-if="((checkStatus('booked') && selectedAppt.type === 'Private') || 
+                          selectedAppt.type === 'Group' || 
+                          (checkStatus('available') || checkStatus('booked')))"
+              color="red"
+              @click="cancelAppointment(); apptDialog = false;"
+            >
+            Cancel Appointment
+            </v-btn>
+          </v-card-actions>
+        </v-card>
+      </v-dialog>
+
+      <v-dialog
         v-model="dialog"
         persistent
         max-width="800"
@@ -76,12 +247,17 @@
               hide-details
           ></v-text-field>
         </v-card-title>
+        <v-card-text>
+          <b>Click on an appointment to view information, make changes, confirm, or reject.</b>
+        </v-card-text>
         <v-data-table
           :headers="headers"
           :search="search"
           :items="appointments"
           :items-per-page="50"
-        ></v-data-table>
+          @click:row="rowClick"
+        >
+        </v-data-table>
       </v-card>
       <br>
       <v-card>
@@ -96,6 +272,9 @@
               hide-details
           ></v-text-field>
         </v-card-title>
+        <v-card-text>
+          <b>Click on an appointment to provide feedback.</b>
+        </v-card-text>
         <v-data-table
           :headers="headerFeedback"
           :search="search"
@@ -118,9 +297,11 @@
 <script>
 import Utils from '@/config/utils.js'
 import PersonRoleServices from "@/services/personRoleServices.js";
+import PersonTopicServices from "@/services/personTopicServices.js";
 import AppointmentServices from '@/services/appointmentServices.js'
-import GroupServices from "@/services/groupServices.js";
+import LocationServices from "@/services/locationServices.js";
 import PersonAppointmentServices from "@/services/personAppointmentServices.js";
+import TwilioServices from "@/services/twilioServices.js";
 
   export default {
     props: ["id"],
@@ -141,6 +322,13 @@ import PersonAppointmentServices from "@/services/personAppointmentServices.js";
         currentId: 0,
         approved: false,
         disabled: false,
+        apptDialog: false,
+        saveChanges: false,
+        locations: [],
+        topics: [],
+        students: [],
+        tutors: [],
+        selectedAppt: {},
         appointments: [],
         appointmentsneedingfeedback: [],
         headers: [{text: 'Date', value: 'date'}, 
@@ -148,8 +336,8 @@ import PersonAppointmentServices from "@/services/personAppointmentServices.js";
                   {text: 'End Time', value: 'endTime'},
                   {text: 'Topic', value: 'topic.name'},
                   {text: 'Location', value: 'location.name'},
-                  {text: 'Type', value: 'type'},
                   {text: 'Status', value: 'status'},
+                  {text: 'Type', value: 'type'},
                   {text: 'Student(s)', value: 'student'}],
         headerFeedback: [{text: 'Date', value: 'date'}, 
                   {text: 'Start Time', value: 'startTime'},
@@ -164,11 +352,12 @@ import PersonAppointmentServices from "@/services/personAppointmentServices.js";
       if(this.id !== 0) {
         this.getTutorRole();
       }
-      console.log("selected group = " + this.user.selectedGroup)
-      await this.getGroup(this.user.selectedGroup.replace(/%20/g, " "))
+      await this.getGroupByPersonRoleId()
       .then(async () => {
         await this.getAppointments();
         this.getAppointmentsNeedingFeedback();
+        this.getLocations();
+        this.getTopics();
       })
       .catch ((error) => {
         this.message = error.response.data.message
@@ -187,12 +376,12 @@ import PersonAppointmentServices from "@/services/personAppointmentServices.js";
         }
       },
       doAuthorization() {
-        console.log("doAuth")
-        console.log("url:"+process.env.VUE_APP_SITE_URL)
+        // console.log("doAuth")
+        // console.log("url:"+process.env.VUE_APP_SITE_URL)
 
 //        this.url = (process.env.VUE_APP_SITE_URL ? process.env.VUE_APP_SITE_URL : "http://localhost") + '/tutoring-api/authorize/' + this.user.userID;
        this.url = '/tutoring-api/authorize/' + this.user.userID;
-        console.log(this.url)
+        // console.log(this.url)
         const client = global.google.accounts.oauth2.initCodeClient({
           client_id: process.env.VUE_APP_CLIENT_ID,
           access_type: "offline",
@@ -225,10 +414,10 @@ import PersonAppointmentServices from "@/services/personAppointmentServices.js";
         });
         client.requestCode();
       },
-      async getGroup(name) {
-        await GroupServices.getGroupByName(name)
-        .then((response) => {
-          this.group = response.data[0];
+      async getGroupByPersonRoleId() {
+        await PersonRoleServices.getGroupForPersonRole(this.id)
+        .then(async (response) => {
+          this.group = response.data[0].role.group
         })
         .catch((error) => {
           this.message = error.response.data.message
@@ -261,7 +450,6 @@ import PersonAppointmentServices from "@/services/personAppointmentServices.js";
         await AppointmentServices.getUpcomingAppointmentForPersonForGroup(this.group.id, this.user.userID)
           .then(async (response) => {
             this.appointments = response.data;
-            console.log(response.data)
             let temp = this.appointments.length
             for(let i = 0; i < temp; i++){
                 for(let j = 0; j < temp - i - 1; j++){
@@ -309,11 +497,24 @@ import PersonAppointmentServices from "@/services/personAppointmentServices.js";
                   name: 'Not Selected'
                 }
               }
+
+              // set color
+              if(this.appointments[index].status === "available" && this.appointments[index].type === "Private")
+                this.appointments[index].color = "grey darken-1"
+              else if(this.appointments[index].status === "available" && this.appointments[index].type === "Group")
+                this.appointments[index].color = "purple"
+              else if(this.appointments[index].status === "pending")
+                this.appointments[index].color = "yellow"
+              else if(this.appointments[index].status === "booked")
+                this.appointments[index].color = "blue"
   
-              //format date, start time, and end time
+              //format date, start time, and end time but keep the originals
               let element = this.appointments[index];
+              this.appointments[index].originalDate = this.appointments[index].date;
               this.appointments[index].date = this.formatDate(element.date);
+              this.appointments[index].originalStart = this.appointments[index].startTime;
               this.appointments[index].startTime = this.formatTime(element.startTime);
+              this.appointments[index].originalEnd = this.appointments[index].endTime;
               this.appointments[index].endTime = this.formatTime(element.endTime);
             } 
           })
@@ -345,7 +546,133 @@ import PersonAppointmentServices from "@/services/personAppointmentServices.js";
         row.select(true);
         this.$router.push({ name: 'tutorAppointmentFeedback', params: { id: item.id, userId: this.user.userID } });
       },
-      
+      //Update on tutor confirming booking
+      async confirmAppointment(confirm) {
+        if(confirm) {
+          this.selectedAppt.status = 'booked'
+          if(this.selectedAppt.type.includes("Private")){
+            let updateAppt = {
+              id: this.selectedAppt.id,
+              date: this.selectedAppt.originalDate,
+              startTime: this.selectedAppt.originalStart,
+              endTime: this.selectedAppt.originalEnd,
+              type: this.selectedAppt.type,
+              status: 'booked',
+              preSessionInfo: this.selectedAppt.preSessionInfo,
+              groupId: this.selectedAppt.groupId,
+              topicId: this.selectedAppt.topicId,
+              locationId: this.selectedAppt.locationId
+            }
+            await AppointmentServices.updateForGoogle(updateAppt.id, updateAppt)
+            .then(async () =>{
+              await this.tutorConfirmMessage(this.students[0], this.user.fName, this.user.lName, updateAppt.id)
+              this.getAppointments()
+              this.selectedAppt.color = "blue"
+            })
+            .catch (error => {
+              this.message = error.response.data.message
+            })
+          }
+        } else {
+          // don't need to update google cal because it's not even on there yet
+          this.selectedAppt.status = 'tutorCancel'
+          let updateAppt = {
+            id: this.selectedAppt.id,
+            date: this.selectedAppt.originalDate,
+            startTime: this.selectedAppt.originalStart,
+            endTime: this.selectedAppt.originalEnd,
+            type: this.selectedAppt.type,
+            status: 'tutorCancel',
+            preSessionInfo: this.selectedAppt.preSessionInfo,
+            groupId: this.selectedAppt.groupId,
+            topicId: this.selectedAppt.topicId,
+            locationId: this.selectedAppt.locationId,
+            googleEventId: this.selectedAppt.googleEventId
+          }
+          await AppointmentServices.updateAppointment(updateAppt.id, updateAppt).then(() =>{
+            this.getAppointments()
+            // don't want to keep this open since it's supposed to leave this list
+            this.apptDialog = false
+          })
+          .catch (error => {
+            this.message = error.response.data.message
+          })
+        }
+      },
+      async editAppointment(){
+        let updateAppt = {
+          id: this.selectedAppt.id,
+          date: this.selectedAppt.originalDate,
+          startTime: this.selectedAppt.originalStart,
+          endTime: this.selectedAppt.originalEnd,
+          type: this.selectedAppt.type,
+          status: this.selectedAppt.status,
+          preSessionInfo: this.selectedAppt.preSessionInfo,
+          groupId: this.selectedAppt.groupId,
+          topicId: this.selectedAppt.topicId,
+          locationId: this.selectedAppt.locationId,
+          googleEventId: this.selectedAppt.googleEventId
+        }
+        await AppointmentServices.updateForGoogle(updateAppt.id, updateAppt)
+        .then(async () => {
+          for (let i = 0;i < this.students.length;i++){
+            this.tutorEditMessage(this.students[i], this.user.fName, this.user.lName, updateAppt.type)
+          }
+          await this.getAppointments()
+        })
+        .catch(error => { 
+          this.message = error.response.data.message
+        })
+      },
+      //method for canceling appointments
+      async cancelAppointment() {
+        // if students are NOT signed up for the appointment, delete it and delete the tutor personappointments
+        if(this.students.length === 0) {
+          for(let i = 0; i < this.tutors.length; i++) {
+            await PersonAppointmentServices.deletePersonAppointment(this.tutors[i].id)
+            .catch(error => { 
+              this.message = error.response.data.message
+            })
+          }
+          await AppointmentServices.deleteAppointment(this.selectedAppt.id)
+          .catch(error => { 
+            this.message = error.response.data.message
+          })
+        }
+        // if students are, keep the appointment but delete all the personappointments
+        else {
+          for(let i = 0; i < this.students.length; i++) {
+            this.tutorCancelMessage(this.students[i], this.user.fName, this.user.lName, this.selectedAppt.id)
+            await PersonAppointmentServices.deletePersonAppointment(this.students[i].id)
+            .catch(error => { 
+              this.message = error.response.data.message
+            })
+          }
+          for(let i = 0; i < this.tutors.length; i++) {
+            await PersonAppointmentServices.deletePersonAppointment(this.tutors[i].id)
+            .catch(error => { 
+              this.message = error.response.data.message
+            })
+          }
+          let updateAppt = {
+            id: this.selectedAppt.id,
+            date: this.selectedAppt.originalDate,
+            startTime: this.selectedAppt.originalStart,
+            endTime: this.selectedAppt.originalEnd,
+            type: this.selectedAppt.type,
+            status: "tutorCancel",
+            preSessionInfo: this.selectedAppt.preSessionInfo,
+            groupId: this.selectedAppt.groupId,
+            topicId: this.selectedAppt.topicId,
+            locationId: this.selectedAppt.locationId
+          }
+          await AppointmentServices.updateForGoogle(updateAppt.id, updateAppt)
+          .catch(error => { 
+            this.message = error.response.data.message
+          })
+        }
+        this.getAppointments();
+      },
       async getTutorRole() {
         await PersonRoleServices.getPersonRole(this.id)
         .then((response) => {
@@ -370,24 +697,83 @@ import PersonAppointmentServices from "@/services/personAppointmentServices.js";
           this.checkForAuthorization();
         }
       },
-      async addDataToAppoints() {
-        for (let i = 0; i < this.appointments.length; i++){
-          this.appointments[i].student =  i;
-          await PersonAppointmentServices.findStudentDataForTable(this.appointments[i].id).then((response) => {
-            let studentData = response.data;
-            if (this.appointments[i].type.includes('Group')){
-              this.appointments[i].student = studentData.length + " Student(s)";
-            }
-            else if (this.appointments[i].type.includes('Private') && (this.appointments[i].status.includes('booked') || this.appointments[i].status.includes('pending'))){
-              this.appointments[i].student = studentData[0].person.fName + " " + studentData[0].person.lName;
-            }
-            else {
-              this.appointments[i].student = 'Open'
-            }
-          })
-          console.log(this.appointments[i].student)
+      //Update the lists of tutors and students
+      async updatePeople() {
+        this.tutors = []
+        this.students = []
+        await PersonAppointmentServices.findStudentDataForTable(this.selectedAppt.id)
+        .then((response) => {
+          this.students = response.data;
+        })
+        .catch(error => {
+          this.message = error.response.data.message
+          console.log("There was an error:", error.response)
+        });
+        await PersonAppointmentServices.findTutorDataForTable(this.selectedAppt.id)
+        .then((response) => {
+          this.tutors = response.data;
+        })
+        .catch(error => {
+          this.message = error.response.data.message
+          console.log("There was an error:", error.response)
+        });
+      },
+      getLocations() {
+        LocationServices.getAllForGroup(this.group.id)
+        .then((response) => {
+          this.locations = response.data;
+        })
+        .catch((error) => {
+          this.message = error.response.data.message
+          console.log("There was an error:", error.response);
+        });
+      },
+      getTopics() {
+        PersonTopicServices.getTopicForPersonGroup(this.group.id, this.user.userID)
+        .then((response) => {
+          this.topics = response.data;
+        })
+        .catch((error) => {
+          this.message = error.response.data.message
+          console.log("There was an error:", error.response);
+        });
+      },
+      checkStatus(status) {
+        if(this.selectedAppt != null && this.selectedAppt.status == status) {
+          return true;
         }
-      }
+        else {
+          return false;
+        }
+      },
+      rowClick: function (item, row) {      
+        row.select(true);
+        this.selectedAppt = item;
+        this.updatePeople();
+        this.saveChanges = false;
+        this.apptDialog = true;
+      },
+      tutorConfirmMessage(student, fName, lName){
+        let temp = student
+        temp.phoneNum = student.person.phoneNum
+        temp.message = "The " + this.selectedAppt.type + " appointment you booked on " + this.selectedAppt.date + " at " + this.selectedAppt.startTime + 
+          " has been confirmed by " + fName + " " + lName + ".\nPlease review this appointment at http://tutorscheduling.oc.edu/"
+        TwilioServices.sendMessage(temp);
+      },
+      tutorEditMessage(student, fName, lName) {
+        let temp = student
+        temp.phoneNum = student.person.phoneNum
+        temp.message = "Your " + this.selectedAppt.type + " appointment with " + fName + " " + lName + " on " + this.selectedAppt.date + " at " + this.selectedAppt.startTime + 
+          " has been edited. \nPlease check changes at http://tutorscheduling.oc.edu/"
+        TwilioServices.sendMessage(temp);
+      },
+      tutorCancelMessage(student, fName, lName){
+        let temp = student
+        temp.phoneNum = student.person.phoneNum
+        temp.message = "Your " + this.selectedAppt.type + " appointment on " + this.selectedAppt.date + " at " + this.selectedAppt.startTime + 
+          " has been canceled by " + fName + " " + lName + ". We apologize for the inconvenience."
+        TwilioServices.sendMessage(temp);
+      },
     }
   }
 </script>

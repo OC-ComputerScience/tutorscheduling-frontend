@@ -91,9 +91,10 @@
 <script>
 import Utils from '@/config/utils.js'
 import LocationServices from "@/services/locationServices.js";
-import GroupServices from "@/services/groupServices.js";
+import PersonRoleServices from "@/services/personRoleServices.js";
 
 export default {
+  props: ["id"],
   data() {
     return {
       message : 'Add Location - enter data and click Save',
@@ -109,29 +110,19 @@ export default {
   },
   created() {
     this.user = Utils.getStore('user');
-    this.getGroup(this.user.selectedGroup.replace(/%20/g, " "));
-    //this.getAllGroups();
+    this.getGroupByPersonRoleId();
   },
   methods: {
-    getGroup(name) {
-      GroupServices.getGroupByName(name)
-      .then((response) => {
-        this.group = response.data[0];
+    async getGroupByPersonRoleId() {
+      await PersonRoleServices.getGroupForPersonRole(this.id)
+      .then(async (response) => {
+        this.group = response.data[0].role.group
       })
       .catch((error) => {
         this.message = error.response.data.message
         console.log("There was an error:", error.response);
       });
     },
-    // getAllGroups() {
-    //   GroupServices.getAllGroups()
-    //     .then((response) => {
-    //       this.groups = response.data;
-    //     })
-    //     .catch((error) => {
-    //       console.log("There was an error:", error.response);
-    //     });
-    // },
     addLocation() {
       this.location.groupId = this.group.id;
       LocationServices.addLocation(this.location)

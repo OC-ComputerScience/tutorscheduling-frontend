@@ -67,29 +67,28 @@ export default {
 
   data() {
     return {
+      valid: false,
       topic: {},
       group: {},
-      groups: {},
+      groups: [],
       message: "Edit Topic - make updates to the fields and click Save",
         roles: [
         'admin'
       ],
     };
   },
-  created() {
-    TopicServices.getTopic(this.id)
+  async created() {
+    await TopicServices.getTopic(this.id)
       .then((response) => {
         this.topic = response.data;
-        console.log(response.data);
       })
       .catch((error) => {
         this.message = error.response.data.message
         console.log("There was an error:", error.response);
       }),
-    GroupServices.getGroup(this.groupid)
+    GroupServices.getGroup(this.topic.groupId)
       .then((response) => {
         this.group = response.data;
-        console.log(response.data);
       })
       .catch((error) => {
         this.message = error.response.data.message
@@ -106,6 +105,8 @@ export default {
   },
 
   methods: {
+    // only updating this replace issue once edits can be done on view page
+    // also this.id is topic id
     updateTopic() {
       TopicServices.updateTopic(this.id, this.topic)
         .then(() => {
