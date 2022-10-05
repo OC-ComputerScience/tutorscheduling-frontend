@@ -132,7 +132,7 @@ export default {
     },
   },
   components: {
-    //apexchart: VueApexCharts,
+    // apexchart: VueApexCharts,
   },
 
   data() {
@@ -221,9 +221,9 @@ export default {
       ],
       tutorTable: [
         { text: "Name", value: "name" },
-        { text: "# Appts", value: "count" },
-        { text: "# Total Hours", value: "hours" },
-        { text: "# Hours to Pay", value: "paying" },
+        { text: "# Appts", value: "apptCount" },
+        { text: "# Total Hours", value: "diff" },
+        { text: "# Hours to Pay", value: "hours_paying" },
       ],
       topicTable: [
         { text: "Topic Name", value: "name" },
@@ -261,6 +261,12 @@ export default {
     },
     async setWeeks() {
       await this.setWeekList();
+      var totalHourList = [];
+      var totalAvailableList = [];
+      var totalBookedList = [];
+      var totalCompleteList = [];
+      var totalNoShowList = [];
+
       for (let index = 0; index < this.weeklist.length; ++index) {
         var currWeek = "";
         var apptCount = "";
@@ -270,14 +276,7 @@ export default {
         var completeCount = "";
         var noShowCount = "";
 
-        var totalHourList = [];
-        var totalAvailableList = [];
-        var totalBookedList = [];
-        var totalCompleteList = [];
-        var totalNoShowList = [];
-
         let element = this.weeklist[index];
-        console.log(element)
         await AppointmentServices.getAppointmentHourCount(this.group.id, element)
         .then((responseHour) => {
           currWeek = element.slice(0, 10);
@@ -286,16 +285,16 @@ export default {
           availableCount = responseHour.data[0].available;
           bookedCount = responseHour.data[0].booked;
           completeCount = responseHour.data[0].complete;
+          noShowCount = responseHour.data[0].noshow;
 
-          console.log(responseHour)
-          if (index == 0) {
+          if (index == 1) {
             this.week = currWeek;
             this.appt_count = apptCount;
             this.hour_count = hourCount;
             this.available_count = availableCount;
             this.booked_count = bookedCount;
             this.complete_count = completeCount;
-            this.noShowCount = responseHour.data[0].noshow;
+            this.no_show_count = noShowCount;
 
             this.hour_series = [
               parseInt(availableCount),
@@ -429,39 +428,24 @@ export default {
     },
     async setTutorHours() {
       await this.setWeekList();
-      var tutor_name = "";
-      var appt_count = "";
-      var open_hours = "";
-      var hours_paying = "";
       var currWeek = this.current_week.slice(0, 10);
       await PersonServices.getHoursPerTutor(this.group.id, currWeek)
-        .then((responseHour) => {
-          console.log(responseHour)
-          tutor_name = responseHour.data[0].fName + " " + responseHour.data[0].lName;
-          appt_count = responseHour.data[0].appointment_count;
-          open_hours = responseHour.data[0].total_hours;
-          hours_paying = responseHour.data[0].hours_paying;
-        })
-        .catch((error) => {
-          console.log(
-            "There was an error getting hour count:",
-            error.responseHour
-          );
-        });
-      this.tutors.push(
-        JSON.parse(
-          '{"name": "' +
-            tutor_name +
-            '", "count": "' +
-            (await this.checkNum(appt_count)) +
-            '", "hours":"' +
-            (await this.checkHours(open_hours)) +
-            '", "paying":"' +
-            (await this.checkHours(hours_paying)) +
-            '"}'
-        )
-      );
-
+      .then((responseHour) => {
+        console.log(responseHour)
+        this.tutors = responseHour.data;
+      })
+      .catch((error) => {
+        console.log(
+          "There was an error getting hour count:",
+          error
+        );
+      });
+      for(let i = 0; i < this.tutors.length; i++) {
+        this.tutors[i].name = `${this.tutors[i].fName} ${this.tutors[i].lName}`
+        this.tutors[i].apptCount = await this.checkNum(this.tutors[i].apptCount)
+        this.tutors[i].diff = await this.checkHours(this.tutors[i].diff)
+        this.tutors[i].hours_paying = await this.checkHours(this.tutors[i].hours_paying)
+      }
     },
 
     async getTopics() {
