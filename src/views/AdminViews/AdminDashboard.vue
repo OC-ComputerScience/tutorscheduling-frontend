@@ -49,7 +49,7 @@
             </v-col>
             <v-col md="6">
               <v-card
-                :to="{ name: 'requestList' }"
+                :to="{ name: 'pendingList' }"
                 class="mx-auto my-10 d-flex justify-center"
                 max-width="700"
                 height="200"
@@ -116,7 +116,6 @@
 <script>
 import Utils from "@/config/utils.js";
 import AppointmentServices from "@/services/appointmentServices.js";
-import AvailabilityServices from "@/services/availabilityServices.js";
 import RequestServices from "@/services/requestServices.js";
 import TopicServices from "@/services/topicServices.js";
 import PersonServices from "@/services/personServices.js";
@@ -147,6 +146,9 @@ export default {
             show: true,
           },
         },
+        xaxis: {
+          categories: []
+        },
         responsive: [
           {
             breakpoint: 480,
@@ -165,7 +167,6 @@ export default {
             borderRadius: 10,
           },
         },
-        xaxis: {},
         legend: {
           position: "right",
           offsetY: 40,
@@ -227,7 +228,7 @@ export default {
       ],
       topicTable: [
         { text: "Topic Name", value: "name" },
-        { text: "# Hours available", value: "hours" },
+        { text: "# Hours available", value: "diff" },
       ],
     };
   },
@@ -239,7 +240,7 @@ export default {
       this.setTutorHours();
       this.getTopics();
       this.getRequests();
-      this.getAvailabilities();
+      this.getTutorApplications();
     });
   },
   methods: {
@@ -306,7 +307,6 @@ export default {
           }
         })
         .catch((error) => {
-          console.log(error)
           console.log(
             "There was an error getting hour count:",
             error.responseHour
@@ -410,28 +410,22 @@ export default {
             "}"
         )
       );
-      for (let index = 0; index < this.series.length; ++index) {
-        let element = this.series[index];
-        console.log("Series: " + JSON.stringify(element));
-      }
-      this.xaxis = JSON.parse(
-        "{" +
-          '"type": "category",' +
-          '"categories": ["' +
-          this.weeklist[0] +
-          '", "' +
-          this.weeklist[1] +
-          '", "' +
-          this.weeklist[2] +
-          ' "]}'
-      );
+      // for (let index = 0; index < this.series.length; ++index) {
+      //   let element = this.series[index];
+      //   console.log("Series: " + JSON.stringify(element));
+      // }
+
+      this.$refs.radar.updateOptions({
+        xaxis: {
+          categories: [this.weeklist[0], this.weeklist[1], this.weeklist[2]]
+        }
+      })
     },
     async setTutorHours() {
       await this.setWeekList();
       var currWeek = this.current_week.slice(0, 10);
       await PersonServices.getHoursPerTutor(this.group.id, currWeek)
       .then((responseHour) => {
-        console.log(responseHour)
         this.tutors = responseHour.data;
       })
       .catch((error) => {
@@ -450,31 +444,22 @@ export default {
 
     async getTopics() {
       await this.setWeekList();
-      var topic_name = "";
-      var topic_hours = "";
       var currWeek = this.current_week.slice(0, 10);
       await TopicServices.getHoursPerTopic(this.group.id, currWeek)
-        .then((responseHour) => {
-          topic_name = responseHour.data[0].name;
-          topic_hours = responseHour.data[0].hours;
-        })
-        .catch((error) => {
-          console.log(
-            "There was an error getting topic hour count:",
-            error.responseHour
-          );
-        });
-      this.topics.push(
-        JSON.parse(
-          '{"week":"' +
-            currWeek +
-            '", "name": "' +
-            topic_name +
-            '", "hours":"' +
-            (await this.checkHours(topic_hours)) +
-            '"}'
-        )
-      );
+      .then((responseHour) => {
+        this.topics = responseHour.data
+      })
+      .catch((error) => {
+        console.log(
+          "There was an error getting topic hour count:",
+          error.responseHour
+        );
+      });
+
+      for(let i = 0; i < this.topics.length; i++) {
+        this.topics[i].diff = await this.checkHours(this.topics[i].diff)
+      }
+
     },
     async setWeekList() {
       var currentDate = new Date();
@@ -529,103 +514,34 @@ export default {
 
       return hours + " hr " + minutes + " min";
     },
-    async getAppointmentsForGroup() {
-      await AppointmentServices.getUpcomingAppointmentForGroup(this.group.id)
-        .then((response) => {
-          this.appointments = response.data;
-          for (let index = 0; index < this.appointments.length; ++index) {
-            let element = this.appointments[index];
-            // set unapproved number to display
-            if (element.status === "applied") {
-              this.unapprovednum = this.unapprovednum + 1;
-            }
-            //format date
-            let formattedDate =
-              element.date.toString().substring(5, 10) +
-              "-" +
-              element.date.toString().substring(0, 4);
-            this.appointments[index].date = formattedDate;
-            // format start time
-            let modST = element.startTime.toString().substring(0, 2) % 12;
-            let formattedST =
-              modST + ":" + element.startTime.toString().substring(3, 5);
-            if (element.startTime.toString().substring(0, 2) > 12) {
-              formattedST = formattedST + " P.M.";
-            } else if (
-              modST == 0 &&
-              element.startTime.toString().substring(0, 2) == "12"
-            ) {
-              formattedST =
-                "12:" + element.startTime.toString().substring(3, 5) + " P.M.";
-            } else if (modST == 0) {
-              formattedST =
-                "12:" + element.startTime.toString().substring(3, 5) + " A.M.";
-            } else {
-              formattedST = formattedST + " A.M.";
-            }
-            this.appointments[index].startTime = formattedST;
-            // format end time
-            let modET = element.endTime.toString().substring(0, 2) % 12;
-            let formattedET =
-              modET + ":" + element.endTime.toString().substring(3, 5);
-            if (element.endTime.toString().substring(0, 2) > 12) {
-              formattedET = formattedET + " P.M.";
-            } else if (
-              modET == 0 &&
-              element.endTime.toString().substring(0, 2) == "12"
-            ) {
-              formattedET =
-                "12:" + element.endTime.toString().substring(3, 5) + " P.M.";
-            } else if (modET == 0) {
-              formattedET =
-                "12:" + element.endTime.toString().substring(3, 5) + " A.M.";
-            } else {
-              formattedET = formattedET + " A.M.";
-            }
-            this.appointments[index].endTime = formattedET;
-          }
-        })
-        .catch((error) => {
-          console.log("There was an error:", error.response);
-        });
-    },
-    async getTutors() {
-      await PersonServices.getApprovedTutorsForGroup(this.group.id)
-        .then((response) => {
-          this.tutors = response.data;
-        })
-        .catch((error) => {
-          console.log("There was an error:", error.response);
-        });
-    },
-    async getAvailabilities() {
-      await AvailabilityServices.getAllAvailabilities()
-        .then((response) => {
-          this.availabilities = response.data;
-        })
-        .catch((error) => {
-          console.log("There was an error:", error.response);
-        });
+    async getTutorApplications() {
+      await PersonServices.getPendingTutorsForGroup(this.group.id) 
+      .then((response) => {
+        this.unapprovednum = response.data.length;
+      })
+      .catch((error) => {
+        console.log("There was an error:", error.response);
+      });
     },
     async getRequests() {
       await RequestServices.getAllForGroup(this.group.id)
-        .then((response) => {
-          this.requests = response.data;
-          for (let index = 0; index < this.requests.length; ++index) {
-            let request = this.requests.length;
-            this.requestnum = this.requestnum + 1;
-            if (request.status === "in-progress") {
-              this.inprogressrequests = this.inprogressrequests + 1;
-            } else if (request.status === "received") {
-              this.receivedrequests = this.receivedrequests + 1;
-            } else if (request.status === "complete") {
-              this.completerequests = this.completerequests + 1;
-            }
+      .then((response) => {
+        this.requests = response.data;
+        for (let index = 0; index < this.requests.length; ++index) {
+          let request = this.requests[index];
+          this.requestnum++;
+          if (request.status === "In-Progress") {
+            this.inprogressrequests++;
+          } else if (request.status === "Received") {
+            this.receivedrequests++;
+          } else if (request.status === "Complete") {
+            this.completerequests++;
           }
-        })
-        .catch((error) => {
-          console.log("There was an error:", error.response);
-        });
+        }
+      })
+      .catch((error) => {
+        console.log("There was an error:", error.response);
+      });
     },
   },
 };
