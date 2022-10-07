@@ -12,10 +12,11 @@
         <v-col>
           <v-card>
             <v-card-title>
-              Upcoming Appointment info {{ this.user.selectedGroup }}
+              Upcoming Appointment Info - {{ this.user.selectedGroup }}
               <v-spacer></v-spacer>
             </v-card-title>
             <apexchart
+              ref="chart"
               width="500"
               type="bar"
               :options="chartOptions"
@@ -93,6 +94,9 @@
           Topics For Week Starting {{ current_week }}
           <v-spacer></v-spacer>
         </v-card-title>
+        <v-card-text>
+          <b>Please note that these are possible hours of topics, not exact.</b>
+        </v-card-text>
         <v-data-table
           :headers="topicTable"
           :search="search"
@@ -125,15 +129,8 @@ import "@/plugins/apexcharts";
 export default {
   props: ["id"],
   name: "App",
-  watch: {
-    id: function () {
-      //console.log(this.id);
-    },
-  },
   components: {
-    // apexchart: VueApexCharts,
   },
-
   data() {
     return {
       series: [],
@@ -313,23 +310,15 @@ export default {
           );
         });
 
-        this.weeks.push(
-          JSON.parse(
-            '{"week":"' +
-              currWeek +
-              '", "appointmentNum": "' +
-              (await this.checkNum(apptCount)) +
-              '", "hours":"' +
-              (await this.checkHours(hourCount)) +
-              '", "availableAppointments":"' +
-              (await this.checkHours(availableCount)) +
-              '", "completedAppointments":"' +
-              (await this.checkHours(completeCount)) +
-              '", "scheduledAppointments":"' +
-              (await this.checkHours(bookedCount)) +
-              '"}'
-          )
-        );
+        this.weeks.push({
+          week: currWeek,
+          appointmentNum: await this.checkNum(apptCount),
+          hours: await this.checkHours(hourCount),
+          availableAppointments: await this.checkHours(availableCount),
+          completedAppointments: await this.checkHours(completeCount),
+          scheduledAppointments: await this.checkHours(bookedCount)
+        });
+        
         totalHourList.push(hourCount);
         totalAvailableList.push(availableCount);
         totalBookedList.push(bookedCount);
@@ -347,7 +336,7 @@ export default {
             ", " +
             (await this.numifyHours(totalHourList[2])) +
             "]" +
-            "}"
+          "}"
         )
       );
 
@@ -410,12 +399,8 @@ export default {
             "}"
         )
       );
-      // for (let index = 0; index < this.series.length; ++index) {
-      //   let element = this.series[index];
-      //   console.log("Series: " + JSON.stringify(element));
-      // }
 
-      this.$refs.radar.updateOptions({
+      this.$refs.chart.updateOptions({
         xaxis: {
           categories: [this.weeklist[0], this.weeklist[1], this.weeklist[2]]
         }
@@ -430,7 +415,7 @@ export default {
       })
       .catch((error) => {
         console.log(
-          "There was an error getting hour count:",
+          "There was an error getting hour count: ",
           error
         );
       });
@@ -446,14 +431,17 @@ export default {
       await this.setWeekList();
       var currWeek = this.current_week.slice(0, 10);
       await TopicServices.getHoursPerTopic(this.group.id, currWeek)
+      // await AppointmentServices.getTopicHourCount(this.group.id, currWeek)
       .then((responseHour) => {
         this.topics = responseHour.data
+        console.log(this.topics)
       })
       .catch((error) => {
         console.log(
-          "There was an error getting topic hour count:",
-          error.responseHour
+          "There was an error getting topic hour count: ",
+          error
         );
+        console.log(error.response)
       });
 
       for(let i = 0; i < this.topics.length; i++) {
@@ -462,12 +450,24 @@ export default {
 
     },
     async setWeekList() {
-      var currentDate = new Date();
-      var prev = await this.getPrevWeek(currentDate);
-      var current = await this.toSQLDate(currentDate);
-      var next = await this.getNextWeek(currentDate);
+      var currentDate = new Date();      
+      var tempPrev = this.getPreviousSunday(new Date(await this.getPrevWeek(currentDate)));
+      var prev = await this.toSQLDate(tempPrev)
+      var current = await this.toSQLDate(this.getPreviousSunday(currentDate));
+      var tempNext = this.getPreviousSunday(new Date(await this.getNextWeek(currentDate)));
+      var next = await this.toSQLDate(tempNext);
       this.weeklist = [prev, current, next];
       this.current_week = current;
+    },
+    getPreviousSunday(date) {
+      // not sure why it's monday but this works
+      const previousMonday = new Date();
+      previousMonday.setDate(date.getDate() - date.getDay());
+      // if adding to new week makes the new date bigger than the previous date, subtract a month
+      if(previousMonday > date)
+        previousMonday.setMonth(previousMonday.getMonth() - 1)
+      previousMonday.setHours(0, 0, 0, 0);
+      return previousMonday;
     },
     async getNextWeek(week) {
       var date = new Date(week.getTime() + 7 * 24 * 60 * 60 * 1000);
