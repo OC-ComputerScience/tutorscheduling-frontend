@@ -241,14 +241,6 @@ export default {
                 roles: 'Student'
             },
             {
-                link: 'adminDashboard',
-                name: 'adminDashboard',
-                color: 'white',
-                text: 'Home',
-                icon: 'mdi-home',
-                roles: 'HeadAdmin,Admin,Supervisor'
-            },
-            {
                 link: 'mainCalendar',
                 name: 'mainCalendar',
                 color: 'white',
