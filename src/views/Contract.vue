@@ -44,9 +44,9 @@
                 ></pdf>
                 <v-container>
                   <v-text-field
+                    v-model="signature"
                     label="Digital Signature"
                     :hint="user.fullName"
-                    :rules="[() => !!role.signature || 'This field is required']"
                     persistent-hint
                     required
                     v-on:keyup.enter="role.dialog = false; save(role)"
@@ -57,7 +57,8 @@
                   <v-btn
                     color="success"
                     text
-                    @click="role.dialog = false; save(role)"
+                    :disabled="!signature || signature !== user.fullName"
+                    @click="role.dialog = false; signature = ''; save(role)"
                   >
                     Agree
                   </v-btn>
@@ -88,6 +89,7 @@
         //dialog: [],
         message :'Sign Contract',
         roles: [],
+        signature: '',
         numPages: 2,
         completeRole: {},
         colors: ['#47121D', '#EE5044', '#63BAC0', '#196CA2', '#F8C545', '#032F45'],
@@ -167,24 +169,6 @@
                   console.log(tempFile)
                 personrole.pdfName = tempFile[0].pdf;
                 personrole.numPages = tempFile[0].pages;
-                
-                // if (role.type.includes("Student")) {
-                //   // filter function returns an array--need just the object
-                  
-                //   // for (let h = 0; h < this.studentContracts.length; h++) {
-                //   //   if(this.studentContracts[h].includes(group.name.replace(/\s/g, ''))) {
-                //   //     personrole.pdfName = this.studentContracts[h];
-                //   //   }
-                //   // }
-                // }
-                // else if (role.type.includes("Tutor")) {
-                //   personrole.pdfName = this.tutorContracts.filter(contract => contract.includes(group.name.replace(/\s/g, '')))[0];
-                //   // for (let h = 1; h < this.contracts.length; h++) {
-                //   //   if(this.contracts[h].includes(group.name.replace(/\s/g, ''))) {
-                //   //     personrole.pdfName = this.contracts[h];
-                //   //   }
-                //   // }
-                // }
                 personrole.groupName = group.name;
                 personrole.dialog = false;
                 personrole.signature = null;
