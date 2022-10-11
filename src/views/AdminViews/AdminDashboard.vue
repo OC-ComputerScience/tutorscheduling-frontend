@@ -352,7 +352,7 @@ export default {
       this.series.push(
         JSON.parse(
           "{" +
-            '"name": "Hours Available",' +
+            '"name": "Available",' +
             '"data": [' +
             (await this.numifyHours(totalAvailableList[0])) +
             ", " +
@@ -367,7 +367,7 @@ export default {
       this.series.push(
         JSON.parse(
           "{" +
-            '"name": "Hours Pending",' +
+            '"name": "Pending",' +
             '"data": [' +
             (await this.numifyHours(totalPendingList[0])) +
             ", " +
@@ -382,7 +382,7 @@ export default {
       this.series.push(
         JSON.parse(
           '{"' +
-            'name": "Hours Booked",' +
+            'name": "Booked",' +
             '"data": [' +
             (await this.numifyHours(totalBookedList[0])) +
             ", " +
@@ -397,7 +397,7 @@ export default {
       this.series.push(
         JSON.parse(
           "{" +
-            '"name": "Hours Completed",' +
+            '"name": "Completed",' +
             '"data": [' +
             (await this.numifyHours(totalCompleteList[0])) +
             ", " +
@@ -412,7 +412,7 @@ export default {
       this.series.push(
         JSON.parse(
           "{" +
-            '"name": "No-Show Hours",' +
+            '"name": "No-Show",' +
             '"data": [' +
             (await this.numifyHours(totalNoShowList[0])) +
             ", " +
