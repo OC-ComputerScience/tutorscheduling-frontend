@@ -8,8 +8,8 @@
       </v-toolbar>
       <br>
       <br>
-      <v-row>
-        <v-col>
+      <v-row justify="center">
+        <v-col justify="center">
           <v-card>
             <v-card-title>
               Upcoming Appointment Info - {{ this.user.selectedGroup }}
@@ -31,7 +31,7 @@
                 :to="{ name: 'requestList' }"
                 class="mx-auto my-3 justify-center"
               >
-                <v-card-title class="justify-center">
+                <v-card-title>
                   Student Requests
                 </v-card-title>
                 <apexchart
@@ -50,7 +50,7 @@
                 :to="{ name: 'pendingList' }"
                 class="mx-auto my-5 justify-center"
               >
-                <v-card-title class="justify-center">
+                <v-card-title>
                   Tutor Applications
                 </v-card-title>
                 <v-card-text class="text-center">
@@ -63,35 +63,35 @@
       </v-row>
       <v-row justify="center">
         <v-col>
-      <v-card class="tutor">
-        <v-card-title>
-          Tutors For Week Starting {{ current_week }}
-          <v-spacer></v-spacer>
-        </v-card-title>
-        <v-data-table
-          :headers="tutorTable"
-          :search="search"
-          :items="tutors"
-          :items-per-page="50"
-        ></v-data-table>
-      </v-card>
-      <br />
+          <v-card class="tutor">
+            <v-card-title>
+              Tutors For Week Starting {{ current_week }}
+              <v-spacer></v-spacer>
+            </v-card-title>
+            <v-data-table
+              :headers="tutorTable"
+              :search="search"
+              :items="tutors"
+              :items-per-page="50"
+            ></v-data-table>
+          </v-card>
+          <br />
+            </v-col>
+            <v-col>
+          <v-card class="tutor">
+            <v-card-title>
+              Topics For Week Starting {{ current_week }}
+              <v-spacer></v-spacer>
+            </v-card-title>
+            <v-data-table
+              :headers="topicTable"
+              :search="search"
+              :items="topics"
+              :items-per-page="50"
+            ></v-data-table>
+          </v-card>
         </v-col>
-        <v-col>
-      <v-card class="tutor">
-        <v-card-title>
-          Topics For Week Starting {{ current_week }}
-          <v-spacer></v-spacer>
-        </v-card-title>
-        <v-data-table
-          :headers="topicTable"
-          :search="search"
-          :items="topics"
-          :items-per-page="50"
-        ></v-data-table>
-      </v-card>
-        </v-col>
-        </v-row>
+      </v-row>
 
       <br /><br />
     </v-container>
