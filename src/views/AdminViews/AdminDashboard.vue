@@ -17,58 +17,47 @@
             </v-card-title>
             <apexchart
               ref="chart"
-              width="500"
+              width="700"
               type="bar"
               :options="chartOptions"
               :series="series"
             ></apexchart>
           </v-card>
         </v-col>
-        <v-col>
+        <v-col justify="center">
           <v-row justify="center">
-            <v-col md="6">
+            <!-- <v-col md="6"> -->
               <v-card
                 :to="{ name: 'requestList' }"
-                class="mx-auto my-10 d-flex justify-center"
-                max-width="700"
-                height="200"
-                elevation="10"
-                color="accent"
+                class="mx-auto my-3 justify-center"
               >
-                <v-card-title class="justify-left white--text">
-                  STUDENT REQUESTS
-                  <br />
-                  {{ receivedrequests }} Received <br />{{
-                    inprogressrequests
-                  }}
-                  In-Progress <br />{{ completerequests }} Complete <br />{{
-                    requestnum
-                  }}
-                  Total
+                <v-card-title class="justify-center">
+                  Student Requests
                 </v-card-title>
+                <apexchart
+                  width="380"
+                  type="pie"
+                  :options="pieOptions"
+                  :series="pieSeries"
+                ></apexchart>
+                <br>
               </v-card>
-            </v-col>
-            <v-col md="6">
+            </v-row>
+            <v-row justify="center">
+            <!-- </v-col>
+            <v-col md="6"> -->
               <v-card
                 :to="{ name: 'pendingList' }"
-                class="mx-auto my-10 d-flex justify-center"
-                max-width="700"
-                height="200"
-                elevation="10"
-                color="accent"
+                class="mx-auto my-5 justify-center"
               >
-                <v-card-title class="justify-center white--text">
-                  TUTOR APPLICATIONS
-                  <br />
-                  {{ unapprovednum }} Unapproved
-                  <br />
-                  <br />
-                  <br />
-                  <br />
-                  <br />
+                <v-card-title class="justify-center">
+                  Tutor Applications
                 </v-card-title>
+                <v-card-text class="text-center">
+                  <h1>{{ unapprovednum }}</h1>
+                </v-card-text>
               </v-card>
-            </v-col>
+            <!-- </v-col> -->
           </v-row>
         </v-col>
       </v-row>
@@ -94,9 +83,6 @@
           Topics For Week Starting {{ current_week }}
           <v-spacer></v-spacer>
         </v-card-title>
-        <v-card-text>
-          <b>Please note that these are possible hours of topics, not exact.</b>
-        </v-card-text>
         <v-data-table
           :headers="topicTable"
           :search="search"
@@ -134,14 +120,12 @@ export default {
   data() {
     return {
       series: [],
+      pieSeries: [],
       chartOptions: {
         chart: {
           type: "bar",
           height: 350,
           stacked: true,
-          toolbar: {
-            show: true,
-          },
         },
         xaxis: {
           categories: []
@@ -158,19 +142,52 @@ export default {
             },
           },
         ],
+        colors: ['#80162B', '#757575', '#F8C545', '#196CA2', '#66BB6A', '#EE5044'],
         plotOptions: {
           bar: {
             horizontal: false,
-            borderRadius: 10,
           },
         },
         legend: {
-          position: "right",
-          offsetY: 40,
+          position: "top",
+          // offsetY: 40,
         },
         fill: {
           opacity: 1,
         },
+      },
+      pieOptions: {
+        chart: {
+          width: 380,
+          type: 'pie',
+        },
+        colors: ['#196CA2', '#F8C545', '#66BB6A', '#80162B'],
+        labels: ['Received', 'In-Progress', 'Complete', 'Total'],
+        dataLabels: {
+          enabled: true,
+          formatter: function (val, opts) {
+            return opts.w.config.series[opts.seriesIndex]
+          },
+        },
+        legend: {
+          position: "bottom",
+        },
+        fill: {
+          opacity: 1,
+        },
+        responsive: [{
+          breakpoint: 480,
+          options: {
+            chart: {
+              width: 200
+            },
+            legend: {
+              position: "bottom",
+              offsetX: -10,
+              offsetY: 0,
+            },
+          }
+        }]
       },
       loaded: false,
       dataentry: null,
@@ -201,31 +218,24 @@ export default {
       appointments: [],
       appt_count: [],
       available_count: [],
+      pending_count: [],
       hour_count: [],
       complete_count: [],
       no_show_count: [],
       booked_count: [],
       week: [],
-      hour_series: [],
 
       // table headers
-      appointmentTable: [
-        { text: "Week starting", value: "week" },
-        { text: "# Appointments", value: "appointmentNum" },
-        { text: "# Hours", value: "hours" },
-        { text: "# Hours Scheduled", value: "scheduledAppointments" },
-        { text: "# Hours Completed", value: "completedAppointments" },
-        { text: "# Hours No Showed", valud: "noShowAppointments" }
-      ],
       tutorTable: [
         { text: "Name", value: "name" },
-        { text: "# Appts", value: "apptCount" },
-        { text: "# Total Hours", value: "diff" },
-        { text: "# Hours to Pay", value: "hours_paying" },
+        { text: "# Appointments", value: "apptCount" },
+        { text: "# Total Hours", value: "hours" },
+        { text: "# Hours to Pay", value: "payingHours" },
       ],
       topicTable: [
         { text: "Topic Name", value: "name" },
-        { text: "# Hours available", value: "diff" },
+        { text: "# Booked Hours", value: "hours" },
+        { text: "# Potential Hours", value: "potentialHours" },
       ],
     };
   },
@@ -261,6 +271,7 @@ export default {
       await this.setWeekList();
       var totalHourList = [];
       var totalAvailableList = [];
+      var totalPendingList = [];
       var totalBookedList = [];
       var totalCompleteList = [];
       var totalNoShowList = [];
@@ -270,6 +281,7 @@ export default {
         var apptCount = "";
         var hourCount = "";
         var availableCount = "";
+        var pendingCount = "";
         var bookedCount = "";
         var completeCount = "";
         var noShowCount = "";
@@ -279,8 +291,9 @@ export default {
         .then((responseHour) => {
           currWeek = element.slice(0, 10);
           apptCount = responseHour.data[0].count;
-          hourCount = responseHour.data[0].diff;
+          hourCount = responseHour.data[0].hours;
           availableCount = responseHour.data[0].available;
+          pendingCount = responseHour.data[0].pending;
           bookedCount = responseHour.data[0].booked;
           completeCount = responseHour.data[0].complete;
           noShowCount = responseHour.data[0].noshow;
@@ -290,16 +303,11 @@ export default {
             this.appt_count = apptCount;
             this.hour_count = hourCount;
             this.available_count = availableCount;
+            this.pending_count = pendingCount;
             this.booked_count = bookedCount;
             this.complete_count = completeCount;
             this.no_show_count = noShowCount;
 
-            this.hour_series = [
-              parseInt(availableCount),
-              parseInt(bookedCount),
-              parseInt(completeCount),
-              parseInt(noShowCount)
-            ];
             this.loaded = true;
           }
         })
@@ -321,6 +329,7 @@ export default {
         
         totalHourList.push(hourCount);
         totalAvailableList.push(availableCount);
+        totalPendingList.push(pendingCount)
         totalBookedList.push(bookedCount);
         totalCompleteList.push(completeCount);
         totalNoShowList.push(noShowCount);
@@ -350,6 +359,21 @@ export default {
             (await this.numifyHours(totalAvailableList[1])) +
             ", " +
             (await this.numifyHours(totalAvailableList[2])) +
+            "]" +
+            "}"
+        )
+      );
+
+      this.series.push(
+        JSON.parse(
+          "{" +
+            '"name": "Hours Pending",' +
+            '"data": [' +
+            (await this.numifyHours(totalPendingList[0])) +
+            ", " +
+            (await this.numifyHours(totalPendingList[1])) +
+            ", " +
+            (await this.numifyHours(totalPendingList[2])) +
             "]" +
             "}"
         )
@@ -422,8 +446,8 @@ export default {
       for(let i = 0; i < this.tutors.length; i++) {
         this.tutors[i].name = `${this.tutors[i].fName} ${this.tutors[i].lName}`
         this.tutors[i].apptCount = await this.checkNum(this.tutors[i].apptCount)
-        this.tutors[i].diff = await this.checkHours(this.tutors[i].diff)
-        this.tutors[i].hours_paying = await this.checkHours(this.tutors[i].hours_paying)
+        this.tutors[i].hours = await this.checkHours(this.tutors[i].hours)
+        this.tutors[i].payingHours = await this.checkHours(this.tutors[i].payingHours)
       }
     },
 
@@ -431,23 +455,20 @@ export default {
       await this.setWeekList();
       var currWeek = this.current_week.slice(0, 10);
       await TopicServices.getHoursPerTopic(this.group.id, currWeek)
-      // await AppointmentServices.getTopicHourCount(this.group.id, currWeek)
       .then((responseHour) => {
         this.topics = responseHour.data
-        console.log(this.topics)
       })
       .catch((error) => {
         console.log(
           "There was an error getting topic hour count: ",
           error
         );
-        console.log(error.response)
       });
 
       for(let i = 0; i < this.topics.length; i++) {
-        this.topics[i].diff = await this.checkHours(this.topics[i].diff)
+        this.topics[i].hours = await this.checkHours(this.topics[i].hours)
+        this.topics[i].potentialHours = await this.checkHours(this.topics[i].potentialHours)
       }
-
     },
     async setWeekList() {
       var currentDate = new Date();      
@@ -491,7 +512,7 @@ export default {
     },
     async checkHours(hours) {
       if (!hours) {
-        return 0;
+        return "0 hr 0 min";
       }
       var total = await this.toHoursAndMinutes(hours);
       return total;
@@ -538,10 +559,16 @@ export default {
             this.completerequests++;
           }
         }
+
+        this.pieSeries.push(this.receivedrequests)
+        this.pieSeries.push(this.inprogressrequests)
+        this.pieSeries.push(this.completerequests)
+        this.pieSeries.push(this.requestnum)
       })
       .catch((error) => {
         console.log("There was an error:", error.response);
       });
+
     },
   },
 };
