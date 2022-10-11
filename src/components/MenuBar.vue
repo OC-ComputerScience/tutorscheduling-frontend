@@ -217,6 +217,14 @@ export default {
         currentPersonRoleID: 0,
         menus: [
             {
+                link: 'adminHome',
+                name: 'adminHome',
+                color: 'white',
+                text: 'Home',
+                icon: 'mdi-home',
+                roles: 'HeadAdmin,Admin,Supervisor'
+            },
+            {
                 link: 'tutorHome',
                 name: 'tutorHome',
                 color: 'white',

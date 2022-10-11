@@ -161,12 +161,12 @@ import TopicServices from "@/services/topicServices.js";
         topics: [],
         selectedTopic: -1,
         status: [{id: 0, name: "available", title: "Available"}, 
-                {id: 1, name: "pending", title: "Pending"},
+                {id: 1, name: "studentCancel,tutorCancel", title: "Canceled"},
                 {id: 2, name: "booked,complete", title: "Complete"},
-                {id: 3, name: "studentCancel,tutorCancel", title: "Canceled"},
-                {id: 4, name: "studentCancel", title: "Student Cancel"},
-                {id: 5, name: "tutorCancel", title: "Tutor Cancel"},
-                {id: 6, name: "no-show", title: "No Show"}],
+                {id: 3, name: "no-show", title: "No Show"},
+                {id: 4, name: "pending", title: "Pending"},
+                {id: 5, name: "studentCancel", title: "Student Cancel"},
+                {id: 6, name: "tutorCancel", title: "Tutor Cancel"}],
         selectedStatus: -1,
         selectedTutors: [],
         tutors: [],
@@ -210,6 +210,25 @@ import TopicServices from "@/services/topicServices.js";
       .catch((error) => {
         this.message = error.response.data.message
         console.log("There was an error:", error.response);
+      });
+      // sort checkboxes
+      this.status.sort(function (a, b) {
+        if (a.title < b.title) {
+          return -1;
+        }
+        if (a.title > b.title) {
+          return 1;
+        }
+        return 0;
+      });
+      this.topics.sort(function (a, b) {
+        if (a.name < b.name) {
+          return -1;
+        }
+        if (a.name > b.name) {
+          return 1;
+        }
+        return 0;
       });
     },
     methods: {
@@ -462,10 +481,10 @@ import TopicServices from "@/services/topicServices.js";
         });
       },
       //Update the lists of tutors and students
-      updatePeople() {
+      async updatePeople() {
         this.tutors = []
         this.students = []
-        PersonServices.getAllForGroup(this.group.id)
+        await PersonServices.getAllForGroup(this.group.id)
         .then(response => {
           let people = response.data;
           for(let i = 0; i < people.length; i++) {
@@ -484,6 +503,24 @@ import TopicServices from "@/services/topicServices.js";
         .catch(error => {
           this.message = error.response.data.message
           console.log("There was an error:", error.response)
+        });
+        this.tutors.sort(function (a, b) {
+          if (a.fName < b.fName) {
+            return -1;
+          }
+          if (a.fName > b.fName) {
+            return 1;
+          }
+          return 0;
+        });
+        this.students.sort(function (a, b) {
+          if (a.fName < b.fName) {
+            return -1;
+          }
+          if (a.fName > b.fName) {
+            return 1;
+          }
+          return 0;
         });
       },
       filter() {
@@ -505,26 +542,33 @@ import TopicServices from "@/services/topicServices.js";
         // filter by tutors
         if(this.selectedTutors.length > 0) {
           let tempTutors = this.selectedTutors
-          this.selectedAppointments = this.selectedAppointments.filter(function (appoint) {
+          let tempAppoints = [];
+          for(let k = 0; k < this.selectedAppointments.length; k++) {
+            let appoint = this.selectedAppointments[k]
             for(let i = 0; i < appoint.tutors.length; i++) {
               for(let j = 0; j < tempTutors.length; j++) {
-                return appoint.tutors[i].name === tempTutors[j]
+                if(appoint.tutors[i].name === tempTutors[j])
+                  tempAppoints.push(appoint)
               }
             }
-          })
+          }
+          this.selectedAppointments = tempAppoints;
         }
         // filter by students
         if(this.selectedStudents.length > 0) {
           let tempStudents = this.selectedStudents
-          this.selectedAppointments = this.selectedAppointments.filter(function (appoint) {
+          let tempAppoints = [];
+          for(let k = 0; k < this.selectedAppointments.length; k++) {
+            let appoint = this.selectedAppointments[k]
             for(let i = 0; i < appoint.students.length; i++) {
               for(let j = 0; j < tempStudents.length; j++) {
-                return appoint.students[i].name === tempStudents[j]
+                if(appoint.students[i].name === tempStudents[j])
+                  tempAppoints.push(appoint)
               }
             }
-          })
+          }
+          this.selectedAppointments = tempAppoints;
         }
-
         // makes sure we're not trying to create an empty csv file
         if(this.selectedAppointments.length === 0) {
           this.noApptDialog = true;
