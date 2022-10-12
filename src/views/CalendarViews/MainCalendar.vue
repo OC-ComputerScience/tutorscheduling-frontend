@@ -1259,10 +1259,16 @@ import Utils from '@/config/utils.js'
       AppointmentServices.getAppointment(appointId).then((response) => {
         let appoint = response.data
         let temp = tutor
+        let location = this.locations.find(location =>  location.id = this.selectedAppointment.locationId)
         let start = this.calcTime(this.selectedAppointment.startTime)
         let date = this.selectedAppointment.date.toString().substring(5,10) + "-" + this.selectedAppointment.date.toString().substring(0,4)
-        temp.message = "Your " + appoint.type + " appointment on " + date + " at " + start + 
-          " has been booked by " + fName + " " + lName + ".\nPlease view this pending appointment at http://tutorscheduling.oc.edu/"
+        temp.message = "You have a new pending appointment:" + 
+                        "\n    Type: " + appoint.type + 
+                        "\n    Date: " + date +
+                        "\n    Time: " + start + 
+                        "\n    Location: " + location.name +
+                        "\n    Student: " + fName + " " + lName +
+                       "\nPlease view this pending appointment at http://tutorscheduling.oc.edu/"
         TwilioServices.sendMessage(temp);
       })
     },
@@ -1272,8 +1278,14 @@ import Utils from '@/config/utils.js'
         let temp = tutor
         let start = this.calcTime(this.selectedAppointment.startTime)
         let date = this.selectedAppointment.date.toString().substring(5,10) + "-" + this.selectedAppointment.date.toString().substring(0,4)
-        temp.message = "Your " + appoint.type + " appointment on " + date + " at " + start + 
-          " has been booked by " + fName + " " + lName + " for " + student.fName + " " + student.lName + ".\nPlease view this booked appointment at http://tutorscheduling.oc.edu/"
+        temp.message = "You have a new booked appointment:" + 
+                        "\n    Type: " + appoint.type + 
+                        "\n    Date: " + date +
+                        "\n    Time: " + start + 
+                        "\n    Location: " + location.name +
+                        "\n    Student: " + student.fName + " " + student.lName +
+                        "\n    Booked By: " + fName + " " + lName +
+                       "\nPlease view this booked appointment at http://tutorscheduling.oc.edu/"
         TwilioServices.sendMessage(temp);
       })
     },
