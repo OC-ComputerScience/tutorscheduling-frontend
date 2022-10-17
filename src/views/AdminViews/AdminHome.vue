@@ -12,7 +12,7 @@
         <v-col justify="center">
           <v-card>
             <v-card-title>
-              Upcoming Appointment Info - {{ this.user.selectedGroup }}
+              Upcoming Appointment Hours - {{ this.user.selectedGroup }}
               <v-spacer></v-spacer>
             </v-card-title>
             <apexchart
@@ -444,7 +444,6 @@ export default {
             "}"
         )
       );
-        console.log(this.series)
 
       this.$refs.chart.updateOptions({
         xaxis: {
@@ -560,16 +559,15 @@ export default {
       var total = await this.toHoursAndMinutes(hours);
       return total;
     },
-    async numifyHours(hours) {
+    numifyHours(hours) {
       if (!hours) {
         return 0;
       }
-      var total = await this.toHours(hours);
+      var total = this.toHours(hours);
       return total;
     },
-    async toHours(totalMinutes) {
-      var hours = Math.floor(parseInt(totalMinutes) / parseFloat(60));
-
+    toHours(totalMinutes) {
+      var hours = parseFloat(totalMinutes) / parseFloat(60);
       return hours;
     },
     async toHoursAndMinutes(totalMinutes) {
