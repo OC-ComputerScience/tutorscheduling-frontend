@@ -448,7 +448,8 @@ export default {
       this.$refs.chart.updateOptions({
         xaxis: {
           categories: [this.weeklist[0], this.weeklist[1], this.weeklist[2]]
-        }
+        },
+        decimalsInFloat: 1
       })
     },
     async setTutorHours() {
