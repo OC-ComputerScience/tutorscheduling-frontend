@@ -444,6 +444,7 @@ export default {
             "}"
         )
       );
+        console.log(this.series)
 
       this.$refs.chart.updateOptions({
         xaxis: {
