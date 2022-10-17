@@ -83,6 +83,11 @@ const router =  new Router({
       component: Login
     },
     {
+      path: '/login',
+      name: 'login2',
+      component: Login
+    },
+    {
       path: '/contract/:id',
       name: 'contract',
       component: Contract,
