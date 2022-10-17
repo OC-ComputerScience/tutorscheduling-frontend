@@ -605,10 +605,10 @@ export default {
 
         this.pieSeries.push(this.receivedrequests)
         this.pieSeries.push(this.inprogressrequests)
-        this.pieSeries(this.completerequests)
+        this.pieSeries.push(this.completerequests)
       })
       .catch((error) => {
-        console.log("There was an error:", error.response);
+        console.log("There was an error:", error);
       });
 
     },
