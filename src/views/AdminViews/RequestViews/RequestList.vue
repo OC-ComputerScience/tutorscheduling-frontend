@@ -123,6 +123,8 @@
         dialogDelete: false,
         user: {},
         headers: [
+          { text: "Date", value: "date" },
+          { text: "Time", value: "time" },
           { text: "Person's Name", value: "fullName" },
           { text: "Problem", value: "problem" },
           { text: "Status", value: "status" },
@@ -148,14 +150,14 @@
         val || this.closeDelete()
       },
     },
-    async created () {
+    async created() {
       this.user = Utils.getStore('user');
       await this.getGroupByPersonRoleId()
-      .then(() => {
-        this.getRequestsForGroup();
+      .then(async () => {
+        await this.getRequestsForGroup();
       })
       .catch(error => {
-        this.message = error.response.data.message
+          this.message = error.response.data.message
       })
     },
     methods: {
@@ -169,66 +171,99 @@
           console.log("There was an error:", error.response);
         });
       },
-      getRequestsForGroup() {
-        RequestServices.getAllForGroup(this.group.id)
+      async getRequestsForGroup() {
+        await RequestServices.getAllForGroup(this.group.id)
         .then(response => {
           this.requests = response.data;
+          console.log(response)
           for (let i = 0; i < this.requests.length; i++) {
+            if(this.requests[i].topic === null || this.requests[i].topic === undefined) {
+              this.requests[i].topic = { 
+                name: "None" 
+              }
+            }
+
+            if(this.requests[i].courseNum === null || this.requests[i].courseNum === undefined) {
+              this.requests[i].courseNum = "None"
+            }
+
             this.requests[i].fullName = this.requests[i].person.fName + " " + this.requests[i].person.lName;
+            this.requests[i].date = this.requests[i].createdAt.slice(0,10)
+            this.requests[i].time = this.calcTime(this.requests[i].createdAt.slice(11,19))
           }
+        })
+        .catch(error => {
+          this.message = error.response.data.message
+          console.log("There was an error:", error)
+        });
+      },
+      editItem(item) {
+        this.editedIndex = this.requests.indexOf(item.id)
+        this.editedItem = Object.assign({}, item)
+        this.dialog = true
+      },
+      deleteItem(item) {
+        this.editedIndex = this.requests.indexOf(item.id)
+        this.editedItem = Object.assign({}, item)
+        this.dialogDelete = true
+      },
+      deleteItemConfirm() {
+        this.requests.splice(this.editedIndex, 1)
+        RequestServices.deleteRequest(this.editedItem.id)
+        .then(() => {
+          this.getTopics(this.start, this.length);
         })
         .catch(error => {
           this.message = error.response.data.message
           console.log("There was an error:", error.response)
         });
-      },
-      editItem (item) {
-        this.editedIndex = this.requests.indexOf(item.id)
-        this.editedItem = Object.assign({}, item)
-        this.dialog = true
-      },
-      deleteItem (item) {
-        this.editedIndex = this.requests.indexOf(item.id)
-        this.editedItem = Object.assign({}, item)
-        this.dialogDelete = true
-      },
-      deleteItemConfirm () {
-        this.requests.splice(this.editedIndex, 1)
-          RequestServices.deleteRequest(this.editedItem.id)
-            .then(() => {
-              this.getTopics(this.start, this.length);
-            })
-            .catch(error => {
-              this.message = error.response.data.message
-              console.log("There was an error:", error.response)
-            });
         
         this.closeDelete()
       },
-      close () {
+      close() {
         this.dialog = false
         this.$nextTick(() => {
           this.editedItem = Object.assign({}, this.defaultItem)
           this.editedIndex = -1
         })
       },
-      closeDelete () {
+      closeDelete() {
         this.dialogDelete = false
         this.$nextTick(() => {
           this.editedItem = Object.assign({}, this.defaultItem)
           this.editedIndex = -1
         })
       },
-      save () {
+      save() {
         RequestServices.updateRequest(this.editedItem.id, this.editedItem)
-          .then(() => {
-            this.close()
-            this.getRequestsForGroup();
-          })
-          .catch((error) => {
-            console.log(error);
-          });
-          Object.assign(this.requests[this.editedIndex], this.editedItem)
+        .then(() => {
+          this.close()
+          this.getRequestsForGroup();
+        })
+        .catch((error) => {
+          console.log(error);
+        });
+        Object.assign(this.requests[this.editedIndex], this.editedItem)
+      },
+      calcTime(time) {
+        if(time == null)
+        {
+          return null;
+        }
+        let temp = time.split(":")
+        let milHours = parseInt(temp[0])
+        let minutes = temp[1]
+        let hours = milHours - 5  // subtract 5 to fix how datetimes are saved
+        console.log(hours)
+        console.log((hours % 24 + 24) % 24)
+        hours = (hours % 24 + 24) % 24  // fix it calculating negative numbers
+        
+        if (hours == 0) {
+          hours = 12
+        }
+        let dayTime = (~~(hours / 12) > 0 ? "PM":"AM")
+        hours = hours % 12
+        return "" + hours + ":" + minutes + " " + dayTime
       },
     },
   }
