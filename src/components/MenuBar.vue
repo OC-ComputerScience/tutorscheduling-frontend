@@ -596,7 +596,7 @@ export default {
                 if(!approved) {
                     // makes only admin home page show up on menu bar
                     this.activeMenus = this.activeMenus.filter(menu =>
-                        menu.name.includes("adminHome"));
+                        menu.name.includes("adminDashboard"));
                 }
             }
         }
