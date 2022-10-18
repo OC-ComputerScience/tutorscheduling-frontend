@@ -122,7 +122,7 @@ import RequestServices from "@/services/requestServices.js";
 
   export default {
     data: () => ({
-      StatusSelect: ['Recieved', 'In-Progress', 'Completed'],
+      StatusSelect: ['Received', 'In-Progress', 'Completed'],
       dialog: false,
       dialogDelete: false,
       headers: [

@@ -15,6 +15,9 @@ export default {
     getTopicForPerson(id) {
       return apiClient.get("topic/person/" + id)
     },
+    getHoursPerTopic(groupId, currWeek){
+      return apiClient.get("topic/group/" + groupId + "/hours/week/" + currWeek);
+    },
     getTopicByGroupForPerson(groupId, personId) {
       return apiClient.get("topic/group/" + groupId + "/person/" + personId)
     },
