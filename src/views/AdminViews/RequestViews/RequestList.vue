@@ -1,110 +1,124 @@
 <template>
-<v-container>
-  <v-data-table
-    :headers="headers"
-    :items="requests"
-    sort-by="status"
-    class="elevation-1"
-    :expanded.sync="expanded"
-    show-expand
-  >
-    <template v-slot:top>
-      <v-toolbar
-        flat
-      >
-        <v-toolbar-title>{{message}}</v-toolbar-title>
-        <v-divider
-          class="mx-4"
-          inset
-          vertical
-        ></v-divider>
-        <v-spacer></v-spacer>
-        <v-dialog
-          v-model="dialog"
-          max-width="500px"
-        >
-            
-          <v-card>
-            <v-card-text>
-              <v-container>
-                <v-row>
-                  <v-col
-                    cols="12"
-                    sm="6"
-                    md="4"
-                  >
-                    <v-select
-                        v-model="editedItem.status"
-                        :items="StatusSelect"
-                        label="Status"
-                        required
-                    >
-                    </v-select>
-                  </v-col>
-                </v-row>
-              </v-container>
-            </v-card-text>
-
-            <v-card-actions>
-              <v-spacer></v-spacer>
-              <v-btn
-                color="error"
-                text
-                @click="close"
-              >
-                Cancel
-              </v-btn>
-              <v-btn
-                color="accent"
-                text
-                @click="save"
-              >
-                Save
-              </v-btn>
-            </v-card-actions>
-          </v-card>
-        </v-dialog>
-        <v-dialog v-model="dialogDelete" max-width="500px">
-          <v-card>
-            <v-card-title class="text-h5">Are you sure you want to delete this item?</v-card-title>
-            <v-card-actions>
-              <v-spacer></v-spacer>
-              <v-btn color="error" text @click="closeDelete">Cancel</v-btn>
-              <v-btn color="accent" text @click="deleteItemConfirm">OK</v-btn>
-              <v-spacer></v-spacer>
-            </v-card-actions>
-          </v-card>
-        </v-dialog>
+  <div>
+  <v-container>
+      <v-toolbar>
+        <v-toolbar-title>{{this.message}}</v-toolbar-title>
       </v-toolbar>
-    </template>
-  
-    <template v-slot:[`item.actions`]="{ item }">      
-        <v-icon
-        small
-        class="mr-2"
-        @click="editItem(item)"
-      >
-        mdi-pencil
-      </v-icon>
-      <v-icon
-        small
-        @click="deleteItem(item)"
-      >
-        mdi-delete
-      </v-icon>
-    </template>
+      <br><br>
+      <v-card>
+        <v-card-title>
+          <v-text-field
+            v-model="search"
+            append-icon="mdi-magnify"
+            label="Search"
+            single-line
+            hide-details
+          ></v-text-field>
+          <v-spacer></v-spacer>
+          <v-btn
+              class="mr-4"
+              @click="cancel()"
+            >
+              Back
+          </v-btn>
+        </v-card-title>
+        <v-data-table
+          :headers="headers"
+          :search="search"
+          :items="requests"
+          :items-per-page="50"
+        >
+          <template v-slot:[`item.actions`]="{ item }">
+            <v-icon small class="mr-2" @click="editItem(item)">mdi-pencil</v-icon>
+            <v-icon small @click="deleteItem(item)"> mdi-delete </v-icon>
+          </template>
+        </v-data-table>
+      </v-card>
 
-    <template v-slot:expanded-item="{ headers, item }">
-      <br>
-        <td :colspan="headers.length">
-          Topic: {{ item.topic.name }} <br>
-          Class Num: {{ item.courseNum }} <br>
-          Description: {{ item.description }}
-        </td>
-      <br>
-    </template>
-  </v-data-table>
-</v-container>
+      <v-dialog v-model="dialog" max-width="500px">
+        <v-card>
+          <v-card-title>Request from {{ editedItem.fullName }} on {{ editedItem.date }}</v-card-title>
+          <v-card-text>
+            <br>
+            <v-form ref="form" v-model="valid" lazy validation>
+              <v-text-field
+                v-model="editedItem.date"
+                :counter="25"
+                label="Date"
+                readonly
+              ></v-text-field>
+              <v-text-field
+                v-model="editedItem.time"
+                :counter="25"
+                label="Time"
+                readonly
+              ></v-text-field>
+              <v-text-field
+                v-model="editedItem.fullName"
+                :counter="25"
+                label="Student"
+                readonly
+              ></v-text-field>
+              <v-text-field
+                v-model="editedItem.problem"
+                :counter="25"
+                label="Problem"
+                readonly
+              ></v-text-field>
+
+              <v-text-field v-if="editedItem.topic !== null && editedItem.topic !== undefined"
+                v-model="editedItem.topic.name"
+                :counter="25"
+                label="Topic"
+                readonly
+              ></v-text-field>
+
+              <v-text-field
+                v-model="editedItem.courseNum"
+                :counter="25"
+                label="Course Number"
+                readonly
+              ></v-text-field>
+
+              <v-text-field
+                v-model="editedItem.description"
+                :counter="25"
+                label="Description"
+                readonly
+              ></v-text-field>
+
+              <v-select
+                v-model="editedItem.status"
+                :items="StatusSelect"
+                label="Status"
+                required
+              >
+              </v-select>
+            </v-form>
+          </v-card-text>
+          <v-card-actions>
+            <v-spacer></v-spacer>
+            <v-btn color="accent" @click="save()">Save</v-btn>
+            <v-btn color="error" @click="dialog = false">Cancel</v-btn>
+          </v-card-actions>
+        </v-card>
+      </v-dialog>
+
+      <v-dialog v-model="dialogDelete" max-width="500px">
+        <v-card>
+          <v-card-title>Confirming Deletion:</v-card-title>
+          <v-card-text>
+            <h2>{{deleteMessage}}</h2>
+          </v-card-text>
+          <v-card-actions>
+            <v-spacer></v-spacer>
+            <v-btn color="error" @click="dialogDelete = false">Cancel</v-btn>
+            <v-btn color="accent" @click="confirmedDelete()">OK</v-btn>
+          </v-card-actions>
+        </v-card>
+      </v-dialog>
+    </v-container>
+  </div>
 </template>
 
 <script>
@@ -114,8 +128,12 @@
 
   export default {
     props: ["id"],
-     data() {
-        return { 
+    data() {
+      return { 
+        valid: false,
+        search: "",
+        deleteMessage: "",
+        deleteId: -1,
         expanded: [],
         message : 'Requests',
         StatusSelect: ['Received', 'In-Progress', 'Completed'],
@@ -125,7 +143,7 @@
         headers: [
           { text: "Date", value: "date" },
           { text: "Time", value: "time" },
-          { text: "Person's Name", value: "fullName" },
+          { text: "Student", value: "fullName" },
           { text: "Problem", value: "problem" },
           { text: "Status", value: "status" },
           { text: 'Actions', value: 'actions', sortable: false },
@@ -174,52 +192,60 @@
       async getRequestsForGroup() {
         await RequestServices.getAllForGroup(this.group.id)
         .then(response => {
-          this.requests = response.data;
-          console.log(response)
-          for (let i = 0; i < this.requests.length; i++) {
-            if(this.requests[i].topic === null || this.requests[i].topic === undefined) {
-              this.requests[i].topic = { 
-                name: "None" 
-              }
-            }
-
-            if(this.requests[i].courseNum === null || this.requests[i].courseNum === undefined) {
-              this.requests[i].courseNum = "None"
-            }
-
-            this.requests[i].fullName = this.requests[i].person.fName + " " + this.requests[i].person.lName;
-            this.requests[i].date = this.requests[i].createdAt.slice(0,10)
-            this.requests[i].time = this.calcTime(this.requests[i].createdAt.slice(11,19))
-          }
+          this.requests = response.data;    
         })
         .catch(error => {
           this.message = error.response.data.message
           console.log("There was an error:", error)
         });
+
+        for (let i = 0; i < this.requests.length; i++) {
+          if(this.requests[i].topic === null || this.requests[i].topic === undefined) {
+            this.requests[i].topic = { 
+              name: "None" 
+            }
+          }
+
+          if(this.requests[i].courseNum === null || this.requests[i].courseNum === undefined) {
+            this.requests[i].courseNum = "None"
+          }
+
+          this.requests[i].fullName = `${this.requests[i].person.fName} ${this.requests[i].person.lName}`;
+          this.requests[i].date = this.requests[i].createdAt.slice(0,10)
+          this.requests[i].time = this.calcTime(this.requests[i].createdAt.slice(11,19))
+        }
+
+        this.requests.sort(function (a, b) {
+          if (a.createdAt < b.createdAt) {
+            return -1;
+          }
+          if (a.createdAt > b.createdAt) {
+            return 1;
+          }
+          return 0;
+        });
       },
       editItem(item) {
-        this.editedIndex = this.requests.indexOf(item.id)
+        this.editedIndex = this.requests.findIndex(element => element.id === item.id)
         this.editedItem = Object.assign({}, item)
         this.dialog = true
       },
       deleteItem(item) {
-        this.editedIndex = this.requests.indexOf(item.id)
-        this.editedItem = Object.assign({}, item)
+        this.deleteMessage = `Are you sure you want to delete this request made by ${item.fullName}?`
+        this.deleteId = item.id
         this.dialogDelete = true
       },
-      deleteItemConfirm() {
-        this.requests.splice(this.editedIndex, 1)
-        RequestServices.deleteRequest(this.editedItem.id)
+      async confirmedDelete() {
+        await RequestServices.deleteRequest(this.deleteId)
         .then(() => {
-          this.getTopics(this.start, this.length);
+          this.getRequestsForGroup()
+          this.closeDelete()
         })
-        .catch(error => {
+        .catch((error) => {
           this.message = error.response.data.message
-          console.log("There was an error:", error.response)
+          console.log("There was an error:", error.response);
         });
-        
-        this.closeDelete()
-      },
+    },
       close() {
         this.dialog = false
         this.$nextTick(() => {
@@ -234,16 +260,16 @@
           this.editedIndex = -1
         })
       },
-      save() {
-        RequestServices.updateRequest(this.editedItem.id, this.editedItem)
+      async save() {
+        await RequestServices.updateRequest(this.editedItem.id, this.editedItem)
         .then(() => {
-          this.close()
           this.getRequestsForGroup();
         })
         .catch((error) => {
           console.log(error);
         });
         Object.assign(this.requests[this.editedIndex], this.editedItem)
+        this.close()
       },
       calcTime(time) {
         if(time == null)
@@ -254,16 +280,16 @@
         let milHours = parseInt(temp[0])
         let minutes = temp[1]
         let hours = milHours - 5  // subtract 5 to fix how datetimes are saved
-        console.log(hours)
-        console.log((hours % 24 + 24) % 24)
         hours = (hours % 24 + 24) % 24  // fix it calculating negative numbers
-        
         if (hours == 0) {
           hours = 12
         }
         let dayTime = (~~(hours / 12) > 0 ? "PM":"AM")
         hours = hours % 12
         return "" + hours + ":" + minutes + " " + dayTime
+      },
+      cancel() {
+        this.$router.go(-1);
       },
     },
   }
