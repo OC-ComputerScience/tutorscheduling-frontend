@@ -12,6 +12,9 @@ export default {
     getAllForGroup(id) {
       return apiClient.get("role/group/" + id);
     },
+    getAllForGroupByType(id, type) {
+      return apiClient.get("role/group/" + id + "/type/" + type);
+    },
     getRoleForPerson(id) {
       return apiClient.get("role/person/" + id)
     },
