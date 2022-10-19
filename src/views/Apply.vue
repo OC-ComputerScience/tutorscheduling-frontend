@@ -94,6 +94,7 @@
 import GroupServices from '@/services/groupServices'
 import RoleServices from '@/services/roleServices'
 import PersonRoleServices from '@/services/personRoleServices'
+import TwilioServices from '@/services/twilioServices'
 import Utils from '@/config/utils.js'
 
 export default {
@@ -105,6 +106,7 @@ export default {
       tutor: false, 
       groups: [],
       roles: [],
+      admins: [],
       personroles: [],
       personrole: {},
       selected: [],
@@ -167,7 +169,6 @@ export default {
     async getPersonRoles() {
         await RoleServices.getIncompleteRoleForPerson(this.user.userID)
         .then((response) => {
-          console.log(response);
           for (let i = 0; i < response.data.length; i++) {
             let role = response.data[i];
             this.personroles.push(role);
@@ -211,23 +212,12 @@ export default {
           this.message = error.response.data.message
         });
       }
-      // for (let i = 0; i < this.groups.length; i++) {
-      //   for (let j = 0; j < this.selected.length; j++) {
-      //     if(this.selected[j] === i) {
-      //         this.checkedGroups.push(this.groups[i]);
-      //         const group = this.groups[i];
-      //         await this.addGroupRoles(group.id);
-      //     }
-      //   }
-      // }
-      // console.log(this.checkedGroups)
     },
     async addGroupRoles(id) {
       await RoleServices.getAllForGroup(id)
       .then(response => {
         response.data.forEach(data => {
           this.roles.push(data);
-          console.log(data);
         })
       })
       .catch(error => {
@@ -238,10 +228,8 @@ export default {
     async savePersonRoles() {
       await this.getGroupRoles()
       .then(async () => {
-        console.log(this.roles);
         for (let i = 0; i < this.roles.length; i++) {
           const role = this.roles[i];
-          console.log(role);
           if((this.student && role.type.toLowerCase() === 'student') ||
               (this.tutor && role.type.toLowerCase() === 'tutor')) {
               this.personrole = {
@@ -251,7 +239,21 @@ export default {
                 personId: this.user.userID,
                 roleId: role.id 
               };
-            await PersonRoleServices.addPersonRole(this.personrole);
+            await PersonRoleServices.addPersonRole(this.personrole)
+            .then(async response => {
+              let status = response.data.status
+              // send notification to admins if new person role is a tutor
+              if(role.type.toLowerCase() === 'tutor' && status === 'applied') {
+                await this.getAdmins(role.groupId);
+                for(let i = 0; i < this.admins.length; i++) {
+                  this.sendMessage(this.admins[i], role.groupId)
+                }
+              }
+            })
+            .catch(error => {
+              this.message = error
+              console.log("There was an error:", error)
+            });
           }
         }
         this.setAccess();
@@ -261,15 +263,12 @@ export default {
       // reset the access after a new role is added to a person
       await GroupServices.getGroupsForPerson(this.user.userID)
       .then(response => {
-        // console.log(response);
         this.user.access = [];
         for (let i = 0; i < response.data.length; i++) {
             let element = response.data[i];
             let roles = [];
-            //console.log(element)
             for (let j = 0; j < element.role.length; j++) {
                 let item = element.role[j];
-                //console.log(item)
                 let role = item.type;
                 roles.push(role);
             }
@@ -279,7 +278,6 @@ export default {
             }
             this.user.access.push(group);
         }
-        console.log(this.user.access);
         // resave user in store
         Utils.setStore("user", this.user);
         this.goToPage();
@@ -294,10 +292,8 @@ export default {
       .then(() => {
         for (let i = 0; i < this.personroles.length; i++) {
           let role = this.personroles[i];
-          console.log(role);
           for (let j = 0; j < role.personrole.length; j++) {
             let pRole = role.personrole[j];
-            //console.log(pRole);
             if(role.type.includes("Admin")) {
               this.$router.push({ name: "mainCalendar" });
             }
@@ -321,7 +317,29 @@ export default {
       .catch(error => {
         this.message = error.response.data.message
       })
-    }
+    },
+    async getAdmins(groupId) {
+      await RoleServices.getAllForGroupByType(groupId, "Admin")
+      .then(response => {
+        console.log(response)
+        this.admins = response.data[0].personrole
+      })
+      .catch(error => {
+        this.message = error.response.data.message
+        console.log("There was an error:", error.response)
+      });
+    },
+    sendMessage(admin, groupId) {
+      let temp = {
+        phoneNum: admin.person.phoneNum,
+        message: ''
+      }
+
+      temp.message = "You have a new tutor application from " + this.user.fName + " " + this.user.lName
+        + " for " + this.groups.find(group => group.id == groupId).name + ".\nPlease view this application at http://tutorscheduling.oc.edu/"
+
+      TwilioServices.sendMessage(temp);
+    },
   }
 }
 </script>

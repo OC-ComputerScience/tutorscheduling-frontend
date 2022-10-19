@@ -177,7 +177,6 @@ export default {
         this.message = error.response.data.message
         console.log("There was an error:", error.response)
       });
-
     },
     sendMessage(admin) {
       let temp = {
@@ -186,7 +185,7 @@ export default {
       }
       
       temp.message = "You have a new request from " + this.person.fName + " " + this.person.lName
-        + ".\nPlease view this request at http://tutorscheduling.oc.edu/"
+        + " for " + this.group.name + ".\nPlease view this request at http://tutorscheduling.oc.edu/"
 
       TwilioServices.sendMessage(temp);
     },
