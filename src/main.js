@@ -6,6 +6,7 @@ import store from './store/store'
 import vuetify from './plugins/vuetify'
 import vuePdf from 'vue-pdf'
 import 'material-design-icons-iconfont/dist/material-design-icons.css'
+import '@/plugins/apexcharts'
 
 Vue.component('vue-pdf', vuePdf)
 

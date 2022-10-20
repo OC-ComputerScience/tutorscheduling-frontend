@@ -82,7 +82,7 @@ export default {
     return {
       Problems: ["No times work for me.", "The topic I am looking for is not here.", "Report an issue", "Other"],
       request: {
-        status: "Recieved"
+        status: "Received"
       },
       person: {},
       user: {},

@@ -6,6 +6,9 @@ export default {
     getAllAvailabilities() {
       return apiClient.get("availability");
     },
+    getAllForGroup(id) {
+      return apiClient.get("availability/group/" + id);
+    },
     getAvailabilities(start, length) {
       return apiClient.get(`availabilitys?start=${start}&length=${length}`);
     },
