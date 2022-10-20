@@ -118,7 +118,7 @@
         return { 
         expanded: [],
         message : 'Requests',
-        StatusSelect: ['Recieved', 'In-Progress', 'Completed'],
+        StatusSelect: ['Received', 'In-Progress', 'Completed'],
         dialog: false,
         dialogDelete: false,
         user: {},

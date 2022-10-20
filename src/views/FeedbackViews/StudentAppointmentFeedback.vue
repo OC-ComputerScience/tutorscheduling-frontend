@@ -92,7 +92,18 @@ export default {
     return {
       valid: false,
       personAppointment: {},
-      appointment: {},
+      appointment: {
+        startTime: "",
+        endTime: "",
+        type: "",
+        location: {
+          name: ""
+        },
+        topic: {
+          name: ""
+        },
+        preSessionInfo: ""
+      },
       dateText: '',
       tutorText: '',
       numericalfeedback: null,
