@@ -708,9 +708,7 @@ import Utils from '@/config/utils.js'
     getPrivilegesForPersonRole() {
       PersonRolePrivilegeServices.getPrivilegeByPersonRole(this.id)
       .then(response => {
-        console.log(response)
         this.personroleprivileges = response.data
-        console.log(this.personroleprivileges)
       })
       .catch(error => {
         this.message = error.response.data.message
@@ -991,6 +989,7 @@ import Utils from '@/config/utils.js'
       .catch (error => {
         this.message = error.response.data.message
       })
+      this.adminSignUpMessage(this.tutors[0], this.user.fName, this.user.lName, this.walkInStudent, this.selectedAppointment.id)
       this.adminAddStudent = false
     },
 
@@ -1001,8 +1000,6 @@ import Utils from '@/config/utils.js'
       }
       //If the start of the booked slot isn't the start of the slot, generate an open slot
       if(this.selectedAppointment.startTime < this.newStart) {
-        console.log(this.selectedAppointment.startTime)
-        console.log(this.newStart)
         let temp = {
           date: this.selectedAppointment.date,
           startTime: this.selectedAppointment.startTime,
@@ -1262,10 +1259,33 @@ import Utils from '@/config/utils.js'
       AppointmentServices.getAppointment(appointId).then((response) => {
         let appoint = response.data
         let temp = tutor
+        let location = this.locations.find(location =>  location.id = this.selectedAppointment.locationId)
         let start = this.calcTime(this.selectedAppointment.startTime)
         let date = this.selectedAppointment.date.toString().substring(5,10) + "-" + this.selectedAppointment.date.toString().substring(0,4)
-        temp.message = "Your " + appoint.type + " appointment on " + date + " at " + start + 
-          " has been booked by " + fName + " " + lName + ".\nPlease view this pending appointment at http://tutorscheduling.oc.edu/"
+        temp.message = "You have a new pending appointment:" + 
+                        "\n    Type: " + appoint.type + 
+                        "\n    Date: " + date +
+                        "\n    Time: " + start + 
+                        "\n    Location: " + location.name +
+                        "\n    Student: " + fName + " " + lName +
+                       "\nPlease view this pending appointment at http://tutorscheduling.oc.edu/"
+        TwilioServices.sendMessage(temp);
+      })
+    },
+    adminSignUpMessage(tutor, fName, lName, student, appointId) {
+      AppointmentServices.getAppointment(appointId).then((response) => {
+        let appoint = response.data
+        let temp = tutor
+        let start = this.calcTime(this.selectedAppointment.startTime)
+        let date = this.selectedAppointment.date.toString().substring(5,10) + "-" + this.selectedAppointment.date.toString().substring(0,4)
+        temp.message = "You have a new booked appointment:" + 
+                        "\n    Type: " + appoint.type + 
+                        "\n    Date: " + date +
+                        "\n    Time: " + start + 
+                        "\n    Location: " + location.name +
+                        "\n    Student: " + student.fName + " " + student.lName +
+                        "\n    Booked By: " + fName + " " + lName +
+                       "\nPlease view this booked appointment at http://tutorscheduling.oc.edu/"
         TwilioServices.sendMessage(temp);
       })
     },
@@ -1719,6 +1739,9 @@ import Utils from '@/config/utils.js'
         this.selectedAppointment.preSessionInfo = "";
         // don't need to update google event because it doesn't exist
         await AppointmentServices.updateAppointment(this.selectedAppointment.id, this.selectedAppointment)
+        .then(() => {
+          this.cancelMessage(this.tutors[0], this.user.fName, this.user.lName, this.selectedAppointment.id)
+        })
         .catch(error => { 
           this.message = error.response.data.message
         })
@@ -1759,8 +1782,7 @@ import Utils from '@/config/utils.js'
                 return
               }
             }
-            
-              
+
             await PersonAppointmentServices.deletePersonAppointment(this.personAppointments[i].id)
    
             await AppointmentServices.deleteAppointment(this.selectedAppointment.id)
