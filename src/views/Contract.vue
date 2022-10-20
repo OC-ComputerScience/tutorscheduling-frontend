@@ -48,7 +48,6 @@
                     :hint="user.fullName"
                     :rules="[() => !!role.signature || 'This field is required']"
                     persistent-hint
-                    required
                     v-on:keyup.enter="role.dialog = false; save(role)"
                   ></v-text-field>
                 </v-container>
