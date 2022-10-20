@@ -141,7 +141,10 @@ export default {
         await this.getAdmins();
 
         for(let i = 0; i < this.admins.length; i++) {
-          this.sendMessage(this.admins[i])
+          let tempA = this.admins[i];
+          console.log(tempA)
+          if(await this.checkPrivilege('Receive notifications for requests', tempA.personroleprivilege))
+            this.sendMessage(tempA)
         }
 
         this.$router.go(-1);
@@ -167,6 +170,15 @@ export default {
             console.log("There was an error:", error.response)
           });
       }
+    },
+    async checkPrivilege(privilege, personroleprivileges) {
+      let hasPriv = false;
+      for(let i = 0; i < personroleprivileges.length; i++) {
+        let priv = personroleprivileges[i];
+        if(priv.privilege === privilege)
+          hasPriv = true;
+      }
+      return hasPriv
     },
     async getAdmins() {
       await RoleServices.getAllForGroupByType(this.group.id, "Admin")
