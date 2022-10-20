@@ -48,7 +48,6 @@
                     label="Digital Signature"
                     :hint="user.fullName"
                     persistent-hint
-                    required
                     v-on:keyup.enter="role.dialog = false; save(role)"
                   ></v-text-field>
                 </v-container>
