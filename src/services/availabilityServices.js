@@ -6,6 +6,9 @@ export default {
     getAllAvailabilities() {
       return apiClient.get("availability");
     },
+    getAllForGroup(id) {
+      return apiClient.get("availability/group/" + id);
+    },
     getAvailabilities(start, length) {
       return apiClient.get(`availabilitys?start=${start}&length=${length}`);
     },
@@ -14,6 +17,9 @@ export default {
     },
     getPersonAvailability(id){
       return apiClient.get("availability/person/" + id);
+    },
+    getUpcomingForPerson(personId) {
+      return apiClient.get("availability/upcoming/person/" + personId)
     },
     addAvailability(availability) {
       return apiClient.post("availability", availability);

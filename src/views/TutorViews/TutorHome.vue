@@ -284,7 +284,7 @@
         ></v-data-table>
       </v-card>
       </v-container>
-    <v-container v-else-if="!disabled">
+    <v-container v-else-if="!disabled && !approved">
       <h4>Pending supervisor's approval...</h4>
     </v-container>
     <v-container v-else>
@@ -680,7 +680,7 @@ import TwilioServices from "@/services/twilioServices.js";
           {
             this.approved = true;
           }
-          else 
+          else if(response.data.status.includes("applied") || response.data.status.includes("Applied"))
             this.approved = false;
           if(response.data.status.includes('disabled')){
             this.disabled = true;
