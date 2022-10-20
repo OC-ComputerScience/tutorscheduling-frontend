@@ -290,9 +290,14 @@ export default {
               // send notification to admins if new person role is a tutor
               if(role.type.toLowerCase() === 'tutor' && status === 'applied') {
                 await this.getAdmins(role.groupId);
+
                 for(let i = 0; i < this.admins.length; i++) {
-                  this.sendMessage(this.admins[i], role.groupId)
+                  let tempA = this.admins[i];
+                  console.log(tempA)
+                  if(await this.checkPrivilege('Receive notifications for applications', tempA.personroleprivilege))
+                    this.sendMessage(tempA, role.groupId)
                 }
+
               }
             })
             .catch(error => {
@@ -373,6 +378,15 @@ export default {
           }
         } 
       })
+    },
+    async checkPrivilege(privilege, personroleprivileges) {
+      let hasPriv = false;
+      for(let i = 0; i < personroleprivileges.length; i++) {
+        let priv = personroleprivileges[i];
+        if(priv.privilege === privilege)
+          hasPriv = true;
+      }
+      return hasPriv
     },
     async getAdmins(groupId) {
       await RoleServices.getAllForGroupByType(groupId, "Admin")

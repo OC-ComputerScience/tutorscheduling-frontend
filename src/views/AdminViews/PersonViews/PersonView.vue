@@ -277,7 +277,13 @@
           </v-card-text>
           <v-card-actions>
             <v-spacer></v-spacer>
-            <v-btn color="accent" @click="addPersonRolePrivilege">Save</v-btn>
+            <v-btn 
+              color="accent" 
+              :disabled="!personroleprivilege.privilege || !personroleprivilege.personroleId"
+              @click="addPersonRolePrivilege"
+            >
+              Save
+            </v-btn>
             <v-btn color="error" @click="dialogPrivilegeAdd = false">Cancel</v-btn>
           </v-card-actions>
         </v-card>
@@ -468,7 +474,8 @@ export default {
       });
     },
     async getPersonRoles() {
-      RoleServices.getRoleByGroupForPerson(this.group.id, this.personId)
+      this.personroleprivileges = []
+      await RoleServices.getRoleByGroupForPerson(this.group.id, this.personId)
       .then((response) => {
         this.personroles = response.data;
         console.log(this.personroles)
@@ -484,6 +491,8 @@ export default {
               let priv = pr.personroleprivilege[k]
               priv.associatedRole = this.personroles[i].type;
               this.personroleprivileges.push(priv);
+              // can't do what's below because multiple roles may need the same privilege
+              // this.privileges = this.privileges.filter(privilege => privilege !== priv.privilege)
             }
           }
         }
@@ -556,6 +565,7 @@ export default {
       PersonRolePrivilegeServices.addPrivilege(this.personroleprivilege)
       .then(() => {
         this.dialogPrivilegeAdd = false;
+        this.personroleprivilege = {}
         this.getPersonRoles();
       })
       .catch((error) => {
