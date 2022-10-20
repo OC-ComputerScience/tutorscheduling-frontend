@@ -18,6 +18,9 @@ export default {
     getPersonAvailability(id){
       return apiClient.get("availability/person/" + id);
     },
+    getUpcomingForPerson(personId) {
+      return apiClient.get("availability/upcoming/person/" + personId)
+    },
     addAvailability(availability) {
       return apiClient.post("availability", availability);
     },
