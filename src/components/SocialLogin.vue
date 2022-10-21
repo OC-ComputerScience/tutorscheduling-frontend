@@ -45,49 +45,53 @@
       <v-dialog
         v-model="dialog2"
         persistent
-        max-width="600px"
+        max-width="800"
       >
         <v-card tile>
           <v-card-title>
             <span class="text-h5">Hello, {{this.user.fName}}! Select below:</span>
           </v-card-title>
-          <v-container>
-            <v-subheader>Choose your action:</v-subheader>
+          <br>
+          <v-card-text>
+            <h2 class="black--text">Choose your role:</h2>
             <v-list>
               <v-list-item>
                 <v-checkbox
                   v-model="student"
-                  :label="`Sign up for tutoring`"
+                  :label="`Student`"
                   :rules="validateRoleCheckbox"
                   @change="tutor=!student"
                 ></v-checkbox>
               </v-list-item>
+              <h4 >Sign up for free tutoring that you will receive as a student.</h4>
               <v-list-item>
                 <v-checkbox
                   v-model="tutor"
-                  :label="`Apply to be a tutor`"
+                  :label="`Tutor`"
                   :rules="validateRoleCheckbox"
                   @change="student=!tutor"
                 ></v-checkbox>
               </v-list-item>
+              <h4>Apply to be a tutor in one of our groups and provide quality tutoring.</h4>
             </v-list>
-          </v-container>
-          <v-container>
-            <v-subheader>Choose your organization(s):</v-subheader>
-            <v-list>
-              <v-list-item
-                v-for="(group) in groups"
+            <br><br>
+            <h2 class="black--text">Choose your organization(s):</h2>
+            <v-list
+            v-for="(group) in groups"
                 :key="group.id"
+            >
+              <v-list-item
+                
               >
                 <v-checkbox
                   v-model="selected"
                   :value="group"
                   :label="group.name"
-                  
                 ></v-checkbox>
               </v-list-item>
+              <h4>{{group.description}}</h4>
             </v-list>
-          </v-container>
+          </v-card-text>
           <v-card-actions>
             <v-spacer></v-spacer>
             <v-btn
@@ -233,6 +237,15 @@ export default {
       GroupServices.getAllGroups()
         .then(response => {
           this.groups = response.data;
+          this.groups.sort(function (a, b) {
+            if (a.name < b.name) {
+              return -1;
+            }
+            if (a.name > b.name) {
+              return 1;
+            }
+            return 0;
+          });
         })
         .catch(error => {
           console.log("There was an error:", error.response)
@@ -357,7 +370,7 @@ export default {
           for (let j = 0; j < role.personrole.length; j++) {
             let pRole = role.personrole[j];
             if(role.type.includes("Admin")) {
-              this.$router.push({ name: "adminDashboard", params: { id: pRole.id } });
+              this.$router.push({ name: "adminHome", params: { id: pRole.id } });
             }
             else if((role.type.includes("Student") && !pRole.status.includes("approved") && !pRole.agree) ||
                 ((role.type.includes("Tutor") && !pRole.agree))) {

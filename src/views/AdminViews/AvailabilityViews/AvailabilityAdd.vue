@@ -677,9 +677,20 @@ import Utils from '@/config/utils.js'
         });
       },
       async getAvailabilities() {
-        await AvailabilityServices.getPersonAvailability(this.user.userID)
+        await AvailabilityServices.getUpcomingForPerson(this.user.userID)
         .then(response => {
           this.availabilities = response.data;
+          for(let i = 0; i < this.availabilities.length; i++){
+            for(let j = 0; j < this.availabilities.length - i - 1; j++){
+              if(this.availabilities[j + 1].date < this.availabilities[j].date){
+                  [this.availabilities[j + 1],this.availabilities[j]] = [this.availabilities[j],this.availabilities[j + 1]]
+              }
+              else if(this.availabilities[j + 1].date === this.availabilities[j].date){
+                if(this.availabilities[j + 1].startTime < this.availabilities[j].startTime)
+                  [this.availabilities[j + 1],this.availabilities[j]] = [this.availabilities[j],this.availabilities[j + 1]]
+              } 
+            }
+          }
 
           for (let index = 0; index < this.availabilities.length; ++index) {
             //format date, start time, and end time

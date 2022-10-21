@@ -90,8 +90,7 @@ const router =  new Router({
     {
       path: '/contract/:id',
       name: 'contract',
-      component: Contract,
-      props: true
+      component: Contract
     },
     {
       path: '/apply/:id',

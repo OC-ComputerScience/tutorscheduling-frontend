@@ -101,7 +101,18 @@ export default {
       selected: false,
       valid: false,
       personAppointment: {},
-      appointment: {},
+      appointment: {
+        startTime: "",
+        endTime: "",
+        type: "",
+        location: {
+          name: ""
+        },
+        topic: {
+          name: ""
+        },
+        preSessionInfo: ""
+      },
       dateText: '',
       tutorText: '',
       studentText: '',
@@ -116,31 +127,7 @@ export default {
   
   async created() {
     await this.getAppointment();
-    this.dateText = this.appointment.date.toString().substring(5,10) + "-" + this.appointment.date.toString().substring(0,4)
-    // await PersonAppointmentServices.findPersonAppointmentByPersonAndAppointment(
-    //   this.userId,
-    //   this.id
-    // )
-    //   .then((response) => {
-    //     this.personAppointment = response.data;
-    //     this.personAppointmentId = this.personAppointment.id;
-    //     console.log(this.personAppointment);
-    //   })
-    //   .catch((error) => {
-    //     this.message = error.response.data.message
-    //     console.log("There was an error:", error.response);
-    //   });
-    // await AppointmentServices.getAppointment(this.id)
-    //   .then((response) => {
-    //     this.appointment = response.data;
-    //     console.log(response.data);
-    //   })
-    //   .catch((error) => {
-    //     this.message = error.response.data.message
-    //     console.log("Appointment: " + this);
-    //     console.log("There was an error:", error.response);
-    //   });
-    
+    this.dateText = this.appointment.date.toString().substring(5,10) + "-" + this.appointment.date.toString().substring(0,4)  
   },
 
   methods: {
