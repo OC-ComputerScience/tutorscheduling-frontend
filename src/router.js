@@ -78,15 +78,19 @@ const router =  new Router({
     process.env.NODE_ENV === 'development'? "/" : "/",
   routes: [
     {
-      path: '/login',
+      path: '/',
       name: 'login',
+      component: Login
+    },
+    {
+      path: '/login',
+      name: 'login2',
       component: Login
     },
     {
       path: '/contract/:id',
       name: 'contract',
-      component: Contract,
-      props: true
+      component: Contract
     },
     {
       path: '/apply/:id',
@@ -315,11 +319,11 @@ const router =  new Router({
 
 router.beforeEach((to, from, next) => {
   // redirect to login page if not logged in and trying to access a restricted page
-  const publicPages = ['/login']
+  const publicPages = ['/']
   const authRequired = !publicPages.includes(to.path)
   const loggedIn = localStorage.getItem('user')
   if (authRequired && !loggedIn) {
-    return next('/login')
+    return next('/')
   }
   next()
 })
