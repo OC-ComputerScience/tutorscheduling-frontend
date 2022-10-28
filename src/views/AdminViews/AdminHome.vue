@@ -3,6 +3,27 @@
     <v-container>
       <v-toolbar>
         <v-toolbar-title>Hello, {{ this.user.fName }}!</v-toolbar-title>
+        <v-tooltip bottom>
+          <template v-slot:activator="{ on, attrs }">
+            <v-icon
+              class="mx-2"
+              color="grey darken"
+              dark
+              v-bind="attrs"
+              v-on="on"
+            >
+              mdi-information
+            </v-icon>
+          </template>
+          <span>
+            Welcome to your personalized dashboard for {{this.user.selectedGroup}}.
+            View information on appointment hours, tutor hours, and topic hours for the week.
+            <br>
+            Click on the "Student Requests" chart to view requests.
+            <br>
+            Click on "Tutor Applications" to view applications.
+          </span>
+        </v-tooltip>
         <v-spacer></v-spacer>
         <v-toolbar-title>Admin</v-toolbar-title>
       </v-toolbar>
@@ -14,6 +35,22 @@
             <v-card-title>
               Upcoming Appointment Hours - {{ this.user.selectedGroup }}
               <v-spacer></v-spacer>
+              <v-tooltip bottom>
+                <template v-slot:activator="{ on, attrs }">
+                  <v-icon
+                    class="mx-2"
+                    color="grey darken"
+                    dark
+                    v-bind="attrs"
+                    v-on="on"
+                  >
+                    mdi-information
+                  </v-icon>
+                </template>
+                <span>
+                  View a breakdown of appointment hours for last week, this week, and next week.
+                </span>
+              </v-tooltip>
             </v-card-title>
             <apexchart
               ref="chart"
@@ -33,6 +70,23 @@
               >
                 <v-card-title>
                   Student Requests
+                  <v-spacer></v-spacer>
+                  <v-tooltip bottom>
+                    <template v-slot:activator="{ on, attrs }">
+                      <v-icon
+                        class="mx-2"
+                        color="grey darken"
+                        dark
+                        v-bind="attrs"
+                        v-on="on"
+                      >
+                        mdi-information
+                      </v-icon>
+                    </template>
+                    <span>
+                      Click here to view requests.
+                    </span>
+                  </v-tooltip>
                 </v-card-title>
                 <apexchart
                   width="380"
@@ -52,6 +106,23 @@
               >
                 <v-card-title>
                   Tutor Applications
+                  <v-spacer></v-spacer>
+                  <v-tooltip bottom>
+                    <template v-slot:activator="{ on, attrs }">
+                      <v-icon
+                        class="mx-2"
+                        color="grey darken"
+                        dark
+                        v-bind="attrs"
+                        v-on="on"
+                      >
+                        mdi-information
+                      </v-icon>
+                    </template>
+                    <span>
+                      Click here to view applications.
+                    </span>
+                  </v-tooltip>
                 </v-card-title>
                 <v-card-text class="text-center">
                   <h1>{{ unapprovednum }}</h1>
@@ -67,6 +138,22 @@
             <v-card-title>
               Tutors For Week Starting {{ current_week }}
               <v-spacer></v-spacer>
+              <v-tooltip bottom>
+                <template v-slot:activator="{ on, attrs }">
+                  <v-icon
+                    class="mx-2"
+                    color="grey darken"
+                    dark
+                    v-bind="attrs"
+                    v-on="on"
+                  >
+                    mdi-information
+                  </v-icon>
+                </template>
+                <span>
+                  View a breakdown of the appointment hours for each tutor.
+                </span>
+              </v-tooltip>
             </v-card-title>
             <v-data-table
               :headers="tutorTable"
@@ -82,6 +169,22 @@
             <v-card-title>
               Topics For Week Starting {{ current_week }}
               <v-spacer></v-spacer>
+              <v-tooltip bottom>
+                <template v-slot:activator="{ on, attrs }">
+                  <v-icon
+                    class="mx-2"
+                    color="grey darken"
+                    dark
+                    v-bind="attrs"
+                    v-on="on"
+                  >
+                    mdi-information
+                  </v-icon>
+                </template>
+                <span>
+                  View a breakdown of the appointment hours for each topic.
+                </span>
+              </v-tooltip>
             </v-card-title>
             <v-data-table
               :headers="topicTable"

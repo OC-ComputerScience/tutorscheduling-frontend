@@ -2,6 +2,23 @@
     <v-container>
         <v-toolbar>
             <v-toolbar-title>{{this.message}}</v-toolbar-title>
+            <v-spacer></v-spacer>
+            <v-tooltip bottom>
+                <template v-slot:activator="{ on, attrs }">
+                    <v-icon
+                    class="mx-2"
+                    color="grey darken"
+                    dark
+                    v-bind="attrs"
+                    v-on="on"
+                    >
+                    mdi-information
+                    </v-icon>
+                </template>
+                <span>
+                    Click on topics that you can tutor in. You will then need to specify your skill level on each.
+                </span>
+            </v-tooltip>
         </v-toolbar>
         <br><br>
         <v-item-group
@@ -105,7 +122,7 @@ import PersonTopicServices from '@/services/personTopicServices'
       colors: ['#47121D', '#EE5044', '#63BAC0', '#196CA2', '#F8C545', '#032F45'],
       dialog: false,
       levels: ["Freshman", "Sophomore", "Junior", "Senior"],
-      message : 'Sign up for topics to tutor in:'
+      message : 'Topics'
     }),
     async created () {
         this.user = Utils.getStore('user');

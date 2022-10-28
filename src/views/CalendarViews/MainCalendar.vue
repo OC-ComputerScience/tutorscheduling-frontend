@@ -3,6 +3,24 @@
     <v-container>
       <v-toolbar>
         <v-toolbar-title>{{this.message}}</v-toolbar-title>
+        <v-tooltip bottom>
+          <template v-slot:activator="{ on, attrs }">
+            <v-icon
+              class="mx-2"
+              color="grey darken"
+              dark
+              v-bind="attrs"
+              v-on="on"
+            >
+              mdi-information
+            </v-icon>
+          </template>
+          <span>
+            Select an appointment to view information, book the appointment, make changes, etc.
+            <br>
+            You can filter the appointments by a desired Topic or Tutor.
+          </span>
+        </v-tooltip>
         <v-spacer></v-spacer>
         <v-toolbar-title>{{this.role.type}}</v-toolbar-title>
       </v-toolbar>

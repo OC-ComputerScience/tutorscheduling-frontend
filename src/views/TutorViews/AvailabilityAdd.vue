@@ -4,6 +4,23 @@
 <div>
   <v-toolbar>
     <v-toolbar-title>{{this.message}}</v-toolbar-title>
+    <v-spacer></v-spacer>
+      <v-tooltip bottom>
+        <template v-slot:activator="{ on, attrs }">
+          <v-icon
+            class="mx-2"
+            color="grey darken"
+            dark
+            v-bind="attrs"
+            v-on="on"
+          >
+            mdi-information
+          </v-icon>
+        </template>
+        <span>
+          Select date(s), times, and type, and click Save to indicate when you can tutor.
+        </span>
+      </v-tooltip>
   </v-toolbar>
   <br>
   <b v-if="!group.allowSplittingAppointments">Please create availabilities with specific appointments times, not big blocks of time.</b>
@@ -325,7 +342,7 @@ import Utils from '@/config/utils.js'
     components: {
     },
     data: () => ({
-      message : 'Availability - select date, times and type and click Save to indicate when you can tutor',
+      message : 'Add An Availability',
       nowDate: null,
       nowTime: null,
       availability: {},

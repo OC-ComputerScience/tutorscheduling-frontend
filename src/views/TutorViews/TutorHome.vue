@@ -3,6 +3,24 @@
     <v-container>
       <v-toolbar>
         <v-toolbar-title>Hello, {{ this.user.fName }}!</v-toolbar-title>
+        <v-tooltip bottom>
+          <template v-slot:activator="{ on, attrs }">
+            <v-icon
+              class="mx-2"
+              color="grey darken"
+              dark
+              v-bind="attrs"
+              v-on="on"
+            >
+              mdi-information
+            </v-icon>
+          </template>
+          <span>
+            Click on "View Calendar" to see all appointments.
+            <br>
+            Click on "Manage Availability" to make appointments for yourself.
+          </span>
+        </v-tooltip>
         <v-spacer></v-spacer>
         <v-toolbar-title>{{this.message}}</v-toolbar-title>
       </v-toolbar>
@@ -239,17 +257,23 @@
         <v-card-title>
           Upcoming Appointments for {{this.user.selectedGroup}} as a tutor
           <v-spacer></v-spacer>
-          <v-text-field
-              v-model="search"
-              append-icon="mdi-magnify"
-              label="Search"
-              single-line
-              hide-details
-          ></v-text-field>
+          <v-tooltip bottom>
+            <template v-slot:activator="{ on, attrs }">
+              <v-icon
+                class="mx-2"
+                color="grey darken"
+                dark
+                v-bind="attrs"
+                v-on="on"
+              >
+                mdi-information
+              </v-icon>
+            </template>
+            <span>
+              Click on an appointment to view information, make changes, confirm, or reject.
+            </span>
+          </v-tooltip>
         </v-card-title>
-        <v-card-text>
-          <b>Click on an appointment to view information, make changes, confirm, or reject.</b>
-        </v-card-text>
         <v-data-table
           :headers="headers"
           :search="search"
@@ -264,17 +288,23 @@
         <v-card-title>
           Provide Appointment Feedback for {{this.user.selectedGroup}}
           <v-spacer></v-spacer>
-          <v-text-field
-              v-model="search"
-              append-icon="mdi-magnify"
-              label="Search"
-              single-line
-              hide-details
-          ></v-text-field>
+          <v-tooltip bottom>
+            <template v-slot:activator="{ on, attrs }">
+              <v-icon
+                class="mx-2"
+                color="grey darken"
+                dark
+                v-bind="attrs"
+                v-on="on"
+              >
+                mdi-information
+              </v-icon>
+            </template>
+            <span>
+              Click on an appointment to provide feedback.
+            </span>
+          </v-tooltip>
         </v-card-title>
-        <v-card-text>
-          <b>Click on an appointment to provide feedback.</b>
-        </v-card-text>
         <v-data-table
           :headers="headerFeedback"
           :search="search"

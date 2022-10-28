@@ -2,9 +2,24 @@
   <div>
     <v-container>
       <v-toolbar>
-        <v-toolbar-title
-          >{{this.message}}</v-toolbar-title
-        >
+        <v-toolbar-title>{{this.message}}</v-toolbar-title>
+        <v-spacer></v-spacer>
+        <v-tooltip bottom>
+          <template v-slot:activator="{ on, attrs }">
+              <v-icon
+              class="mx-2"
+              color="grey darken"
+              dark
+              v-bind="attrs"
+              v-on="on"
+              >
+              mdi-information
+              </v-icon>
+          </template>
+          <span>
+            Provide feedback for your recent session.
+          </span>
+        </v-tooltip>
       </v-toolbar>
       <br />
       <br />
@@ -120,7 +135,7 @@ export default {
       textualfeedback: "",
       personAppointmentId: "",
       status: "",
-      message: "Provide feedback for your recent session",
+      message: "Tutor's Feedback",
       roles: ["admin"]
     }
   },

@@ -49,13 +49,11 @@ import ReportList    from './views/AdminViews/ReportViews/ReportList.vue';
 // Approvals
 import PendingList    from './views/AdminViews/ApprovalViews/PendingList.vue';
 
-// Availability
-import AvailabilityAdd    from './views/AdminViews/AvailabilityViews/AvailabilityAdd.vue';
-
 // Calendar
 import MainCalendar    from './views/CalendarViews/MainCalendar.vue';
 
 // Tutor Pages
+import AvailabilityAdd    from './views/TutorViews/AvailabilityAdd.vue';
 import TutorHome from './views/TutorViews/TutorHome.vue'
 import TutorInfo from './views/TutorViews/TutorInfo.vue'
 import TutorTopics from './views/TutorViews/TutorTopics.vue'

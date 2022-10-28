@@ -2,7 +2,24 @@
     <div>
         <v-container>
             <v-toolbar>
-                <v-toolbar-title>{{this.message}}</v-toolbar-title>
+              <v-toolbar-title>{{this.message}}</v-toolbar-title>
+              <v-spacer></v-spacer>
+              <v-tooltip bottom>
+                <template v-slot:activator="{ on, attrs }">
+                    <v-icon
+                    class="mx-2"
+                    color="grey darken"
+                    dark
+                    v-bind="attrs"
+                    v-on="on"
+                    >
+                    mdi-information
+                    </v-icon>
+                </template>
+                <span>
+                  Apply for more help or another position.
+                </span>
+              </v-tooltip>
             </v-toolbar>
             <br><br>
             <v-row justify="center">
@@ -103,7 +120,7 @@ import Utils from '@/config/utils.js'
 export default {
   data () {
     return {
-      message : 'Apply for more help or another position:',
+      message : 'Apply',
       dialog: false,
       student: true,
       tutor: false, 

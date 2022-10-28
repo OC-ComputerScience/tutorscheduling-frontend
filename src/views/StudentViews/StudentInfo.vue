@@ -3,6 +3,23 @@
     <v-container>
       <v-toolbar>
         <v-toolbar-title>{{this.message}}</v-toolbar-title>
+        <v-spacer></v-spacer>
+        <v-tooltip bottom>
+          <template v-slot:activator="{ on, attrs }">
+            <v-icon
+              class="mx-2"
+              color="grey darken"
+              dark
+              v-bind="attrs"
+              v-on="on"
+            >
+              mdi-information
+            </v-icon>
+          </template>
+          <span>
+            Make changes to your phone number or view your information below.
+          </span>
+        </v-tooltip>
       </v-toolbar>
       <br><br>
       <v-text-field
@@ -80,12 +97,12 @@ import Utils from '@/config/utils.js'
       return {
         person: {},
         fullName: '',
-        message : 'Edit Student Account'
+        message : ''
       };
     },
-    created() {
+    async created() {
       this.user = Utils.getStore('user');
-      this.getPerson();
+      await this.getPerson();
     },
     methods: {
       async getPerson() {
@@ -93,6 +110,7 @@ import Utils from '@/config/utils.js'
           .then(response => {
             this.person = response.data;
             this.fullName = this.person.fName + ' ' + this.person.lName;
+            this.message = this.fullName + "'s Information"
           })
           .catch(error => {
             this.message = error.response.data.message

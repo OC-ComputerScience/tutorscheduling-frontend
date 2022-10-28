@@ -3,6 +3,23 @@
     <v-container>
       <v-toolbar>
         <v-toolbar-title>{{this.message}}</v-toolbar-title>
+        <v-spacer></v-spacer>
+        <v-tooltip bottom>
+          <template v-slot:activator="{ on, attrs }">
+            <v-icon
+              class="mx-2"
+              color="grey darken"
+              dark
+              v-bind="attrs"
+              v-on="on"
+            >
+              mdi-information
+            </v-icon>
+          </template>
+          <span>
+            Make changes to your phone number or view your information below.
+          </span>
+        </v-tooltip>
       </v-toolbar>
       <br><br>
       <v-text-field
@@ -41,13 +58,22 @@
         <v-card-title>
           Current Topics for {{this.user.selectedGroup}}
           <v-spacer></v-spacer>
-          <v-text-field
-              v-model="search"
-              append-icon="mdi-magnify"
-              label="Search"
-              single-line
-              hide-details
-          ></v-text-field>
+          <v-tooltip bottom>
+            <template v-slot:activator="{ on, attrs }">
+              <v-icon
+                class="mx-2"
+                color="grey darken"
+                dark
+                v-bind="attrs"
+                v-on="on"
+              >
+                mdi-information
+              </v-icon>
+            </template>
+            <span>
+              If you need to add or remove a topic, please contact your supervisor.
+            </span>
+          </v-tooltip>
         </v-card-title>
         <v-data-table
           :headers="headers"
@@ -93,10 +119,11 @@
 <script>
 import PersonServices from '@/services/personServices'
 import TopicServices from '@/services/topicServices'
-import GroupServices from "@/services/groupServices.js";
+import PersonRoleServices from "@/services/personRoleServices.js";
 import Utils from '@/config/utils.js'
 
   export default {
+    props: ["id"],
     name: 'App',
     components: {
     },
@@ -109,22 +136,22 @@ import Utils from '@/config/utils.js'
         topics: [],
         headers: [{text: 'Topic', value: 'name'}, 
                   {text: 'Skill Level', value: 'persontopic[0].skillLevel'}],
-        message :'Edit Tutor Account'
+        message :''
       };
     },
     async created() {
       this.user = Utils.getStore('user');
-      this.getPerson();
-      await this.getGroup(this.user.selectedGroup.replace(/%20/g, " "))
+      await this.getPerson();
+      await this.getGroupByPersonRoleId(this.id)
       .then(() => {
         this.getTopics();
       })
     },
     methods: {
-      async getGroup(name) {
-        await GroupServices.getGroupByName(name)
-        .then((response) => {
-          this.group = response.data[0];
+      async getGroupByPersonRoleId() {
+        await PersonRoleServices.getGroupForPersonRole(this.id)
+        .then(async (response) => {
+          this.group = response.data[0].role.group
         })
         .catch((error) => {
           this.message = error.response.data.message
@@ -136,6 +163,7 @@ import Utils from '@/config/utils.js'
           .then(response => {
             this.person = response.data;
             this.fullName = this.person.fName + ' ' + this.person.lName;
+            this.message = this.fullName + "'s Information"
           })
           .catch(error => {
             this.message = error.response.data.message

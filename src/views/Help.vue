@@ -2,7 +2,24 @@
     <div>
         <v-container>
             <v-toolbar>
-                <v-toolbar-title>How to use this application:</v-toolbar-title>
+                <v-toolbar-title>Help</v-toolbar-title>
+                <v-spacer></v-spacer>
+                <v-tooltip bottom>
+                    <template v-slot:activator="{ on, attrs }">
+                        <v-icon
+                        class="mx-2"
+                        color="grey darken"
+                        dark
+                        v-bind="attrs"
+                        v-on="on"
+                        >
+                        mdi-information
+                        </v-icon>
+                    </template>
+                    <span>
+                        This document details how to use this application.
+                    </span>
+                </v-tooltip>
             </v-toolbar>
             <br><br>
             <!-- <button @click="$refs.myPdfComponent.print()">print</button> -->

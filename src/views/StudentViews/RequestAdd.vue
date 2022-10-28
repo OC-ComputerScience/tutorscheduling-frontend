@@ -3,6 +3,23 @@
     <v-container>
       <v-toolbar>
         <v-toolbar-title>{{this.message}}</v-toolbar-title>
+        <v-spacer></v-spacer>
+        <v-tooltip bottom>
+          <template v-slot:activator="{ on, attrs }">
+            <v-icon
+              class="mx-2"
+              color="grey darken"
+              dark
+              v-bind="attrs"
+              v-on="on"
+            >
+              mdi-information
+            </v-icon>
+          </template>
+          <span>
+            Enter information about what you are requesting and click Save.
+          </span>
+        </v-tooltip>
       </v-toolbar>
       <br>
     <v-form
@@ -91,7 +108,7 @@ export default {
       roles: [
         'admin'
       ],
-      message :'Add Request - enter data and click Save',
+      message :'Add A Request',
       valid : false
      
     };

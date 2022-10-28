@@ -3,11 +3,27 @@
     <v-container>
       <v-toolbar>
         <v-toolbar-title>{{this.message}}</v-toolbar-title>
+        <v-spacer></v-spacer>
+        <v-tooltip bottom>
+          <template v-slot:activator="{ on, attrs }">
+              <v-icon
+              class="mx-2"
+              color="grey darken"
+              dark
+              v-bind="attrs"
+              v-on="on"
+              >
+              mdi-information
+              </v-icon>
+          </template>
+          <span>
+            Before continuing to this service, you must sign contracts for the following positions. 
+            <br>
+            Please click on each title to sign its contract.
+          </span>
+        </v-tooltip>
       </v-toolbar>
       <br><br>
-      <h4>
-        Before continuing to this service, you must sign contracts for the following positions. Please click on each title to sign its contract.
-      </h4>
         <v-row justify="center">
           <v-col
               v-for="role in roles"
@@ -86,7 +102,7 @@
     data() {
       return {
         //dialog: [],
-        message :'Sign Contract',
+        message :'Contracts',
         roles: [],
         signature: '',
         numPages: 2,
