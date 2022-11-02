@@ -34,7 +34,10 @@
                     {{ item.text }}
                 </v-btn>
             </v-toolbar-items>
-            <v-menu v-if="user != null && selectedGroup != '' && currentPersonRoleID !== 0 && (selectedRoles !== '' && selectedRoles !== undefined && selectedRoles !== null)" offset-y
+            <v-menu 
+                v-if="user != null && selectedGroup != '' && currentPersonRoleID !== 0 
+                    && (selectedRoles !== '' && selectedRoles !== undefined && selectedRoles !== null)" 
+                offset-y
             >
                 <template v-slot:activator="{ on, attrs }">
                     <v-btn
@@ -48,35 +51,27 @@
                     </v-btn>
                 </template>
                 <v-list>
-                    <!--<v-list-item
-                        v-for="group in groups"
-                        :key="group"
-                        @click="(selectedGroup = group); resetMenu()"
+                    <v-list-group
+                        v-for="(group,i) in user.access"
+                        :key="i"
+                        no-action
+                        sub-group
+                        @click.stop.prevent
                     >
-                        <v-list-item-title>{{ group }}</v-list-item-title>
-                    </v-list-item> -->
-                        <v-list-group
-                            v-for="(group,i) in user.access"
-                            :key="i"
-                            no-action
-                            sub-group
-                                            @click.stop.prevent
+                        <template v-slot:activator>
+                            <v-list-item-title v-text="group.name"></v-list-item-title>
+                        </template>
 
-                        >
-                            <template v-slot:activator>
-                                <v-list-item-title v-text="group.name"></v-list-item-title>
-                            </template>
-
-                            <v-list-item
+                        <v-list-item
                             v-for="(role,j) in group.roles"
                             :key="j"
-                            @click="selectedRoles = role; selectedGroup = group.name; resetMenu()"
-                            >
-                            <v-list-item-content>
-                                <v-list-item-title v-text="role"></v-list-item-title>
-                            </v-list-item-content>
-                            </v-list-item>
-                        </v-list-group>
+                            @click="selectedRoles = role.type; selectedGroup = group.name; resetMenu()"
+                        >
+                        <v-list-item-content>
+                            <v-list-item-title v-text="role.type"></v-list-item-title>
+                        </v-list-item-content>
+                        </v-list-item>
+                    </v-list-group>
                 </v-list>
             </v-menu>
             <v-menu
@@ -356,6 +351,7 @@ export default {
         },
         async setGroupsAndRoles() {
             this.user = Utils.getStore('user');
+            console.log(this.user)
             if (this.user != null) {
                 this.title = 'OC Tutoring';
                 this.initials = this.user.fName[0] + this.user.lName[0];
@@ -375,7 +371,7 @@ export default {
                       Utils.setStore("user", this.user);
                     }
                     if (this.selectedRoles === '' || this.selectedRoles === undefined || this.selectedRoles === null) {
-                        this.selectedRoles = this.user.access[0].roles[0]
+                        this.selectedRoles = this.user.access[0].roles[0].type
                     }
                     this.user.selectedRoles = this.selectedRoles
                     Utils.setStore("user", this.user);

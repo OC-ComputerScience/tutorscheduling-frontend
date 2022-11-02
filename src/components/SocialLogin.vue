@@ -311,7 +311,10 @@ export default {
             let roles = [];
             for (let j = 0; j < element.role.length; j++) {
                 let item = element.role[j];
-                let role = item.type;
+                let role = {
+                    type: item.type,
+                    personRoleId: item.personrole[0].id
+                }
                 roles.push(role);
             }
             let group = {
