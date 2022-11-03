@@ -721,23 +721,6 @@ export default {
 
       this.dialogDelete = false;
     },
-    checkRole(type) {
-      console.log(this.disabledRole.type === type)
-      if(this.disabledRole != null && this.disabledRole.type == type) {
-        return true;
-      }
-      else {
-        return false;
-      }
-    },
-    checkStatus(appoint, status) {
-      if(appoint != null && appoint.status == status) {
-        return true;
-      }
-      else {
-        return false;
-      }
-    },
     async disablePersonRole(personrole) {
       await this.getAppointments(personrole);
       console.log(this.appointments)
@@ -790,7 +773,7 @@ export default {
       }
       //delete appointment as a student of a private session
       console.log(appoint)
-      if (appoint.type.includes('Private') && this.checkRole('Student') && this.checkStatus(appoint, 'booked')){
+      if (appoint.type.includes('Private') && this.disabledRole.type === "Student" && appoint.status === 'booked'){
         tempAppoint.status = "studentCancel"
         await AppointmentServices.updateForGoogle(appoint.id, tempAppoint)
         .then(async () =>{
@@ -827,7 +810,7 @@ export default {
           })
         })
       }
-      else if (appoint.type.includes('Private') && this.checkRole('Student') && this.checkStatus(appoint, 'pending')){
+      else if (appoint.type.includes('Private') && this.disabledRole.type === "Student" && appoint.status === 'pending'){
         tempAppoint.status = "available"
         tempAppoint.locationId = null;
         tempAppoint.topicId = null;
@@ -851,7 +834,7 @@ export default {
         }
       }
       //delete appointment as a student of a group session
-      else if (appoint.type.includes('Group') && this.checkRole('Student')){
+      else if (appoint.type.includes('Group') && this.disabledRole.type === "Student"){
         for (let i = 0;i < appoint.personappointment.length;i++) {
           if (appoint.personappointment[i].appointmentId == appoint.id && !appoint.personappointment[i].isTutor
             && appoint.personappointment[i].personId == this.person.id){
@@ -866,7 +849,7 @@ export default {
         }
       }
       //delete appointment as a tutor of a private session
-      else if (appoint.type.includes('Private') && this.checkRole('Tutor')){
+      else if (appoint.type.includes('Private') && this.disabledRole.type === "Tutor"){
         console.log("in delete private for tutor")
         for (let i = 0; i < appoint.personappointment.length;i++) {
           if (appoint.personappointment[i].appointmentId == appoint.id && appoint.personappointment[i].isTutor){
@@ -893,7 +876,7 @@ export default {
         }
       }
       //delete appointment as a tutor of a group session
-      else if (appoint.type.includes('Group') && this.checkRole('Tutor')){
+      else if (appoint.type.includes('Group') && this.disabledRole.type === "Tutor"){
         for (let i = 0;i < appoint.personappointment.length;i++) {
           if (appoint.personappointment[i].appointmentId == appoint.id && appoint.personappointment[i].isTutor && 
           appoint.personappointment[i].personId == this.person.id){
