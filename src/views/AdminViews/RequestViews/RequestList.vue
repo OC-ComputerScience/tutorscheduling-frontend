@@ -43,46 +43,39 @@
             <v-form ref="form" v-model="valid" lazy validation>
               <v-text-field
                 v-model="editedItem.date"
-                :counter="25"
                 label="Date"
                 readonly
               ></v-text-field>
               <v-text-field
                 v-model="editedItem.time"
-                :counter="25"
                 label="Time"
                 readonly
               ></v-text-field>
               <v-text-field
                 v-model="editedItem.fullName"
-                :counter="25"
                 label="Student"
                 readonly
               ></v-text-field>
               <v-text-field
                 v-model="editedItem.problem"
-                :counter="25"
                 label="Problem"
                 readonly
               ></v-text-field>
 
               <v-text-field v-if="editedItem.topic !== null && editedItem.topic !== undefined"
                 v-model="editedItem.topic.name"
-                :counter="25"
                 label="Topic"
                 readonly
               ></v-text-field>
 
               <v-text-field
                 v-model="editedItem.courseNum"
-                :counter="25"
                 label="Course Number"
                 readonly
               ></v-text-field>
 
               <v-text-field
                 v-model="editedItem.description"
-                :counter="25"
                 label="Description"
                 readonly
               ></v-text-field>
