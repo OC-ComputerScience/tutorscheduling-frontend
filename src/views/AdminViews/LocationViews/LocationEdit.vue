@@ -43,6 +43,14 @@
     >
     </v-select>
 
+    <v-select
+        v-model="location.status"
+        :items="status"
+        label="Status"
+        required
+      >
+      </v-select>
+
       <v-select
         v-model="location.groupId"
         :items="groups"
@@ -88,6 +96,7 @@ export default {
       location: {},
       groups: [],
       types: ["Online", "In-Person"],
+      status: ["enabled", "disabled"],
         roles: [
         'admin'
       ],

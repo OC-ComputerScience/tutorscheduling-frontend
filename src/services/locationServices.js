@@ -12,6 +12,9 @@ export default {
     getAllForGroup(id) {
       return apiClient.get("location/group/" + id);
     },
+    getActiveForGroup(id) {
+      return apiClient.get("location/active/group/" + id);
+    },
     getLocation(id) {
       return apiClient.get("location/" + id);
     },

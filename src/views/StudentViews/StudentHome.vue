@@ -616,7 +616,7 @@ import PersonAppointmentServices from "@/services/personAppointmentServices.js";
         });
       },
       getLocations() {
-        LocationServices.getAllForGroup(this.group.id)
+        LocationServices.getActiveForGroup(this.group.id)
         .then((response) => {
           this.locations = response.data;
         })

@@ -721,7 +721,7 @@ import Utils from '@/config/utils.js'
       await TopicServices.getTopicByGroupForPerson(this.group.id, this.user.userID)
       .then(async response => {
         this.topics = response.data
-        await LocationServices.getAllForGroup(this.group.id).then(response => {
+        await LocationServices.getActiveForGroup(this.group.id).then(response => {
           this.locations = response.data
         })
       })

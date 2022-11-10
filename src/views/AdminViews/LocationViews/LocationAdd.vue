@@ -49,6 +49,14 @@
       >
       </v-select>
 
+      <v-select
+        v-model="location.status"
+        :items="status"
+        label="Status"
+        required
+      >
+      </v-select>
+
       <!-- group should be readonly -->
       <v-text-field
         v-model="this.user.selectedGroup"
@@ -103,6 +111,7 @@ export default {
       group: {},
       user: {},
       types: ["Online", "In-Person"],
+      status: ["enabled", "disabled"],
       roles: [
         'admin'
       ],

@@ -64,7 +64,8 @@
         headers: [{text: 'ID', value: 'id'}, 
                   {text: 'Name', value: 'name'},
                   {text: 'Type', value: 'type'},
-                  {text: 'Building', value: 'building'}]
+                  {text: 'Building', value: 'building'},
+                  {text: 'Status', value: 'status'}]
       }
     },
     async created() {
