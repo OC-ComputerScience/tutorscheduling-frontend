@@ -416,7 +416,7 @@ import Utils from '@/config/utils.js'
         let dayTime = (~~(milHours / 12) > 0 ? "PM":"AM")
         return "" + hours + ":" + minutes + " " + dayTime
       },
-      generateTimeslots(startTime, endTime) {
+      generateStartTimeslots(startTime, endTime) {
         let timeInterval = this.group.timeInterval;
         // get the total minutes between the start and end times.
         var totalMins = this.subtractTimes(startTime, endTime);
@@ -426,6 +426,32 @@ import Utils from '@/config/utils.js'
         
         // get the rest of the time slots.
         let generatedTimes = this.getTimeSlots(timeInterval, totalMins, timeSlots);
+        console.log(generatedTimes)
+
+        let newTimeText = ""
+
+        let times = []
+        for(let i = 0; i < generatedTimes.length; i++) {
+          newTimeText = this.calcTime(generatedTimes[i])
+          times.push({
+            time: generatedTimes[i],
+            timeText: newTimeText
+          })
+        }
+        return times
+      },
+      generateEndTimeslots(startTime, endTime) {
+        let minApptTime = this.group.minApptTime;
+        console.log(minApptTime)
+        // get the total minutes between the start and end times.
+        var totalMins = this.subtractTimes(startTime, endTime);
+        
+        // set the initial timeSlots array to just the start time
+        var timeSlots = [startTime];
+        
+        // get the rest of the time slots.
+        let generatedTimes = this.getTimeSlots(minApptTime, totalMins, timeSlots);
+        console.log(generatedTimes)
 
         let newTimeText = ""
 
@@ -516,10 +542,10 @@ import Utils from '@/config/utils.js'
         else {
           this.nowTime = "00:00"
         }
-        this.startTimes = this.generateTimeslots(this.nowTime, this.newEnd)
+        this.startTimes = this.generateStartTimeslots(this.nowTime, this.newEnd)
         // adding this to make sure that you can't start an appointment at the end time
         this.startTimes.pop();
-        this.endTimes = this.generateTimeslots(this.newStart, maxEndTime)
+        this.endTimes = this.generateEndTimeslots(this.newStart, maxEndTime)
         // adding this to make sure you can't end an appointment at the start time
         this.endTimes.shift();
       },

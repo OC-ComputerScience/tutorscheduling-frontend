@@ -259,7 +259,7 @@
               item-value="time"
               label="Booked Start"
               required
-              @change="newStart = displayedStart; updateTimes()"
+              @change="newStart = displayedStart; updateTimes(); secondTime = false"
               :disabled="(checkRole('Tutor') && (!checkPrivilege('Sign up students for appointments') || !adminAddStudent)) || datePast"
               dense
             >
@@ -288,7 +288,7 @@
             label="Booked End"
             required
             @change="newEnd = displayedEnd; updateTimes()"
-            :disabled="(checkRole('Tutor') && (!checkPrivilege('Sign up students for appointments') || !adminAddStudent)) || datePast"
+            :disabled="secondTime || (checkRole('Tutor') && (!checkPrivilege('Sign up students for appointments') || !adminAddStudent)) || datePast"
             dense
           >
           </v-select>
@@ -387,7 +387,7 @@
         <v-card-actions>
           <v-btn v-if="!isTutorEvent || checkRole('Student') || checkRole('Admin') || checkPrivilege('Sign up students for appointments')"
             color="primary"
-            @click="bookAppointment(); selectedOpen = false;"
+            @click="bookAppointment(); selectedOpen = false; secondTime = true"
             :disabled="!checkStatus('available') || isGroupBook || ((studentfName == '' || studentlName == '') && !emailFound && (checkRole('Admin') || checkPrivilege('Sign up students for appointments'))) ||
                         (checkRole('Admin') && selectedAppointment.type.includes('Group') && !adminAddStudent) || selectedAppointment.topicId == null 
                         || selectedAppointment.locationId == null || (isTutorEvent && !(checkRole('Admin') || checkPrivilege('Sign up students for appointments'))) || (displayedStart === '' || displayedEnd === '')
@@ -397,27 +397,27 @@
           </v-btn>
         <v-btn v-if="checkRole('Tutor') && !appointmentType.includes('Group')"
           color="#12f000"
-          @click="confirmAppointment(true)"
+          @click="confirmAppointment(true); secondTime = true"
           :disabled="!checkStatus('pending') || datePast"
         >
         Confirm
         </v-btn>
         <v-btn v-if="checkRole('Tutor') && !appointmentType.includes('Group')"
           color="error"
-          @click="confirmAppointment(false)"
+          @click="confirmAppointment(false); secondTime = true"
           :disabled="!checkStatus('pending') || datePast"
         >
         Reject
         </v-btn>
         <v-btn
           color="accent"
-          @click="selectedOpen = false"
+          @click="selectedOpen = false; secondTime = true"
         >
         Close
         </v-btn>
         <v-btn v-if="(isTutorEvent || isPrivateBook) && saveChanges && !checkStatus('available')"
           color="accent"
-          @click="editAppointment(); selectedOpen = false;"
+          @click="editAppointment(); selectedOpen = false; secondTime = true"
         >
         Save Changes
         </v-btn>
@@ -427,14 +427,14 @@
                       (isTutorEvent && (checkStatus('available') || checkStatus('booked'))) || 
                       (checkRole('Student') && checkStatus('pending'))) && !datePast"
           color="red"
-          @click="cancelAppointment(); selectedOpen = false;"
+          @click="cancelAppointment(); selectedOpen = false; secondTime = true"
         >
         Cancel Appointment
         </v-btn>
 
                   <v-btn v-if="(checkRole('Admin') || checkPrivilege('Sign up students for appointments')) && checkStatus('available') && !datePast"
                     color="green"
-                    @click="adminAddStudent = true"
+                    @click="adminAddStudent = true; secondTime = true"
                     :disabled="adminAddStudent"
                   >
                   Sign Up Student
@@ -559,6 +559,7 @@ import Utils from '@/config/utils.js'
     overlay: true,
     message : 'Calendar',
     mode: 'stack',
+    secondTime: true,
     //appointment info
     appointments: [],
     appointmentType: "",
@@ -1096,7 +1097,7 @@ import Utils from '@/config/utils.js'
       return "" + hours + ":" + minutes + " " + dayTime
     },
     //Create time slots for users to select from
-    generateTimeslots(startTime, endTime) {
+    generateStartTimeslots(startTime, endTime) {
       let timeInterval = this.group.timeInterval;
       // get the total minutes between the start and end times.
       var totalMins = this.subtractTimes(startTime, endTime);
@@ -1106,6 +1107,31 @@ import Utils from '@/config/utils.js'
       
       // get the rest of the time slots.
       let generatedTimes = this.getTimeSlots(timeInterval, totalMins, timeSlots);
+
+      let newTimeText = ""
+
+      let times = []
+      for(let i = 0; i < generatedTimes.length; i++) {
+        if(generatedTimes[i].length < 8)
+          generatedTimes[i] = generatedTimes[i] + ':00'
+        newTimeText = this.calcTime(generatedTimes[i])
+        times.push({
+          time: generatedTimes[i],
+          timeText: newTimeText
+        })
+      }
+      return times
+    },
+    generateEndTimeslots(startTime, endTime) {
+      let minApptTime = this.group.minApptTime;
+      // get the total minutes between the start and end times.
+      var totalMins = this.subtractTimes(startTime, endTime);
+      
+      // set the initial timeSlots array to just the start time
+      var timeSlots = [startTime];
+      
+      // get the rest of the time slots.
+      let generatedTimes = this.getTimeSlots(minApptTime, totalMins, timeSlots);
 
       let newTimeText = ""
 
@@ -1181,10 +1207,10 @@ import Utils from '@/config/utils.js'
       return String("00" + timeHrs).slice(-2) + ":" + String("00" + timeMins).slice(-2);
     },
     updateTimes() {
-      this.startTimes = this.generateTimeslots(this.selectedAppointment.startTime, this.newEnd);
+      this.startTimes = this.generateStartTimeslots(this.selectedAppointment.startTime, this.newEnd);
       // adding this to make sure that you can't start an appointment at the end time
       this.startTimes.pop();
-      this.endTimes = this.generateTimeslots(this.newStart, this.selectedAppointment.endTime);
+      this.endTimes = this.generateEndTimeslots(this.newStart, this.selectedAppointment.endTime);
       // adding this to make sure you can't end an appointment at the start time
       this.endTimes.shift();
     },
