@@ -96,7 +96,7 @@ export default {
       location: {},
       groups: [],
       types: ["Online", "In-Person"],
-      status: ["enabled", "disabled"],
+      status: ["active", "disabled"],
         roles: [
         'admin'
       ],
