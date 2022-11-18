@@ -6,8 +6,8 @@
         <v-spacer></v-spacer>
         <v-toolbar-title>Admin</v-toolbar-title>
       </v-toolbar>
-      <br>
-      <br>
+      <br />
+      <br />
       <v-row justify="center">
         <v-col justify="center">
           <v-card>
@@ -27,36 +27,32 @@
         <v-col justify="center">
           <v-row justify="center">
             <!-- <v-col md="6"> -->
-              <v-card
-                :to="{ name: 'requestList' }"
-                class="mx-auto my-3 justify-center"
-              >
-                <v-card-title>
-                  Student Requests
-                </v-card-title>
-                <apexchart
-                  width="380"
-                  type="pie"
-                  :options="pieOptions"
-                  :series="pieSeries"
-                ></apexchart>
-                <br>
-              </v-card>
-            </v-row>
-            <v-row justify="center">
+            <v-card
+              :to="{ name: 'requestList' }"
+              class="mx-auto my-3 justify-center"
+            >
+              <v-card-title> Student Requests </v-card-title>
+              <apexchart
+                width="380"
+                type="pie"
+                :options="pieOptions"
+                :series="pieSeries"
+              ></apexchart>
+              <br />
+            </v-card>
+          </v-row>
+          <v-row justify="center">
             <!-- </v-col>
             <v-col md="6"> -->
-              <v-card
-                :to="{ name: 'pendingList' }"
-                class="mx-auto my-5 justify-center"
-              >
-                <v-card-title>
-                  Tutor Applications
-                </v-card-title>
-                <v-card-text class="text-center">
-                  <h1>{{ unapprovednum }}</h1>
-                </v-card-text>
-              </v-card>
+            <v-card
+              :to="{ name: 'pendingList' }"
+              class="mx-auto my-5 justify-center"
+            >
+              <v-card-title> Tutor Applications </v-card-title>
+              <v-card-text class="text-center">
+                <h1>{{ unapprovednum }}</h1>
+              </v-card-text>
+            </v-card>
             <!-- </v-col> -->
           </v-row>
         </v-col>
@@ -76,8 +72,8 @@
             ></v-data-table>
           </v-card>
           <br />
-            </v-col>
-            <v-col>
+        </v-col>
+        <v-col>
           <v-card class="tutor">
             <v-card-title>
               Topics For Week Starting {{ current_week }}
@@ -98,10 +94,10 @@
   </div>
 </template>
 
-<script src='//cdnjs.cloudflare.com/ajax/libs/vue/2.1.10/vue.min.js'></script>
-<script src='//unpkg.com/vue-chartjs@2.6.0/dist/vue-chartjs.full.min.js'></script>
-<script src='//cdnjs.cloudflare.com/ajax/libs/Chart.js/2.3.0/Chart.js'></script>
-<script src='//unpkg.com/hchs-vue-charts@1.2.8'></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/vue/2.1.10/vue.min.js"></script>
+<script src="//unpkg.com/vue-chartjs@2.6.0/dist/vue-chartjs.full.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/Chart.js/2.3.0/Chart.js"></script>
+<script src="//unpkg.com/hchs-vue-charts@1.2.8"></script>
 
 <script>
 import Utils from "@/config/utils.js";
@@ -115,8 +111,7 @@ import "@/plugins/apexcharts";
 export default {
   props: ["id"],
   name: "App",
-  components: {
-  },
+  components: {},
   data() {
     return {
       series: [],
@@ -128,7 +123,7 @@ export default {
           stacked: true,
         },
         xaxis: {
-          categories: []
+          categories: [],
         },
         responsive: [
           {
@@ -142,7 +137,14 @@ export default {
             },
           },
         ],
-        colors: ['#757575', '#9C27B0', '#F8C545', '#196CA2', '#4CAF50', '#EE5044'],
+        colors: [
+          "#757575",
+          "#9C27B0",
+          "#F8C545",
+          "#196CA2",
+          "#4CAF50",
+          "#EE5044",
+        ],
         plotOptions: {
           bar: {
             horizontal: false,
@@ -159,14 +161,14 @@ export default {
       pieOptions: {
         chart: {
           width: 380,
-          type: 'pie',
+          type: "pie",
         },
-        colors: ['#EE5044', '#F8C545', '#4CAF50'],
-        labels: ['Received', 'In-Progress', 'Complete'],
+        colors: ["#EE5044", "#F8C545", "#4CAF50"],
+        labels: ["Received", "In-Progress", "Complete"],
         dataLabels: {
           enabled: true,
           formatter: function (val, opts) {
-            return opts.w.config.series[opts.seriesIndex]
+            return opts.w.config.series[opts.seriesIndex];
           },
         },
         legend: {
@@ -175,19 +177,21 @@ export default {
         fill: {
           opacity: 1,
         },
-        responsive: [{
-          breakpoint: 480,
-          options: {
-            chart: {
-              width: 200
+        responsive: [
+          {
+            breakpoint: 480,
+            options: {
+              chart: {
+                width: 200,
+              },
+              legend: {
+                position: "bottom",
+                offsetX: -10,
+                offsetY: 0,
+              },
             },
-            legend: {
-              position: "bottom",
-              offsetX: -10,
-              offsetY: 0,
-            },
-          }
-        }]
+          },
+        ],
       },
       loaded: false,
       dataentry: null,
@@ -242,8 +246,7 @@ export default {
   },
   async created() {
     this.user = Utils.getStore("user");
-    await this.getGroupByPersonRoleId()
-    .then(() => {
+    await this.getGroupByPersonRoleId().then(() => {
       this.setWeeks();
       this.setTutorHours();
       this.getTopics();
@@ -254,13 +257,13 @@ export default {
   methods: {
     async getGroupByPersonRoleId() {
       await PersonRoleServices.getGroupForPersonRole(this.id)
-      .then(async (response) => {
-        this.group = response.data[0].role.group
-      })
-      .catch((error) => {
-        this.message = error.response.data.message
-        console.log("There was an error:", error.response);
-      });
+        .then(async (response) => {
+          this.group = response.data[0].role.group;
+        })
+        .catch((error) => {
+          this.message = error.response.data.message;
+          console.log("There was an error:", error.response);
+        });
     },
     async addData() {
       this.dataset.push(this.dataentry);
@@ -272,7 +275,7 @@ export default {
       await this.setWeekList();
       var totalHourList = [];
       var totalAvailableList = [];
-      var totalGroupList = []
+      var totalGroupList = [];
       var totalPendingList = [];
       var totalBookedList = [];
       var totalCompleteList = [];
@@ -290,38 +293,41 @@ export default {
         var noShowCount = "";
 
         let element = this.weeklist[index];
-        await AppointmentServices.getAppointmentHourCount(this.group.id, element)
-        .then((responseHour) => {
-          currWeek = element.slice(0, 10);
-          apptCount = responseHour.data[0].count;
-          hourCount = responseHour.data[0].hours;
-          availableCount = responseHour.data[0].available;
-          groupCount = responseHour.data[0].group;
-          pendingCount = responseHour.data[0].pending;
-          bookedCount = responseHour.data[0].booked;
-          completeCount = responseHour.data[0].complete;
-          noShowCount = responseHour.data[0].noshow;
+        await AppointmentServices.getAppointmentHourCount(
+          this.group.id,
+          element
+        )
+          .then((responseHour) => {
+            currWeek = element.slice(0, 10);
+            apptCount = responseHour.data[0].count;
+            hourCount = responseHour.data[0].hours;
+            availableCount = responseHour.data[0].available;
+            groupCount = responseHour.data[0].group;
+            pendingCount = responseHour.data[0].pending;
+            bookedCount = responseHour.data[0].booked;
+            completeCount = responseHour.data[0].complete;
+            noShowCount = responseHour.data[0].noshow;
 
-          if (index == 1) {
-            this.week = currWeek;
-            this.appt_count = apptCount;
-            this.hour_count = hourCount;
-            this.available_count = availableCount;
-            this.group_count = groupCount
-            this.pending_count = pendingCount;
-            this.booked_count = bookedCount;
-            this.complete_count = completeCount;
-            this.no_show_count = noShowCount;
+            if (index == 1) {
+              this.week = currWeek;
+              this.appt_count = apptCount;
+              this.hour_count = hourCount;
+              this.available_count = availableCount;
+              this.group_count = groupCount;
+              this.pending_count = pendingCount;
+              this.booked_count = bookedCount;
+              this.complete_count = completeCount;
+              this.no_show_count = noShowCount;
 
-            this.loaded = true;
-          }
-        })
-        .catch((error) => {
-          console.log(
-            "There was an error getting hour count:",
-            error.responseHour
-          );
-        });
+              this.loaded = true;
+            }
+          })
+          .catch((error) => {
+            console.log(
+              "There was an error getting hour count:",
+              error.responseHour
+            );
+          });
 
         this.weeks.push({
           week: currWeek,
@@ -329,13 +335,13 @@ export default {
           hours: await this.checkHours(hourCount),
           availableAppointments: await this.checkHours(availableCount),
           completedAppointments: await this.checkHours(completeCount),
-          scheduledAppointments: await this.checkHours(bookedCount)
+          scheduledAppointments: await this.checkHours(bookedCount),
         });
-        
+
         totalHourList.push(hourCount);
         totalAvailableList.push(availableCount);
-        totalGroupList.push(groupCount)
-        totalPendingList.push(pendingCount)
+        totalGroupList.push(groupCount);
+        totalPendingList.push(pendingCount);
         totalBookedList.push(bookedCount);
         totalCompleteList.push(completeCount);
         totalNoShowList.push(noShowCount);
@@ -447,59 +453,59 @@ export default {
 
       this.$refs.chart.updateOptions({
         xaxis: {
-          categories: [this.weeklist[0], this.weeklist[1], this.weeklist[2]]
+          categories: [this.weeklist[0], this.weeklist[1], this.weeklist[2]],
         },
-        decimalsInFloat: 1
-      })
+        decimalsInFloat: 1,
+      });
     },
     async setTutorHours() {
       await this.setWeekList();
       var currWeek = this.current_week.slice(0, 10);
       await PersonServices.getHoursPerTutor(this.group.id, currWeek)
-      .then((responseHour) => {
-        this.tutors = responseHour.data;
-      })
-      .catch((error) => {
-        console.log(
-          "There was an error getting hour count: ",
-          error
+        .then((responseHour) => {
+          this.tutors = responseHour.data;
+        })
+        .catch((error) => {
+          console.log("There was an error getting hour count: ", error);
+        });
+      for (let i = 0; i < this.tutors.length; i++) {
+        this.tutors[i].name = `${this.tutors[i].fName} ${this.tutors[i].lName}`;
+        this.tutors[i].apptCount = await this.checkNum(
+          this.tutors[i].apptCount
         );
-      });
-      for(let i = 0; i < this.tutors.length; i++) {
-        this.tutors[i].name = `${this.tutors[i].fName} ${this.tutors[i].lName}`
-        this.tutors[i].apptCount = await this.checkNum(this.tutors[i].apptCount)
-        this.tutors[i].hours = await this.checkHours(this.tutors[i].hours)
-        this.tutors[i].payingHours = await this.checkHours(this.tutors[i].payingHours)
+        this.tutors[i].hours = await this.checkHours(this.tutors[i].hours);
+        this.tutors[i].payingHours = await this.checkHours(
+          this.tutors[i].payingHours
+        );
       }
 
       this.tutors.sort(function (a, b) {
-          if (a.fName < b.fName) {
-            return -1;
-          }
-          if (a.fName > b.fName) {
-            return 1;
-          }
-          return 0;
-        });
+        if (a.fName < b.fName) {
+          return -1;
+        }
+        if (a.fName > b.fName) {
+          return 1;
+        }
+        return 0;
+      });
     },
 
     async getTopics() {
       await this.setWeekList();
       var currWeek = this.current_week.slice(0, 10);
       await TopicServices.getHoursPerTopic(this.group.id, currWeek)
-      .then((responseHour) => {
-        this.topics = responseHour.data
-      })
-      .catch((error) => {
-        console.log(
-          "There was an error getting topic hour count: ",
-          error
-        );
-      });
+        .then((responseHour) => {
+          this.topics = responseHour.data;
+        })
+        .catch((error) => {
+          console.log("There was an error getting topic hour count: ", error);
+        });
 
-      for(let i = 0; i < this.topics.length; i++) {
-        this.topics[i].hours = await this.checkHours(this.topics[i].hours)
-        this.topics[i].potentialHours = await this.checkHours(this.topics[i].potentialHours)
+      for (let i = 0; i < this.topics.length; i++) {
+        this.topics[i].hours = await this.checkHours(this.topics[i].hours);
+        this.topics[i].potentialHours = await this.checkHours(
+          this.topics[i].potentialHours
+        );
       }
 
       this.topics.sort(function (a, b) {
@@ -513,11 +519,15 @@ export default {
       });
     },
     async setWeekList() {
-      var currentDate = new Date();      
-      var tempPrev = this.getPreviousSunday(new Date(await this.getPrevWeek(currentDate)));
-      var prev = await this.toSQLDate(tempPrev)
+      var currentDate = new Date();
+      var tempPrev = this.getPreviousSunday(
+        new Date(await this.getPrevWeek(currentDate))
+      );
+      var prev = await this.toSQLDate(tempPrev);
       var current = await this.toSQLDate(this.getPreviousSunday(currentDate));
-      var tempNext = this.getPreviousSunday(new Date(await this.getNextWeek(currentDate)));
+      var tempNext = this.getPreviousSunday(
+        new Date(await this.getNextWeek(currentDate))
+      );
       var next = await this.toSQLDate(tempNext);
       this.weeklist = [prev, current, next];
       this.current_week = current;
@@ -527,8 +537,8 @@ export default {
       const previousMonday = new Date();
       previousMonday.setDate(date.getDate() - date.getDay());
       // if adding to new week makes the new date bigger than the previous date, subtract a month
-      if(previousMonday > date)
-        previousMonday.setMonth(previousMonday.getMonth() - 1)
+      if (previousMonday > date)
+        previousMonday.setMonth(previousMonday.getMonth() - 1);
       previousMonday.setHours(0, 0, 0, 0);
       return previousMonday;
     },
@@ -572,45 +582,44 @@ export default {
     },
     async toHoursAndMinutes(totalMinutes) {
       var minutes = parseInt(totalMinutes) % 60;
-      minutes = (minutes < 10 ? '0' : '') + minutes;
+      minutes = (minutes < 10 ? "0" : "") + minutes;
       var hours = Math.floor(parseInt(totalMinutes) / 60);
-      hours = (hours < 10 ? '0' : '') + hours;
+      hours = (hours < 10 ? "0" : "") + hours;
 
       return hours + ":" + minutes;
     },
     async getTutorApplications() {
-      await PersonServices.getPendingTutorsForGroup(this.group.id) 
-      .then((response) => {
-        this.unapprovednum = response.data.length;
-      })
-      .catch((error) => {
-        console.log("There was an error:", error.response);
-      });
+      await PersonServices.getPendingTutorsForGroup(this.group.id)
+        .then((response) => {
+          this.unapprovednum = response.data.length;
+        })
+        .catch((error) => {
+          console.log("There was an error:", error.response);
+        });
     },
     async getRequests() {
       await RequestServices.getAllForGroup(this.group.id)
-      .then((response) => {
-        this.requests = response.data;
-        for (let index = 0; index < this.requests.length; index++) {
-          let request = this.requests[index];
-          this.requestnum++;
-          if (request.status === "In-Progress") {
-            this.inprogressrequests++;
-          } else if (request.status === "Received") {
-            this.receivedrequests++;
-          } else if (request.status === "Completed") {
-            this.completerequests++;
+        .then((response) => {
+          this.requests = response.data;
+          for (let index = 0; index < this.requests.length; index++) {
+            let request = this.requests[index];
+            this.requestnum++;
+            if (request.status === "In-Progress") {
+              this.inprogressrequests++;
+            } else if (request.status === "Received") {
+              this.receivedrequests++;
+            } else if (request.status === "Completed") {
+              this.completerequests++;
+            }
           }
-        }
 
-        this.pieSeries.push(this.receivedrequests)
-        this.pieSeries.push(this.inprogressrequests)
-        this.pieSeries.push(this.completerequests)
-      })
-      .catch((error) => {
-        console.log("There was an error:", error);
-      });
-
+          this.pieSeries.push(this.receivedrequests);
+          this.pieSeries.push(this.inprogressrequests);
+          this.pieSeries.push(this.completerequests);
+        })
+        .catch((error) => {
+          console.log("There was an error:", error);
+        });
     },
   },
 };
