@@ -1,312 +1,312 @@
-import Vue from 'vue'
-import Router from 'vue-router'
+import Vue from "vue";
+import Router from "vue-router";
 
-import Login from './views/Login.vue';
-import Contract from './views/Contract.vue';
-import Apply from './views/Apply.vue';
-import Help from './views/Help.vue';
+import Login from "./views/Login.vue";
+import Contract from "./views/Contract.vue";
+import Apply from "./views/Apply.vue";
+import Help from "./views/Help.vue";
 
 // Admin Views. Views are sorted into sections for this project, so check that the path is correct below.
-import AdminHome from './views/AdminViews/AdminHome.vue'
-import AdminInfo from './views/AdminViews/AdminInfo.vue'
+import AdminHome from "./views/AdminViews/AdminHome.vue";
+import AdminInfo from "./views/AdminViews/AdminInfo.vue";
 
 //Groups
-import GroupList    from './views/AdminViews/GroupViews/GroupList.vue';
-import GroupEdit    from './views/AdminViews/GroupViews/GroupEdit.vue';
-import GroupAdd     from './views/AdminViews/GroupViews/GroupAdd.vue';
-import GroupView    from './views/AdminViews/GroupViews/GroupView.vue';
+import GroupList from "./views/AdminViews/GroupViews/GroupList.vue";
+import GroupEdit from "./views/AdminViews/GroupViews/GroupEdit.vue";
+import GroupAdd from "./views/AdminViews/GroupViews/GroupAdd.vue";
+import GroupView from "./views/AdminViews/GroupViews/GroupView.vue";
 
 // People
-import PersonList    from './views/AdminViews/PersonViews/PersonList.vue';
-import PersonAdd     from './views/AdminViews/PersonViews/PersonAdd.vue';
-import PersonView    from './views/AdminViews/PersonViews/PersonView.vue';
+import PersonList from "./views/AdminViews/PersonViews/PersonList.vue";
+import PersonAdd from "./views/AdminViews/PersonViews/PersonAdd.vue";
+import PersonView from "./views/AdminViews/PersonViews/PersonView.vue";
 
 // Topic
-import TopicList    from './views/AdminViews/TopicViews/TopicList.vue';
-import TopicEdit    from './views/AdminViews/TopicViews/TopicEdit.vue';
-import TopicAdd     from './views/AdminViews/TopicViews/TopicAdd.vue';
-import TopicView    from './views/AdminViews/TopicViews/TopicView.vue';
+import TopicList from "./views/AdminViews/TopicViews/TopicList.vue";
+import TopicEdit from "./views/AdminViews/TopicViews/TopicEdit.vue";
+import TopicAdd from "./views/AdminViews/TopicViews/TopicAdd.vue";
+import TopicView from "./views/AdminViews/TopicViews/TopicView.vue";
 
 // Location
-import LocationList    from './views/AdminViews/LocationViews/LocationList.vue';
-import LocationEdit    from './views/AdminViews/LocationViews/LocationEdit.vue';
-import LocationAdd     from './views/AdminViews/LocationViews/LocationAdd.vue';
-import LocationView    from './views/AdminViews/LocationViews/LocationView.vue';
+import LocationList from "./views/AdminViews/LocationViews/LocationList.vue";
+import LocationEdit from "./views/AdminViews/LocationViews/LocationEdit.vue";
+import LocationAdd from "./views/AdminViews/LocationViews/LocationAdd.vue";
+import LocationView from "./views/AdminViews/LocationViews/LocationView.vue";
 
 // Role
-import RoleList    from './views/AdminViews/RoleViews/RoleList.vue';
-import RoleEdit    from './views/AdminViews/RoleViews/RoleEdit.vue';
-import RoleAdd     from './views/AdminViews/RoleViews/RoleAdd.vue';
-import RoleView    from './views/AdminViews/RoleViews/RoleView.vue';
+import RoleList from "./views/AdminViews/RoleViews/RoleList.vue";
+import RoleEdit from "./views/AdminViews/RoleViews/RoleEdit.vue";
+import RoleAdd from "./views/AdminViews/RoleViews/RoleAdd.vue";
+import RoleView from "./views/AdminViews/RoleViews/RoleView.vue";
 
 // Request
-import RequestList    from './views/AdminViews/RequestViews/RequestList.vue';
-import RequestAdd     from './views/StudentViews/RequestAdd.vue';
+import RequestList from "./views/AdminViews/RequestViews/RequestList.vue";
+import RequestAdd from "./views/StudentViews/RequestAdd.vue";
 
 // Reports
-import ReportList    from './views/AdminViews/ReportViews/ReportList.vue';
+import ReportList from "./views/AdminViews/ReportViews/ReportList.vue";
 
 // Approvals
-import PendingList    from './views/AdminViews/ApprovalViews/PendingList.vue';
+import PendingList from "./views/AdminViews/ApprovalViews/PendingList.vue";
 
 // Availability
-import AvailabilityAdd    from './views/AdminViews/AvailabilityViews/AvailabilityAdd.vue';
+import AvailabilityAdd from "./views/AdminViews/AvailabilityViews/AvailabilityAdd.vue";
 
 // Calendar
-import MainCalendar    from './views/CalendarViews/MainCalendar.vue';
+import MainCalendar from "./views/CalendarViews/MainCalendar.vue";
 
 // Tutor Pages
-import TutorHome from './views/TutorViews/TutorHome.vue'
-import TutorInfo from './views/TutorViews/TutorInfo.vue'
-import TutorTopics from './views/TutorViews/TutorTopics.vue'
+import TutorHome from "./views/TutorViews/TutorHome.vue";
+import TutorInfo from "./views/TutorViews/TutorInfo.vue";
+import TutorTopics from "./views/TutorViews/TutorTopics.vue";
 
 // Student Pages
-import StudentHome from './views/StudentViews/StudentHome.vue'
-import StudentInfo from './views/StudentViews/StudentInfo.vue'
+import StudentHome from "./views/StudentViews/StudentHome.vue";
+import StudentInfo from "./views/StudentViews/StudentInfo.vue";
 
 // Feedback
-import StudentAppointmentFeedback from './views/FeedbackViews/StudentAppointmentFeedback.vue'
-import TutorAppointmentFeedback from './views/FeedbackViews/TutorAppointmentFeedback.vue'
+import StudentAppointmentFeedback from "./views/FeedbackViews/StudentAppointmentFeedback.vue";
+import TutorAppointmentFeedback from "./views/FeedbackViews/TutorAppointmentFeedback.vue";
 
-Vue.use(Router)
+Vue.use(Router);
 
-const router =  new Router({
-  mode: 'hash',
-  linkExactActiveClass: 'active',
+const router = new Router({
+  mode: "hash",
+  linkExactActiveClass: "active",
   base:
-//    process.env.NODE_ENV === 'development'? "/" : "/tutorScheduling/", - for AWS
-    process.env.NODE_ENV === 'development'? "/" : "/",
+    //    process.env.NODE_ENV === 'development'? "/" : "/tutorScheduling/", - for AWS
+    process.env.NODE_ENV === "development" ? "/" : "/",
   routes: [
     {
-      path: '/',
-      name: 'login',
-      component: Login
+      path: "/",
+      name: "login",
+      component: Login,
     },
     {
-      path: '/login',
-      name: 'login2',
-      component: Login
+      path: "/login",
+      name: "login2",
+      component: Login,
     },
     {
-      path: '/contract/:id',
-      name: 'contract',
-      component: Contract
+      path: "/contract/:id",
+      name: "contract",
+      component: Contract,
     },
     {
-      path: '/apply/:id',
-      name: 'apply',
+      path: "/apply/:id",
+      name: "apply",
       component: Apply,
-      props: true
+      props: true,
     },
     {
-      path: '/help/:id',
-      name: 'help',
+      path: "/help/:id",
+      name: "help",
       component: Help,
-      props: true
+      props: true,
     },
     {
-      path: '/groupList/:id',
-      name: 'groupList',
+      path: "/groupList/:id",
+      name: "groupList",
       component: GroupList,
-      props: true
+      props: true,
     },
     {
-      path: '/groupEdit/:id',
-      name: 'groupEdit',
+      path: "/groupEdit/:id",
+      name: "groupEdit",
       component: GroupEdit,
-      props: true
+      props: true,
     },
     {
-      path: '/groupAdd/:id',
-      name: 'groupAdd',
+      path: "/groupAdd/:id",
+      name: "groupAdd",
       component: GroupAdd,
-      props: true
+      props: true,
     },
     {
-      path: '/GroupView/:id/:groupId',
-      name: 'groupView',
+      path: "/GroupView/:id/:groupId",
+      name: "groupView",
       component: GroupView,
-      props: true
+      props: true,
     },
     {
-      path: '/personList/:id',
-      name: 'personList',
+      path: "/personList/:id",
+      name: "personList",
       component: PersonList,
-      props: true
+      props: true,
     },
     {
-      path: '/personAdd/:id',
-      name: 'personAdd',
+      path: "/personAdd/:id",
+      name: "personAdd",
       component: PersonAdd,
-      props: true
+      props: true,
     },
     {
-      path: '/personView/:id/:personId',
-      name: 'personView',
+      path: "/personView/:id/:personId",
+      name: "personView",
       component: PersonView,
-      props: true
+      props: true,
     },
     {
-      path: '/topicList/:id',
-      name: 'topicList',
+      path: "/topicList/:id",
+      name: "topicList",
       component: TopicList,
-      props: true
+      props: true,
     },
     {
-      path: '/topicEdit/:id',
-      name: 'topicEdit',
+      path: "/topicEdit/:id",
+      name: "topicEdit",
       component: TopicEdit,
-      props: true
+      props: true,
     },
     {
-      path: '/topicAdd/:id',
-      name: 'topicAdd',
+      path: "/topicAdd/:id",
+      name: "topicAdd",
       component: TopicAdd,
-      props: true
+      props: true,
     },
     {
-      path: '/topicView/:id/:topicId',
-      name: 'topicView',
-      component:TopicView,
-      props: true
+      path: "/topicView/:id/:topicId",
+      name: "topicView",
+      component: TopicView,
+      props: true,
     },
     {
-      path: '/locationList/:id',
-      name: 'locationList',
+      path: "/locationList/:id",
+      name: "locationList",
       component: LocationList,
-      props: true
+      props: true,
     },
     {
-      path: '/locationEdit/:id',
-      name: 'locationEdit',
+      path: "/locationEdit/:id",
+      name: "locationEdit",
       component: LocationEdit,
-      props: true
+      props: true,
     },
     {
-      path: '/locationAdd/:id',
-      name: 'locationAdd',
+      path: "/locationAdd/:id",
+      name: "locationAdd",
       component: LocationAdd,
-      props: true
+      props: true,
     },
     {
-      path: '/locationView/:id/:locationId',
-      name: 'locationView',
-      component:LocationView,
-      props: true
+      path: "/locationView/:id/:locationId",
+      name: "locationView",
+      component: LocationView,
+      props: true,
     },
     {
-      path: '/roleList/:id',
-      name: 'roleList',
+      path: "/roleList/:id",
+      name: "roleList",
       component: RoleList,
-      props: true
+      props: true,
     },
     {
-      path: '/roleEdit/:id',
-      name: 'roleEdit',
+      path: "/roleEdit/:id",
+      name: "roleEdit",
       component: RoleEdit,
-      props: true
+      props: true,
     },
     {
-      path: '/roleAdd/:id',
-      name: 'roleAdd',
+      path: "/roleAdd/:id",
+      name: "roleAdd",
       component: RoleAdd,
-      props: true
+      props: true,
     },
     {
-      path: '/roleView/:id/:roleId',
-      name: 'roleView',
+      path: "/roleView/:id/:roleId",
+      name: "roleView",
       component: RoleView,
-      props: true
+      props: true,
     },
     {
-      path: '/pendingList/:id',
-      name: 'pendingList',
+      path: "/pendingList/:id",
+      name: "pendingList",
       component: PendingList,
-      props: true
+      props: true,
     },
     {
-      path: '/reportList/:id',
-      name: 'reportList',
+      path: "/reportList/:id",
+      name: "reportList",
       component: ReportList,
-      props: true
+      props: true,
     },
     {
-      path: '/requestList/:id',
-      name: 'requestList',
+      path: "/requestList/:id",
+      name: "requestList",
       component: RequestList,
-      props: true
+      props: true,
     },
     {
-      path: '/requestAdd/:id',
-      name: 'requestAdd',
+      path: "/requestAdd/:id",
+      name: "requestAdd",
       component: RequestAdd,
-      props: true
+      props: true,
     },
     {
-      path: '/availabilityAdd/:id',
-      name: 'availabilityAdd',
+      path: "/availabilityAdd/:id",
+      name: "availabilityAdd",
       component: AvailabilityAdd,
-      props: true
+      props: true,
     },
     {
-      path: '/calendar/:id',
-      name: 'mainCalendar',
+      path: "/calendar/:id",
+      name: "mainCalendar",
       component: MainCalendar,
-      props: true
+      props: true,
     },
     {
-      path: '/tutorHome/:id',
-      name: 'tutorHome',
+      path: "/tutorHome/:id",
+      name: "tutorHome",
       component: TutorHome,
-      props: true
+      props: true,
     },
     {
-      path: '/tutorInfo/:id',
-      name: 'tutorInfo',
+      path: "/tutorInfo/:id",
+      name: "tutorInfo",
       component: TutorInfo,
-      props: true
+      props: true,
     },
     {
-      path: '/tutorTopics/:id',
-      name: 'tutorTopics',
+      path: "/tutorTopics/:id",
+      name: "tutorTopics",
       component: TutorTopics,
-      props: true
+      props: true,
     },
     {
-      path: '/studentHome/:id',
-      name: 'studentHome',
+      path: "/studentHome/:id",
+      name: "studentHome",
       component: StudentHome,
-      props: true
+      props: true,
     },
     {
-      path: '/studentInfo/:id',
-      name: 'studentInfo',
+      path: "/studentInfo/:id",
+      name: "studentInfo",
       component: StudentInfo,
-      props: true
+      props: true,
     },
     {
-      path: '/adminHome/:id',
-      name: 'adminHome',
+      path: "/adminHome/:id",
+      name: "adminHome",
       component: AdminHome,
-      props: true
+      props: true,
     },
     {
-      path: '/adminInfo/:id',
-      name: 'adminInfo',
+      path: "/adminInfo/:id",
+      name: "adminInfo",
       component: AdminInfo,
-      props: true
+      props: true,
     },
     {
-      path: '/studentAppointmentFeedback/:id/:userId',
-      name: 'studentAppointmentFeedback',
+      path: "/studentAppointmentFeedback/:id/:userId",
+      name: "studentAppointmentFeedback",
       component: StudentAppointmentFeedback,
-      props: true
+      props: true,
     },
     {
-      path: '/tutorAppointmentFeedback/:id/:userId',
-      name: 'tutorAppointmentFeedback',
+      path: "/tutorAppointmentFeedback/:id/:userId",
+      name: "tutorAppointmentFeedback",
       component: TutorAppointmentFeedback,
-      props: true
+      props: true,
     },
     /*
     {
@@ -314,20 +314,18 @@ const router =  new Router({
       component: NotFoundComponent
     }
     */
-  ]
-})
+  ],
+});
 
 router.beforeEach((to, from, next) => {
   // redirect to login page if not logged in and trying to access a restricted page
-  const publicPages = ['/']
-  const authRequired = !publicPages.includes(to.path)
-  const loggedIn = localStorage.getItem('user')
+  const publicPages = ["/"];
+  const authRequired = !publicPages.includes(to.path);
+  const loggedIn = localStorage.getItem("user");
   if (authRequired && !loggedIn) {
-    return next('/')
+    return next("/");
   }
-  next()
-})
-
+  next();
+});
 
 export default router;
-

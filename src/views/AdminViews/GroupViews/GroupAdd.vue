@@ -2,51 +2,41 @@
   <div>
     <v-container>
       <v-toolbar>
-        <v-toolbar-title>{{this.message}}</v-toolbar-title>
+        <v-toolbar-title>{{ this.message }}</v-toolbar-title>
       </v-toolbar>
-      <br>
-    <v-form
-      ref="form" 
-      v-model="valid"
-      lazy validation
-    >
-      <v-text-field
-        v-model="group.name"
-        id="name"
-        :counter="50"
-        label="name"
-        hint="Name"
-        persistent-hint
-        required
-      ></v-text-field>
+      <br />
+      <v-form ref="form" v-model="valid" lazy validation>
+        <v-text-field
+          v-model="group.name"
+          id="name"
+          :counter="50"
+          label="name"
+          hint="Name"
+          persistent-hint
+          required
+        ></v-text-field>
 
-      <v-text-field
-        v-model="group.description"
-        id="description"
-        :counter="500"
-        label="description"
-        hint="Description..."
-        persistent-hint
-        required
-      ></v-text-field>
+        <v-text-field
+          v-model="group.description"
+          id="description"
+          :counter="500"
+          label="description"
+          hint="Description..."
+          persistent-hint
+          required
+        ></v-text-field>
 
-      <v-btn
-        :disabled="!valid"
-        color="success"
-        class="mr-4"
-        @click="addGroup"
-      >
-        Save
-      </v-btn>
+        <v-btn
+          :disabled="!valid"
+          color="success"
+          class="mr-4"
+          @click="addGroup"
+        >
+          Save
+        </v-btn>
 
-      <v-btn
-        color="error"
-        class="mr-4"
-        @click="cancel"
-      >
-        Cancel
-      </v-btn>
-    </v-form>
+        <v-btn color="error" class="mr-4" @click="cancel"> Cancel </v-btn>
+      </v-form>
     </v-container>
   </div>
 </template>
@@ -57,10 +47,8 @@ export default {
   data() {
     return {
       group: {},
-      roles: [
-        'admin'
-      ],
-      message :'Add Group - enter data and click Save'
+      roles: ["admin"],
+      message: "Add Group - enter data and click Save",
     };
   },
   methods: {
@@ -70,13 +58,13 @@ export default {
           this.$router.push({ name: "groupList" });
         })
         .catch((error) => {
-          this.message = error.response.data.message
+          this.message = error.response.data.message;
           console.log(error);
         });
     },
     cancel() {
       this.$router.push({ name: "groupList" });
-    }
+    },
   },
 };
 </script>
