@@ -378,7 +378,6 @@ export default {
     },
     async setGroupsAndRoles() {
       this.user = Utils.getStore("user");
-      console.log(this.user);
       if (this.user != null) {
         this.title = "OC Tutoring";
         this.initials = this.user.fName[0] + this.user.lName[0];

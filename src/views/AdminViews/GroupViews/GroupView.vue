@@ -4,34 +4,24 @@
       <v-toolbar>
         <v-toolbar-title>{{ this.message }}</v-toolbar-title>
       </v-toolbar>
-      <br>
-      <v-btn
-        color="accent"
-        elevation="2"
-        class="mr-4"
-        @click="toEdit"
-      >
+      <br />
+      <v-btn color="accent" elevation="2" class="mr-4" @click="toEdit">
         Edit
-    </v-btn>
+      </v-btn>
 
-    <v-btn
+      <v-btn
         color="error"
         class="mr-4"
         @click="deleteGroup(group.id, group.name)"
       >
         Delete
-    </v-btn>
+      </v-btn>
 
-    <v-btn
-        class="mr-4"
-        @click="cancel"
-      >
-        Back
-    </v-btn>
+      <v-btn class="mr-4" @click="cancel"> Back </v-btn>
 
-    <br><br>
+      <br /><br />
 
-    <v-text-field
+      <v-text-field
         v-model="group.name"
         id="name"
         :counter="50"
@@ -59,7 +49,7 @@ export default {
   data() {
     return {
       group: {},
-      message : 'View Topic - click Edit to update or Delete to remove group',
+      message: "View Topic - click Edit to update or Delete to remove group",
     };
   },
   created() {

@@ -1,36 +1,25 @@
-
 <template>
   <div style="">
     <v-container>
       <v-toolbar>
-        <v-toolbar-title>{{this.message}}</v-toolbar-title>
+        <v-toolbar-title>{{ this.message }}</v-toolbar-title>
       </v-toolbar>
-      <br>
-      <v-btn
-        color="accent"
-        elevation="2"
-        class="mr-4"
-        @click="toEdit"
-      >
+      <br />
+      <v-btn color="accent" elevation="2" class="mr-4" @click="toEdit">
         Edit
       </v-btn>
 
       <v-btn
-          color="error"
-          class="mr-4"
-          @click="deleteLocation(location.id, location.name)"
-        >
-          Delete
+        color="error"
+        class="mr-4"
+        @click="deleteLocation(location.id, location.name)"
+      >
+        Delete
       </v-btn>
 
-      <v-btn
-          class="mr-4"
-          @click="cancel"
-        >
-          Back
-      </v-btn>
+      <v-btn class="mr-4" @click="cancel"> Back </v-btn>
 
-      <br><br>
+      <br /><br />
 
       <v-text-field
         v-model="location.name"
@@ -39,7 +28,7 @@
         label="Location Name"
         readonly
       ></v-text-field>
-        
+
       <v-text-field
         v-model="location.building"
         id="building"
@@ -86,7 +75,8 @@ export default {
     return {
       location: {},
       group: {},
-      message : 'View Location - click Edit to update or Delete to remove location'
+      message:
+        "View Location - click Edit to update or Delete to remove location",
     };
   },
   async created() {
@@ -96,23 +86,23 @@ export default {
   methods: {
     async getGroupByPersonRoleId() {
       await PersonRoleServices.getGroupForPersonRole(this.id)
-      .then(async (response) => {
-        this.group = response.data[0].role.group
-      })
-      .catch((error) => {
-        this.message = error.response.data.message
-        console.log("There was an error:", error.response);
-      });
+        .then(async (response) => {
+          this.group = response.data[0].role.group;
+        })
+        .catch((error) => {
+          this.message = error.response.data.message;
+          console.log("There was an error:", error.response);
+        });
     },
     async getLocation() {
       LocationServices.getLocation(this.locationId)
-      .then((response) => {
-        this.location = response.data;
-      })
-      .catch((error) => {
-        this.message = error.response.data.message
-        console.log("There was an error:", error.response);
-      });
+        .then((response) => {
+          this.location = response.data;
+        })
+        .catch((error) => {
+          this.message = error.response.data.message;
+          console.log("There was an error:", error.response);
+        });
     },
     deleteLocation(id, name) {
       let confirmed = confirm(`Are you sure you want to delete ${name}`);
@@ -122,7 +112,7 @@ export default {
             this.$router.push({ name: "locationList" });
           })
           .catch((error) => {
-            this.message = error.response.data.message
+            this.message = error.response.data.message;
             console.log("There was an error:", error.response);
           });
       }
@@ -131,7 +121,10 @@ export default {
       this.$router.go(-1);
     },
     toEdit() {
-      this.$router.push({ name: "locationEdit", params: { id: this.location.id } });
+      this.$router.push({
+        name: "locationEdit",
+        params: { id: this.location.id },
+      });
     },
   },
 };
