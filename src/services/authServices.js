@@ -9,5 +9,5 @@ export default {
   },
   logoutUser(token) {
     return apiClient.post("logout", token);
-  }
+  },
 };

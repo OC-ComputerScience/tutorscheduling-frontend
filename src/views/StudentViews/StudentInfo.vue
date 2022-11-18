@@ -2,14 +2,10 @@
   <div>
     <v-container>
       <v-toolbar>
-        <v-toolbar-title>{{this.message}}</v-toolbar-title>
+        <v-toolbar-title>{{ this.message }}</v-toolbar-title>
       </v-toolbar>
-      <br><br>
-      <v-text-field
-        v-model="fullName"
-        label="Name"
-        readonly
-      ></v-text-field>
+      <br /><br />
+      <v-text-field v-model="fullName" label="Name" readonly></v-text-field>
 
       <v-text-field
         v-model="person.email"
@@ -27,7 +23,7 @@
         required
       ></v-text-field>
 
-      <br>
+      <br />
       <v-btn
         color="accent"
         @click="savePhoneNum()"
@@ -35,10 +31,10 @@
       >
         Update Mobile Phone
       </v-btn>
-      <br><br>
+      <br /><br />
       <v-row>
         <v-col>
-          <v-card 
+          <v-card
             :to="{ name: 'apply' }"
             height="100"
             elevation="10"
@@ -51,7 +47,7 @@
           </v-card>
         </v-col>
         <v-col>
-          <v-card 
+          <v-card
             :to="{ name: 'apply' }"
             height="100"
             elevation="10"
@@ -69,39 +65,38 @@
 </template>
 
 <script>
-import PersonServices from '@/services/personServices'
-import Utils from '@/config/utils.js'
+import PersonServices from "@/services/personServices";
+import Utils from "@/config/utils.js";
 
-  export default {
-    name: 'App',
-    components: {
+export default {
+  name: "App",
+  components: {},
+  data() {
+    return {
+      person: {},
+      fullName: "",
+      message: "Edit Student Account",
+    };
+  },
+  created() {
+    this.user = Utils.getStore("user");
+    this.getPerson();
+  },
+  methods: {
+    async getPerson() {
+      await PersonServices.getPerson(this.user.userID)
+        .then((response) => {
+          this.person = response.data;
+          this.fullName = this.person.fName + " " + this.person.lName;
+        })
+        .catch((error) => {
+          this.message = error.response.data.message;
+          console.log("There was an error:", error.response);
+        });
     },
-    data() {
-      return {
-        person: {},
-        fullName: '',
-        message : 'Edit Student Account'
-      };
+    savePhoneNum() {
+      PersonServices.updatePerson(this.person.id, this.person);
     },
-    created() {
-      this.user = Utils.getStore('user');
-      this.getPerson();
-    },
-    methods: {
-      async getPerson() {
-        await PersonServices.getPerson(this.user.userID)
-          .then(response => {
-            this.person = response.data;
-            this.fullName = this.person.fName + ' ' + this.person.lName;
-          })
-          .catch(error => {
-            this.message = error.response.data.message
-            console.log("There was an error:", error.response)
-          });
-      },
-      savePhoneNum() {
-        PersonServices.updatePerson(this.person.id, this.person);
-      },
-    }
-  }
+  },
+};
 </script>
