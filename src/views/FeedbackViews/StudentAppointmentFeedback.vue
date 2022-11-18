@@ -2,37 +2,29 @@
   <div>
     <v-container>
       <v-toolbar>
-        <v-toolbar-title
-          >{{this.message}}</v-toolbar-title
-        >
+        <v-toolbar-title>{{ this.message }}</v-toolbar-title>
       </v-toolbar>
       <br />
       <br />
       <v-row justify="center">
-        <v-card
-          flat
-          color="grey lighten-4"
-          min-width="500px"
-        >
-          <v-card-title
-            class="justify-center"
-          >
-            Appointment on {{dateText}} with {{tutorText}}
+        <v-card flat color="grey lighten-4" min-width="500px">
+          <v-card-title class="justify-center">
+            Appointment on {{ dateText }} with {{ tutorText }}
           </v-card-title>
           <v-card-text>
-            <b>Time: </b>{{appointment.startTime}} - {{appointment.endTime}}
-            <br>
-            <b>Type: </b>{{appointment.type}}
-            <br>
-            <b>Location: </b>{{appointment.location.name}}
-            <br>
-            <b>Topic: </b>{{appointment.topic.name}}
-            <br>
-            <b>Pre-Session Info: </b>{{appointment.preSessionInfo}}
+            <b>Time: </b>{{ appointment.startTime }} - {{ appointment.endTime }}
+            <br />
+            <b>Type: </b>{{ appointment.type }}
+            <br />
+            <b>Location: </b>{{ appointment.location.name }}
+            <br />
+            <b>Topic: </b>{{ appointment.topic.name }}
+            <br />
+            <b>Pre-Session Info: </b>{{ appointment.preSessionInfo }}
           </v-card-text>
         </v-card>
       </v-row>
-      <br><br>
+      <br /><br />
       <v-row justify="center">
         <v-form ref="form" v-model="valid" lazy validation>
           <div class="text-xs-center">
@@ -75,8 +67,7 @@
           <v-btn color="error" class="mr-4" @click="cancel"> Cancel </v-btn>
         </v-form>
       </v-row>
-      <br><br>
-      
+      <br /><br />
     </v-container>
   </div>
 </template>
@@ -97,50 +88,52 @@ export default {
         endTime: "",
         type: "",
         location: {
-          name: ""
+          name: "",
         },
         topic: {
-          name: ""
+          name: "",
         },
-        preSessionInfo: ""
+        preSessionInfo: "",
       },
-      dateText: '',
-      tutorText: '',
+      dateText: "",
+      tutorText: "",
       numericalfeedback: null,
       textualfeedback: "",
       personAppointmentId: "",
       message: "Provide Feedback for your recent appointment",
       roles: ["admin"],
-    }; 
+    };
   },
   async created() {
     await this.getAppointment();
-    this.dateText = this.appointment.date.toString().substring(5,10) + "-" + this.appointment.date.toString().substring(0,4)
+    this.dateText =
+      this.appointment.date.toString().substring(5, 10) +
+      "-" +
+      this.appointment.date.toString().substring(0, 4);
   },
   methods: {
     async getAppointment() {
       await AppointmentServices.getAppointmentForFeedback(this.id)
-      .then((response) => {
-        this.appointment = response.data[0];
-        for(let i = 0; i < this.appointment.personappointment.length; i++) {
-          let personApp = this.appointment.personappointment[i];
-          if(personApp.personId === this.userId) {
-            this.personAppointment = personApp;
-            this.personAppointmentId = this.personAppointment.id
-          }
-          else {
-            if(personApp.isTutor) {
-              if(this.tutorText !== '')
-                this.tutorText += ", ";
-              this.tutorText += personApp.person.fName + " " + personApp.person.lName;
+        .then((response) => {
+          this.appointment = response.data[0];
+          for (let i = 0; i < this.appointment.personappointment.length; i++) {
+            let personApp = this.appointment.personappointment[i];
+            if (personApp.personId === this.userId) {
+              this.personAppointment = personApp;
+              this.personAppointmentId = this.personAppointment.id;
+            } else {
+              if (personApp.isTutor) {
+                if (this.tutorText !== "") this.tutorText += ", ";
+                this.tutorText +=
+                  personApp.person.fName + " " + personApp.person.lName;
+              }
             }
           }
-        }
-      })
-      .catch((error) => {
-        this.message = error.response.data.message
-        console.log("There was an error:", error.response);
-      });
+        })
+        .catch((error) => {
+          this.message = error.response.data.message;
+          console.log("There was an error:", error.response);
+        });
     },
     async updatePersonAppointment() {
       delete this.personAppointment.person;
@@ -155,7 +148,7 @@ export default {
           this.$router.go(-1);
         })
         .catch((error) => {
-          this.message = error.response.data.message
+          this.message = error.response.data.message;
           console.log(error);
         });
     },
