@@ -54,6 +54,14 @@
       ></v-text-field>
 
       <v-text-field
+        v-model="location.status"
+        id="status"
+        :counter="25"
+        label="Status"
+        readonly
+      ></v-text-field>
+
+      <v-text-field
         v-model="group.name"
         id="name"
         :counter="25"

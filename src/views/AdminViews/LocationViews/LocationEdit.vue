@@ -30,6 +30,14 @@
           required
         ></v-text-field>
 
+        <v-select
+          v-model="location.status"
+          :items="status"
+          label="Status"
+          required
+        >
+        </v-select>
+
         <v-select v-model="location.type" :items="types" label="Type" required>
         </v-select>
 
@@ -72,6 +80,7 @@ export default {
       location: {},
       groups: [],
       types: ["Online", "In-Person"],
+      status: ["active", "disabled"],
       roles: ["admin"],
     };
   },

@@ -55,6 +55,7 @@ export default {
         { text: "Name", value: "name" },
         { text: "Type", value: "type" },
         { text: "Building", value: "building" },
+        { text: "Status", value: "status" },
       ],
     };
   },

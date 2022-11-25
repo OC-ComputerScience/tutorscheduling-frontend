@@ -770,7 +770,7 @@ export default {
       )
         .then(async (response) => {
           this.topics = response.data;
-          await LocationServices.getAllForGroup(this.group.id).then(
+          await LocationServices.getActiveForGroup(this.group.id).then(
             (response) => {
               this.locations = response.data;
             }
