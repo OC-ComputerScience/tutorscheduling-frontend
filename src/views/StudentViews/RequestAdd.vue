@@ -63,8 +63,10 @@
 import RequestServices from "@/services/requestServices.js";
 import TopicServices from "@/services/topicServices.js";
 import PersonServices from "@/services/personServices.js";
-import Utils from "@/config/utils.js";
 import PersonRoleServices from "@/services/personRoleServices.js";
+import RoleServices from "@/services/roleServices.js";
+import TwilioServices from "@/services/twilioServices.js";
+import Utils from "@/config/utils.js";
 
 export default {
   props: ["id"],
@@ -83,6 +85,7 @@ export default {
       user: {},
       group: {},
       topics: [],
+      admins: [],
       roles: ["admin"],
       message: "Add Request - enter data and click Save",
       valid: false,
@@ -125,8 +128,22 @@ export default {
     async addRequest() {
       this.request.personId = this.person.id;
       this.request.groupId = this.group.id;
-      RequestServices.addRequest(this.request)
-        .then(() => {
+      await RequestServices.addRequest(this.request)
+        .then(async () => {
+          await this.getAdmins();
+
+          for (let i = 0; i < this.admins.length; i++) {
+            let tempA = this.admins[i];
+            console.log(tempA);
+            if (
+              await this.checkPrivilege(
+                "Receive notifications for requests",
+                tempA.personroleprivilege
+              )
+            )
+              this.sendMessage(tempA);
+          }
+
           this.$router.go(-1);
         })
         .catch((error) => {
@@ -153,6 +170,41 @@ export default {
             console.log("There was an error:", error.response);
           });
       }
+    },
+    async checkPrivilege(privilege, personroleprivileges) {
+      let hasPriv = false;
+      for (let i = 0; i < personroleprivileges.length; i++) {
+        let priv = personroleprivileges[i];
+        if (priv.privilege === privilege) hasPriv = true;
+      }
+      return hasPriv;
+    },
+    async getAdmins() {
+      await RoleServices.getAllForGroupByType(this.group.id, "Admin")
+        .then((response) => {
+          this.admins = response.data[0].personrole;
+        })
+        .catch((error) => {
+          this.message = error.response.data.message;
+          console.log("There was an error:", error.response);
+        });
+    },
+    sendMessage(admin) {
+      let temp = {
+        phoneNum: admin.person.phoneNum,
+        message: "",
+      };
+
+      temp.message =
+        "You have a new request from " +
+        this.person.fName +
+        " " +
+        this.person.lName +
+        " for " +
+        this.group.name +
+        ".\nPlease view this request at http://tutorscheduling.oc.edu/";
+
+      TwilioServices.sendMessage(temp);
     },
   },
 };

@@ -117,6 +117,7 @@ import GroupServices from "@/services/groupServices";
 import RoleServices from "@/services/roleServices";
 import PersonServices from "@/services/personServices";
 import PersonRoleServices from "@/services/personRoleServices";
+import TwilioServices from "@/services/twilioServices";
 import Utils from "@/config/utils.js";
 
 export default {
@@ -131,6 +132,7 @@ export default {
       admin: false,
       model: false,
       groups: [],
+      admins: [],
       phoneNum: "",
       person: {},
       roles: [],
@@ -297,7 +299,33 @@ export default {
               personId: this.user.userID,
               roleId: role.id,
             };
-            PersonRoleServices.addPersonRole(this.personrole);
+            PersonRoleServices.addPersonRole(this.personrole)
+              .then(async (response) => {
+                let status = response.data.status;
+                // send notification to admins if new person role is a tutor
+                if (
+                  role.type.toLowerCase() === "tutor" &&
+                  status === "applied"
+                ) {
+                  await this.getAdmins(role.groupId);
+
+                  for (let i = 0; i < this.admins.length; i++) {
+                    let tempA = this.admins[i];
+                    console.log(tempA);
+                    if (
+                      await this.checkPrivilege(
+                        "Receive notifications for applications",
+                        tempA.personroleprivilege
+                      )
+                    )
+                      this.sendMessage(tempA, role.groupId);
+                  }
+                }
+              })
+              .catch((error) => {
+                this.message = error;
+                console.log("There was an error:", error);
+              });
           }
         }
       });
@@ -392,6 +420,42 @@ export default {
           }
         }
       });
+    },
+    async checkPrivilege(privilege, personroleprivileges) {
+      let hasPriv = false;
+      for (let i = 0; i < personroleprivileges.length; i++) {
+        let priv = personroleprivileges[i];
+        if (priv.privilege === privilege) hasPriv = true;
+      }
+      return hasPriv;
+    },
+    async getAdmins(groupId) {
+      await RoleServices.getAllForGroupByType(groupId, "Admin")
+        .then((response) => {
+          console.log(response);
+          this.admins = response.data[0].personrole;
+        })
+        .catch((error) => {
+          this.message = error.response.data.message;
+          console.log("There was an error:", error.response);
+        });
+    },
+    sendMessage(admin, groupId) {
+      let temp = {
+        phoneNum: admin.person.phoneNum,
+        message: "",
+      };
+
+      temp.message =
+        "You have a new tutor application from " +
+        this.user.fName +
+        " " +
+        this.user.lName +
+        " for " +
+        this.groups.find((group) => group.id == groupId).name +
+        ".\nPlease view this application at http://tutorscheduling.oc.edu/";
+
+      TwilioServices.sendMessage(temp);
     },
   },
 };

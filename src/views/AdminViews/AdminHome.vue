@@ -601,14 +601,14 @@ export default {
       await RequestServices.getAllForGroup(this.group.id)
         .then((response) => {
           this.requests = response.data;
-          for (let index = 0; index < this.requests.length; ++index) {
+          for (let index = 0; index < this.requests.length; index++) {
             let request = this.requests[index];
             this.requestnum++;
             if (request.status === "In-Progress") {
               this.inprogressrequests++;
             } else if (request.status === "Received") {
               this.receivedrequests++;
-            } else if (request.status === "Complete") {
+            } else if (request.status === "Completed") {
               this.completerequests++;
             }
           }

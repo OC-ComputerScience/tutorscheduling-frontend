@@ -1,80 +1,98 @@
 <template>
-  <v-container>
-    <v-data-table
-      :headers="headers"
-      :items="personroles"
-      sort-by="status"
-      class="elevation-1"
-      :expanded.sync="expanded"
-      show-expand
-    >
-      <template v-slot:top>
-        <v-toolbar flat>
-          <v-toolbar-title>{{ message }}</v-toolbar-title>
-          <v-divider class="mx-4" inset vertical></v-divider>
+  <div>
+    <v-container>
+      <v-toolbar>
+        <v-toolbar-title>{{ this.message }}</v-toolbar-title>
+      </v-toolbar>
+      <br /><br />
+      <v-card>
+        <v-card-title>
+          <v-text-field
+            v-model="search"
+            append-icon="mdi-magnify"
+            label="Search"
+            single-line
+            hide-details
+          ></v-text-field>
           <v-spacer></v-spacer>
-          <v-dialog v-model="dialog" max-width="500px">
-            <v-card>
-              <v-card-title>
-                <span class="text-h5">
-                  Approve Application for {{ editedPerson.fName }}
-                  {{ editedPerson.lName }}</span
-                >
-              </v-card-title>
+          <v-btn class="mr-4" @click="cancel()"> Back </v-btn>
+        </v-card-title>
+        <v-data-table
+          :headers="headers"
+          :search="search"
+          :items="personroles"
+          :items-per-page="50"
+        >
+          <template v-slot:[`item.actions`]="{ item }">
+            <v-icon small class="mr-2" @click="editItem(item)"
+              >mdi-pencil</v-icon
+            >
+            <v-icon small @click="deleteItem(item)"> mdi-delete </v-icon>
+          </template>
+        </v-data-table>
+      </v-card>
 
-              <v-card-text>
-                <v-container>
-                  <v-row>
-                    <v-col cols="12" sm="6" md="4">
-                      <v-select
-                        v-model="editedItem.status"
-                        :items="StatusSelect"
-                        label="Status"
-                        required
-                      >
-                      </v-select>
-                    </v-col>
-                  </v-row>
-                </v-container>
-              </v-card-text>
-
-              <v-card-actions>
-                <v-spacer></v-spacer>
-                <v-btn color="error" text @click="close"> Cancel </v-btn>
-                <v-btn color="accent" text @click="save"> Save </v-btn>
-              </v-card-actions>
-            </v-card>
-          </v-dialog>
-          <v-dialog v-model="dialogDelete" max-width="800">
-            <v-card>
-              <v-card-title class="text-h5"
-                >Are you sure you want to delete {{ editedPerson.fName }}
-                {{ editedPerson.lName }}'s application?</v-card-title
+      <v-dialog v-model="dialog" max-width="500px">
+        <v-card>
+          <v-card-title
+            >Approve Application for {{ editedPerson.fName }}
+            {{ editedPerson.lName }}</v-card-title
+          >
+          <v-card-text>
+            <br />
+            <v-form ref="form" v-model="valid" lazy validation>
+              <v-data-table
+                :headers="topicHeaders"
+                :items="editedPerson.persontopic"
+                :hide-default-footer="true"
               >
-              <v-card-actions>
-                <v-spacer></v-spacer>
-                <v-btn color="error" text @click="closeDelete">Cancel</v-btn>
-                <v-btn color="accent" text @click="deleteItemConfirm">OK</v-btn>
-              </v-card-actions>
-            </v-card>
-          </v-dialog>
-        </v-toolbar>
-      </template>
+              </v-data-table>
 
-      <template v-slot:expanded-item="{ headers, item }">
-        <v-spacer></v-spacer>
-        <td :colspan="headers.length">
-          Phone Number: {{ item.phoneNum }}
-          <br />
-          Email Address: {{ item.email }}
-        </td>
-      </template>
-      <template v-slot:[`item.actions`]="{ item }">
-        <v-icon small class="mr-2" @click="editItem(item)"> mdi-pencil </v-icon>
-        <v-icon small @click="deleteItem(item)"> mdi-delete </v-icon>
-      </template>
-    </v-data-table>
-  </v-container>
+              <br />
+              <v-text-field
+                v-model="editedPerson.email"
+                label="Email Address"
+                readonly
+              ></v-text-field>
+
+              <v-text-field
+                v-model="editedPerson.phoneNum"
+                label="Phone Number"
+                readonly
+              ></v-text-field>
+
+              <v-select
+                v-model="editedItem.status"
+                :items="StatusSelect"
+                label="Status"
+                required
+              >
+              </v-select>
+            </v-form>
+          </v-card-text>
+          <v-card-actions>
+            <v-spacer></v-spacer>
+            <v-btn color="accent" @click="save()">Save</v-btn>
+            <v-btn color="error" @click="dialog = false">Cancel</v-btn>
+          </v-card-actions>
+        </v-card>
+      </v-dialog>
+
+      <v-dialog v-model="dialogDelete" max-width="800">
+        <v-card>
+          <v-card-title class="text-h5"
+            >Are you sure you want to delete {{ editedPerson.fName }}
+            {{ editedPerson.lName }}'s application?</v-card-title
+          >
+          <v-card-actions>
+            <v-spacer></v-spacer>
+            <v-btn color="error" text @click="closeDelete">Cancel</v-btn>
+            <v-btn color="accent" text @click="deleteItemConfirm">OK</v-btn>
+          </v-card-actions>
+        </v-card>
+      </v-dialog>
+    </v-container>
+  </div>
 </template>
 
 <script>
@@ -85,12 +103,14 @@ import PersonRoleServices from "@/services/personRoleServices.js";
 export default {
   props: ["id"],
   data: () => ({
+    valid: false,
     message: "Approval - click tutor to approve or deny application",
-    StatusSelect: ["Applied", "Approved", "Denied"],
+    StatusSelect: ["applied", "approved", "disabled"],
     dialog: false,
     dialogDelete: false,
     expanded: [],
     user: {},
+    search: "",
     group: {},
     headers: [
       { text: "First Name", value: "fName" },
@@ -100,6 +120,11 @@ export default {
       { text: "Actions", value: "actions", sortable: false },
     ],
     personroles: [],
+    topicHeaders: [
+      { text: "Topic", value: "topic.name" },
+      { text: "Skill Level", value: "skillLevel" },
+    ],
+    persontopics: [],
     editedIndex: -1,
     editedPerson: {},
     editedItem: {
@@ -153,7 +178,6 @@ export default {
       this.editedIndex = this.personroles.indexOf(item.id);
       this.editedPerson = Object.assign({}, item);
       this.editedItem = Object.assign({}, item.personrole[0]);
-      console.log(this.editedItem);
       this.dialog = true;
     },
     deleteItem(item) {
@@ -190,8 +214,6 @@ export default {
       });
     },
     save() {
-      console.log(this.editedIndex);
-      console.log(this.editedItem);
       PersonRoleServices.updatePersonRole(this.editedItem.id, this.editedItem)
         .then(() => {
           this.close();
@@ -202,6 +224,9 @@ export default {
           console.log(error);
         });
       Object.assign(this.personroles[this.editedIndex], this.editedItem);
+    },
+    cancel() {
+      this.$router.go(-1);
     },
   },
 };
