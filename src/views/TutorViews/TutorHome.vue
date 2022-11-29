@@ -403,8 +403,6 @@ export default {
   methods: {
     checkForAuthorization() {
       var now = new Date().toISOString();
-      console.log(now);
-      console.log(this.user.expiration_date);
       if (
         this.user.refresh_token !== null &&
         this.user.refresh_token !== undefined &&

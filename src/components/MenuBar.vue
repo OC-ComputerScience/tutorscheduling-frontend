@@ -69,13 +69,13 @@
               v-for="(role, j) in group.roles"
               :key="j"
               @click="
-                selectedRole = role;
+                selectedRole = role.type;
                 selectedGroup = group.name;
                 resetMenu();
               "
             >
               <v-list-item-content>
-                <v-list-item-title v-text="role"></v-list-item-title>
+                <v-list-item-title v-text="role.type"></v-list-item-title>
               </v-list-item-content>
             </v-list-item>
           </v-list-group>
