@@ -35,9 +35,9 @@
           user != null &&
           selectedGroup != '' &&
           currentPersonRoleID !== 0 &&
-          selectedRoles !== '' &&
-          selectedRoles !== undefined &&
-          selectedRoles !== null
+          selectedRole !== '' &&
+          selectedRole !== undefined &&
+          selectedRole !== null
         "
         offset-y
       >
@@ -69,13 +69,13 @@
               v-for="(role, j) in group.roles"
               :key="j"
               @click="
-                selectedRoles = role;
+                selectedRole = role.type;
                 selectedGroup = group.name;
                 resetMenu();
               "
             >
               <v-list-item-content>
-                <v-list-item-title v-text="role"></v-list-item-title>
+                <v-list-item-title v-text="role.type"></v-list-item-title>
               </v-list-item-content>
             </v-list-item>
           </v-list-group>
@@ -89,9 +89,9 @@
         v-if="
           user != null &&
           currentPersonRoleID !== 0 &&
-          selectedRoles !== '' &&
-          selectedRoles !== undefined &&
-          selectedRoles !== null
+          selectedRole !== '' &&
+          selectedRole !== undefined &&
+          selectedRole !== null
         "
       >
         <template v-slot:activator="{ on, attrs }">
@@ -100,9 +100,9 @@
               v-if="
                 user != null &&
                 currentPersonRoleID !== 0 &&
-                selectedRoles !== '' &&
-                selectedRoles !== undefined &&
-                selectedRoles !== null
+                selectedRole !== '' &&
+                selectedRole !== undefined &&
+                selectedRole !== null
               "
               color="secondary"
             >
@@ -128,27 +128,27 @@
               </v-btn>
               <v-divider
                 class="my-3"
-                v-if="!selectedRoles.includes('Admin')"
+                v-if="!selectedRole.includes('Admin')"
               ></v-divider>
               <v-btn
                 depressed
                 rounded
                 text
                 :to="{ name: 'apply' }"
-                v-if="!selectedRoles.includes('Admin')"
+                v-if="!selectedRole.includes('Admin')"
               >
                 Apply
               </v-btn>
               <v-divider
                 class="my-3"
-                v-if="!selectedRoles.includes('Admin')"
+                v-if="!selectedRole.includes('Admin')"
               ></v-divider>
               <v-btn
                 depressed
                 rounded
                 text
                 :to="{ name: 'help', params: { id: currentPersonRoleID } }"
-                v-if="!selectedRoles.includes('Admin')"
+                v-if="!selectedRole.includes('Admin')"
               >
                 Help
               </v-btn>
@@ -162,9 +162,9 @@
         v-if="
           user !== null &&
           currentPersonRoleID !== 0 &&
-          selectedRoles !== '' &&
-          selectedRoles !== undefined &&
-          selectedRoles !== null
+          selectedRole !== '' &&
+          selectedRole !== undefined &&
+          selectedRole !== null
         "
         dark
         class="hidden-lg-and-up"
@@ -177,9 +177,9 @@
         drawer &&
         user !== null &&
         currentPersonRoleID !== 0 &&
-        selectedRoles !== '' &&
-        selectedRoles !== undefined &&
-        selectedRoles !== null
+        selectedRole !== '' &&
+        selectedRole !== undefined &&
+        selectedRole !== null
       "
       class="hidden-lg-and-up"
       v-model="drawer"
@@ -229,7 +229,7 @@ export default {
     incompleteGroups: [],
     hasTopics: true,
     selectedGroup: "",
-    selectedRoles: "",
+    selectedRole: "",
     activeMenus: [],
     currentPersonRoleID: 0,
     menus: [
@@ -362,7 +362,7 @@ export default {
     _link() {
       return (
         "/" +
-        this.selectedRoles.toLowerCase() +
+        this.selectedRole.toLowerCase() +
         "Home/" +
         this.currentPersonRoleID
       );
@@ -372,9 +372,9 @@ export default {
     menuAction(route) {
       if (
         this.currentPersonRoleID === 0 &&
-        (this.selectedRoles === "" ||
-          this.selectedRoles === undefined ||
-          this.selectedRoles === null)
+        (this.selectedRole === "" ||
+          this.selectedRole === undefined ||
+          this.selectedRole === null)
       ) {
         this.$router.push({ name: "login" });
       } else
@@ -407,13 +407,13 @@ export default {
             Utils.setStore("user", this.user);
           }
           if (
-            this.selectedRoles === "" ||
-            this.selectedRoles === undefined ||
-            this.selectedRoles === null
+            this.selectedRole === "" ||
+            this.selectedRole === undefined ||
+            this.selectedRole === null
           ) {
-            this.selectedRoles = this.user.access[0].roles[0];
+            this.selectedRole = this.user.access[0].roles[0].type;
           }
-          this.user.selectedRoles = this.selectedRoles;
+          this.user.selectedRole = this.selectedRole;
           Utils.setStore("user", this.user);
           await this.getPersonRoles();
         }
@@ -441,19 +441,19 @@ export default {
                     if (
                       this.user != null &&
                       this.currentPersonRoleID !== 0 &&
-                      this.selectedRoles !== "" &&
-                      this.selectedRoles !== undefined &&
-                      this.selectedRoles !== null
+                      this.selectedRole !== "" &&
+                      this.selectedRole !== undefined &&
+                      this.selectedRole !== null
                     ) {
                       this.activeMenus = this.menus;
                       this.activeMenus = this.menus.filter((menu) =>
-                        menu.roles.includes(this.selectedRoles)
+                        menu.roles.includes(this.selectedRole)
                       );
-                      if (this.selectedRoles.includes("Student"))
+                      if (this.selectedRole.includes("Student"))
                         this.limitStudentMenu();
-                      else if (this.selectedRoles.includes("Tutor"))
+                      else if (this.selectedRole.includes("Tutor"))
                         this.limitTutorMenu();
-                      else if (this.selectedRoles.includes("Admin"))
+                      else if (this.selectedRole.includes("Admin"))
                         this.limitAdminMenu();
                     } else {
                       this.activeMenus = this.menus.filter((menu) =>
@@ -537,7 +537,7 @@ export default {
             if (this.selectedGroup.includes(group.name)) {
               for (let j = 0; j < group.role.length; j++) {
                 let role = group.role[j];
-                if (this.selectedRoles.includes(role.type)) {
+                if (this.selectedRole.includes(role.type)) {
                   this.currentPersonRoleID = role.personrole[0].id;
                 }
               }
@@ -555,11 +555,11 @@ export default {
         });
     },
     goToRightInfo() {
-      if (this.selectedRoles.includes("Student"))
+      if (this.selectedRole.includes("Student"))
         this.$router.push({ name: "studentInfo" });
-      else if (this.selectedRoles.includes("Tutor"))
+      else if (this.selectedRole.includes("Tutor"))
         this.$router.push({ name: "tutorInfo" });
-      else if (this.selectedRoles.includes("Admin"))
+      else if (this.selectedRole.includes("Admin"))
         this.$router.push({ name: "adminInfo" });
     },
     logout() {
@@ -576,8 +576,8 @@ export default {
     },
     async limitTutorMenu() {
       if (
-        this.selectedRoles.includes("tutor") ||
-        this.selectedRoles.includes("Tutor")
+        this.selectedRole.includes("tutor") ||
+        this.selectedRole.includes("Tutor")
       ) {
         let approved = false;
         await PersonRoleServices.getPersonRole(this.currentPersonRoleID)
@@ -603,8 +603,8 @@ export default {
     },
     async limitStudentMenu() {
       if (
-        this.selectedRoles.includes("student") ||
-        this.selectedRoles.includes("Student")
+        this.selectedRole.includes("student") ||
+        this.selectedRole.includes("Student")
       ) {
         let approved = false;
         await PersonRoleServices.getPersonRole(this.currentPersonRoleID)
@@ -630,8 +630,8 @@ export default {
     },
     async limitAdminMenu() {
       if (
-        this.selectedRoles.includes("admin") ||
-        this.selectedRoles.includes("Admin")
+        this.selectedRole.includes("admin") ||
+        this.selectedRole.includes("Admin")
       ) {
         let approved = false;
         await PersonRoleServices.getPersonRole(this.currentPersonRoleID)

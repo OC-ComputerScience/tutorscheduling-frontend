@@ -402,7 +402,7 @@ export default {
   },
   methods: {
     checkForAuthorization() {
-      var now = new Date();
+      var now = new Date().toISOString();
       if (
         this.user.refresh_token !== null &&
         this.user.refresh_token !== undefined &&
@@ -416,12 +416,10 @@ export default {
       }
     },
     doAuthorization() {
-      // console.log("doAuth")
-      // console.log("url:"+process.env.VUE_APP_SITE_URL)
-
-      //        this.url = (process.env.VUE_APP_SITE_URL ? process.env.VUE_APP_SITE_URL : "http://localhost") + '/tutoring-api/authorize/' + this.user.userID;
+      // the commented line is for local machine only
+      // this.url = (process.env.VUE_APP_SITE_URL ? process.env.VUE_APP_SITE_URL : "http://localhost") + '/tutoring-api/authorize/' + this.user.userID;
       this.url = "/tutoring-api/authorize/" + this.user.userID;
-      // console.log(this.url)
+
       const client = global.google.accounts.oauth2.initCodeClient({
         client_id: process.env.VUE_APP_CLIENT_ID,
         access_type: "offline",
