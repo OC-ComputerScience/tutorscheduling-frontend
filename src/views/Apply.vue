@@ -15,8 +15,7 @@
             height="100"
             elevation="10"
             color="primary"
-            class="d-flex justify-center align-center"
-          >
+            class="d-flex justify-center align-center">
             <v-card-title class="justify-center white--text">
               Apply
             </v-card-title>
@@ -40,8 +39,7 @@
                   @change="
                     tutor = !student;
                     haveRoleAlready();
-                  "
-                ></v-checkbox>
+                  "></v-checkbox>
               </v-list-item>
               <h4>
                 Sign up for free tutoring that you will receive as a student.
@@ -54,8 +52,7 @@
                   @change="
                     student = !tutor;
                     haveRoleAlready();
-                  "
-                ></v-checkbox>
+                  "></v-checkbox>
               </v-list-item>
               <h4>
                 Apply to be a tutor in one of our groups and provide quality
@@ -70,8 +67,7 @@
                   v-model="selected"
                   :value="group"
                   :label="group.name"
-                  :disabled="group.haveRole"
-                ></v-checkbox>
+                  :disabled="group.haveRole"></v-checkbox>
                 <v-text-field
                   v-if="group.haveRole"
                   v-model="group.sentenceHaveRole"
@@ -79,8 +75,7 @@
                   flat
                   solo
                   class="ma-0 pa-0 pb-1"
-                  hide-details
-                >
+                  hide-details>
                 </v-text-field>
               </v-list-item>
               <h4>{{ group.description }}</h4>
@@ -92,8 +87,7 @@
               color="accent"
               text
               @click="savePersonRoles()"
-              :disabled="selected == ''"
-            >
+              :disabled="selected == ''">
               Continue
             </v-btn>
           </v-card-actions>
@@ -154,12 +148,12 @@ export default {
               role.push(element);
             });
             for (let j = 0; j < role.length; j++) {
-              if (role[j].includes("Student") && this.student == true) {
+              if (role[j].type.includes("Student") && this.student == true) {
                 this.groups[k].haveRole = true;
                 this.groups[k].sentenceHaveRole =
                   "    You already have this role";
                 break;
-              } else if (role[j].includes("Tutor") && this.tutor == true) {
+              } else if (role[j].type.includes("Tutor") && this.tutor == true) {
                 this.groups[k].haveRole = true;
                 this.groups[k].sentenceHaveRole =
                   "    You already have this role";
@@ -301,7 +295,10 @@ export default {
             let roles = [];
             for (let j = 0; j < element.role.length; j++) {
               let item = element.role[j];
-              let role = item.type;
+              let role = {
+                type: item.type,
+                personRoleId: item.personrole[0].id,
+              };
               roles.push(role);
             }
             let group = {
@@ -343,7 +340,7 @@ export default {
                 role.type.includes("Tutor") &&
                 pRole.status.includes("applied")
               ) {
-                this.$router.push({ name: "tutorTopics" });
+                this.$router.push({ name: "tutorAddTopics" });
               } else if (
                 role.type.includes("Student") &&
                 pRole.status.includes("approved")

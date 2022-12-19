@@ -26,8 +26,7 @@
                 v-on:keyup.enter="
                   dialog = false;
                   savePhoneNum();
-                "
-              ></v-text-field>
+                "></v-text-field>
             </v-row>
           </v-container>
         </v-card-text>
@@ -39,8 +38,7 @@
             @click="
               dialog = false;
               savePhoneNum();
-            "
-          >
+            ">
             Continue
           </v-btn>
         </v-card-actions>
@@ -63,8 +61,7 @@
                 v-model="student"
                 :label="`Student`"
                 :rules="validateRoleCheckbox"
-                @change="tutor = !student"
-              ></v-checkbox>
+                @change="tutor = !student"></v-checkbox>
             </v-list-item>
             <h4>
               Sign up for free tutoring that you will receive as a student.
@@ -74,8 +71,7 @@
                 v-model="tutor"
                 :label="`Tutor`"
                 :rules="validateRoleCheckbox"
-                @change="student = !tutor"
-              ></v-checkbox>
+                @change="student = !tutor"></v-checkbox>
             </v-list-item>
             <h4>
               Apply to be a tutor in one of our groups and provide quality
@@ -89,8 +85,7 @@
               <v-checkbox
                 v-model="selected"
                 :value="group"
-                :label="group.name"
-              ></v-checkbox>
+                :label="group.name"></v-checkbox>
             </v-list-item>
             <h4>{{ group.description }}</h4>
           </v-list>
@@ -101,8 +96,7 @@
             color="accent"
             text
             :disabled="!allowGroupContinue"
-            @click="savePersonRoles()"
-          >
+            @click="savePersonRoles()">
             Continue
           </v-btn>
         </v-card-actions>
@@ -399,7 +393,7 @@ export default {
               role.type.includes("Tutor") &&
               pRole.status.includes("applied")
             ) {
-              this.$router.push({ name: "tutorTopics" });
+              this.$router.push({ name: "tutorAddTopics" });
             } else if (
               role.type.includes("Student") &&
               pRole.status.includes("approved")
@@ -418,7 +412,6 @@ export default {
                 params: { id: pRole.id },
               });
             }
-            this.$router.go();
             break;
           }
         }

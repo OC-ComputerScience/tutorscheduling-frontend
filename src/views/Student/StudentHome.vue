@@ -74,8 +74,7 @@
                   :disabled="selectedAppt.status === 'booked'"
                   required
                   dense
-                  @change="saveChanges = true"
-                >
+                  @change="saveChanges = true">
                 </v-select>
 
                 <v-select
@@ -87,8 +86,7 @@
                   :disabled="selectedAppt.status === 'booked'"
                   required
                   dense
-                  @change="saveChanges = true"
-                >
+                  @change="saveChanges = true">
                 </v-select>
               </span>
               <!-- slots for location and topic to be unchangable if the session type is group -->
@@ -100,8 +98,7 @@
                   item-value="id"
                   label="Location"
                   dense
-                  readonly
-                >
+                  readonly>
                 </v-select>
 
                 <v-select
@@ -111,8 +108,7 @@
                   item-value="id"
                   label="Topic"
                   dense
-                  readonly
-                >
+                  readonly>
                 </v-select>
               </span>
               <!-- show time for private lessons-->
@@ -121,15 +117,13 @@
                 v-model="selectedAppt.startTime"
                 label="Booked Start"
                 dense
-                readonly
-              >
+                readonly>
               </v-text-field>
               <v-text-field
                 v-model="selectedAppt.endTime"
                 label="Booked End"
                 dense
-                readonly
-              >
+                readonly>
               </v-text-field>
               <!-- put in presession-info for appointment for private appointments/ add a readonly if  group -->
               <v-textarea
@@ -142,8 +136,7 @@
                 auto-grow
                 rows="1"
                 :readonly="selectedAppt.type === 'Group'"
-                @change="saveChanges = true"
-              ></v-textarea>
+                @change="saveChanges = true"></v-textarea>
             </v-card-text>
             <v-card-actions>
               <v-spacer></v-spacer>
@@ -152,8 +145,7 @@
                 @click="
                   apptDialog = false;
                   getAppointments();
-                "
-              >
+                ">
                 Close
               </v-btn>
               <v-btn
@@ -162,8 +154,7 @@
                 @click="
                   editAppointment();
                   apptDialog = false;
-                "
-              >
+                ">
                 Save Changes
               </v-btn>
               <v-btn
@@ -171,8 +162,7 @@
                 @click="
                   cancelAppointment();
                   apptDialog = false;
-                "
-              >
+                ">
                 Cancel Appointment
               </v-btn>
             </v-card-actions>
@@ -182,13 +172,12 @@
         <v-row>
           <v-col>
             <v-card
-              :to="{ name: 'mainCalendar' }"
+              :to="{ name: 'calendar' }"
               class="mx-auto my-12 d-flex justify-center"
               max-width="400"
               height="100"
               elevation="10"
-              color="#EE5044"
-            >
+              color="#EE5044">
               <v-card-title class="justify-center white--text">
                 View Calendar
               </v-card-title>
@@ -196,13 +185,12 @@
           </v-col>
           <v-col>
             <v-card
-              :to="{ name: 'requestAdd' }"
+              :to="{ name: 'studentAddRequest' }"
               class="mx-auto my-12 d-flex justify-center"
               max-width="400"
               height="100"
               elevation="10"
-              color="#F8C545"
-            >
+              color="#F8C545">
               <v-card-title class="justify-center white--text">
                 Make A Request
               </v-card-title>
@@ -218,8 +206,7 @@
               append-icon="mdi-magnify"
               label="Search"
               single-line
-              hide-details
-            ></v-text-field>
+              hide-details></v-text-field>
           </v-card-title>
           <v-card-text>
             <b
@@ -232,8 +219,7 @@
             :search="search"
             :items="appointments"
             :items-per-page="50"
-            @click:row="rowClick"
-          ></v-data-table>
+            @click:row="rowClick"></v-data-table>
         </v-card>
         <br />
         <v-card>
@@ -245,8 +231,7 @@
               append-icon="mdi-magnify"
               label="Search"
               single-line
-              hide-details
-            ></v-text-field>
+              hide-details></v-text-field>
           </v-card-title>
           <v-card-text>
             <b>Click on an appointment to provide feedback.</b>
@@ -256,8 +241,7 @@
             :search="search"
             :items="appointmentsneedingfeedback"
             :items-per-page="50"
-            @click:row="provideFeedback"
-          ></v-data-table>
+            @click:row="provideFeedback"></v-data-table>
         </v-card>
       </v-container>
       <v-container v-else>

@@ -7,8 +7,7 @@
           src="../assets/oc_logo_social.png"
           max-height="50"
           max-width="50"
-          contain
-        ></v-img>
+          contain></v-img>
       </router-link>
       <v-toolbar-title class="title">
         <div>{{ this.title }}</div>
@@ -17,16 +16,14 @@
       <v-toolbar-items
         v-for="item in activeMenus"
         :key="item.link"
-        class="hidden-md-and-down"
-      >
+        class="hidden-md-and-down">
         <v-btn
           exact
           :ref="item.link"
           link
           :to="{ name: item.name, params: { id: currentPersonRoleID } }"
           :color="item.color"
-          text
-        >
+          text>
           {{ item.text }}
         </v-btn>
       </v-toolbar-items>
@@ -39,8 +36,7 @@
           selectedRole !== undefined &&
           selectedRole !== null
         "
-        offset-y
-      >
+        offset-y>
         <template v-slot:activator="{ on, attrs }">
           <v-btn color="accent" dark v-bind="attrs" v-on="on" class="mr-4 ml-4">
             {{ selectedGroup }}
@@ -59,8 +55,7 @@
             :key="i"
             no-action
             sub-group
-            @click.stop.prevent
-          >
+            @click.stop.prevent>
             <template v-slot:activator>
               <v-list-item-title v-text="group.name"></v-list-item-title>
             </template>
@@ -72,8 +67,7 @@
                 selectedRole = role.type;
                 selectedGroup = group.name;
                 resetMenu();
-              "
-            >
+              ">
               <v-list-item-content>
                 <v-list-item-title v-text="role.type"></v-list-item-title>
               </v-list-item-content>
@@ -92,8 +86,7 @@
           selectedRole !== '' &&
           selectedRole !== undefined &&
           selectedRole !== null
-        "
-      >
+        ">
         <template v-slot:activator="{ on, attrs }">
           <v-btn icon x-large v-on="on" v-bind="attrs">
             <v-avatar
@@ -104,8 +97,7 @@
                 selectedRole !== undefined &&
                 selectedRole !== null
               "
-              color="secondary"
-            >
+              color="secondary">
               <span class="accent--text font-weight-bold">{{ initials }}</span>
             </v-avatar>
           </v-btn>
@@ -128,28 +120,24 @@
               </v-btn>
               <v-divider
                 class="my-3"
-                v-if="!selectedRole.includes('Admin')"
-              ></v-divider>
+                v-if="!selectedRole.includes('Admin')"></v-divider>
               <v-btn
                 depressed
                 rounded
                 text
                 :to="{ name: 'apply' }"
-                v-if="!selectedRole.includes('Admin')"
-              >
+                v-if="!selectedRole.includes('Admin')">
                 Apply
               </v-btn>
               <v-divider
                 class="my-3"
-                v-if="!selectedRole.includes('Admin')"
-              ></v-divider>
+                v-if="!selectedRole.includes('Admin')"></v-divider>
               <v-btn
                 depressed
                 rounded
                 text
                 :to="{ name: 'help', params: { id: currentPersonRoleID } }"
-                v-if="!selectedRole.includes('Admin')"
-              >
+                v-if="!selectedRole.includes('Admin')">
                 Help
               </v-btn>
               <v-divider class="my-3"></v-divider>
@@ -168,8 +156,7 @@
         "
         dark
         class="hidden-lg-and-up"
-        @click="drawer = !drawer"
-      ></v-app-bar-nav-icon>
+        @click="drawer = !drawer"></v-app-bar-nav-icon>
     </v-app-bar>
 
     <v-navigation-drawer
@@ -186,16 +173,14 @@
       app
       right
       :mini-variant.sync="$vuetify.breakpoint.smAndDown"
-      color="primary"
-    >
+      color="primary">
       <v-list>
         <v-list-item
           exact
           v-for="item in activeMenus"
           :to="{ name: item.name, params: { id: currentPersonRoleID } }"
           :color="item.color"
-          :key="item.text"
-        >
+          :key="item.text">
           <v-list-item-action>
             <v-icon color="white" v-if="item.icon">{{ item.icon }}</v-icon>
           </v-list-item-action>
@@ -258,16 +243,16 @@ export default {
         roles: "Student",
       },
       {
-        link: "mainCalendar",
-        name: "mainCalendar",
+        link: "calendar",
+        name: "calendar",
         color: "white",
         text: "Calendar",
         icon: "mdi-calendar",
         roles: "HeadAdmin,Admin,Supervisor,Tutor,Student",
       },
       {
-        link: "requestList",
-        name: "requestList",
+        link: "adminRequests",
+        name: "adminRequests",
         color: "white",
         text: "Requests",
         icon: "mdi-alert",
@@ -282,8 +267,8 @@ export default {
         roles: "HeadAdmin,Admin,Supervisor",
       },
       {
-        link: "pendingList",
-        name: "pendingList",
+        link: "adminApprove",
+        name: "adminApprove",
         color: "white",
         text: "Applications",
         icon: "mdi-text-account",
@@ -314,8 +299,8 @@ export default {
         roles: "HeadAdmin,Admin,Supervisor",
       },
       {
-        link: "reportList",
-        name: "reportList",
+        link: "adminReports",
+        name: "adminReports",
         color: "white",
         text: "Reports",
         icon: "mdi-chart-line",
@@ -329,16 +314,16 @@ export default {
         roles: "Headdmin",
       },
       {
-        link: "availabilityAdd",
-        name: "availabilityAdd",
+        link: "tutorAddAvailability",
+        name: "tutorAddAvailability",
         color: "white",
         text: "Availability",
         icon: "mdi-clipboard-text-clock",
         roles: "Tutor",
       },
       {
-        link: "requestAdd",
-        name: "requestAdd",
+        link: "studentAddRequest",
+        name: "studentAddRequest",
         color: "white",
         text: "Request",
         icon: "mdi-alert",
@@ -468,7 +453,7 @@ export default {
                     this.initials = this.user.fName[0] + this.user.lName[0];
                     this.name = this.user.fName + " " + this.user.lName;
                   }
-                  this.$router.push({ name: "tutorTopics" });
+                  this.$router.push({ name: "tutorAddTopics" });
                 }
               });
             } else if (this.incompleteGroups.length !== 0) {
@@ -567,7 +552,6 @@ export default {
         .then((response) => {
           console.log(response);
           Utils.removeItem("user");
-          this.$router.go();
           this.$router.push({ name: "login" });
         })
         .catch((error) => {
