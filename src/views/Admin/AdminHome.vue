@@ -20,24 +20,21 @@
               width="700"
               type="bar"
               :options="chartOptions"
-              :series="series"
-            ></apexchart>
+              :series="series"></apexchart>
           </v-card>
         </v-col>
         <v-col justify="center">
           <v-row justify="center">
             <!-- <v-col md="6"> -->
             <v-card
-              :to="{ name: 'requestList' }"
-              class="mx-auto my-3 justify-center"
-            >
+              :to="{ name: 'adminRequests' }"
+              class="mx-auto my-3 justify-center">
               <v-card-title> Student Requests </v-card-title>
               <apexchart
                 width="380"
                 type="pie"
                 :options="pieOptions"
-                :series="pieSeries"
-              ></apexchart>
+                :series="pieSeries"></apexchart>
               <br />
             </v-card>
           </v-row>
@@ -45,9 +42,8 @@
             <!-- </v-col>
             <v-col md="6"> -->
             <v-card
-              :to="{ name: 'pendingList' }"
-              class="mx-auto my-5 justify-center"
-            >
+              :to="{ name: 'adminApprove' }"
+              class="mx-auto my-5 justify-center">
               <v-card-title> Tutor Applications </v-card-title>
               <v-card-text class="text-center">
                 <h1>{{ unapprovednum }}</h1>
@@ -68,8 +64,7 @@
               :headers="tutorTable"
               :search="search"
               :items="tutors"
-              :items-per-page="50"
-            ></v-data-table>
+              :items-per-page="50"></v-data-table>
           </v-card>
           <br />
         </v-col>
@@ -83,8 +78,7 @@
               :headers="topicTable"
               :search="search"
               :items="topics"
-              :items-per-page="50"
-            ></v-data-table>
+              :items-per-page="50"></v-data-table>
           </v-card>
         </v-col>
       </v-row>

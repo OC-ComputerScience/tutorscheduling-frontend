@@ -74,8 +74,7 @@
                   selectedAppt.status === 'studentCancel' ||
                   selectedAppt.status === 'tutorCancel'
                 "
-                @change="saveChanges = true"
-              >
+                @change="saveChanges = true">
               </v-select>
 
               <v-select
@@ -85,8 +84,7 @@
                 item-value="id"
                 label="Topic"
                 disabled
-                dense
-              >
+                dense>
               </v-select>
             </span>
             <!-- slots for location and topic to be unchangable if the session type is group -->
@@ -99,8 +97,7 @@
                 label="Location"
                 required
                 dense
-                @change="saveChanges = true"
-              >
+                @change="saveChanges = true">
               </v-select>
 
               <v-select
@@ -112,8 +109,7 @@
                 required
                 dense
                 :readonly="students.length > 0"
-                @change="saveChanges = true"
-              >
+                @change="saveChanges = true">
               </v-select>
             </span>
             <!-- show time ad an changeable value for private lessons-->
@@ -122,15 +118,13 @@
               v-model="selectedAppt.startTime"
               label="Booked Start"
               dense
-              readonly
-            >
+              readonly>
             </v-text-field>
             <v-text-field
               v-model="selectedAppt.endTime"
               label="Booked End"
               dense
-              readonly
-            >
+              readonly>
             </v-text-field>
             <!-- put in presession-info for appointment for private appointments/ add a readonly if private -->
             <v-textarea
@@ -143,8 +137,7 @@
               auto-grow
               rows="1"
               :readonly="selectedAppt.type === 'Private'"
-              @change="saveChanges = true"
-            ></v-textarea>
+              @change="saveChanges = true"></v-textarea>
           </v-card-text>
           <v-card-actions>
             <v-spacer></v-spacer>
@@ -152,8 +145,7 @@
               v-if="!(selectedAppt.type === 'Group')"
               color="#12f000"
               @click="confirmAppointment(true)"
-              :disabled="!checkStatus('pending')"
-            >
+              :disabled="!checkStatus('pending')">
               Confirm
             </v-btn>
             <v-btn
@@ -163,8 +155,7 @@
                 confirmAppointment(false);
                 apptDialog = false;
               "
-              :disabled="!checkStatus('pending')"
-            >
+              :disabled="!checkStatus('pending')">
               Reject
             </v-btn>
             <v-btn
@@ -172,8 +163,7 @@
               @click="
                 apptDialog = false;
                 getAppointments();
-              "
-            >
+              ">
               Close
             </v-btn>
             <v-btn
@@ -182,8 +172,7 @@
               @click="
                 editAppointment();
                 apptDialog = false;
-              "
-            >
+              ">
               Save Changes
             </v-btn>
 
@@ -198,8 +187,7 @@
               @click="
                 cancelAppointment();
                 apptDialog = false;
-              "
-            >
+              ">
               Cancel Appointment
             </v-btn>
           </v-card-actions>
@@ -224,8 +212,7 @@
               @click="
                 dialog = false;
                 doAuthorization();
-              "
-            >
+              ">
               Continue
             </v-btn>
           </v-card-actions>
@@ -236,13 +223,12 @@
         <v-row>
           <v-col>
             <v-card
-              :to="{ name: 'mainCalendar' }"
+              :to="{ name: 'calendar' }"
               class="mx-auto my-12 d-flex justify-center"
               max-width="400"
               height="100"
               elevation="10"
-              color="#196CA2"
-            >
+              color="#196CA2">
               <v-card-title class="justify-center white--text">
                 View Calendar
               </v-card-title>
@@ -250,13 +236,12 @@
           </v-col>
           <v-col>
             <v-card
-              :to="{ name: 'availabilityAdd' }"
+              :to="{ name: 'tutorAddAvailability' }"
               class="mx-auto my-12 d-flex justify-center"
               max-width="400"
               height="100"
               elevation="10"
-              color="#63BAC0"
-            >
+              color="#63BAC0">
               <v-card-title class="justify-center white--text">
                 Manage Availability
               </v-card-title>
@@ -272,8 +257,7 @@
               append-icon="mdi-magnify"
               label="Search"
               single-line
-              hide-details
-            ></v-text-field>
+              hide-details></v-text-field>
           </v-card-title>
           <v-card-text>
             <b
@@ -286,8 +270,7 @@
             :search="search"
             :items="appointments"
             :items-per-page="50"
-            @click:row="rowClick"
-          >
+            @click:row="rowClick">
           </v-data-table>
         </v-card>
         <br />
@@ -300,8 +283,7 @@
               append-icon="mdi-magnify"
               label="Search"
               single-line
-              hide-details
-            ></v-text-field>
+              hide-details></v-text-field>
           </v-card-title>
           <v-card-text>
             <b>Click on an appointment to provide feedback.</b>
@@ -311,8 +293,7 @@
             :search="search"
             :items="appointmentsneedingfeedback"
             :items-per-page="50"
-            @click:row="provideFeedback"
-          ></v-data-table>
+            @click:row="provideFeedback"></v-data-table>
         </v-card>
       </v-container>
       <v-container v-else-if="!disabled && !approved">

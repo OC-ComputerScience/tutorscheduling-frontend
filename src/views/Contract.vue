@@ -17,8 +17,7 @@
             max-width="400"
             height="100"
             elevation="10"
-            :style="{ 'background-color': role.color }"
-          >
+            :style="{ 'background-color': role.color }">
             <v-card-title class="justify-center white--text">
               {{ role.type }} - {{ role.groupName }}
             </v-card-title>
@@ -35,8 +34,7 @@
                 v-for="i in role.numPages"
                 :key="i"
                 :page="i"
-                :src="role.pdfName"
-              ></pdf>
+                :src="role.pdfName"></pdf>
               <v-container>
                 <v-text-field
                   v-model="signature"
@@ -46,8 +44,7 @@
                   v-on:keyup.enter="
                     role.dialog = false;
                     save(role);
-                  "
-                ></v-text-field>
+                  "></v-text-field>
               </v-container>
               <v-card-actions>
                 <v-spacer></v-spacer>
@@ -59,8 +56,7 @@
                     role.dialog = false;
                     signature = '';
                     save(role);
-                  "
-                >
+                  ">
                   Agree
                 </v-btn>
               </v-card-actions>
@@ -140,7 +136,7 @@ export default {
             params: { id: this.completeRole.personrole[0].id },
           });
         else if (this.completeRole.type.includes("Admin"))
-          this.$router.push({ name: "mainCalendar" });
+          this.$router.push({ name: "adminHome" });
       }
     });
   },
