@@ -1,8 +1,8 @@
 <template>
   <v-app>
-    <MenuBar></MenuBar>
+    <MenuBar :key="$route.fullPath"></MenuBar>
     <v-main>
-      <router-view :key="$route.fullPath"></router-view>
+      <router-view></router-view>
     </v-main>
   </v-app>
 </template>

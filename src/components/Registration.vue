@@ -142,9 +142,11 @@ import PersonRoleServices from "@/services/personRoleServices";
 import TwilioServices from "@/services/twilioServices";
 import Utils from "@/config/utils.js";
 import SelectGroupView from "./SelectGroupView.vue";
+import { RedirectToPageMixin } from "../mixins/RedirectToPageMixin";
 
 export default {
   name: "Registration",
+  mixins: [RedirectToPageMixin],
   components: {
     SelectGroupView,
   },
@@ -152,7 +154,6 @@ export default {
     return {
       roleDialog: true,
       groupDialog: false,
-      openSelect: false,
       absolute: true,
       opacity: 0.75,
       roleSelect: "Student",
@@ -161,7 +162,6 @@ export default {
       admins: [],
       person: {},
       roles: [],
-      personroles: [],
       personrole: {},
       roleCounter: 0,
       user: {},
@@ -196,32 +196,6 @@ export default {
             }
           }
         }
-      }
-    },
-    async getPersonRoles() {
-      await RoleServices.getIncompleteRoleForPerson(this.user.userID)
-        .then((response) => {
-          for (let i = 0; i < response.data.length; i++) {
-            let role = response.data[i];
-            this.personroles.push(role);
-          }
-        })
-        .catch((error) => {
-          console.log("There was an error:", error.response);
-        });
-
-      // if the user doesn't have any incomplete roles, get normal roles
-      if (this.personroles.length === 0) {
-        await RoleServices.getRoleForPerson(this.user.userID)
-          .then((response) => {
-            for (let i = 0; i < response.data.length; i++) {
-              let role = response.data[i];
-              this.personroles.push(role);
-            }
-          })
-          .catch((error) => {
-            console.log("There was an error:", error.response);
-          });
       }
     },
     async getGroups() {
@@ -318,59 +292,11 @@ export default {
           }
           // resave user in store
           Utils.setStore("user", this.user);
-          this.goToPage();
+          this.goToPage(this.user.userID);
         })
         .catch((error) => {
           console.log("There was an error:", error.response);
         });
-    },
-    async goToPage() {
-      await this.getPersonRoles().then(() => {
-        for (let i = 0; i < this.personroles.length; i++) {
-          let role = this.personroles[i];
-          for (let j = 0; j < role.personrole.length; j++) {
-            let pRole = role.personrole[j];
-            if (role.type.includes("Admin")) {
-              this.$router.push({
-                name: "adminHome",
-                params: { id: pRole.id },
-              });
-            } else if (
-              (role.type.includes("Student") &&
-                !pRole.status.includes("approved") &&
-                !pRole.agree) ||
-              (role.type.includes("Tutor") && !pRole.agree)
-            ) {
-              this.$router.push({ name: "contract", params: { id: pRole.id } });
-            }
-            // make a tutor sign up for topics if they haven't been approved yet
-            else if (
-              role.type.includes("Tutor") &&
-              pRole.status.includes("applied")
-            ) {
-              this.$router.push({ name: "tutorAddTopics" });
-            } else if (
-              role.type.includes("Student") &&
-              pRole.status.includes("approved")
-            ) {
-              this.$router.push({
-                name: "studentHome",
-                params: { id: pRole.id },
-              });
-            } else if (
-              role.type.includes("Tutor") &&
-              pRole.status.includes("approved") &&
-              pRole.agree
-            ) {
-              this.$router.push({
-                name: "tutorHome",
-                params: { id: pRole.id },
-              });
-            }
-            break;
-          }
-        }
-      });
     },
     async checkPrivilege(privilege, personroleprivileges) {
       let hasPriv = false;

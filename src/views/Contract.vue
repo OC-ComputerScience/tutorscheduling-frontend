@@ -65,6 +65,8 @@
           </v-dialog>
         </v-col>
       </v-row>
+
+      <SelectGroupView v-if="openSelect"></SelectGroupView>
     </v-container>
   </div>
 </template>
@@ -72,23 +74,26 @@
 <script>
 import pdf from "vue-pdf";
 import GroupServices from "@/services/groupServices.js";
-import RoleServices from "@/services/roleServices.js";
 import PersonRoleServices from "@/services/personRoleServices.js";
 import Utils from "@/config/utils.js";
+import SelectGroupView from "@/components/SelectGroupView.vue";
+import { RedirectToPageMixin } from "../mixins/RedirectToPageMixin";
 
 export default {
   name: "App",
+  mixins: [RedirectToPageMixin],
   components: {
     pdf,
+    SelectGroupView,
   },
   data() {
     return {
       //dialog: [],
       message: "Sign Contract",
+      openSelect: false,
       roles: [],
       signature: "",
       numPages: 2,
-      completeRole: {},
       colors: [
         "#47121D",
         "#EE5044",
@@ -121,67 +126,22 @@ export default {
   async created() {
     this.user = Utils.getStore("user");
     this.user.fullName = this.user.fName + " " + this.user.lName;
-    await this.getPersonRoles().then(() => {
-      console.log(this.roles);
-      console.log(this.completeRole);
-      if (this.roles.length === 0 && this.completeRole !== null) {
-        if (this.completeRole.type.includes("Student"))
-          this.$router.push({
-            name: "studentHome",
-            params: { id: this.completeRole.personrole[0].id },
-          });
-        else if (this.completeRole.type.includes("Tutor"))
-          this.$router.push({
-            name: "tutorHome",
-            params: { id: this.completeRole.personrole[0].id },
-          });
-        else if (this.completeRole.type.includes("Admin"))
-          this.$router.push({ name: "adminHome" });
-      }
-    });
+    await this.setContracts();
   },
   methods: {
     // check that if there are multiple contracts to sign, some of the buttons go away
     async save(role) {
-      await this.updatePersonRole(role)
-        .then(async () => {
-          await this.getPersonRoles()
-            .then(() => {
-              console.log(this.roles);
-              if (this.roles.length !== 0) role.dialog = false;
-              else if (this.roles.length === 0 && this.completeRole !== null) {
-                if (this.completeRole.type.includes("Student"))
-                  this.$router.push({
-                    name: "studentHome",
-                    params: { id: this.completeRole.personrole[0].id },
-                  });
-                else if (this.completeRole.type.includes("Tutor"))
-                  this.$router.push({
-                    name: "tutorHome",
-                    params: { id: this.completeRole.personrole[0].id },
-                  });
-                else if (this.completeRole.type.includes("Admin"))
-                  this.$router.push({ name: "adminHome" });
-                this.$router.go();
-              }
-            })
-            .catch((error) => {
-              this.message = error.response.data.message;
-            });
-        })
-        .catch((error) => {
-          this.message = error.response.data.message;
-        });
+      await this.updatePersonRole(role);
+      await this.goToPage(this.user.userID);
     },
-    async getPersonRoles() {
+    async setContracts() {
       this.roles = [];
-      await GroupServices.getIncompleteGroupsForPerson(this.user.userID)
+      await GroupServices.getContractsNeededForPerson(this.user.userID)
         .then((response) => {
           for (let i = 0; i < response.data.length; i++) {
             let group = response.data[i];
             for (let j = 0; j < group.role.length; j++) {
               let role = group.role[j];
-
               for (let k = 0; k < role.personrole.length; k++) {
                 let personrole = role.personrole[k];
                 let tempFile = this.files.filter(function (file) {
@@ -190,7 +150,6 @@ export default {
                     file.pdf.includes(role.type.toString())
                   );
                 });
-                console.log(tempFile);
                 personrole.pdfName = tempFile[0].pdf;
                 personrole.numPages = tempFile[0].pages;
                 personrole.groupName = group.name;
@@ -207,20 +166,6 @@ export default {
           this.message = error.response.data.message;
           console.log("There was an error:", error.response);
         });
-
-      console.log(this.roles);
-
-      // if there are no incomplete roles, route home with the right id
-      if (this.roles.length === 0) {
-        await RoleServices.getRoleForPerson(this.user.userID)
-          .then((response) => {
-            this.completeRole = response.data[0];
-          })
-          .catch((error) => {
-            this.message = error.response.data.message;
-            console.log("There was an error:", error.response);
-          });
-      }
     },
     async updatePersonRole(role) {
       let updatedRole = {};

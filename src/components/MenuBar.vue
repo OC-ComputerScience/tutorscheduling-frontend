@@ -1,7 +1,7 @@
 <template>
   <div>
     <v-app-bar app color="primary" dark>
-      <router-link :to="_link">
+      <router-link :to="link">
         <v-img
           class="mr-4"
           src="../assets/oc_logo_social.png"
@@ -21,21 +21,14 @@
           exact
           :ref="item.link"
           link
-          :to="{ name: item.name, params: { id: currentPersonRoleID } }"
+          :to="{ name: item.name, params: { id: selectedRole.personRoleId } }"
           :color="item.color"
           text>
           {{ item.text }}
         </v-btn>
       </v-toolbar-items>
       <v-menu
-        v-if="
-          user != null &&
-          selectedGroup != '' &&
-          currentPersonRoleID !== 0 &&
-          selectedRole !== '' &&
-          selectedRole !== undefined &&
-          selectedRole !== null
-        "
+        v-if="isUserPopulated() && selectedGroup != '' && isSelectedRoleValid()"
         offset-y>
         <template v-slot:activator="{ on, attrs }">
           <v-btn color="accent" dark v-bind="attrs" v-on="on" class="mr-4 ml-4">
@@ -43,13 +36,6 @@
           </v-btn>
         </template>
         <v-list>
-          <!--<v-list-item
-                        v-for="group in groups"
-                        :key="group"
-                        @click="(selectedGroup = group); resetMenu()"
-                    >
-                        <v-list-item-title>{{ group }}</v-list-item-title>
-                    </v-list-item> -->
           <v-list-group
             v-for="(group, i) in user.access"
             :key="i"
@@ -64,9 +50,10 @@
               v-for="(role, j) in group.roles"
               :key="j"
               @click="
-                selectedRole = role.type;
+                selectedRole = role;
                 selectedGroup = group.name;
                 resetMenu();
+                menuAction(`${selectedRole.type.toLowerCase()}Home`);
               ">
               <v-list-item-content>
                 <v-list-item-title v-text="role.type"></v-list-item-title>
@@ -80,23 +67,11 @@
         min-width="200px"
         rounded
         offset-y
-        v-if="
-          user != null &&
-          currentPersonRoleID !== 0 &&
-          selectedRole !== '' &&
-          selectedRole !== undefined &&
-          selectedRole !== null
-        ">
+        v-if="isUserPopulated() && isSelectedRoleValid()">
         <template v-slot:activator="{ on, attrs }">
           <v-btn icon x-large v-on="on" v-bind="attrs">
             <v-avatar
-              v-if="
-                user != null &&
-                currentPersonRoleID !== 0 &&
-                selectedRole !== '' &&
-                selectedRole !== undefined &&
-                selectedRole !== null
-              "
+              v-if="isUserPopulated() && isSelectedRoleValid()"
               color="secondary">
               <span class="accent--text font-weight-bold">{{ initials }}</span>
             </v-avatar>
@@ -120,24 +95,27 @@
               </v-btn>
               <v-divider
                 class="my-3"
-                v-if="!selectedRole.includes('Admin')"></v-divider>
+                v-if="!selectedRole.type.includes('Admin')"></v-divider>
               <v-btn
                 depressed
                 rounded
                 text
                 :to="{ name: 'apply' }"
-                v-if="!selectedRole.includes('Admin')">
+                v-if="!selectedRole.type.includes('Admin')">
                 Apply
               </v-btn>
               <v-divider
                 class="my-3"
-                v-if="!selectedRole.includes('Admin')"></v-divider>
+                v-if="!selectedRole.type.includes('Admin')"></v-divider>
               <v-btn
                 depressed
                 rounded
                 text
-                :to="{ name: 'help', params: { id: currentPersonRoleID } }"
-                v-if="!selectedRole.includes('Admin')">
+                :to="{
+                  name: 'help',
+                  params: { id: selectedRole.personRoleId },
+                }"
+                v-if="!selectedRole.type.includes('Admin')">
                 Help
               </v-btn>
               <v-divider class="my-3"></v-divider>
@@ -147,27 +125,14 @@
         </v-card>
       </v-menu>
       <v-app-bar-nav-icon
-        v-if="
-          user !== null &&
-          currentPersonRoleID !== 0 &&
-          selectedRole !== '' &&
-          selectedRole !== undefined &&
-          selectedRole !== null
-        "
+        v-if="isUserPopulated() && isSelectedRoleValid()"
         dark
         class="hidden-lg-and-up"
         @click="drawer = !drawer"></v-app-bar-nav-icon>
     </v-app-bar>
 
     <v-navigation-drawer
-      v-if="
-        drawer &&
-        user !== null &&
-        currentPersonRoleID !== 0 &&
-        selectedRole !== '' &&
-        selectedRole !== undefined &&
-        selectedRole !== null
-      "
+      v-if="drawer && isUserPopulated() && isSelectedRoleValid()"
       class="hidden-lg-and-up"
       v-model="drawer"
       app
@@ -178,7 +143,7 @@
         <v-list-item
           exact
           v-for="item in activeMenus"
-          :to="{ name: item.name, params: { id: currentPersonRoleID } }"
+          :to="{ name: item.name, params: { id: selectedRole.personRoleId } }"
           :color="item.color"
           :key="item.text">
           <v-list-item-action>
@@ -198,13 +163,15 @@
 <script>
 import Utils from "@/config/utils.js";
 import AuthServices from "@/services/authServices.js";
-import GroupServices from "@/services/groupServices.js";
 import PersonRoleServices from "@/services/personRoleServices.js";
+import { RedirectToPageMixin } from "../mixins/RedirectToPageMixin";
 
 export default {
   name: "App",
+  mixins: [RedirectToPageMixin],
   data: () => ({
     user: {},
+    link: "",
     drawer: false,
     title: "OC Tutoring",
     initials: "",
@@ -214,9 +181,8 @@ export default {
     incompleteGroups: [],
     hasTopics: true,
     selectedGroup: "",
-    selectedRole: "",
+    selectedRole: {},
     activeMenus: [],
-    currentPersonRoleID: 0,
     menus: [
       {
         link: "adminHome",
@@ -334,221 +300,79 @@ export default {
   async created() {
     // ensures that their name gets set properly from store
     this.user = Utils.getStore("user");
-    if (this.user != null) {
-      this.title = "OC Tutoring";
+    if (this.isUserPopulated()) {
+      this.title = "Tutor Scheduling";
       this.initials = this.user.fName[0] + this.user.lName[0];
       this.name = this.user.fName + " " + this.user.lName;
+      this.selectedRole = this.user.selectedRole;
+      this.selectedGroup = this.user.selectedGroup;
+      this.link = this.createLink();
+      await this.resetMenu();
     }
   },
-  async mounted() {
-    await this.resetMenu();
-  },
-  computed: {
-    _link() {
+  methods: {
+    createLink() {
       return (
         "/" +
-        this.selectedRole.toLowerCase() +
+        this.selectedRole.type.toLowerCase() +
         "Home/" +
-        this.currentPersonRoleID
+        this.selectedRole.personRoleId
       );
     },
-  },
-  methods: {
+    isUserPopulated() {
+      return JSON.stringify(this.user) !== "{}" && this.user !== null;
+    },
+    isSelectedRoleValid() {
+      return (
+        this.selectedRole.personRoleId !== 0 &&
+        this.selectedRole.type !== "" &&
+        this.selectedRole.type !== undefined &&
+        this.selectedRole.type !== null
+      );
+    },
     menuAction(route) {
-      if (
-        this.currentPersonRoleID === 0 &&
-        (this.selectedRole === "" ||
-          this.selectedRole === undefined ||
-          this.selectedRole === null)
-      ) {
+      if (!this.isSelectedRoleValid()) {
         this.$router.push({ name: "login" });
       } else
         this.$router.push({
           name: route,
-          params: { id: this.currentPersonRoleID },
+          params: { id: this.selectedRole.personRoleId },
         });
-    },
-    async setGroupsAndRoles() {
-      this.user = Utils.getStore("user");
-      if (this.user != null) {
-        this.title = "OC Tutoring";
-        this.initials = this.user.fName[0] + this.user.lName[0];
-        this.name = this.user.fName + " " + this.user.lName;
-        this.groups = [];
-        this.user.access.forEach((element) => {
-          this.groups.push(element.name);
-        });
-        for (let i = 0; i < this.user.access.length; i++) {
-          if (
-            this.selectedGroup === "" ||
-            this.selectedGroup === undefined ||
-            this.selectedGroup === null
-          ) {
-            this.selectedGroup = this.user.access[0].name;
-            this.user.selectedGroup = this.selectedGroup;
-            Utils.setStore("user", this.user);
-          } else {
-            this.user.selectedGroup = this.selectedGroup;
-            Utils.setStore("user", this.user);
-          }
-          if (
-            this.selectedRole === "" ||
-            this.selectedRole === undefined ||
-            this.selectedRole === null
-          ) {
-            this.selectedRole = this.user.access[0].roles[0].type;
-          }
-          this.user.selectedRole = this.selectedRole;
-          Utils.setStore("user", this.user);
-          await this.getPersonRoles();
-        }
-      } else this.title = "";
     },
     async resetMenu() {
       this.user = Utils.getStore("user");
-      if (this.user !== null) {
-        await this.getIncompletePersonRoles()
-          .then(async () => {
-            if (this.incompleteGroups.length === 0) {
-              await this.getIncompleteTopics().then(async () => {
-                if (this.hasTopics) {
-                  await this.setGroupsAndRoles().then(() => {
-                    if (
-                      this.selectedGroup === "" &&
-                      this.user.selectedGroup === undefined
-                    ) {
-                      this.selectedGroup = this.groups[0];
-                      this.user.selectedGroup = this.selectedGroup;
-                      Utils.setStore("user", this.user);
-                    } else if (this.selectedGroup === "")
-                      this.selectedGroup = this.user.selectedGroup;
-
-                    if (
-                      this.user != null &&
-                      this.currentPersonRoleID !== 0 &&
-                      this.selectedRole !== "" &&
-                      this.selectedRole !== undefined &&
-                      this.selectedRole !== null
-                    ) {
-                      this.activeMenus = this.menus;
-                      this.activeMenus = this.menus.filter((menu) =>
-                        menu.roles.includes(this.selectedRole)
-                      );
-                      if (this.selectedRole.includes("Student"))
-                        this.limitStudentMenu();
-                      else if (this.selectedRole.includes("Tutor"))
-                        this.limitTutorMenu();
-                      else if (this.selectedRole.includes("Admin"))
-                        this.limitAdminMenu();
-                    } else {
-                      this.activeMenus = this.menus.filter((menu) =>
-                        menu.roles.includes("None")
-                      );
-                    }
-                    this.menuAction(this.activeMenus[0].name);
-                  });
-                } else {
-                  if (this.user != null) {
-                    this.title = "OC Tutoring";
-                    this.initials = this.user.fName[0] + this.user.lName[0];
-                    this.name = this.user.fName + " " + this.user.lName;
-                  }
-                  this.$router.push({ name: "tutorAddTopics" });
-                }
-              });
-            } else if (this.incompleteGroups.length !== 0) {
-              if (this.user != null) {
-                this.title = "OC Tutoring";
-                this.initials = this.user.fName[0] + this.user.lName[0];
-                this.name = this.user.fName + " " + this.user.lName;
-              }
-              this.$router.push({ name: "contract" });
-            }
-          })
-          .catch((error) => {
-            if (error == 401) {
-              console.log("Not authorized");
-              this.logout();
-              this.$router.push({ name: "login" });
-            }
-          });
+      if (this.isUserPopulated()) {
+        await this.goToPage(this.user.userID);
+        if (this.openSelect) {
+          if (this.isUserPopulated() && this.isSelectedRoleValid()) {
+            this.activeMenus = this.menus;
+            this.activeMenus = this.menus.filter((menu) =>
+              menu.roles.includes(this.selectedRole.type)
+            );
+            if (this.selectedRole.type.includes("Student"))
+              this.limitStudentMenu();
+            else if (this.selectedRole.type.includes("Tutor"))
+              this.limitTutorMenu();
+            else if (this.selectedRole.type.includes("Admin"))
+              this.limitAdminMenu();
+          } else {
+            this.activeMenus = this.menus.filter((menu) =>
+              menu.roles.includes("None")
+            );
+          }
+        }
       }
     },
-    async getIncompletePersonRoles() {
-      await GroupServices.getIncompleteGroupsForPerson(this.user.userID)
-        .then((response) => {
-          this.incompleteGroups = [];
-          for (let i = 0; i < response.data.length; i++) {
-            let group = response.data[i];
-            this.incompleteGroups.push(group);
-          }
-        })
-        .catch((error) => {
-          if (error.response.status == 401) {
-            console.log("error: " + error.response.status);
-            this.logout();
-            this.$router.push({ name: "login" });
-            throw 401;
-          }
-          console.log("There was an real error:", error.response.status);
-        });
-    },
-    async getIncompleteTopics() {
-      await GroupServices.getGroupTopicsForTutor(this.user.userID)
-        .then((response) => {
-          this.hasTopics = true;
-          for (let i = 0; i < response.data.length && this.hasTopics; i++) {
-            let group = response.data[i];
-            if (group.topic.length === 0) {
-              this.hasTopics = false;
-            }
-          }
-        })
-        .catch((error) => {
-          if (error.response.status == 401) {
-            console.log("error: " + error.response.status);
-            this.logout();
-            this.$router.push({ name: "login" });
-            throw 401;
-          }
-          console.log("There was an error:", error.response);
-        });
-    },
-    async getPersonRoles() {
-      await GroupServices.getGroupsForPerson(this.user.userID)
-        .then((response) => {
-          for (let i = 0; i < response.data.length; i++) {
-            let group = response.data[i];
-            if (this.selectedGroup.includes(group.name)) {
-              for (let j = 0; j < group.role.length; j++) {
-                let role = group.role[j];
-                if (this.selectedRole.includes(role.type)) {
-                  this.currentPersonRoleID = role.personrole[0].id;
-                }
-              }
-            }
-          }
-        })
-        .catch((error) => {
-          if (error.response.status == 401) {
-            console.log("error: " + error.response.status);
-            this.logout();
-            this.$router.push({ name: "login" });
-            throw 401;
-          }
-          console.log("There was an error:", error.response);
-        });
-    },
     goToRightInfo() {
-      if (this.selectedRole.includes("Student"))
+      if (this.selectedRole.type.includes("Student"))
         this.$router.push({ name: "studentInfo" });
-      else if (this.selectedRole.includes("Tutor"))
+      else if (this.selectedRole.type.includes("Tutor"))
         this.$router.push({ name: "tutorInfo" });
-      else if (this.selectedRole.includes("Admin"))
+      else if (this.selectedRole.type.includes("Admin"))
         this.$router.push({ name: "adminInfo" });
     },
-    logout() {
-      AuthServices.logoutUser(this.user)
+    async logout() {
+      await AuthServices.logoutUser(this.user)
         .then((response) => {
           console.log(response);
           Utils.removeItem("user");
@@ -559,12 +383,9 @@ export default {
         });
     },
     async limitTutorMenu() {
-      if (
-        this.selectedRole.includes("tutor") ||
-        this.selectedRole.includes("Tutor")
-      ) {
+      if (this.selectedRole.type.includes("Tutor")) {
         let approved = false;
-        await PersonRoleServices.getPersonRole(this.currentPersonRoleID)
+        await PersonRoleServices.getPersonRole(this.selectedRole.personRoleId)
           .then((response) => {
             if (
               response.data.status.includes("approved") ||
@@ -586,12 +407,9 @@ export default {
       }
     },
     async limitStudentMenu() {
-      if (
-        this.selectedRole.includes("student") ||
-        this.selectedRole.includes("Student")
-      ) {
+      if (this.selectedRole.type.includes("Student")) {
         let approved = false;
-        await PersonRoleServices.getPersonRole(this.currentPersonRoleID)
+        await PersonRoleServices.getPersonRole(this.selectedRole.personRoleId)
           .then((response) => {
             if (
               response.data.status.includes("approved") ||
@@ -613,12 +431,9 @@ export default {
       }
     },
     async limitAdminMenu() {
-      if (
-        this.selectedRole.includes("admin") ||
-        this.selectedRole.includes("Admin")
-      ) {
+      if (this.selectedRole.type.includes("Admin")) {
         let approved = false;
-        await PersonRoleServices.getPersonRole(this.currentPersonRoleID)
+        await PersonRoleServices.getPersonRole(this.selectedRole.personRoleId)
           .then((response) => {
             if (
               response.data.status.includes("approved") ||

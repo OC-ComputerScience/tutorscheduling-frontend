@@ -1,5 +1,7 @@
 <template>
   <div>
+    <v-overlay color="white" :absolute="absolute" :opacity="opacity">
+    </v-overlay>
     <v-dialog v-if="this.user !== null" v-model="groupDialog" max-width="1000">
       <v-card tile>
         <v-card-title>
@@ -61,14 +63,14 @@
               class="d-flex justify-center align-center">
               <v-btn
                 v-bind:color="
-                  role.type == 'Student'
+                  selectedRole.type == 'Student' && selectedRole.id == role.id
                     ? '#EE5044'
-                    : role.type == 'Tutor'
+                    : selectedRole.type == 'Tutor' && selectedRole.id == role.id
                     ? '#196CA2'
                     : 'grey lighten-2'
                 "
                 x-large
-                @click="selectedRole = role.type"
+                @click="selectedRole = role"
                 class="white--text">
                 {{ role.type }}
               </v-btn>
@@ -82,7 +84,7 @@
             @click="
               roleDialog = false;
               groupDialog = true;
-              selectedRole = '';
+              selectedRole = Object;
             ">
             Back
           </v-btn>
@@ -105,41 +107,29 @@
 
 <script>
 import GroupServices from "@/services/groupServices";
-import RoleServices from "@/services/roleServices";
 import Utils from "@/config/utils.js";
 
 export default {
   name: "SelectGroupView",
   data() {
     return {
+      absolute: true,
+      opacity: 1,
+      groupDialog: false,
       roleDialog: false,
-      groupDialog: true,
-      selectedRole: "",
+      selectedRole: {},
       selectedGroup: "",
       groups: [],
       roles: [],
-      personroles: [],
       user: {},
     };
   },
-  created() {
+  async created() {
     this.user = Utils.getStore("user");
-    this.getPersonGroups();
+    await this.getPersonGroups();
+    this.openDialogsOrRedirect();
   },
   methods: {
-    async getPersonRoles() {
-      await RoleServices.getRoleForPerson(this.user.userID)
-        .then((response) => {
-          for (let i = 0; i < response.data.length; i++) {
-            let role = response.data[i];
-            this.personroles.push(role);
-          }
-        })
-        .catch((error) => {
-          console.log("There was an error:", error.response);
-        });
-      console.log(this.personroles);
-    },
     async getPersonGroups() {
       await GroupServices.getGroupsForPerson(this.user.userID)
         .then((response) => {
@@ -148,14 +138,38 @@ export default {
         .catch((error) => {
           console.log("There was an error:", error.response);
         });
-      console.log(this.groups);
+      console.log(this.groups[0]);
+    },
+    openDialogsOrRedirect() {
+      if (this.groups.length > 1) this.groupDialog = true;
+      else {
+        this.selectedGroup = this.groups[0].name;
+        this.roles = this.groups[0].role;
+        this.saveGroupRoleSelection();
+      }
     },
     saveGroupRoleSelection() {
-      console.log("in save group role selection");
       this.user.selectedGroup = this.selectedGroup;
-      if (this.selectedRole === "") this.user.selectedRole = this.roles[0].type;
-      else this.user.selectedRole = this.selectedRole;
+      if (this.selectedRole.type === undefined) {
+        this.selectedRole = this.roles[0];
+      }
+      // formated selected role
+      this.user.selectedRole = {
+        type: this.selectedRole.type,
+        personRoleId: this.selectedRole.personrole[0].id,
+      };
       Utils.setStore("user", this.user);
+      if (this.selectedRole.type === "Student") {
+        this.$router.push({
+          name: "studentHome",
+          params: { id: this.selectedRole.personrole[0].id },
+        });
+      } else if (this.selectedRole.type === "Tutor") {
+        this.$router.push({
+          name: "tutorHome",
+          params: { id: this.selectedRole.personrole[0].id },
+        });
+      }
     },
   },
 };
