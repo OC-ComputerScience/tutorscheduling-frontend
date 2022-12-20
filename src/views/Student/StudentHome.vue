@@ -265,13 +265,12 @@ import PersonAppointmentServices from "@/services/personAppointmentServices.js";
 
 export default {
   props: ["id"],
-  name: "App",
+  name: "StudentHome",
   watch: {
     id: function () {
       console.log(this.id);
     },
   },
-  components: {},
   data() {
     return {
       search: "",

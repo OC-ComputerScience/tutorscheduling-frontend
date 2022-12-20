@@ -3,13 +3,23 @@
     <v-toolbar>
       <v-toolbar-title>{{ this.message }}</v-toolbar-title>
     </v-toolbar>
-    <br /><br />
+    <br />
+    <v-btn
+      color="accent"
+      @click="
+        dialog = true;
+        getSelectedGroupTopics();
+      "
+      class="justify-center white--text">
+      Continue
+    </v-btn>
+    <br />
+    <br />
     <v-item-group
       v-for="group in groups"
       :key="group.id"
       v-model="group.selected"
-      multiple
-    >
+      multiple>
       <h3>{{ group.name }}</h3>
       <v-row justify="center">
         <v-col v-for="topic in group.topics" :key="topic.id" md="4">
@@ -20,8 +30,7 @@
               max-width="400"
               height="100"
               elevation="10"
-              :style="{ 'background-color': topic.color }"
-            >
+              :style="{ 'background-color': topic.color }">
               <v-card-title class="justify-center white--text">
                 {{ topic.name }}
               </v-card-title>
@@ -34,23 +43,13 @@
       </v-row>
     </v-item-group>
     <br /><br />
-    <v-btn
-      color="accent"
-      @click="
-        dialog = true;
-        getSelectedGroupTopics();
-      "
-      class="justify-center white--text"
-    >
-      Continue
-    </v-btn>
+
     <v-dialog v-model="dialog" max-width="800">
       <v-card
         v-for="group in selectedGroupTopics"
         :key="group.id"
         flat
-        rounded="0"
-      >
+        rounded="0">
         <v-card-title>
           <span class="text-h5"
             >Select your skill level for {{ group.name }} topics:</span
@@ -65,23 +64,22 @@
             item-text="name"
             item-value="id"
             label="Skill Level"
-            required
-          >
+            required>
           </v-select>
         </v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
+          <v-btn
+            color="accent"
+            text
+            @click="
+              goToPage();
+              savePersonTopics();
+            ">
+            Continue
+          </v-btn>
         </v-card-actions>
       </v-card>
-      <v-btn
-        color="accent"
-        @click="
-          goToPage();
-          savePersonTopics();
-        "
-      >
-        Continue
-      </v-btn>
     </v-dialog>
   </v-container>
 </template>
@@ -136,7 +134,7 @@ export default {
                 group.name.toString() === this.user.access[j].name.toString()
               ) {
                 for (let k = 0; k < this.user.access[j].roles.length; k++) {
-                  if (this.user.access[j].roles[k].includes("Tutor"))
+                  if (this.user.access[j].roles[k].type.includes("Tutor"))
                     this.groups.push(group);
                 }
               }
