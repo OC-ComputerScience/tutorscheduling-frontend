@@ -4,7 +4,7 @@
       <v-toolbar-title>Welcome to OC Tutoring!</v-toolbar-title>
     </v-toolbar>
     <br /><br />
-    <SocialLogin />
+    <GoogleLogin />
     <br /><br />
     <v-card>
       <v-card-title> About OC's Tutoring Services </v-card-title>
@@ -13,32 +13,26 @@
           Oklahoma Christian University wants to aid students in being
           successful, including offering multiple different tutoring services.
           <br />
-          The current offered services are:
         </p>
-        <h3>New College</h3>
+        <h3>For on-campus students:</h3>
+        <ul>
+          <li>
+            The <b>Student Success Center</b> offers individual and group
+            tutoring sessions for any course.
+          </li>
+          <li>
+            The <b>Writing Center</b> offers individual writing assistance for
+            essays and writing assignments.
+          </li>
+        </ul>
+        <br />
+        <h3>
+          For off-campus students in our online, nursing and education
+          work-based programs:
+        </h3>
         <p>
-          Since New College is an online program, it makes sense that you have
-          access to free virtual tutoring services! We have highly qualified
-          tutors with flexible scheduling.
-          <br />
-          If you are in New College, this is the tutoring group for you!
-        </p>
-        <h3>Student Success Center</h3>
-        <p>
-          Serving as a compass to navigate towards graduation, Oklahoma's
-          Christian's Student Success Center partners with academic programs to
-          promote personal and academic responsibility as students transition
-          through their university experience.
-          <br />
-          If you are a student on campus, this is the tutoring group for you!
-        </p>
-        <h3>Writing Center</h3>
-        <p>
-          We offer free writing help by collaboratively improving your papers in
-          one-on-one appointments in-person and online.
-          <br />
-          If you are a student requiring help specifically regarding writing,
-          this is the tutoring group for you!
+          The <b>New College</b> offers virtual individual and group tutoring
+          sessions programs.
         </p>
       </v-card-text>
     </v-card>
@@ -46,11 +40,11 @@
 </template>
 
 <script>
-import SocialLogin from "@/components/SocialLogin";
+import GoogleLogin from "@/components/GoogleLogin";
 export default {
   name: "login",
   components: {
-    SocialLogin,
+    GoogleLogin,
   },
 };
 </script>

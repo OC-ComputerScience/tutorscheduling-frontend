@@ -9,6 +9,8 @@
       <v-container v-if="!disabled">
         <b>Click on "View Calendar" to see available appointments!</b>
 
+        <SelectGroupView></SelectGroupView>
+
         <v-dialog v-model="apptDialog" max-width="800px">
           <v-card>
             <v-toolbar :color="selectedAppt.color" dark>
@@ -262,6 +264,7 @@ import TwilioServices from "@/services/twilioServices.js";
 import PersonRoleServices from "@/services/personRoleServices.js";
 import PersonTopicServices from "@/services/personTopicServices.js";
 import PersonAppointmentServices from "@/services/personAppointmentServices.js";
+import SelectGroupView from "../../components/SelectGroupView.vue";
 
 export default {
   props: ["id"],
@@ -271,7 +274,9 @@ export default {
       console.log(this.id);
     },
   },
-  components: {},
+  components: {
+    SelectGroupView,
+  },
   data() {
     return {
       search: "",
