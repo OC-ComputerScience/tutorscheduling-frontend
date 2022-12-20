@@ -77,7 +77,7 @@
                 v-bind:color="
                   groupSelect === group.id ? 'primary' : 'grey lighten-2'
                 "
-                height="175"
+                height="200"
                 elevation="10"
                 v-on="
                   !group.haveRole
@@ -130,6 +130,8 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
+
+    <SelectGroupView v-if="openSelect"></SelectGroupView>
   </div>
 </template>
 
@@ -139,13 +141,18 @@ import RoleServices from "@/services/roleServices";
 import PersonRoleServices from "@/services/personRoleServices";
 import TwilioServices from "@/services/twilioServices";
 import Utils from "@/config/utils.js";
+import SelectGroupView from "./SelectGroupView.vue";
 
 export default {
   name: "Registration",
+  components: {
+    SelectGroupView,
+  },
   data() {
     return {
       roleDialog: true,
       groupDialog: false,
+      openSelect: false,
       absolute: true,
       opacity: 0.75,
       roleSelect: "Student",
@@ -175,32 +182,23 @@ export default {
         groups.push(element.name);
       });
       for (let k = 0; k < this.groups.length; k++) {
+        console.log(this.hasAnyRoles);
+        this.groups[k].haveRole = false;
+        this.groups[k].sentenceHaveRole = "";
         if (this.hasAnyRoles) {
           for (let i = 0; i < groups.length; i++) {
             if (groups[i].includes(this.groups[k].name)) {
-              let role = [];
+              let role = "";
               this.user.access[i].roles.forEach((element) => {
-                role.push(element);
+                role += element.type;
               });
-              for (let j = 0; j < role.length; j++) {
-                if (role[j].type === this.roleSelect) {
-                  this.groups[k].haveRole = true;
-                  this.groups[k].sentenceHaveRole =
-                    "You already have this role.";
-                  break;
-                } else {
-                  this.groups[k].haveRole = false;
-                  this.groups[k].sentenceHaveRole = "";
-                }
+              console.log(role);
+              if (role.includes(this.roleSelect)) {
+                this.groups[k].haveRole = true;
+                this.groups[k].sentenceHaveRole = "You already have this role.";
               }
-            } else {
-              this.groups[k].haveRole = false;
-              this.groups[k].sentenceHaveRole = "";
             }
           }
-        } else {
-          this.groups[k].haveRole = false;
-          this.groups[k].sentenceHaveRole = "";
         }
       }
       console.log(this.groups);

@@ -35,6 +35,7 @@
             text
             @click="
               dialog = false;
+              openRegistration = true;
               savePhoneNum();
             ">
             Continue
@@ -44,7 +45,9 @@
     </v-dialog>
 
     <Registration
-      v-if="this.user !== null && !dialog && this.fName !== ''"></Registration>
+      v-if="
+        openRegistration && this.user !== null && !dialog && this.fName !== ''
+      "></Registration>
   </div>
 </template>
 
@@ -63,6 +66,7 @@ export default {
   data() {
     return {
       dialog: false,
+      openRegistration: false,
       phoneNum: "",
       person: {},
       fName: "",

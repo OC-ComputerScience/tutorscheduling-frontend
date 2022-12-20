@@ -8,7 +8,7 @@
       <v-row justify="center">
         <v-col justify="center">
           <v-card
-            @click="openCards = true"
+            @click="openRegistration = true"
             height="100"
             elevation="10"
             color="primary"
@@ -19,7 +19,8 @@
           </v-card>
         </v-col>
       </v-row>
-      <Registration v-if="this.user !== null && openCards"></Registration>
+      <Registration
+        v-if="this.user !== null && openRegistration"></Registration>
     </v-container>
   </div>
 </template>
@@ -35,7 +36,7 @@ export default {
   data() {
     return {
       message: "Apply for more help or another position:",
-      openCards: false,
+      openRegistration: false,
     };
   },
   created() {
