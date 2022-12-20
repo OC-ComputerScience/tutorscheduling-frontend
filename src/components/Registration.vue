@@ -168,12 +168,10 @@ export default {
       hasAnyRoles: false,
     };
   },
-  created() {
-    this.getGroups();
+  async created() {
+    await this.getGroups();
     this.user = Utils.getStore("user");
-    console.log(this.user);
     this.hasAnyRoles = this.user.access.length > 0;
-    // this.openDialogs();
   },
   methods: {
     async haveRoleAlready() {
@@ -182,7 +180,6 @@ export default {
         groups.push(element.name);
       });
       for (let k = 0; k < this.groups.length; k++) {
-        console.log(this.hasAnyRoles);
         this.groups[k].haveRole = false;
         this.groups[k].sentenceHaveRole = "";
         if (this.hasAnyRoles) {
@@ -192,7 +189,6 @@ export default {
               this.user.access[i].roles.forEach((element) => {
                 role += element.type;
               });
-              console.log(role);
               if (role.includes(this.roleSelect)) {
                 this.groups[k].haveRole = true;
                 this.groups[k].sentenceHaveRole = "You already have this role.";
@@ -201,7 +197,6 @@ export default {
           }
         }
       }
-      console.log(this.groups);
     },
     async getPersonRoles() {
       await RoleServices.getIncompleteRoleForPerson(this.user.userID)
@@ -229,8 +224,8 @@ export default {
           });
       }
     },
-    getGroups() {
-      GroupServices.getAllGroups()
+    async getGroups() {
+      await GroupServices.getAllGroups()
         .then((response) => {
           this.groups = response.data;
           this.groups.sort(function (a, b) {
@@ -259,7 +254,6 @@ export default {
         });
     },
     async savePersonRoles() {
-      console.log("in save person");
       await this.addGroupRoles(this.groupSelect);
 
       for (let i = 0; i < this.roles.length; i++) {
@@ -272,7 +266,6 @@ export default {
             personId: this.user.userID,
             roleId: role.id,
           };
-          console.log(this.personrole);
           await PersonRoleServices.addPersonRole(this.personrole)
             .then(async (response) => {
               let status = response.data.status;
@@ -282,7 +275,6 @@ export default {
 
                 for (let i = 0; i < this.admins.length; i++) {
                   let tempA = this.admins[i];
-                  console.log(tempA);
                   if (
                     await this.checkPrivilege(
                       "Receive notifications for applications",
@@ -331,14 +323,6 @@ export default {
         .catch((error) => {
           console.log("There was an error:", error.response);
         });
-    },
-    openDialogs() {
-      // if this person doesn't have any roles, do this
-      //   if (this.user.access.length === 0) {
-      this.roleDialog = true;
-      //   } else {
-      //     this.goToPage();
-      //   }
     },
     async goToPage() {
       await this.getPersonRoles().then(() => {
@@ -399,7 +383,6 @@ export default {
     async getAdmins(groupId) {
       await RoleServices.getAllForGroupByType(groupId, "Admin")
         .then((response) => {
-          console.log(response);
           this.admins = response.data[0].personrole;
         })
         .catch((error) => {
