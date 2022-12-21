@@ -44,12 +44,12 @@
       </v-card>
     </v-dialog>
 
-    <Registration
+    <RegistrationComponent
       v-if="
         openRegistration && this.user !== null && !dialog && this.fName !== ''
-      "></Registration>
+      "></RegistrationComponent>
 
-    <SelectGroupView v-if="openSelect"></SelectGroupView>
+    <GroupViewComponent v-if="openSelect"></GroupViewComponent>
   </div>
 </template>
 
@@ -57,15 +57,15 @@
 import AuthServices from "@/services/authServices";
 import PersonServices from "@/services/personServices";
 import Utils from "@/config/utils.js";
-import Registration from "./Registration.vue";
-import SelectGroupView from "./SelectGroupView.vue";
+import RegistrationComponent from "./RegistrationComponent.vue";
+import GroupViewComponent from "./GroupViewComponent.vue";
 import { RedirectToPageMixin } from "../mixins/RedirectToPageMixin";
 
 export default {
-  name: "GoogleLogin",
+  name: "GoogleLoginComponent",
   components: {
-    Registration,
-    SelectGroupView,
+    RegistrationComponent,
+    GroupViewComponent,
   },
   mixins: [RedirectToPageMixin],
   data() {

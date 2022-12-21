@@ -110,7 +110,7 @@ import GroupServices from "@/services/groupServices";
 import Utils from "@/config/utils.js";
 
 export default {
-  name: "SelectGroupView",
+  name: "GroupViewComponent",
   data() {
     return {
       absolute: true,

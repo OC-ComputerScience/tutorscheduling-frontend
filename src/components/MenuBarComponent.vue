@@ -167,7 +167,7 @@ import PersonRoleServices from "@/services/personRoleServices.js";
 import { RedirectToPageMixin } from "../mixins/RedirectToPageMixin";
 
 export default {
-  name: "App",
+  name: "MenuBarComponent",
   mixins: [RedirectToPageMixin],
   data: () => ({
     user: {},

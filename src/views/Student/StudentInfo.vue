@@ -10,8 +10,7 @@
       <v-text-field
         v-model="person.email"
         label="Email"
-        readonly
-      ></v-text-field>
+        readonly></v-text-field>
 
       <v-text-field
         v-model="person.phoneNum"
@@ -20,15 +19,13 @@
         label="Mobile Phone"
         hint="111-222-3333"
         persistent-hint
-        required
-      ></v-text-field>
+        required></v-text-field>
 
       <br />
       <v-btn
         color="accent"
         @click="savePhoneNum()"
-        class="justify-center white--text"
-      >
+        class="justify-center white--text">
         Update Mobile Phone
       </v-btn>
       <br /><br />
@@ -39,8 +36,7 @@
             height="100"
             elevation="10"
             color="yellow"
-            class="d-flex justify-center"
-          >
+            class="d-flex justify-center">
             <v-card-title class="justify-center white--text">
               Apply For Tutoring
             </v-card-title>
@@ -52,8 +48,7 @@
             height="100"
             elevation="10"
             color="teal"
-            class="d-flex justify-center"
-          >
+            class="d-flex justify-center">
             <v-card-title class="justify-center white--text">
               Apply To Be A Tutor
             </v-card-title>
@@ -69,7 +64,7 @@ import PersonServices from "@/services/personServices";
 import Utils from "@/config/utils.js";
 
 export default {
-  name: "App",
+  name: "StudentInfo",
   components: {},
   data() {
     return {

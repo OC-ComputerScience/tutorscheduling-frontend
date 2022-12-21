@@ -82,7 +82,7 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <SelectGroupView v-if="openSelect"></SelectGroupView>
+    <GroupViewComponent v-if="openSelect"></GroupViewComponent>
   </v-container>
 </template>
 
@@ -90,14 +90,15 @@
 import Utils from "@/config/utils.js";
 import TopicServices from "@/services/topicServices";
 import PersonTopicServices from "@/services/personTopicServices";
-import SelectGroupView from "@/components/SelectGroupView.vue";
+import GroupViewComponent from "@/components/GroupViewComponent.vue";
 import { RedirectToPageMixin } from "@/mixins/RedirectToPageMixin";
 
 export default {
+  name: "TutorAddTopics",
   props: ["id"],
   mixins: [RedirectToPageMixin],
   components: {
-    SelectGroupView,
+    GroupViewComponent,
   },
   data: () => ({
     selectedGroupTopics: [],

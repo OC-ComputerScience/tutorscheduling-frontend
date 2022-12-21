@@ -43,8 +43,7 @@
                 hover
                 length="5"
                 size="45"
-                value="3"
-              ></v-rating>
+                value="3"></v-rating>
             </v-layout>
           </div>
           <v-text-field
@@ -52,15 +51,13 @@
             id="description"
             :counter="500"
             label="Provide Feedback..."
-            required
-          ></v-text-field>
+            required></v-text-field>
 
           <v-btn
             :disabled="!valid || !textualfeedback"
             color="success"
             class="mr-4"
-            @click="updatePersonAppointment"
-          >
+            @click="updatePersonAppointment">
             Save
           </v-btn>
 
@@ -77,8 +74,8 @@ import AppointmentServices from "@/services/appointmentServices.js";
 import PersonAppointmentServices from "@/services/personAppointmentServices.js";
 
 export default {
+  name: "StudentAppointmentFeedback",
   props: ["id", "userId"],
-
   data() {
     return {
       valid: false,

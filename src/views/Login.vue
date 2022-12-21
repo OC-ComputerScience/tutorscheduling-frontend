@@ -4,7 +4,7 @@
       <v-toolbar-title>Welcome to OC's Tutor Scheduling!</v-toolbar-title>
     </v-toolbar>
     <br /><br />
-    <GoogleLogin />
+    <GoogleLoginComponent></GoogleLoginComponent>
     <br /><br />
     <v-card>
       <v-card-title> About OC's Tutor Scheduling Services </v-card-title>
@@ -40,11 +40,11 @@
 </template>
 
 <script>
-import GoogleLogin from "@/components/GoogleLogin";
+import GoogleLoginComponent from "@/components/GoogleLoginComponent";
 export default {
-  name: "login",
+  name: "Login",
   components: {
-    GoogleLogin,
+    GoogleLoginComponent,
   },
 };
 </script>

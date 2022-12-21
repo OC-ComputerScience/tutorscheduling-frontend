@@ -66,7 +66,7 @@
         </v-col>
       </v-row>
 
-      <SelectGroupView v-if="openSelect"></SelectGroupView>
+      <GroupViewComponent v-if="openSelect"></GroupViewComponent>
     </v-container>
   </div>
 </template>
@@ -76,15 +76,15 @@ import pdf from "vue-pdf";
 import GroupServices from "@/services/groupServices.js";
 import PersonRoleServices from "@/services/personRoleServices.js";
 import Utils from "@/config/utils.js";
-import SelectGroupView from "@/components/SelectGroupView.vue";
+import GroupViewComponent from "@/components/GroupViewComponent.vue";
 import { RedirectToPageMixin } from "../mixins/RedirectToPageMixin";
 
 export default {
-  name: "App",
+  name: "Contract",
   mixins: [RedirectToPageMixin],
   components: {
     pdf,
-    SelectGroupView,
+    GroupViewComponent,
   },
   data() {
     return {

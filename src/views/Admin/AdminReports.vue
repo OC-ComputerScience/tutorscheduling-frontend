@@ -30,8 +30,7 @@
             :nudge-right="40"
             transition="scale-transition"
             offset-y
-            min-width="auto"
-          >
+            min-width="auto">
             <template v-slot:activator="{ on, attrs }">
               <v-text-field
                 v-model="dateRangeText"
@@ -39,8 +38,7 @@
                 prepend-icon="mdi-calendar"
                 readonly
                 v-bind="attrs"
-                v-on="on"
-              ></v-text-field>
+                v-on="on"></v-text-field>
             </template>
             <v-date-picker v-model="dates" range></v-date-picker>
           </v-menu>
@@ -51,8 +49,7 @@
             :items="topics"
             item-text="name"
             item-value="id"
-            label="Topic"
-          >
+            label="Topic">
           </v-select>
         </v-col>
         <v-col md="4">
@@ -61,8 +58,7 @@
             :items="status"
             item-text="title"
             item-value="id"
-            label="Status"
-          >
+            label="Status">
           </v-select>
         </v-col>
         <!-- <v-col md="4">
@@ -81,8 +77,7 @@
             item-value="fullName"
             chips
             multiple
-            label="Tutors"
-          >
+            label="Tutors">
           </v-select>
         </v-col>
         <v-col md="4">
@@ -93,8 +88,7 @@
             item-value="fullName"
             chips
             multiple
-            label="Students"
-          >
+            label="Students">
           </v-select>
         </v-col>
       </v-row>
@@ -103,8 +97,7 @@
       <vue-json-to-csv
         :json-data="selectedAppointments"
         :labels="labels"
-        :csv-title="fileName"
-      >
+        :csv-title="fileName">
         <v-btn
           color="success"
           class="mr-4"
@@ -117,8 +110,7 @@
             selectedTopic = -1;
             selectedStatus = -1;
             getAllAppointmentsForGroup();
-          "
-        >
+          ">
           Download CSV
         </v-btn>
       </vue-json-to-csv>
@@ -135,7 +127,7 @@ import PersonServices from "@/services/personServices.js";
 import TopicServices from "@/services/topicServices.js";
 
 export default {
-  name: "App",
+  name: "AdminReports",
   props: ["id"],
   components: {
     VueJsonToCsv,

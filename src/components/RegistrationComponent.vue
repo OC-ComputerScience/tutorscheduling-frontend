@@ -131,7 +131,7 @@
       </v-card>
     </v-dialog>
 
-    <SelectGroupView v-if="openSelect"></SelectGroupView>
+    <GroupViewComponent v-if="openSelect"></GroupViewComponent>
   </div>
 </template>
 
@@ -141,14 +141,14 @@ import RoleServices from "@/services/roleServices";
 import PersonRoleServices from "@/services/personRoleServices";
 import TwilioServices from "@/services/twilioServices";
 import Utils from "@/config/utils.js";
-import SelectGroupView from "./SelectGroupView.vue";
+import GroupViewComponent from "./GroupViewComponent.vue";
 import { RedirectToPageMixin } from "../mixins/RedirectToPageMixin";
 
 export default {
-  name: "Registration",
+  name: "RegistrationComponent",
   mixins: [RedirectToPageMixin],
   components: {
-    SelectGroupView,
+    GroupViewComponent,
   },
   data() {
     return {

@@ -50,8 +50,7 @@
                 <v-btn
                   color="blue darken-1"
                   text
-                  @click="doubleBookedDialog = false"
-                >
+                  @click="doubleBookedDialog = false">
                   Close
                 </v-btn>
               </v-card-actions>
@@ -73,8 +72,7 @@
                         item-value="id"
                         label="Location"
                         required
-                        dense
-                      >
+                        dense>
                       </v-select>
                     </v-col>
                     <v-col cols="12" sm="6" md="4">
@@ -85,8 +83,7 @@
                         item-value="id"
                         label="Topic"
                         required
-                        dense
-                      >
+                        dense>
                       </v-select>
                     </v-col>
                   </v-row>
@@ -97,8 +94,7 @@
                         label="Pre-session info"
                         hint="Information for the session"
                         required
-                        outlined
-                      ></v-textarea>
+                        outlined></v-textarea>
                     </v-col>
                   </v-row>
                 </v-container>
@@ -122,8 +118,7 @@
                     topic === '' ||
                     topic === null ||
                     topic === undefined
-                  "
-                >
+                  ">
                   Save
                 </v-btn>
               </v-card-actions>
@@ -137,8 +132,7 @@
               :min="nowDate"
               show-adjacent-months
               multiple
-              @input="updateTimes()"
-            ></v-date-picker>
+              @input="updateTimes()"></v-date-picker>
           </v-col>
           <v-col cols="12" sm="6">
             <v-menu
@@ -148,8 +142,7 @@
               :return-value.sync="dates"
               transition="scale-transition"
               offset-y
-              min-width="auto"
-            >
+              min-width="auto">
               <template v-slot:activator="{ on, attrs }">
                 <v-combobox
                   v-model="dates"
@@ -160,8 +153,7 @@
                   prepend-icon="mdi-calendar"
                   readonly
                   v-bind="attrs"
-                  v-on="on"
-                ></v-combobox>
+                  v-on="on"></v-combobox>
               </template>
               <v-date-picker
                 v-model="dates"
@@ -170,8 +162,7 @@
                 multiple
                 no-title
                 scrollable
-                @input="updateTimes()"
-              >
+                @input="updateTimes()">
                 <v-spacer></v-spacer>
                 <v-btn text color="primary" @click="menu = false">
                   Cancel
@@ -196,8 +187,7 @@
                 updateTimes();
                 secondTime = false;
               "
-              dense
-            >
+              dense>
             </v-select>
           </v-col>
           <v-col cols="11" sm="5">
@@ -214,8 +204,7 @@
                 updateTimes();
               "
               :disabled="secondTime"
-              dense
-            >
+              dense>
             </v-select>
           </v-col>
           <v-container>
@@ -226,8 +215,7 @@
               item-value="value"
               label="Choose a session type"
               required
-              dense
-            >
+              dense>
             </v-select>
             <v-btn
               color="success"
@@ -244,8 +232,7 @@
                 groupSession === null ||
                 groupSession === undefined ||
                 dates.length === 0
-              "
-            >
+              ">
               Save
             </v-btn>
           </v-container>
@@ -260,8 +247,7 @@
           <v-data-table
             :headers="headers"
             :items="availabilities"
-            :items-per-page="50"
-          >
+            :items-per-page="50">
             <template v-slot:top>
               <v-toolbar flat>
                 <!--  popup for deleting an availability  -->
@@ -319,7 +305,7 @@ import PersonAppointmentServices from "@/services/personAppointmentServices.js";
 import Utils from "@/config/utils.js";
 
 export default {
-  name: "App",
+  name: "TutorAddAvailability",
   props: ["id"],
   components: {},
   data: () => ({

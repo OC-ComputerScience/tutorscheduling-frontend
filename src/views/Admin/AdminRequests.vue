@@ -12,8 +12,7 @@
             append-icon="mdi-magnify"
             label="Search"
             single-line
-            hide-details
-          ></v-text-field>
+            hide-details></v-text-field>
           <v-spacer></v-spacer>
           <v-btn class="mr-4" @click="cancel()"> Back </v-btn>
         </v-card-title>
@@ -21,8 +20,7 @@
           :headers="headers"
           :search="search"
           :items="requests"
-          :items-per-page="50"
-        >
+          :items-per-page="50">
           <template v-slot:[`item.actions`]="{ item }">
             <v-icon small class="mr-2" @click="editItem(item)"
               >mdi-pencil</v-icon
@@ -44,23 +42,19 @@
               <v-text-field
                 v-model="editedItem.date"
                 label="Date"
-                readonly
-              ></v-text-field>
+                readonly></v-text-field>
               <v-text-field
                 v-model="editedItem.time"
                 label="Time"
-                readonly
-              ></v-text-field>
+                readonly></v-text-field>
               <v-text-field
                 v-model="editedItem.fullName"
                 label="Student"
-                readonly
-              ></v-text-field>
+                readonly></v-text-field>
               <v-text-field
                 v-model="editedItem.problem"
                 label="Problem"
-                readonly
-              ></v-text-field>
+                readonly></v-text-field>
 
               <v-text-field
                 v-if="
@@ -68,27 +62,23 @@
                 "
                 v-model="editedItem.topic.name"
                 label="Topic"
-                readonly
-              ></v-text-field>
+                readonly></v-text-field>
 
               <v-text-field
                 v-model="editedItem.courseNum"
                 label="Course Number"
-                readonly
-              ></v-text-field>
+                readonly></v-text-field>
 
               <v-text-field
                 v-model="editedItem.description"
                 label="Description"
-                readonly
-              ></v-text-field>
+                readonly></v-text-field>
 
               <v-select
                 v-model="editedItem.status"
                 :items="StatusSelect"
                 label="Status"
-                required
-              >
+                required>
               </v-select>
             </v-form>
           </v-card-text>
@@ -123,6 +113,7 @@ import PersonRoleServices from "@/services/personRoleServices.js";
 import RequestServices from "@/services/requestServices.js";
 
 export default {
+  name: "AdminRequests",
   props: ["id"],
   data() {
     return {

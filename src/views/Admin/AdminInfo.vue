@@ -10,8 +10,7 @@
       <v-text-field
         v-model="person.email"
         label="Email"
-        readonly
-      ></v-text-field>
+        readonly></v-text-field>
 
       <v-text-field
         v-model="person.phoneNum"
@@ -20,15 +19,13 @@
         label="Mobile Phone"
         hint="111-222-3333"
         persistent-hint
-        required
-      ></v-text-field>
+        required></v-text-field>
 
       <br />
       <v-btn
         color="accent"
         @click="savePhoneNum()"
-        class="justify-center white--text"
-      >
+        class="justify-center white--text">
         Update Phone Number
       </v-btn>
 
@@ -42,7 +39,7 @@ import PersonServices from "@/services/personServices";
 import Utils from "@/config/utils.js";
 
 export default {
-  name: "App",
+  name: "AdminInfo",
   components: {},
   data() {
     return {

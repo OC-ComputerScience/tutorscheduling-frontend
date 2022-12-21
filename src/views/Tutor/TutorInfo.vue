@@ -10,8 +10,7 @@
       <v-text-field
         v-model="person.email"
         label="Email"
-        readonly
-      ></v-text-field>
+        readonly></v-text-field>
 
       <v-text-field
         v-model="person.phoneNum"
@@ -20,15 +19,13 @@
         label="Mobile Phone"
         hint="111-222-3333"
         persistent-hint
-        required
-      ></v-text-field>
+        required></v-text-field>
 
       <br />
       <v-btn
         color="accent"
         @click="savePhoneNum()"
-        class="justify-center white--text"
-      >
+        class="justify-center white--text">
         Update Mobile Phone
       </v-btn>
 
@@ -42,15 +39,13 @@
             append-icon="mdi-magnify"
             label="Search"
             single-line
-            hide-details
-          ></v-text-field>
+            hide-details></v-text-field>
         </v-card-title>
         <v-data-table
           :headers="headers"
           :search="search"
           :items="topics"
-          :items-per-page="50"
-        ></v-data-table>
+          :items-per-page="50"></v-data-table>
       </v-card>
       <br /><br />
       <v-row>
@@ -60,8 +55,7 @@
             height="100"
             elevation="10"
             color="yellow"
-            class="d-flex justify-center"
-          >
+            class="d-flex justify-center">
             <v-card-title class="justify-center white--text">
               Apply For Tutoring
             </v-card-title>
@@ -73,8 +67,7 @@
             height="100"
             elevation="10"
             color="teal"
-            class="d-flex justify-center"
-          >
+            class="d-flex justify-center">
             <v-card-title class="justify-center white--text">
               Apply To Be A Tutor
             </v-card-title>
@@ -93,7 +86,7 @@ import GroupServices from "@/services/groupServices.js";
 import Utils from "@/config/utils.js";
 
 export default {
-  name: "App",
+  name: "TutorInfo",
   components: {},
   data() {
     return {

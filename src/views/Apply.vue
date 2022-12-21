@@ -19,19 +19,20 @@
           </v-card>
         </v-col>
       </v-row>
-      <Registration
-        v-if="this.user !== null && openRegistration"></Registration>
+      <RegistrationComponent
+        v-if="this.user !== null && openRegistration"></RegistrationComponent>
     </v-container>
   </div>
 </template>
 
 <script>
 import Utils from "@/config/utils.js";
-import Registration from "../components/Registration.vue";
+import RegistrationComponent from "../components/RegistrationComponent.vue";
 
 export default {
+  name: "Apply",
   components: {
-    Registration,
+    RegistrationComponent,
   },
   data() {
     return {

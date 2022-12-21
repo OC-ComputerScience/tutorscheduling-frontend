@@ -104,7 +104,7 @@ import "@/plugins/apexcharts";
 
 export default {
   props: ["id"],
-  name: "App",
+  name: "AdminHome",
   components: {},
   data() {
     return {
