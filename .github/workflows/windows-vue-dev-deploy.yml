@@ -1,55 +1,50 @@
 name: Deploy to Windows Dev
 
 on:
-    pull_request:
-        types: [closed]
-        branches:
-            - dev
+  pull_request:
+    types: [closed]
+    branches:
+      - dev
 
 jobs:
-    windows-deploy:
-        runs-on: ubuntu-latest
-        env:
-                  DB_HOST: ${{ secrets.DEV_DB_HOST }}
-                  DB_PW: ${{ secrets.DEV_DB_PW}}
-                  DB_USER: ${{ secrets.DEV_DB_USER }}
-                  DB_NAME: ${{ secrets.DEV_DB_NAME }}
-                  TWILIO_ACCOUNT_SID : ${{secrets.TWILIO_ACCOUNT_SID}}
-                  TWILIO_AUTH_TOKEN1 : ${{secrets.TWILIO_AUTH_TOKEN2}}
-                  TWILIO_AUTH_TOKEN2 :  ${{secrets.TWILIO_AUTH_TOKEN2}}
-                  TWILIO_NUMBER : ${{secrets.TWILIO_NUMBER}}
-                  VUE_APP_CLIENT_ID : ${{secrets.VUE_APP_CLIENT_ID}}
-                  VUE_APP_API_URL : ${{secrets.VUE_APP_API_URL}}
-                  VUE_APP_CLIENT_URL : ${{secrets.VUE_APP_CLIENT_URL}}
-                  GOOGLE_AUDIENCE : ${{secrets.GOOGLE_AUDIENCE}} 
-                  CLIENT_SECRET : ${{secrets.CLIENT_SECRET}} 
-        steps:
-            - uses: actions/checkout@v2
-              with:
-                  ref: dev
-            - uses: actions/setup-node@v1
-            - run: |
-                    touch .env
-                    echo VUE_APP_CLIENT_ID="$VUE_APP_CLIENT_ID" >> .env
-                    echo VUE_APP_API_URL="$VUE_APP_API_URL" >> .env
-                    echo VUE_APP_CLIENT_URL=tutorschedulingdev.oc.edu >> .env
-                    echo VUE_APP_SITE_URL=tutorschedulingdev.oc.edu >> .env
-                   
+  windows-deploy:
+    runs-on: ubuntu-latest
+    env:
+      DB_HOST: ${{ secrets.DEV_DB_HOST }}
+      DB_PW: ${{ secrets.DEV_DB_PW}}
+      DB_USER: ${{ secrets.DEV_DB_USER }}
+      DB_NAME: ${{ secrets.DEV_DB_NAME }}
+      TWILIO_ACCOUNT_SID: ${{secrets.TWILIO_ACCOUNT_SID}}
+      TWILIO_AUTH_TOKEN1: ${{secrets.TWILIO_AUTH_TOKEN2}}
+      TWILIO_AUTH_TOKEN2: ${{secrets.TWILIO_AUTH_TOKEN2}}
+      TWILIO_NUMBER: ${{secrets.TWILIO_NUMBER}}
+      VUE_APP_CLIENT_ID: ${{secrets.VUE_APP_CLIENT_ID}}
+      VUE_APP_API_URL: ${{secrets.VUE_APP_API_URL}}
+      VUE_APP_CLIENT_URL: ${{secrets.VUE_APP_CLIENT_URL}}
+      GOOGLE_AUDIENCE: ${{secrets.GOOGLE_AUDIENCE}}
+      CLIENT_SECRET: ${{secrets.CLIENT_SECRET}}
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          ref: dev
+      - uses: actions/setup-node@v1
+      - run: |
+          touch .env
+          echo VUE_APP_CLIENT_ID="$VUE_APP_CLIENT_ID" >> .env
+          echo VUE_APP_API_URL="$VUE_APP_API_URL" >> .env
+          echo VUE_APP_CLIENT_URL=tutorschedulingdev.oc.edu >> .env
+          echo VUE_APP_SITE_URL=tutorschedulingdev.oc.edu >> .env
 
-            - run: npm install
-            - run: npm run build
-            - run: npm run bundle
+      - run: npm install
+      - run: npm run build
+      - run: npm run bundle
 
-            - name: Copy folder content recursively to remote
-              uses: garygrossgarten/github-action-scp@release
-              with:
-                  local: dist/
-                  remote: c:/Apache24/htdocs
-                  recursive : true
-                  host: 'tutorschedulingdev.oc.edu'
-                  username: 'david.north'
-                  privateKey: ${{ secrets.DEV_WIN_SERVER_SSH_KEY  }}
-                  
-
-  
-
+      - name: Copy folder content recursively to remote
+        uses: garygrossgarten/github-action-scp@release
+        with:
+          local: dist/
+          remote: c:/Apache24/htdocs
+          recursive: true
+          host: "tutorschedulingdev.oc.edu"
+          username: "david.north"
+          privateKey: ${{ secrets.DEV_WIN_SERVER_SSH_KEY  }}
