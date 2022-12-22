@@ -156,7 +156,7 @@ export default {
       ) {
         this.dialog = true;
       } else if (this.user.access.length === 0) {
-        this.dialog2 = true;
+        this.openRegistration = true;
       } else {
         this.goToPage(this.user.userID);
       }
