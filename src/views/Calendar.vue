@@ -1019,9 +1019,11 @@ export default {
           "You have successfully confirmed your " +
           this.selectedAppointment.type +
           " appointment on " +
-          this.selectedAppointment.date +
+          this.selectedAppointment.date.toString().substring(5, 10) +
+          "-" +
+          this.selectedAppointment.date.toString().substring(0, 4) +
           " at " +
-          this.selectedAppointment.startTime +
+          this.calcTime(this.selectedAppointment.startTime) +
           ".";
         this.showAlert = true;
       } else {
@@ -1046,9 +1048,11 @@ export default {
           "You have successfully rejected your " +
           this.selectedAppointment.type +
           " appointment on " +
-          this.selectedAppointment.date +
+          this.selectedAppointment.date.toString().substring(5, 10) +
+          "-" +
+          this.selectedAppointment.date.toString().substring(0, 4) +
           " at " +
-          this.selectedAppointment.startTime +
+          this.calcTime(this.selectedAppointment.startTime) +
           ".";
         this.showAlert = true;
       }
@@ -1129,9 +1133,11 @@ export default {
         "You have successfully booked a " +
         this.selectedAppointment.type +
         " appointment on " +
-        this.selectedAppointment.date +
+        this.selectedAppointment.date.toString().substring(5, 10) +
+        "-" +
+        this.selectedAppointment.date.toString().substring(0, 4) +
         " at " +
-        this.selectedAppointment.startTime +
+        this.calcTime(this.selectedAppointment.startTime) +
         ".";
       this.showAlert = true;
     },
@@ -1142,7 +1148,11 @@ export default {
         return;
       }
       //If the start of the booked slot isn't the start of the slot, generate an open slot
-      if (this.selectedAppointment.startTime < this.newStart) {
+      if (
+        this.selectedAppointment.startTime < this.newStart &&
+        this.subtractTimes(this.selectedAppointment.startTime, this.newStart) >=
+          this.group.minApptTime
+      ) {
         let temp = {
           date: this.selectedAppointment.date,
           startTime: this.selectedAppointment.startTime,
@@ -1180,7 +1190,11 @@ export default {
           });
       }
       //If the end of the booked slot isn't the end of the slot, generate an open slot
-      if (this.selectedAppointment.endTime > this.newEnd) {
+      if (
+        this.selectedAppointment.endTime > this.newEnd &&
+        this.subtractTimes(this.newEnd, this.selectedAppointment.endTime) >=
+          this.group.minApptTime
+      ) {
         let temp = {
           date: this.selectedAppointment.date,
           startTime: this.newEnd,
@@ -1264,9 +1278,11 @@ export default {
         " " +
         this.tutors[0].lName +
         " on " +
-        this.selectedAppointment.date +
+        this.selectedAppointment.date.toString().substring(5, 10) +
+        "-" +
+        this.selectedAppointment.date.toString().substring(0, 4) +
         " at " +
-        this.selectedAppointment.startTime +
+        this.calcTime(this.selectedAppointment.startTime) +
         ".";
       this.showAlert = true;
     },
@@ -1277,7 +1293,11 @@ export default {
         return;
       }
       //If the start of the booked slot isn't the start of the slot, generate an open slot
-      if (this.selectedAppointment.startTime < this.newStart) {
+      if (
+        this.selectedAppointment.startTime < this.newStart &&
+        this.subtractTimes(this.selectedAppointment.startTime, this.newStart) >=
+          this.group.minApptTime
+      ) {
         let temp = {
           date: this.selectedAppointment.date,
           startTime: this.selectedAppointment.startTime,
@@ -1295,6 +1315,7 @@ export default {
                 appointmentId: response.data.id,
                 personId: t.id,
               };
+              console.log(response.data);
               await PersonAppointmentServices.addPersonAppointment(pap).catch(
                 (error) => {
                   this.alertType = "error";
@@ -1314,7 +1335,11 @@ export default {
           });
       }
       //If the end of the booked slot isn't the end of the slot, generate an open slot
-      if (this.selectedAppointment.endTime > this.newEnd) {
+      if (
+        this.selectedAppointment.endTime > this.newEnd &&
+        this.subtractTimes(this.newEnd, this.selectedAppointment.endTime) >=
+          this.group.minApptTime
+      ) {
         let temp = {
           date: this.selectedAppointment.date,
           startTime: this.newEnd,
@@ -1393,9 +1418,11 @@ export default {
         " " +
         this.tutors[0].lName +
         " on " +
-        this.selectedAppointment.date +
+        this.selectedAppointment.date.toString().substring(5, 10) +
+        "-" +
+        this.selectedAppointment.date.toString().substring(0, 4) +
         " at " +
-        this.selectedAppointment.startTime +
+        this.calcTime(this.selectedAppointment.startTime) +
         ".";
       this.showAlert = true;
     },
@@ -2380,7 +2407,6 @@ export default {
             );
 
             await this.getAppointments();
-            //this.$router.go(0);
           }
         }
       }
@@ -2456,8 +2482,6 @@ export default {
               });
             }
             await this.getAppointments();
-
-            //this.$router.go(0);
           }
         }
       }
@@ -2466,9 +2490,11 @@ export default {
         "You have successfully canceled your " +
         this.selectedAppointment.type +
         " appointment on " +
-        this.selectedAppointment.date +
+        this.selectedAppointment.date.toString().substring(5, 10) +
+        "-" +
+        this.selectedAppointment.date.toString().substring(0, 4) +
         " at " +
-        this.selectedAppointment.startTime +
+        this.calcTime(this.selectedAppointment.startTime) +
         ".";
       this.showAlert = true;
     },
@@ -2640,9 +2666,11 @@ export default {
               "You have successfully updated your " +
               this.selectedAppointment.type +
               " appointment on " +
-              this.selectedAppointment.date +
+              this.selectedAppointment.date.toString().substring(5, 10) +
+              "-" +
+              this.selectedAppointment.date.toString().substring(0, 4) +
               " at " +
-              this.selectedAppointment.startTime +
+              this.calcTime(this.selectedAppointment.startTime) +
               ".";
             this.showAlert = true;
           }

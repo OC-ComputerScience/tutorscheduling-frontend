@@ -582,8 +582,16 @@ export default {
               tempAvail.startTime < appoint.endTime) // new availability starts during and ends after existing
           ) {
             isAvail = false;
-            this.conflictAvailability.conflicting = tempAvail;
-            this.conflictAvailability.existing = appoint;
+            this.conflictAvailability.conflicting = {
+              date: tempAvail.date,
+              startTime: tempAvail.startTime,
+              endTime: tempAvail.endTime,
+            };
+            this.conflictAvailability.existing = {
+              date: appoint.date,
+              startTime: appoint.startTime,
+              endTime: appoint.endTime,
+            };
             // format time of conflict availability
             this.conflictAvailability.conflicting.startTime = this.formatTime(
               this.conflictAvailability.conflicting.startTime
@@ -800,6 +808,7 @@ export default {
       await PersonRoleServices.getGroupForPersonRole(this.id)
         .then(async (response) => {
           this.group = response.data[0].role.group;
+          console.log(this.group);
           await this.getTopicsForGroup();
         })
         .catch((error) => {
