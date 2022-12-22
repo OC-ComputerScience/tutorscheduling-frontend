@@ -17,11 +17,11 @@ export default {
   getGroupsForPerson(id) {
     return apiClient.get("group/person/" + id);
   },
-  getIncompleteGroupsForPerson(id) {
-    return apiClient.get("group/personIn/" + id);
+  getContractsNeededForPerson(id) {
+    return apiClient.get("group/personNeedContracts/" + id);
   },
-  getGroupTopicsForTutor(id) {
-    return apiClient.get("group/personT/" + id);
+  getTopicsNeededForTutor(id) {
+    return apiClient.get("group/personNeedTopics/" + id);
   },
   addGroup(group) {
     return apiClient.post("group", group);

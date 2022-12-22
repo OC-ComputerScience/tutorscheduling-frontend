@@ -2,16 +2,22 @@
   <div>
     <v-container>
       <v-toolbar>
-        <v-toolbar-title>How to use this application:</v-toolbar-title>
+        <v-toolbar-title>Help</v-toolbar-title>
+        <v-spacer></v-spacer>
+        <InformationComponent
+          message="This document details how to use this application."></InformationComponent>
       </v-toolbar>
-      <br /><br />
+      <br />
+      <v-alert v-model="showAlert" dismissible :type="alertType">{{
+        this.alert
+      }}</v-alert>
+      <br />
       <!-- <button @click="$refs.myPdfComponent.print()">print</button> -->
       <pdf
         v-for="i in tutorial.pages"
         :key="i"
         :page="i"
-        :src="tutorial.pdf"
-      ></pdf>
+        :src="tutorial.pdf"></pdf>
     </v-container>
   </div>
 </template>
@@ -21,14 +27,20 @@ import Utils from "@/config/utils.js";
 import pdf from "vue-pdf";
 import PersonRoleServices from "@/services/personRoleServices.js";
 import RoleServices from "@/services/roleServices.js";
+import InformationComponent from "../components/InformationComponent.vue";
 
 export default {
+  name: "Help",
   props: ["id"],
   components: {
     pdf,
+    InformationComponent,
   },
   data() {
     return {
+      showAlert: false,
+      alert: "",
+      alertType: "success",
       user: {},
       tutorial: {},
       currentRole: {},
@@ -57,10 +69,16 @@ export default {
               this.currentRole = result.data;
             })
             .catch((error) => {
+              this.alertType = "error";
+              this.alert = error.response.data.message;
+              this.showAlert = true;
               console.log("There was an error:", error.response);
             });
         })
         .catch((error) => {
+          this.alertType = "error";
+          this.alert = error.response.data.message;
+          this.showAlert = true;
           console.log("There was an error:", error.response);
         });
     },

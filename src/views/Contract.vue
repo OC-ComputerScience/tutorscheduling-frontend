@@ -3,12 +3,17 @@
     <v-container>
       <v-toolbar>
         <v-toolbar-title>{{ this.message }}</v-toolbar-title>
+        <v-spacer></v-spacer>
+        <InformationComponent
+          message="Before continuing to this service, you must sign contracts for the
+            following positions.
+            <br />
+            Please click on each title to sign its contract."></InformationComponent>
       </v-toolbar>
-      <br /><br />
-      <h4>
-        Before continuing to this service, you must sign contracts for the
-        following positions. Please click on each title to sign its contract.
-      </h4>
+      <br />
+      <v-alert v-model="showAlert" dismissible :type="alertType">{{
+        this.alert
+      }}</v-alert>
       <v-row justify="center">
         <v-col v-for="role in roles" :key="role.id">
           <v-card
@@ -17,8 +22,7 @@
             max-width="400"
             height="100"
             elevation="10"
-            :style="{ 'background-color': role.color }"
-          >
+            :style="{ 'background-color': role.color }">
             <v-card-title class="justify-center white--text">
               {{ role.type }} - {{ role.groupName }}
             </v-card-title>
@@ -35,8 +39,7 @@
                 v-for="i in role.numPages"
                 :key="i"
                 :page="i"
-                :src="role.pdfName"
-              ></pdf>
+                :src="role.pdfName"></pdf>
               <v-container>
                 <v-text-field
                   v-model="signature"
@@ -46,8 +49,7 @@
                   v-on:keyup.enter="
                     role.dialog = false;
                     save(role);
-                  "
-                ></v-text-field>
+                  "></v-text-field>
               </v-container>
               <v-card-actions>
                 <v-spacer></v-spacer>
@@ -59,8 +61,7 @@
                     role.dialog = false;
                     signature = '';
                     save(role);
-                  "
-                >
+                  ">
                   Agree
                 </v-btn>
               </v-card-actions>
@@ -69,6 +70,8 @@
           </v-dialog>
         </v-col>
       </v-row>
+
+      <GroupViewComponent v-if="openSelect"></GroupViewComponent>
     </v-container>
   </div>
 </template>
@@ -76,23 +79,30 @@
 <script>
 import pdf from "vue-pdf";
 import GroupServices from "@/services/groupServices.js";
-import RoleServices from "@/services/roleServices.js";
 import PersonRoleServices from "@/services/personRoleServices.js";
 import Utils from "@/config/utils.js";
+import GroupViewComponent from "@/components/GroupViewComponent.vue";
+import InformationComponent from "@/components/InformationComponent.vue";
+import { RedirectToPageMixin } from "../mixins/RedirectToPageMixin";
 
 export default {
-  name: "App",
+  name: "Contract",
+  mixins: [RedirectToPageMixin],
   components: {
     pdf,
+    GroupViewComponent,
+    InformationComponent,
   },
   data() {
     return {
-      //dialog: [],
+      showAlert: false,
+      alert: "",
+      alertType: "success",
       message: "Sign Contract",
+      openSelect: false,
       roles: [],
       signature: "",
       numPages: 2,
-      completeRole: {},
       colors: [
         "#47121D",
         "#EE5044",
@@ -125,67 +135,22 @@ export default {
   async created() {
     this.user = Utils.getStore("user");
     this.user.fullName = this.user.fName + " " + this.user.lName;
-    await this.getPersonRoles().then(() => {
-      console.log(this.roles);
-      console.log(this.completeRole);
-      if (this.roles.length === 0 && this.completeRole !== null) {
-        if (this.completeRole.type.includes("Student"))
-          this.$router.push({
-            name: "studentHome",
-            params: { id: this.completeRole.personrole[0].id },
-          });
-        else if (this.completeRole.type.includes("Tutor"))
-          this.$router.push({
-            name: "tutorHome",
-            params: { id: this.completeRole.personrole[0].id },
-          });
-        else if (this.completeRole.type.includes("Admin"))
-          this.$router.push({ name: "mainCalendar" });
-      }
-    });
+    await this.setContracts();
   },
   methods: {
     // check that if there are multiple contracts to sign, some of the buttons go away
     async save(role) {
-      await this.updatePersonRole(role)
-        .then(async () => {
-          await this.getPersonRoles()
-            .then(() => {
-              console.log(this.roles);
-              if (this.roles.length !== 0) role.dialog = false;
-              else if (this.roles.length === 0 && this.completeRole !== null) {
-                if (this.completeRole.type.includes("Student"))
-                  this.$router.push({
-                    name: "studentHome",
-                    params: { id: this.completeRole.personrole[0].id },
-                  });
-                else if (this.completeRole.type.includes("Tutor"))
-                  this.$router.push({
-                    name: "tutorHome",
-                    params: { id: this.completeRole.personrole[0].id },
-                  });
-                else if (this.completeRole.type.includes("Admin"))
-                  this.$router.push({ name: "adminHome" });
-                this.$router.go();
-              }
-            })
-            .catch((error) => {
-              this.message = error.response.data.message;
-            });
-        })
-        .catch((error) => {
-          this.message = error.response.data.message;
-        });
+      await this.updatePersonRole(role);
+      await this.goToPage(this.user.userID);
     },
-    async getPersonRoles() {
+    async setContracts() {
       this.roles = [];
-      await GroupServices.getIncompleteGroupsForPerson(this.user.userID)
+      await GroupServices.getContractsNeededForPerson(this.user.userID)
         .then((response) => {
           for (let i = 0; i < response.data.length; i++) {
             let group = response.data[i];
             for (let j = 0; j < group.role.length; j++) {
               let role = group.role[j];
-
               for (let k = 0; k < role.personrole.length; k++) {
                 let personrole = role.personrole[k];
                 let tempFile = this.files.filter(function (file) {
@@ -194,7 +159,6 @@ export default {
                     file.pdf.includes(role.type.toString())
                   );
                 });
-                console.log(tempFile);
                 personrole.pdfName = tempFile[0].pdf;
                 personrole.numPages = tempFile[0].pages;
                 personrole.groupName = group.name;
@@ -208,23 +172,11 @@ export default {
           }
         })
         .catch((error) => {
-          this.message = error.response.data.message;
+          this.alertType = "error";
+          this.alert = error.response.data.message;
+          this.showAlert = true;
           console.log("There was an error:", error.response);
         });
-
-      console.log(this.roles);
-
-      // if there are no incomplete roles, route home with the right id
-      if (this.roles.length === 0) {
-        await RoleServices.getRoleForPerson(this.user.userID)
-          .then((response) => {
-            this.completeRole = response.data[0];
-          })
-          .catch((error) => {
-            this.message = error.response.data.message;
-            console.log("There was an error:", error.response);
-          });
-      }
     },
     async updatePersonRole(role) {
       let updatedRole = {};
@@ -238,7 +190,10 @@ export default {
       updatedRole.updatedAt = role.updatedAt;
       await PersonRoleServices.updatePersonRole(role.id, updatedRole).catch(
         (error) => {
-          this.message = error.response.data.message;
+          this.alertType = "error";
+          this.alert = error.response.data.message;
+          this.showAlert = true;
+          console.log("There was an error:", error.response);
         }
       );
     },
