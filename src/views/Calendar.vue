@@ -642,8 +642,8 @@ import TwilioServices from "@/services/twilioServices.js";
 import Utils from "@/config/utils.js";
 
 export default {
+    name: "Calendar",
   props: ["id"],
-
   data: () => ({
     overlay: true,
     message: "Calendar",

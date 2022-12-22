@@ -1,13 +1,13 @@
 <template>
   <v-container>
     <v-toolbar>
-      <v-toolbar-title>Welcome to OC Tutoring!</v-toolbar-title>
+      <v-toolbar-title>Welcome to OC's Tutor Scheduling!</v-toolbar-title>
     </v-toolbar>
     <br /><br />
-    <GoogleLogin />
+    <GoogleLoginComponent></GoogleLoginComponent>
     <br /><br />
     <v-card>
-      <v-card-title> About OC's Tutoring Services </v-card-title>
+      <v-card-title> About OC's Tutor Scheduling Services </v-card-title>
       <v-card-text>
         <p>
           Oklahoma Christian University wants to aid students in being
@@ -40,11 +40,11 @@
 </template>
 
 <script>
-import GoogleLogin from "@/components/GoogleLogin";
+import GoogleLoginComponent from "@/components/GoogleLoginComponent";
 export default {
-  name: "login",
+  name: "Login",
   components: {
-    GoogleLogin,
+    GoogleLoginComponent,
   },
 };
 </script>

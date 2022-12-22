@@ -10,8 +10,7 @@
         v-for="i in tutorial.pages"
         :key="i"
         :page="i"
-        :src="tutorial.pdf"
-      ></pdf>
+        :src="tutorial.pdf"></pdf>
     </v-container>
   </div>
 </template>
@@ -23,6 +22,7 @@ import PersonRoleServices from "@/services/personRoleServices.js";
 import RoleServices from "@/services/roleServices.js";
 
 export default {
+  name: "Help",
   props: ["id"],
   components: {
     pdf,

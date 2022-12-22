@@ -10,8 +10,7 @@
           v-model="request.problem"
           :items="Problems"
           label="Why are you making this request?"
-          required
-        >
+          required>
         </v-select>
         <v-text-field
           v-model="request.courseNum"
@@ -20,8 +19,7 @@
           label="Course Number"
           hint="Enter n/a if non applicable"
           persistent-hint
-          required
-        ></v-text-field>
+          required></v-text-field>
 
         <v-select
           v-model="request.topicId"
@@ -29,8 +27,7 @@
           item-text="name"
           item-value="id"
           label="Topic"
-          required
-        >
+          required>
         </v-select>
 
         <v-text-field
@@ -40,16 +37,14 @@
           label="Description"
           hint="Description..."
           persistent-hint
-          required
-        ></v-text-field>
+          required></v-text-field>
 
         <br /><br />
         <v-btn
           :disabled="!valid"
           color="success"
           class="mr-4"
-          @click="addRequest"
-        >
+          @click="addRequest">
           Save
         </v-btn>
 
@@ -69,6 +64,7 @@ import TwilioServices from "@/services/twilioServices.js";
 import Utils from "@/config/utils.js";
 
 export default {
+  name: "StudentAddRequest",
   props: ["id"],
   data() {
     return {
@@ -155,11 +151,8 @@ export default {
       this.$router.go(-1);
     },
     async getPerson() {
-      if (
-        this.$store.state.loginUser.userID !== undefined &&
-        this.$store.state.loginUser !== null
-      ) {
-        await PersonServices.getPerson(this.$store.state.loginUser.userID)
+      if (this.user.userID !== undefined && this.user !== null) {
+        await PersonServices.getPerson(this.user.userID)
           .then((response) => {
             this.person = response.data;
 

@@ -46,8 +46,7 @@
                 hover
                 length="5"
                 size="45"
-                value="3"
-              ></v-rating>
+                value="3"></v-rating>
             </v-layout>
           </div>
           <v-text-field
@@ -55,21 +54,18 @@
             id="description"
             :counter="500"
             label="Provide Feedback..."
-            required
-          ></v-text-field>
+            required></v-text-field>
           <v-container fluid>
             <v-checkbox
               v-model="status"
               label="This student was a no-show"
-              value="No-Show"
-            ></v-checkbox>
+              value="No-Show"></v-checkbox>
           </v-container>
           <v-btn
             :disabled="!valid || !textualfeedback"
             color="success"
             class="mr-4"
-            @click="updatePersonAppointment"
-          >
+            @click="updatePersonAppointment">
             Save
           </v-btn>
 
@@ -86,8 +82,8 @@ import PersonAppointmentServices from "@/services/personAppointmentServices.js";
 import AppointmentServices from "@/services/appointmentServices.js";
 
 export default {
+  name: "TutorAppointmentFeedback",
   props: ["id", "userId"],
-
   data() {
     return {
       selected: false,

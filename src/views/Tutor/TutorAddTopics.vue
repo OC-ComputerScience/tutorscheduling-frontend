@@ -5,6 +5,7 @@
     </v-toolbar>
     <br />
     <v-btn
+      right
       color="accent"
       @click="
         dialog = true;
@@ -17,15 +18,15 @@
     <br />
     <v-item-group
       v-for="group in groups"
-      :key="group.id"
       v-model="group.selected"
+      :key="group.id"
       multiple>
       <h3>{{ group.name }}</h3>
       <v-row justify="center">
-        <v-col v-for="topic in group.topics" :key="topic.id" md="4">
+        <v-col v-for="topic in group.grouptopics" :key="topic.id" md="4">
           <v-item v-slot="{ active, toggle }">
             <v-card
-              @click="toggle"
+              @click="toggle()"
               class="mx-auto my-12 d-flex justify-center"
               max-width="400"
               height="100"
@@ -73,30 +74,37 @@
             color="accent"
             text
             @click="
-              goToPage();
               savePersonTopics();
+              goToPage(user.userID);
             ">
             Continue
           </v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
+    <GroupViewComponent v-if="openSelect"></GroupViewComponent>
   </v-container>
 </template>
 
 <script>
 import Utils from "@/config/utils.js";
-import GroupServices from "@/services/groupServices";
 import TopicServices from "@/services/topicServices";
 import PersonTopicServices from "@/services/personTopicServices";
+import GroupViewComponent from "@/components/GroupViewComponent.vue";
+import { RedirectToPageMixin } from "@/mixins/RedirectToPageMixin";
 
 export default {
+  name: "TutorAddTopics",
+  props: ["id"],
+  mixins: [RedirectToPageMixin],
+  components: {
+    GroupViewComponent,
+  },
   data: () => ({
-    selected: [],
     selectedGroupTopics: [],
+    groups: [],
     persontopic: {},
     user: {},
-    groups: [],
     colors: ["#47121D", "#EE5044", "#63BAC0", "#196CA2", "#F8C545", "#032F45"],
     dialog: false,
     levels: ["Freshman", "Sophomore", "Junior", "Senior"],
@@ -104,86 +112,31 @@ export default {
   }),
   async created() {
     this.user = Utils.getStore("user");
-    console.log(this.user.access);
-    await this.getGroups().then(async () => {
-      await this.getGroupTopics().then(async () => {
-        console.log(this.groups);
-        await this.existingPersonTopics().then(async () => {
-          await this.getGroupTopics().then(() => {
-            if (this.groups.length === 0) {
-              this.goToPage();
-            }
-            console.log(this.groups);
-          });
-        });
-      });
-    });
+    await this.getGroupsWithNoTopics();
+    await this.getGroupTopics();
   },
   methods: {
-    async getGroups() {
-      // this must filter groups to only get groups where they have applied to be a tutor
-      await GroupServices.getAllGroups()
-        .then((response) => {
-          this.groups = [];
-          for (let i = 0; i < response.data.length; i++) {
-            let group = response.data[i];
-            group.selected = [];
-            group.topics = [];
-            for (let j = 0; j < this.user.access.length; j++) {
-              if (
-                group.name.toString() === this.user.access[j].name.toString()
-              ) {
-                for (let k = 0; k < this.user.access[j].roles.length; k++) {
-                  if (this.user.access[j].roles[k].type.includes("Tutor"))
-                    this.groups.push(group);
-                }
-              }
-            }
-          }
-        })
-        .catch((error) => {
-          this.message = error.response.data.message;
-          console.log("There was an error:", error.response);
-        });
-    },
-    async existingPersonTopics() {
-      await PersonTopicServices.getAllForPerson(this.user.userID)
-        .then((response) => {
-          console.log(response);
-          for (let i = 0; i < response.data.length; i++) {
-            let topic = response.data[i];
-            for (let j = 0; j < this.groups.length; j++) {
-              let group = this.groups[j];
-              for (let k = 0; k < group.topics.length; k++) {
-                if (topic.topicId === group.topics[k].id) {
-                  console.log(this.groups);
-                  this.groups = this.groups.filter(function (item) {
-                    console.log(item);
-                    return item.id !== group.id;
-                  });
-                  console.log(this.groups);
-                  break;
-                }
-              }
-            }
-          }
-        })
-        .catch((error) => {
-          this.message = error.response.data.message;
-          console.log("There was an error:", error.response);
-        });
+    async getGroupsWithNoTopics() {
+      await this.getPersonRoles(this.user.userID);
+      this.groups = this.topicroles;
+      if (this.groups.length === 0) {
+        this.goToPage(this.user.userID);
+      } else {
+        this.groups = this.groups.filter((group) => group.topic.length === 0);
+      }
     },
     async getGroupTopics() {
       for (let i = 0; i < this.groups.length; i++) {
-        const group = this.groups[i];
-        this.groups[i].topics = [];
+        let group = this.groups[i];
+        this.groups[i].selected = [];
+        this.groups[i].grouptopics = [];
         await TopicServices.getAllForGroup(group.id)
           .then((response) => {
             for (let j = 0; j < response.data.length; j++) {
               let topic = response.data[j];
               topic.color =
                 this.colors[Math.floor(Math.random() * this.colors.length)];
-              this.groups[i].topics.push(topic);
+              this.groups[i].grouptopics.push(topic);
             }
           })
           .catch((error) => {
@@ -191,10 +144,12 @@ export default {
             console.log("There was an error:", error.response);
           });
       }
+      // doing this to ensure all topics show up
+      this.$forceUpdate();
     },
     getSelectedGroupTopics() {
       for (let k = 0; k < this.groups.length; k++) {
-        for (let i = 0; i < this.groups[k].topics.length; i++) {
+        for (let i = 0; i < this.groups[k].grouptopics.length; i++) {
           for (let j = 0; j < this.groups[k].selected.length; j++) {
             if (this.groups[k].selected[j] === i) {
               if (!this.selectedGroupTopics.includes(this.groups[k])) {
@@ -207,7 +162,11 @@ export default {
 
       for (let k = 0; k < this.selectedGroupTopics.length; k++) {
         this.selectedGroupTopics[k].selectedTopics = [];
-        for (let i = 0; i < this.selectedGroupTopics[k].topics.length; i++) {
+        for (
+          let i = 0;
+          i < this.selectedGroupTopics[k].grouptopics.length;
+          i++
+        ) {
           for (
             let j = 0;
             j < this.selectedGroupTopics[k].selected.length;
@@ -215,18 +174,14 @@ export default {
           ) {
             if (this.selectedGroupTopics[k].selected[j] === i) {
               this.selectedGroupTopics[k].selectedTopics.push(
-                this.selectedGroupTopics[k].topics[i]
+                this.selectedGroupTopics[k].grouptopics[i]
               );
             }
           }
         }
       }
     },
-    goToPage() {
-      this.$router.push({ name: "contract" });
-      this.$router.go();
-    },
-    savePersonTopics() {
+    async savePersonTopics() {
       for (let i = 0; i < this.selectedGroupTopics.length; i++) {
         for (
           let j = 0;
@@ -239,7 +194,7 @@ export default {
             topicId: topic.id,
             personId: this.user.userID,
           };
-          PersonTopicServices.addPersonTopic(this.persontopic).catch(
+          await PersonTopicServices.addPersonTopic(this.persontopic).catch(
             (error) => {
               this.message = error.response.data.message;
             }

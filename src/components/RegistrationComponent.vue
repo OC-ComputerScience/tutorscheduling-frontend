@@ -131,7 +131,7 @@
       </v-card>
     </v-dialog>
 
-    <SelectGroupView v-if="openSelect"></SelectGroupView>
+    <GroupViewComponent v-if="openSelect"></GroupViewComponent>
   </div>
 </template>
 
@@ -141,18 +141,19 @@ import RoleServices from "@/services/roleServices";
 import PersonRoleServices from "@/services/personRoleServices";
 import TwilioServices from "@/services/twilioServices";
 import Utils from "@/config/utils.js";
-import SelectGroupView from "./SelectGroupView.vue";
+import GroupViewComponent from "./GroupViewComponent.vue";
+import { RedirectToPageMixin } from "../mixins/RedirectToPageMixin";
 
 export default {
-  name: "Registration",
+  name: "RegistrationComponent",
+  mixins: [RedirectToPageMixin],
   components: {
-    SelectGroupView,
+    GroupViewComponent,
   },
   data() {
     return {
       roleDialog: true,
       groupDialog: false,
-      openSelect: false,
       absolute: true,
       opacity: 0.75,
       roleSelect: "Student",
@@ -161,19 +162,16 @@ export default {
       admins: [],
       person: {},
       roles: [],
-      personroles: [],
       personrole: {},
       roleCounter: 0,
       user: {},
       hasAnyRoles: false,
     };
   },
-  created() {
-    this.getGroups();
+  async created() {
+    await this.getGroups();
     this.user = Utils.getStore("user");
-    console.log(this.user);
     this.hasAnyRoles = this.user.access.length > 0;
-    // this.openDialogs();
   },
   methods: {
     async haveRoleAlready() {
@@ -182,7 +180,6 @@ export default {
         groups.push(element.name);
       });
       for (let k = 0; k < this.groups.length; k++) {
-        console.log(this.hasAnyRoles);
         this.groups[k].haveRole = false;
         this.groups[k].sentenceHaveRole = "";
         if (this.hasAnyRoles) {
@@ -192,7 +189,6 @@ export default {
               this.user.access[i].roles.forEach((element) => {
                 role += element.type;
               });
-              console.log(role);
               if (role.includes(this.roleSelect)) {
                 this.groups[k].haveRole = true;
                 this.groups[k].sentenceHaveRole = "You already have this role.";
@@ -201,36 +197,9 @@ export default {
           }
         }
       }
-      console.log(this.groups);
     },
-    async getPersonRoles() {
-      await RoleServices.getIncompleteRoleForPerson(this.user.userID)
-        .then((response) => {
-          for (let i = 0; i < response.data.length; i++) {
-            let role = response.data[i];
-            this.personroles.push(role);
-          }
-        })
-        .catch((error) => {
-          console.log("There was an error:", error.response);
-        });
-
-      // if the user doesn't have any incomplete roles, get normal roles
-      if (this.personroles.length === 0) {
-        await RoleServices.getRoleForPerson(this.user.userID)
-          .then((response) => {
-            for (let i = 0; i < response.data.length; i++) {
-              let role = response.data[i];
-              this.personroles.push(role);
-            }
-          })
-          .catch((error) => {
-            console.log("There was an error:", error.response);
-          });
-      }
-    },
-    getGroups() {
-      GroupServices.getAllGroups()
+    async getGroups() {
+      await GroupServices.getAllGroups()
         .then((response) => {
           this.groups = response.data;
           this.groups.sort(function (a, b) {
@@ -259,7 +228,6 @@ export default {
         });
     },
     async savePersonRoles() {
-      console.log("in save person");
       await this.addGroupRoles(this.groupSelect);
 
       for (let i = 0; i < this.roles.length; i++) {
@@ -272,7 +240,6 @@ export default {
             personId: this.user.userID,
             roleId: role.id,
           };
-          console.log(this.personrole);
           await PersonRoleServices.addPersonRole(this.personrole)
             .then(async (response) => {
               let status = response.data.status;
@@ -282,7 +249,6 @@ export default {
 
                 for (let i = 0; i < this.admins.length; i++) {
                   let tempA = this.admins[i];
-                  console.log(tempA);
                   if (
                     await this.checkPrivilege(
                       "Receive notifications for applications",
@@ -326,67 +292,11 @@ export default {
           }
           // resave user in store
           Utils.setStore("user", this.user);
-          this.goToPage();
+          this.goToPage(this.user.userID);
         })
         .catch((error) => {
           console.log("There was an error:", error.response);
         });
-    },
-    openDialogs() {
-      // if this person doesn't have any roles, do this
-      //   if (this.user.access.length === 0) {
-      this.roleDialog = true;
-      //   } else {
-      //     this.goToPage();
-      //   }
-    },
-    async goToPage() {
-      await this.getPersonRoles().then(() => {
-        for (let i = 0; i < this.personroles.length; i++) {
-          let role = this.personroles[i];
-          for (let j = 0; j < role.personrole.length; j++) {
-            let pRole = role.personrole[j];
-            if (role.type.includes("Admin")) {
-              this.$router.push({
-                name: "adminHome",
-                params: { id: pRole.id },
-              });
-            } else if (
-              (role.type.includes("Student") &&
-                !pRole.status.includes("approved") &&
-                !pRole.agree) ||
-              (role.type.includes("Tutor") && !pRole.agree)
-            ) {
-              this.$router.push({ name: "contract", params: { id: pRole.id } });
-            }
-            // make a tutor sign up for topics if they haven't been approved yet
-            else if (
-              role.type.includes("Tutor") &&
-              pRole.status.includes("applied")
-            ) {
-              this.$router.push({ name: "tutorAddTopics" });
-            } else if (
-              role.type.includes("Student") &&
-              pRole.status.includes("approved")
-            ) {
-              this.$router.push({
-                name: "studentHome",
-                params: { id: pRole.id },
-              });
-            } else if (
-              role.type.includes("Tutor") &&
-              pRole.status.includes("approved") &&
-              pRole.agree
-            ) {
-              this.$router.push({
-                name: "tutorHome",
-                params: { id: pRole.id },
-              });
-            }
-            break;
-          }
-        }
-      });
     },
     async checkPrivilege(privilege, personroleprivileges) {
       let hasPriv = false;
@@ -399,7 +309,6 @@ export default {
     async getAdmins(groupId) {
       await RoleServices.getAllForGroupByType(groupId, "Admin")
         .then((response) => {
-          console.log(response);
           this.admins = response.data[0].personrole;
         })
         .catch((error) => {

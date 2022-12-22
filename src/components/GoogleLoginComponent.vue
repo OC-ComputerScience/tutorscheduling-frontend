@@ -44,25 +44,30 @@
       </v-card>
     </v-dialog>
 
-    <Registration
+    <RegistrationComponent
       v-if="
         openRegistration && this.user !== null && !dialog && this.fName !== ''
-      "></Registration>
+      "></RegistrationComponent>
+
+    <GroupViewComponent v-if="openSelect"></GroupViewComponent>
   </div>
 </template>
 
 <script>
 import AuthServices from "@/services/authServices";
 import PersonServices from "@/services/personServices";
-import RoleServices from "@/services/roleServices";
 import Utils from "@/config/utils.js";
-import Registration from "./Registration.vue";
+import RegistrationComponent from "./RegistrationComponent.vue";
+import GroupViewComponent from "./GroupViewComponent.vue";
+import { RedirectToPageMixin } from "../mixins/RedirectToPageMixin";
 
 export default {
-  name: "GoogleLogin",
+  name: "GoogleLoginComponent",
   components: {
-    Registration,
+    RegistrationComponent,
+    GroupViewComponent,
   },
+  mixins: [RedirectToPageMixin],
   data() {
     return {
       dialog: false,
@@ -72,10 +77,8 @@ export default {
       fName: "",
       lName: "",
       user: {},
-      token: "",
     };
   },
-  created() {},
   mounted() {
     this.loginWithGoogle();
   },
@@ -128,17 +131,20 @@ export default {
     },
     async savePhoneNum() {
       // use this to also update name if it's the first time a student is logging in
-      await this.getPerson().then(() => {
-        this.person.phoneNum = this.phoneNum;
-        this.person.fName = this.fName;
-        this.person.lName = this.lName;
-        // save phone number and name locally and to database
-        this.user.phoneNum = this.phoneNum;
-        this.user.fName = this.fName;
-        this.user.lName = this.lName;
-        Utils.setStore("user", this.user);
-        PersonServices.updatePerson(this.person.id, this.person);
-      });
+      await this.getPerson();
+      this.person.phoneNum = this.phoneNum;
+      this.person.fName = this.fName;
+      this.person.lName = this.lName;
+      // save phone number and name locally and to database
+      this.user.phoneNum = this.phoneNum;
+      this.user.fName = this.fName;
+      this.user.lName = this.lName;
+      Utils.setStore("user", this.user);
+      await PersonServices.updatePerson(this.person.id, this.person)
+        .then()
+        .catch((error) => {
+          console.log("There was an error:", error.response);
+        });
       this.openDialogs();
     },
     openDialogs() {
@@ -152,81 +158,7 @@ export default {
       } else if (this.user.access.length === 0) {
         this.dialog2 = true;
       } else {
-        this.goToPage();
-      }
-    },
-    async goToPage() {
-      await this.getPersonRoles().then(() => {
-        for (let i = 0; i < this.personroles.length; i++) {
-          let role = this.personroles[i];
-          for (let j = 0; j < role.personrole.length; j++) {
-            let pRole = role.personrole[j];
-            if (role.type.includes("Admin")) {
-              this.$router.push({
-                name: "adminHome",
-                params: { id: pRole.id },
-              });
-            } else if (
-              (role.type.includes("Student") &&
-                !pRole.status.includes("approved") &&
-                !pRole.agree) ||
-              (role.type.includes("Tutor") && !pRole.agree)
-            ) {
-              this.$router.push({ name: "contract" });
-            }
-            // make a tutor sign up for topics if they haven't been approved yet
-            else if (
-              role.type.includes("Tutor") &&
-              pRole.status.includes("applied")
-            ) {
-              this.$router.push({ name: "tutorAddTopics" });
-            } else if (
-              role.type.includes("Student") &&
-              pRole.status.includes("approved")
-            ) {
-              this.$router.push({
-                name: "studentHome",
-                params: { id: pRole.id },
-              });
-            } else if (
-              role.type.includes("Tutor") &&
-              pRole.status.includes("approved") &&
-              pRole.agree
-            ) {
-              this.$router.push({
-                name: "tutorHome",
-                params: { id: pRole.id },
-              });
-            }
-            break;
-          }
-        }
-      });
-    },
-    async getPersonRoles() {
-      await RoleServices.getIncompleteRoleForPerson(this.user.userID)
-        .then((response) => {
-          for (let i = 0; i < response.data.length; i++) {
-            let role = response.data[i];
-            this.personroles.push(role);
-          }
-        })
-        .catch((error) => {
-          console.log("There was an error:", error.response);
-        });
-
-      // if the user doesn't have any incomplete roles, get normal roles
-      if (this.personroles.length === 0) {
-        await RoleServices.getRoleForPerson(this.user.userID)
-          .then((response) => {
-            for (let i = 0; i < response.data.length; i++) {
-              let role = response.data[i];
-              this.personroles.push(role);
-            }
-          })
-          .catch((error) => {
-            console.log("There was an error:", error.response);
-          });
+        this.goToPage(this.user.userID);
       }
     },
   },

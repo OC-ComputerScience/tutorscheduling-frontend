@@ -320,7 +320,7 @@ import TwilioServices from "@/services/twilioServices.js";
 
 export default {
   props: ["id"],
-  name: "App",
+  name: "TutorHome",
   watch: {
     id: function () {
       this.getTutorRole();

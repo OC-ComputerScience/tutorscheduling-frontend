@@ -242,7 +242,7 @@ const router = new Router({
       props: true,
     },
     {
-      path: "/StudentAddRequest/:id",
+      path: "/studentAddRequest/:id",
       name: "studentAddRequest",
       component: StudentAddRequest,
       props: true,

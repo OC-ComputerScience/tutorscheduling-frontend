@@ -12,8 +12,7 @@
             append-icon="mdi-magnify"
             label="Search"
             single-line
-            hide-details
-          ></v-text-field>
+            hide-details></v-text-field>
           <v-spacer></v-spacer>
           <v-btn class="mr-4" @click="cancel()"> Back </v-btn>
         </v-card-title>
@@ -21,8 +20,7 @@
           :headers="headers"
           :search="search"
           :items="personroles"
-          :items-per-page="50"
-        >
+          :items-per-page="50">
           <template v-slot:[`item.actions`]="{ item }">
             <v-icon small class="mr-2" @click="editItem(item)"
               >mdi-pencil</v-icon
@@ -44,29 +42,25 @@
               <v-data-table
                 :headers="topicHeaders"
                 :items="editedPerson.persontopic"
-                :hide-default-footer="true"
-              >
+                :hide-default-footer="true">
               </v-data-table>
 
               <br />
               <v-text-field
                 v-model="editedPerson.email"
                 label="Email Address"
-                readonly
-              ></v-text-field>
+                readonly></v-text-field>
 
               <v-text-field
                 v-model="editedPerson.phoneNum"
                 label="Phone Number"
-                readonly
-              ></v-text-field>
+                readonly></v-text-field>
 
               <v-select
                 v-model="editedItem.status"
                 :items="StatusSelect"
                 label="Status"
-                required
-              >
+                required>
               </v-select>
             </v-form>
           </v-card-text>
@@ -101,6 +95,7 @@ import PersonServices from "@/services/personServices.js";
 import PersonRoleServices from "@/services/personRoleServices.js";
 
 export default {
+  name: "AdminApprove",
   props: ["id"],
   data: () => ({
     valid: false,
