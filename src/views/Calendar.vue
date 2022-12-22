@@ -2620,11 +2620,7 @@ export default {
       let tempHours = checkTime.getHours();
       // check minutes for group's booking buffer
       let tempMins = checkTime.getMinutes();
-      if (
-        (this.checkRole("Admin") ||
-          this.checkPrivilege("Sign up students for appointments")) &&
-        this.group.bookPastMinutes > 0
-      ) {
+      if (this.group.bookPastMinutes > 0) {
         tempMins -= this.group.bookPastMinutes;
         while (tempMins < 0) {
           tempMins += 60;
