@@ -1,4 +1,3 @@
-import RoleServices from "../services/roleServices";
 import GroupServices from "../services/groupServices";
 import Utils from "../config/utils";
 
@@ -31,10 +30,8 @@ export const RedirectToPageMixin = {
           .catch((error) => {
             console.log("There was an error:", error.response);
           });
-        // TODO check about roles for admins
-        await RoleServices.getRoleForPerson(personId)
+        await GroupServices.getGroupsForPerson(personId)
           .then((response) => {
-            console.log(this.personroles);
             this.personroles = response.data;
           })
           .catch((error) => {
@@ -47,16 +44,14 @@ export const RedirectToPageMixin = {
       if (this.personroles.length === 0) {
         for (let i = 0; i < this.contractroles.length; i++) {
           let group = this.contractroles[i];
-          if (group.role.length > 0) {
-            for (let j = 0; j < group.role.length; j++) {
-              let role = group.role[j];
-              if (role.type === "Student" || role.type === "Tutor") {
-                this.$router.push({
-                  name: "contract",
-                  params: { id: role.personrole[0].id },
-                });
-                break;
-              }
+          for (let j = 0; j < group.role.length; j++) {
+            let role = group.role[j];
+            if (role.type === "Student" || role.type === "Tutor") {
+              this.$router.push({
+                name: "contract",
+                params: { id: role.personrole[0].id },
+              });
+              break;
             }
           }
         }
@@ -72,25 +67,32 @@ export const RedirectToPageMixin = {
           }
         }
         // TODO fix this for admins
-        for (let i = 0; i < this.personroles.length; i++) {
-          let role = this.personroles[i];
-          for (let j = 0; j < role.personrole.length; j++) {
-            let pRole = role.personrole[j];
-            if (role.type === "Admin") {
-              this.user.selectedGroup = this.group.name;
-              this.user.selectedRole = {
-                type: role.type,
-                personRoleId: pRole.id,
-              };
-              Utils.setStore("user", this.user);
-              this.$router.push({
-                name: "adminHome",
-                params: { id: pRole.id },
-              });
-              break;
+        if (
+          this.user.selectedGroup === null ||
+          this.user.selectedGroup === "" ||
+          this.user.selectedGroup === undefined
+        ) {
+          for (let i = 0; i < this.personroles.length; i++) {
+            let group = this.personroles[i];
+            for (let j = 0; j < group.role.length; j++) {
+              let role = group.role[j];
+              if (role.type === "Admin") {
+                this.user.selectedGroup = group.name;
+                this.user.selectedRole = {
+                  type: role.type,
+                  personRoleId: role.personrole[0].id,
+                };
+                Utils.setStore("user", this.user);
+                this.$router.push({
+                  name: "adminHome",
+                  params: { id: role.personrole[0].id },
+                });
+                break;
+              }
             }
           }
         }
+
         this.openSelect = true;
       }
     },

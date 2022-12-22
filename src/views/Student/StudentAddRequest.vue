@@ -151,11 +151,8 @@ export default {
       this.$router.go(-1);
     },
     async getPerson() {
-      if (
-        this.$store.state.loginUser.userID !== undefined &&
-        this.$store.state.loginUser !== null
-      ) {
-        await PersonServices.getPerson(this.$store.state.loginUser.userID)
+      if (this.user.userID !== undefined && this.user !== null) {
+        await PersonServices.getPerson(this.user.userID)
           .then((response) => {
             this.person = response.data;
 

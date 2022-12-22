@@ -138,14 +138,14 @@ export default {
         .catch((error) => {
           console.log("There was an error:", error.response);
         });
-      console.log(this.groups[0]);
     },
     openDialogsOrRedirect() {
       if (this.groups.length > 1) this.groupDialog = true;
       else {
         this.selectedGroup = this.groups[0].name;
         this.roles = this.groups[0].role;
-        this.saveGroupRoleSelection();
+        if (this.groups[0].role.length > 1) this.roleDialog = true;
+        else this.saveGroupRoleSelection();
       }
     },
     saveGroupRoleSelection() {
@@ -153,7 +153,7 @@ export default {
       if (this.selectedRole.type === undefined) {
         this.selectedRole = this.roles[0];
       }
-      // formated selected role
+      // formatted selected role
       this.user.selectedRole = {
         type: this.selectedRole.type,
         personRoleId: this.selectedRole.personrole[0].id,

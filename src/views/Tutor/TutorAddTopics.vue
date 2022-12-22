@@ -148,7 +148,6 @@ export default {
       this.$forceUpdate();
     },
     getSelectedGroupTopics() {
-      console.log(this.groups);
       for (let k = 0; k < this.groups.length; k++) {
         for (let i = 0; i < this.groups[k].grouptopics.length; i++) {
           for (let j = 0; j < this.groups[k].selected.length; j++) {

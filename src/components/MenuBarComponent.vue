@@ -37,8 +37,8 @@
         </template>
         <v-list>
           <v-list-group
-            v-for="(group, i) in user.access"
-            :key="i"
+            v-for="group in user.access"
+            :key="group.id"
             no-action
             sub-group
             @click.stop.prevent>
@@ -47,12 +47,12 @@
             </template>
 
             <v-list-item
-              v-for="(role, j) in group.roles"
-              :key="j"
+              v-for="role in group.roles"
+              :key="role.personRoleId"
               @click="
                 selectedRole = role;
                 selectedGroup = group.name;
-                resetMenu();
+                saveGroupRole();
                 menuAction(`${selectedRole.type.toLowerCase()}Home`);
               ">
               <v-list-item-content>
@@ -181,7 +181,10 @@ export default {
     incompleteGroups: [],
     hasTopics: true,
     selectedGroup: "",
-    selectedRole: {},
+    selectedRole: {
+      type: "",
+      personRoleId: 0,
+    },
     activeMenus: [],
     menus: [
       {
@@ -312,18 +315,29 @@ export default {
   },
   methods: {
     createLink() {
-      return (
-        "/" +
-        this.selectedRole.type.toLowerCase() +
-        "Home/" +
-        this.selectedRole.personRoleId
-      );
+      if (this.isSelectedRoleValid()) {
+        return (
+          "/" +
+          this.selectedRole.type.toLowerCase() +
+          "Home/" +
+          this.selectedRole.personRoleId
+        );
+      } else {
+        return "/";
+      }
+    },
+    saveGroupRole() {
+      this.user.selectedGroup = this.selectedGroup;
+      this.user.selectedRole = this.selectedRole;
+      Utils.setStore("user", this.user);
+      this.resetMenu();
     },
     isUserPopulated() {
       return JSON.stringify(this.user) !== "{}" && this.user !== null;
     },
     isSelectedRoleValid() {
       return (
+        this.selectedRole !== undefined &&
         this.selectedRole.personRoleId !== 0 &&
         this.selectedRole.type !== "" &&
         this.selectedRole.type !== undefined &&
@@ -372,15 +386,11 @@ export default {
         this.$router.push({ name: "adminInfo" });
     },
     async logout() {
-      await AuthServices.logoutUser(this.user)
-        .then((response) => {
-          console.log(response);
-          Utils.removeItem("user");
-          this.$router.push({ name: "login" });
-        })
-        .catch((error) => {
-          console.log("error", error);
-        });
+      await AuthServices.logoutUser(this.user).catch((error) => {
+        console.log("error", error);
+      });
+      Utils.removeItem("user");
+      this.$router.push({ name: "login" });
     },
     async limitTutorMenu() {
       if (this.selectedRole.type.includes("Tutor")) {
