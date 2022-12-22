@@ -2,8 +2,14 @@
   <v-container>
     <v-toolbar>
       <v-toolbar-title>{{ this.message }}</v-toolbar-title>
+      <v-spacer></v-spacer>
+      <InformationComponent
+        message="Click on topics that you can tutor in. You will then need to specify your skill level on each."></InformationComponent>
     </v-toolbar>
     <br />
+    <v-alert v-model="showAlert" dismissible :type="alertType">{{
+      this.alert
+    }}</v-alert>
     <v-btn
       right
       color="accent"
@@ -90,6 +96,7 @@
 import Utils from "@/config/utils.js";
 import TopicServices from "@/services/topicServices";
 import PersonTopicServices from "@/services/personTopicServices";
+import InformationComponent from "../../components/InformationComponent.vue";
 import GroupViewComponent from "@/components/GroupViewComponent.vue";
 import { RedirectToPageMixin } from "@/mixins/RedirectToPageMixin";
 
@@ -99,8 +106,12 @@ export default {
   mixins: [RedirectToPageMixin],
   components: {
     GroupViewComponent,
+    InformationComponent,
   },
   data: () => ({
+    showAlert: false,
+    alert: "",
+    alertType: "success",
     selectedGroupTopics: [],
     groups: [],
     persontopic: {},
@@ -108,7 +119,7 @@ export default {
     colors: ["#47121D", "#EE5044", "#63BAC0", "#196CA2", "#F8C545", "#032F45"],
     dialog: false,
     levels: ["Freshman", "Sophomore", "Junior", "Senior"],
-    message: "Sign up for topics to tutor in:",
+    message: "Add Topics",
   }),
   async created() {
     this.user = Utils.getStore("user");
@@ -140,7 +151,9 @@ export default {
             }
           })
           .catch((error) => {
-            this.message = error.response.data.message;
+            this.alertType = "error";
+            this.alert = error.response.data.message;
+            this.showAlert = true;
             console.log("There was an error:", error.response);
           });
       }
@@ -196,7 +209,10 @@ export default {
           };
           await PersonTopicServices.addPersonTopic(this.persontopic).catch(
             (error) => {
-              this.message = error.response.data.message;
+              this.alertType = "error";
+              this.alert = error.response.data.message;
+              this.showAlert = true;
+              console.log("There was an error:", error.response);
             }
           );
         }

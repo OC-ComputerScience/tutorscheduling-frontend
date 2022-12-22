@@ -3,25 +3,17 @@
     <v-container>
       <v-toolbar>
         <v-toolbar-title>{{ message }}</v-toolbar-title>
+        <v-spacer></v-spacer>
+        <InformationComponent
+          message="Select various criteria for appointments regarding dates, topics, statuses, tutors, and/or students.
+          <br />
+          Click <b>Filter</b> and then click <b>Download CSV</b>.
+          <br /> A CSV Report of the selected appointments will be saved to your Downloads file."></InformationComponent>
       </v-toolbar>
-      <br /><br />
-      <br /><br />
-      <v-dialog v-model="noApptDialog" max-width="600px">
-        <v-card>
-          <v-card-title>
-            <span class="text-h5">Warning:</span>
-          </v-card-title>
-          <v-card-text>
-            <h2>There are no appointments that meet this criteria.</h2>
-          </v-card-text>
-          <v-card-actions>
-            <v-spacer></v-spacer>
-            <v-btn color="blue darken-1" text @click="noApptDialog = false">
-              Close
-            </v-btn>
-          </v-card-actions>
-        </v-card>
-      </v-dialog>
+      <br />
+      <v-alert v-model="showAlert" dismissible :type="alertType">{{
+        this.alert
+      }}</v-alert>
       <v-row>
         <v-col md="4">
           <v-menu
@@ -103,6 +95,9 @@
           class="mr-4"
           :disabled="!isFiltered"
           @click="
+            showAlert = true;
+            alert = 'Your CSV Report has been successfully downloaded.';
+            alertType = 'success';
             isFiltered = false;
             selectedStudents = [];
             selectedTutors = [];
@@ -125,20 +120,23 @@ import AppointmentServices from "@/services/appointmentServices.js";
 import PersonRoleServices from "@/services/personRoleServices.js";
 import PersonServices from "@/services/personServices.js";
 import TopicServices from "@/services/topicServices.js";
+import InformationComponent from "../../components/InformationComponent.vue";
 
 export default {
   name: "AdminReports",
   props: ["id"],
   components: {
     VueJsonToCsv,
+    InformationComponent,
   },
   data() {
     return {
-      message:
-        "Reports - enter the criteria and click Filter then click Download to create CSV file",
+      message: "Create Reports",
       isFiltered: false,
-      noApptDialog: false,
       menu: false,
+      showAlert: false,
+      alertType: "success",
+      alert: "",
       dates: [],
       group: {},
       user: {},
@@ -188,18 +186,9 @@ export default {
   },
   async created() {
     this.user = Utils.getStore("user");
-    await this.getGroupByPersonRoleId()
-      .then(async () => {
-        await this.getTopicsForGroup();
-        await this.getAllAppointmentsForGroup().catch((error) => {
-          this.message = error.response.data.message;
-          console.log("There was an error:", error.response);
-        });
-      })
-      .catch((error) => {
-        this.message = error.response.data.message;
-        console.log("There was an error:", error.response);
-      });
+    await this.getGroupByPersonRoleId();
+    await this.getTopicsForGroup();
+    await this.getAllAppointmentsForGroup();
     // sort checkboxes
     this.status.sort(function (a, b) {
       if (a.title < b.title) {
@@ -227,7 +216,9 @@ export default {
           this.group = response.data[0].role.group;
         })
         .catch((error) => {
-          this.message = error.response.data.message;
+          this.alertType = "error";
+          this.alert = error.response.data.message;
+          this.showAlert = true;
           console.log("There was an error:", error.response);
         });
     },
@@ -523,7 +514,9 @@ export default {
           this.updatePeople();
         })
         .catch((error) => {
-          this.message = error.response.data.message;
+          this.alertType = "error";
+          this.alert = error.response.data.message;
+          this.showAlert = true;
           console.log("There was an error:", error.response);
         });
     },
@@ -535,7 +528,9 @@ export default {
           this.status.push({ name: "Any", title: "Any", id: -1 });
         })
         .catch((error) => {
-          this.message = error.response.data.message;
+          this.alertType = "error";
+          this.alert = error.response.data.message;
+          this.showAlert = true;
           console.log("There was an error:", error.response);
         });
     },
@@ -561,7 +556,9 @@ export default {
           }
         })
         .catch((error) => {
-          this.message = error.response.data.message;
+          this.alertType = "error";
+          this.alert = error.response.data.message;
+          this.showAlert = true;
           console.log("There was an error:", error.response);
         });
       this.tutors.sort(function (a, b) {
@@ -640,10 +637,19 @@ export default {
       }
       // makes sure we're not trying to create an empty csv file
       if (this.selectedAppointments.length === 0) {
-        this.noApptDialog = true;
+        this.showAlert = true;
+        this.alertType = "warning";
+        this.alert = "There are no appointments that meet this criteria.";
+        // reset variables
+        this.dates = [];
+        this.selectedTopic = -1;
+        this.selectedStatus = -1;
+        this.selectedStudents = [];
+        this.selectedTutors = [];
         this.getAllAppointmentsForGroup();
       } else {
         this.isFiltered = true;
+        this.showAlert = false;
       }
     },
   },

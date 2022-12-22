@@ -3,8 +3,17 @@
     <v-container>
       <v-toolbar>
         <v-toolbar-title>{{ this.message }}</v-toolbar-title>
+        <v-spacer></v-spacer>
+        <InformationComponent
+          message="View information for potential tutors including the topics they have signed up for and approve or disable their application."></InformationComponent>
       </v-toolbar>
-      <br /><br />
+      <br />
+
+      <v-alert v-model="showAlert" dismissible :type="alertType">{{
+        this.alert
+      }}</v-alert>
+
+      <br />
       <v-card>
         <v-card-title>
           <v-text-field
@@ -93,14 +102,21 @@
 import Utils from "@/config/utils.js";
 import PersonServices from "@/services/personServices.js";
 import PersonRoleServices from "@/services/personRoleServices.js";
+import InformationComponent from "../../components/InformationComponent.vue";
 
 export default {
   name: "AdminApprove",
   props: ["id"],
+  components: {
+    InformationComponent,
+  },
   data: () => ({
     valid: false,
-    message: "Approval - click tutor to approve or deny application",
+    message: "Approve Applications",
     StatusSelect: ["applied", "approved", "disabled"],
+    showAlert: false,
+    alert: "",
+    alertType: "success",
     dialog: false,
     dialogDelete: false,
     expanded: [],
@@ -140,13 +156,8 @@ export default {
   },
   async created() {
     this.user = Utils.getStore("user");
-    await this.getGroupByPersonRoleId()
-      .then(() => {
-        this.getPersonRoles();
-      })
-      .catch((error) => {
-        this.message = error.response.data.message;
-      });
+    await this.getGroupByPersonRoleId();
+    await this.getPersonRoles();
   },
   methods: {
     async getGroupByPersonRoleId() {
@@ -155,17 +166,21 @@ export default {
           this.group = response.data[0].role.group;
         })
         .catch((error) => {
-          this.message = error.response.data.message;
+          this.alertType = "error";
+          this.alert = error.response.data.message;
+          this.showAlert = true;
           console.log("There was an error:", error.response);
         });
     },
-    getPersonRoles() {
-      PersonServices.getPendingTutorsForGroup(this.group.id)
+    async getPersonRoles() {
+      await PersonServices.getPendingTutorsForGroup(this.group.id)
         .then((response) => {
           this.personroles = response.data;
         })
         .catch((error) => {
-          this.message = error.response.data.message;
+          this.alertType = "error";
+          this.alert = error.response.data.message;
+          this.showAlert = true;
           console.log("There was an error:", error.response);
         });
     },
@@ -181,14 +196,24 @@ export default {
       this.editedItem = Object.assign({}, item.personrole[0]);
       this.dialogDelete = true;
     },
-    deleteItemConfirm() {
+    async deleteItemConfirm() {
       this.personroles.splice(this.editedIndex, 1);
-      PersonRoleServices.deletePersonRole(this.editedItem.id)
+      await PersonRoleServices.deletePersonRole(this.editedItem.id)
         .then(() => {
           this.getPersonRoles();
+          this.alertType = "success";
+          this.alert =
+            "You have successfully deleted " +
+            this.editedPerson.fName +
+            " " +
+            this.editedPerson.lName +
+            "'s application.";
+          this.showAlert = true;
         })
         .catch((error) => {
-          this.message = error.response.data.message;
+          this.alertType = "error";
+          this.alert = error.response.data.message;
+          this.showAlert = true;
           console.log("There was an error:", error.response);
         });
 
@@ -208,15 +233,28 @@ export default {
         this.editedIndex = -1;
       });
     },
-    save() {
-      PersonRoleServices.updatePersonRole(this.editedItem.id, this.editedItem)
+    async save() {
+      await PersonRoleServices.updatePersonRole(
+        this.editedItem.id,
+        this.editedItem
+      )
         .then(() => {
           this.close();
           this.getPersonRoles();
+          this.alertType = "success";
+          this.alert =
+            "You have successfully updated " +
+            this.editedPerson.fName +
+            " " +
+            this.editedPerson.lName +
+            "'s application.";
+          this.showAlert = true;
         })
         .catch((error) => {
-          this.message = error.response.data.message;
-          console.log(error);
+          this.alertType = "error";
+          this.alert = error.response.data.message;
+          this.showAlert = true;
+          console.log("There was an error:", error.response);
         });
       Object.assign(this.personroles[this.editedIndex], this.editedItem);
     },

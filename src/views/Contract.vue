@@ -3,12 +3,17 @@
     <v-container>
       <v-toolbar>
         <v-toolbar-title>{{ this.message }}</v-toolbar-title>
+        <v-spacer></v-spacer>
+        <InformationComponent
+          message="Before continuing to this service, you must sign contracts for the
+            following positions.
+            <br />
+            Please click on each title to sign its contract."></InformationComponent>
       </v-toolbar>
-      <br /><br />
-      <h4>
-        Before continuing to this service, you must sign contracts for the
-        following positions. Please click on each title to sign its contract.
-      </h4>
+      <br />
+      <v-alert v-model="showAlert" dismissible :type="alertType">{{
+        this.alert
+      }}</v-alert>
       <v-row justify="center">
         <v-col v-for="role in roles" :key="role.id">
           <v-card
@@ -77,6 +82,7 @@ import GroupServices from "@/services/groupServices.js";
 import PersonRoleServices from "@/services/personRoleServices.js";
 import Utils from "@/config/utils.js";
 import GroupViewComponent from "@/components/GroupViewComponent.vue";
+import InformationComponent from "@/components/InformationComponent.vue";
 import { RedirectToPageMixin } from "../mixins/RedirectToPageMixin";
 
 export default {
@@ -85,10 +91,13 @@ export default {
   components: {
     pdf,
     GroupViewComponent,
+    InformationComponent,
   },
   data() {
     return {
-      //dialog: [],
+      showAlert: false,
+      alert: "",
+      alertType: "success",
       message: "Sign Contract",
       openSelect: false,
       roles: [],
@@ -163,7 +172,9 @@ export default {
           }
         })
         .catch((error) => {
-          this.message = error.response.data.message;
+          this.alertType = "error";
+          this.alert = error.response.data.message;
+          this.showAlert = true;
           console.log("There was an error:", error.response);
         });
     },
@@ -179,7 +190,10 @@ export default {
       updatedRole.updatedAt = role.updatedAt;
       await PersonRoleServices.updatePersonRole(role.id, updatedRole).catch(
         (error) => {
-          this.message = error.response.data.message;
+          this.alertType = "error";
+          this.alert = error.response.data.message;
+          this.showAlert = true;
+          console.log("There was an error:", error.response);
         }
       );
     },

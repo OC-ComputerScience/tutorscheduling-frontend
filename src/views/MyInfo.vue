@@ -1,0 +1,205 @@
+<template>
+  <div>
+    <v-container>
+      <v-toolbar>
+        <v-toolbar-title>{{ this.message }}</v-toolbar-title>
+        <InformationComponent
+          message="Make changes to your phone number or view your information below."></InformationComponent>
+        <v-spacer></v-spacer>
+        <v-toolbar-title>{{ this.user.selectedRole.type }}</v-toolbar-title>
+      </v-toolbar>
+      <br />
+
+      <v-alert v-model="showAlert" dismissible :type="alertType">{{
+        this.alert
+      }}</v-alert>
+
+      <v-text-field v-model="fullName" label="Name" readonly></v-text-field>
+
+      <v-text-field
+        v-model="person.email"
+        label="Email"
+        readonly></v-text-field>
+
+      <v-text-field
+        v-model="person.phoneNum"
+        id="phoneNum"
+        :counter="13"
+        label="Mobile Phone"
+        hint="111-222-3333"
+        @change="enableUpdate = true"
+        persistent-hint
+        required></v-text-field>
+
+      <br />
+      <v-btn
+        :disabled="!enableUpdate"
+        color="accent"
+        @click="savePhoneNum()"
+        class="justify-center white--text">
+        Update Phone Number
+      </v-btn>
+
+      <br /><br />
+
+      <v-card v-if="user.selectedRole.type === 'Tutor'">
+        <v-card-title>
+          Current Topics for {{ this.user.selectedGroup }}
+          <v-spacer></v-spacer>
+        </v-card-title>
+        <v-data-table
+          :headers="topicHeaders"
+          :items="topics"
+          :items-per-page="50"></v-data-table>
+      </v-card>
+
+      <br />
+
+      <v-card
+        v-if="
+          user.selectedRole.type === 'Tutor' ||
+          user.selectedRole.type === 'Admin'
+        ">
+        <v-card-title>
+          Current Privileges for {{ this.user.selectedGroup }}
+          <v-spacer></v-spacer>
+        </v-card-title>
+        <v-data-table
+          :headers="privilegeHeaders"
+          :items="personroleprivileges"
+          :items-per-page="50"></v-data-table>
+      </v-card>
+    </v-container>
+  </div>
+</template>
+
+<script>
+import PersonServices from "@/services/personServices";
+import PersonRoleServices from "@/services/personRoleServices";
+import RoleServices from "@/services/roleServices";
+import TopicServices from "@/services/topicServices";
+import Utils from "@/config/utils.js";
+import InformationComponent from "../components/InformationComponent.vue";
+
+export default {
+  name: "MyInfo",
+  props: ["id"],
+  components: { InformationComponent },
+  data() {
+    return {
+      user: {},
+      alertType: "success",
+      alert: "",
+      showAlert: false,
+      person: {},
+      group: {},
+      enableUpdate: false,
+      fullName: "",
+      message: "",
+      topics: [],
+      personroles: [],
+      personroleprivileges: [],
+      topicHeaders: [
+        { text: "Topic", value: "name" },
+        { text: "Skill Level", value: "persontopic[0].skillLevel" },
+      ],
+      privilegeHeaders: [
+        { text: "Privilege", value: "privilege" },
+        { text: "Associated Role", value: "associatedRole" },
+      ],
+    };
+  },
+  async created() {
+    this.user = Utils.getStore("user");
+    await this.getPerson();
+    await this.getGroupByPersonRoleId();
+    if (this.user.selectedRole.type === "Tutor") {
+      await this.getTopics();
+    }
+    if (
+      this.user.selectedRole.type === "Tutor" ||
+      this.user.selectedRole.type === "Admin"
+    ) {
+      await this.getPersonRoles();
+    }
+  },
+  methods: {
+    async getPerson() {
+      await PersonServices.getPerson(this.user.userID)
+        .then((response) => {
+          this.person = response.data;
+          this.fullName = this.person.fName + " " + this.person.lName;
+          this.message = this.fullName + "'s Information";
+        })
+        .catch((error) => {
+          this.message = error.response.data.message;
+          console.log("There was an error:", error.response);
+        });
+    },
+    async savePhoneNum() {
+      await PersonServices.updatePerson(this.person.id, this.person)
+        .then(() => {
+          this.alert = "Your phone number was successfully updated.";
+          this.enableUpdate = false;
+          this.showAlert = true;
+        })
+        .catch((error) => {
+          this.alertType = "error";
+          this.alert = error.response.data.message;
+          this.enableUpdate = false;
+          this.showAlert = true;
+          console.log("There was an error:", error.response);
+        });
+    },
+    async getTopics() {
+      await TopicServices.getTopicByGroupForPerson(
+        this.group.id,
+        this.user.userID
+      )
+        .then((response) => {
+          this.topics = response.data;
+        })
+        .catch((error) => {
+          this.message = error.response.data.message;
+          console.log("There was an error:", error.response);
+        });
+    },
+    async getGroupByPersonRoleId() {
+      await PersonRoleServices.getGroupForPersonRole(this.id)
+        .then(async (response) => {
+          this.group = response.data[0].role.group;
+        })
+        .catch((error) => {
+          this.message = error.response.data.message;
+          console.log("There was an error:", error.response);
+        });
+    },
+    async getPersonRoles() {
+      this.personroleprivileges = [];
+      await RoleServices.getRoleByGroupForPerson(
+        this.group.id,
+        this.user.userID
+      )
+        .then((response) => {
+          this.personroles = response.data;
+          for (let i = 0; i < this.personroles.length; i++) {
+            let personRoleArray = this.personroles[i].personrole;
+            // set up personroleprivilege array
+            for (let j = 0; j < personRoleArray.length; j++) {
+              let pr = personRoleArray[j];
+              for (let k = 0; k < pr.personroleprivilege.length; k++) {
+                let priv = pr.personroleprivilege[k];
+                priv.associatedRole = this.personroles[i].type;
+                this.personroleprivileges.push(priv);
+              }
+            }
+          }
+        })
+        .catch((error) => {
+          this.message = error.response.data.message;
+          console.log("There was an error:", error.response);
+        });
+    },
+  },
+};
+</script>

@@ -90,8 +90,8 @@
                 {{ user.email }}
               </p>
               <v-divider class="my-3"></v-divider>
-              <v-btn depressed rounded text @click="goToRightInfo()">
-                Edit Account
+              <v-btn depressed rounded text @click="menuAction('myInfo')">
+                My Info
               </v-btn>
               <v-divider
                 class="my-3"
@@ -100,7 +100,7 @@
                 depressed
                 rounded
                 text
-                :to="{ name: 'apply' }"
+                @click="menuAction('apply')"
                 v-if="!selectedRole.type.includes('Admin')">
                 Apply
               </v-btn>
@@ -111,10 +111,7 @@
                 depressed
                 rounded
                 text
-                :to="{
-                  name: 'help',
-                  params: { id: selectedRole.personRoleId },
-                }"
+                @click="menuAction('help')"
                 v-if="!selectedRole.type.includes('Admin')">
                 Help
               </v-btn>
@@ -347,11 +344,12 @@ export default {
     menuAction(route) {
       if (!this.isSelectedRoleValid()) {
         this.$router.push({ name: "login" });
-      } else
+      } else {
         this.$router.push({
           name: route,
           params: { id: this.selectedRole.personRoleId },
         });
+      }
     },
     async resetMenu() {
       this.user = Utils.getStore("user");
@@ -376,14 +374,6 @@ export default {
           }
         }
       }
-    },
-    goToRightInfo() {
-      if (this.selectedRole.type.includes("Student"))
-        this.$router.push({ name: "studentInfo" });
-      else if (this.selectedRole.type.includes("Tutor"))
-        this.$router.push({ name: "tutorInfo" });
-      else if (this.selectedRole.type.includes("Admin"))
-        this.$router.push({ name: "adminInfo" });
     },
     async logout() {
       await AuthServices.logoutUser(this.user).catch((error) => {

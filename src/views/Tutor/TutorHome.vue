@@ -3,10 +3,15 @@
     <v-container>
       <v-toolbar>
         <v-toolbar-title>Hello, {{ this.user.fName }}!</v-toolbar-title>
+        <InformationComponent
+          v-if="!disabled"
+          message="Click on <b>View Calendar</b> to see all appointments.<br>Click on <b>Manage Availability</b> to make appointments for yourself."></InformationComponent>
         <v-spacer></v-spacer>
         <v-toolbar-title>{{ this.message }}</v-toolbar-title>
       </v-toolbar>
-
+      <v-alert v-model="showAlert" dismissible :type="alertType">{{
+        this.alert
+      }}</v-alert>
       <v-dialog v-model="apptDialog" max-width="800px">
         <v-card>
           <v-toolbar :color="selectedAppt.color" dark>
@@ -252,22 +257,12 @@
           <v-card-title>
             Upcoming Appointments for {{ this.user.selectedGroup }} as a tutor
             <v-spacer></v-spacer>
-            <v-text-field
-              v-model="search"
-              append-icon="mdi-magnify"
-              label="Search"
-              single-line
-              hide-details></v-text-field>
+            <InformationComponent
+              message="Click on an appointment to view information, make changes,
+              confirm, or reject."></InformationComponent>
           </v-card-title>
-          <v-card-text>
-            <b
-              >Click on an appointment to view information, make changes,
-              confirm, or reject.</b
-            >
-          </v-card-text>
           <v-data-table
             :headers="headers"
-            :search="search"
             :items="appointments"
             :items-per-page="50"
             @click:row="rowClick">
@@ -278,19 +273,11 @@
           <v-card-title>
             Provide Appointment Feedback for {{ this.user.selectedGroup }}
             <v-spacer></v-spacer>
-            <v-text-field
-              v-model="search"
-              append-icon="mdi-magnify"
-              label="Search"
-              single-line
-              hide-details></v-text-field>
+            <InformationComponent
+              message="Click on an appointment to provide feedback."></InformationComponent>
           </v-card-title>
-          <v-card-text>
-            <b>Click on an appointment to provide feedback.</b>
-          </v-card-text>
           <v-data-table
             :headers="headerFeedback"
-            :search="search"
             :items="appointmentsneedingfeedback"
             :items-per-page="50"
             @click:row="provideFeedback"></v-data-table>
@@ -317,19 +304,24 @@ import AppointmentServices from "@/services/appointmentServices.js";
 import LocationServices from "@/services/locationServices.js";
 import PersonAppointmentServices from "@/services/personAppointmentServices.js";
 import TwilioServices from "@/services/twilioServices.js";
+import InformationComponent from "../../components/InformationComponent.vue";
 
 export default {
   props: ["id"],
   name: "TutorHome",
+  components: {
+    InformationComponent,
+  },
   watch: {
     id: function () {
       this.getTutorRole();
     },
   },
-  components: {},
   data() {
     return {
-      search: "",
+      showAlert: false,
+      alert: "",
+      alertType: "success",
       user: {},
       group: {},
       dialog: false,
@@ -370,16 +362,11 @@ export default {
     if (this.id !== 0) {
       this.getTutorRole();
     }
-    await this.getGroupByPersonRoleId()
-      .then(async () => {
-        await this.getAppointments();
-        this.getAppointmentsNeedingFeedback();
-        this.getLocations();
-        this.getTopics();
-      })
-      .catch((error) => {
-        this.message = error.response.data.message;
-      });
+    await this.getGroupByPersonRoleId();
+    await this.getAppointments();
+    await this.getAppointmentsNeedingFeedback();
+    await this.getLocations();
+    await this.getTopics();
   },
   methods: {
     checkForAuthorization() {
@@ -434,6 +421,10 @@ export default {
         },
       });
       client.requestCode();
+      this.alertType = "success";
+      this.alert =
+        "You have successfully authorized Tutor Scheduling to link your Google calendar to ours.";
+      this.showAlert = true;
     },
     async getGroupByPersonRoleId() {
       await PersonRoleServices.getGroupForPersonRole(this.id)
@@ -441,7 +432,9 @@ export default {
           this.group = response.data[0].role.group;
         })
         .catch((error) => {
-          this.message = error.response.data.message;
+          this.alertType = "error";
+          this.alert = error.response.data.message;
+          this.showAlert = true;
           console.log("There was an error:", error.response);
         });
     },
@@ -523,7 +516,9 @@ export default {
                 }
               })
               .catch((error) => {
-                this.message = error.response.data.message;
+                this.alertType = "error";
+                this.alert = error.response.data.message;
+                this.showAlert = true;
                 console.log("There was an error:", error.response);
               });
 
@@ -573,7 +568,9 @@ export default {
           }
         })
         .catch((error) => {
-          this.message = error.response.data.message;
+          this.alertType = "error";
+          this.alert = error.response.data.message;
+          this.showAlert = true;
           console.log("There was an error:", error.response);
         });
     },
@@ -604,7 +601,9 @@ export default {
           }
         })
         .catch((error) => {
-          this.message = error.response.data.message;
+          this.alertType = "error";
+          this.alert = error.response.data.message;
+          this.showAlert = true;
           console.log("There was an error:", error.response);
         });
     },
@@ -634,7 +633,7 @@ export default {
           };
           await AppointmentServices.updateForGoogle(updateAppt.id, updateAppt)
             .then(async () => {
-              await this.tutorConfirmMessage(
+              this.tutorConfirmMessage(
                 this.students[0],
                 this.user.fName,
                 this.user.lName,
@@ -644,8 +643,21 @@ export default {
               this.selectedAppt.color = "blue";
             })
             .catch((error) => {
-              this.message = error.response.data.message;
+              this.alertType = "error";
+              this.alert = error.response.data.message;
+              this.showAlert = true;
+              console.log("There was an error:", error.response);
             });
+          this.alertType = "success";
+          this.alert =
+            "You have successfully confirmed your" +
+            this.selectedAppt.type +
+            " appointment on " +
+            this.selectedAppt.date +
+            " at " +
+            this.selectedAppt.startTime +
+            ".";
+          this.showAlert = true;
         }
       } else {
         // don't need to update google cal because it's not even on there yet
@@ -670,8 +682,21 @@ export default {
             this.apptDialog = false;
           })
           .catch((error) => {
-            this.message = error.response.data.message;
+            this.alertType = "error";
+            this.alert = error.response.data.message;
+            this.showAlert = true;
+            console.log("There was an error:", error.response);
           });
+        this.alertType = "warning";
+        this.alert =
+          "You have successfully rejected your" +
+          this.selectedAppt.type +
+          " appointment on " +
+          this.selectedAppt.date +
+          " at " +
+          this.selectedAppt.startTime +
+          ".";
+        this.showAlert = true;
       }
     },
     async editAppointment() {
@@ -697,11 +722,24 @@ export default {
               this.user.lName,
               updateAppt.type
             );
+            this.alertType = "success";
+            this.alert =
+              "You have successfully updated your" +
+              this.selectedAppt.type +
+              " appointment on " +
+              this.selectedAppt.date +
+              " at " +
+              this.selectedAppt.startTime +
+              ".";
+            this.showAlert = true;
           }
           await this.getAppointments();
         })
         .catch((error) => {
-          this.message = error.response.data.message;
+          this.alertType = "error";
+          this.alert = error.response.data.message;
+          this.showAlert = true;
+          console.log("There was an error:", error.response);
         });
     },
     //method for canceling appointments
@@ -712,12 +750,18 @@ export default {
           await PersonAppointmentServices.deletePersonAppointment(
             this.tutors[i].id
           ).catch((error) => {
-            this.message = error.response.data.message;
+            this.alertType = "error";
+            this.alert = error.response.data.message;
+            this.showAlert = true;
+            console.log("There was an error:", error.response);
           });
         }
         await AppointmentServices.deleteAppointment(this.selectedAppt.id).catch(
           (error) => {
-            this.message = error.response.data.message;
+            this.alertType = "error";
+            this.alert = error.response.data.message;
+            this.showAlert = true;
+            console.log("There was an error:", error.response);
           }
         );
       }
@@ -733,14 +777,20 @@ export default {
           await PersonAppointmentServices.deletePersonAppointment(
             this.students[i].id
           ).catch((error) => {
-            this.message = error.response.data.message;
+            this.alertType = "error";
+            this.alert = error.response.data.message;
+            this.showAlert = true;
+            console.log("There was an error:", error.response);
           });
         }
         for (let i = 0; i < this.tutors.length; i++) {
           await PersonAppointmentServices.deletePersonAppointment(
             this.tutors[i].id
           ).catch((error) => {
-            this.message = error.response.data.message;
+            this.alertType = "error";
+            this.alert = error.response.data.message;
+            this.showAlert = true;
+            console.log("There was an error:", error.response);
           });
         }
         let updateAppt = {
@@ -759,10 +809,23 @@ export default {
           updateAppt.id,
           updateAppt
         ).catch((error) => {
-          this.message = error.response.data.message;
+          this.alertType = "error";
+          this.alert = error.response.data.message;
+          this.showAlert = true;
+          console.log("There was an error:", error.response);
         });
       }
       this.getAppointments();
+      this.alertType = "warning";
+      this.alert =
+        "You have successfully canceled your" +
+        this.selectedAppt.type +
+        " appointment on " +
+        this.selectedAppt.date +
+        " at " +
+        this.selectedAppt.startTime +
+        ".";
+      this.showAlert = true;
     },
     async getTutorRole() {
       await PersonRoleServices.getPersonRole(this.id)
@@ -782,7 +845,9 @@ export default {
           } else this.disabled = false;
         })
         .catch((error) => {
-          this.message = error.response.data.message;
+          this.alertType = "error";
+          this.alert = error.response.data.message;
+          this.showAlert = true;
           console.log("There was an error:", error.response);
         });
 
@@ -801,7 +866,9 @@ export default {
           this.students = response.data;
         })
         .catch((error) => {
-          this.message = error.response.data.message;
+          this.alertType = "error";
+          this.alert = error.response.data.message;
+          this.showAlert = true;
           console.log("There was an error:", error.response);
         });
       await PersonAppointmentServices.findTutorDataForTable(
@@ -811,22 +878,26 @@ export default {
           this.tutors = response.data;
         })
         .catch((error) => {
-          this.message = error.response.data.message;
+          this.alertType = "error";
+          this.alert = error.response.data.message;
+          this.showAlert = true;
           console.log("There was an error:", error.response);
         });
     },
-    getLocations() {
-      LocationServices.getActiveForGroup(this.group.id)
+    async getLocations() {
+      await LocationServices.getActiveForGroup(this.group.id)
         .then((response) => {
           this.locations = response.data;
         })
         .catch((error) => {
-          this.message = error.response.data.message;
+          this.alertType = "error";
+          this.alert = error.response.data.message;
+          this.showAlert = true;
           console.log("There was an error:", error.response);
         });
     },
-    getTopics() {
-      PersonTopicServices.getTopicForPersonGroup(
+    async getTopics() {
+      await PersonTopicServices.getTopicForPersonGroup(
         this.group.id,
         this.user.userID
       )
@@ -834,7 +905,9 @@ export default {
           this.topics = response.data;
         })
         .catch((error) => {
-          this.message = error.response.data.message;
+          this.alertType = "error";
+          this.alert = error.response.data.message;
+          this.showAlert = true;
           console.log("There was an error:", error.response);
         });
     },

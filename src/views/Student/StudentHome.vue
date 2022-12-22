@@ -3,12 +3,13 @@
     <v-container>
       <v-toolbar>
         <v-toolbar-title>Hello, {{ this.user.fName }}!</v-toolbar-title>
+        <InformationComponent
+          v-if="!disabled"
+          message="Click on <b>View Calendar</b> to see available appointments!"></InformationComponent>
         <v-spacer></v-spacer>
         <v-toolbar-title>{{ this.message }}</v-toolbar-title>
       </v-toolbar>
       <v-container v-if="!disabled">
-        <b>Click on "View Calendar" to see available appointments!</b>
-
         <v-dialog v-model="apptDialog" max-width="800px">
           <v-card>
             <v-toolbar :color="selectedAppt.color" dark>
@@ -168,7 +169,9 @@
             </v-card-actions>
           </v-card>
         </v-dialog>
-
+        <v-alert v-model="showAlert" dismissible :type="alertType">{{
+          this.alert
+        }}</v-alert>
         <v-row>
           <v-col>
             <v-card
@@ -199,49 +202,31 @@
         </v-row>
         <v-card>
           <v-card-title>
-            Upcoming Appointments for {{ this.user.selectedGroup }}
+            Upcoming Appointments for {{ this.user.selectedGroup }} as a student
             <v-spacer></v-spacer>
-            <v-text-field
-              v-model="search"
-              append-icon="mdi-magnify"
-              label="Search"
-              single-line
-              hide-details></v-text-field>
+            <InformationComponent
+              message="Click on an appointment to view information, make changes, or
+              cancel."></InformationComponent>
           </v-card-title>
-          <v-card-text>
-            <b
-              >Click on an appointment to view information, make changes, or
-              cancel.</b
-            >
-          </v-card-text>
           <v-data-table
             :headers="headers"
-            :search="search"
             :items="appointments"
             :items-per-page="50"
-            @click:row="rowClick"></v-data-table>
+            @click:row="rowClick()"></v-data-table>
         </v-card>
         <br />
         <v-card>
           <v-card-title>
             Provide Appointment Feedback for {{ this.user.selectedGroup }}
             <v-spacer></v-spacer>
-            <v-text-field
-              v-model="search"
-              append-icon="mdi-magnify"
-              label="Search"
-              single-line
-              hide-details></v-text-field>
+            <InformationComponent
+              message="Click on an appointment to provide feedback."></InformationComponent>
           </v-card-title>
-          <v-card-text>
-            <b>Click on an appointment to provide feedback.</b>
-          </v-card-text>
           <v-data-table
             :headers="headerFeedback"
-            :search="search"
             :items="appointmentsneedingfeedback"
             :items-per-page="50"
-            @click:row="provideFeedback"></v-data-table>
+            @click:row="provideFeedback()"></v-data-table>
         </v-card>
       </v-container>
       <v-container v-else>
@@ -262,10 +247,14 @@ import TwilioServices from "@/services/twilioServices.js";
 import PersonRoleServices from "@/services/personRoleServices.js";
 import PersonTopicServices from "@/services/personTopicServices.js";
 import PersonAppointmentServices from "@/services/personAppointmentServices.js";
+import InformationComponent from "../../components/InformationComponent.vue";
 
 export default {
   props: ["id"],
   name: "StudentHome",
+  components: {
+    InformationComponent,
+  },
   watch: {
     id: function () {
       console.log(this.id);
@@ -273,9 +262,11 @@ export default {
   },
   data() {
     return {
-      search: "",
       user: {},
       group: {},
+      showAlert: false,
+      alert: "",
+      alertType: "success",
       disabled: false,
       apptDialog: false,
       saveChanges: false,
@@ -307,18 +298,13 @@ export default {
   },
   async created() {
     this.user = Utils.getStore("user");
-    await this.getGroupByPersonRoleId()
-      .then(() => {
-        this.getStudentRole();
-        if (!this.disabled) {
-          this.getAppointments();
-          this.getAppointmentsNeedingFeedback();
-          this.getLocations();
-        }
-      })
-      .catch((error) => {
-        this.message = error.response.data.message;
-      });
+    await this.getGroupByPersonRoleId();
+    await this.getStudentRole();
+    if (!this.disabled) {
+      await this.getAppointments();
+      await this.getAppointmentsNeedingFeedback();
+      await this.getLocations();
+    }
   },
   methods: {
     async getGroupByPersonRoleId() {
@@ -327,7 +313,9 @@ export default {
           this.group = response.data[0].role.group;
         })
         .catch((error) => {
-          this.message = error.response.data.message;
+          this.alertType = "error";
+          this.alert = error.response.data.message;
+          this.showAlert = true;
           console.log("There was an error:", error.response);
         });
     },
@@ -407,7 +395,9 @@ export default {
                 }
               })
               .catch((error) => {
-                this.message = error.response.data.message;
+                this.alertType = "error";
+                this.alert = error.response.data.message;
+                this.showAlert = true;
                 console.log("There was an error:", error.response);
               });
 
@@ -457,7 +447,9 @@ export default {
           }
         })
         .catch((error) => {
-          this.message = error.response.data.message;
+          this.alertType = "error";
+          this.alert = error.response.data.message;
+          this.showAlert = true;
           console.log("There was an error:", error.response);
         });
     },
@@ -487,7 +479,9 @@ export default {
           }
         })
         .catch((error) => {
-          this.message = error.response.data.message;
+          this.alertType = "error";
+          this.alert = error.response.data.message;
+          this.showAlert = true;
           console.log("There was an error:", error.response);
         });
     },
@@ -522,10 +516,23 @@ export default {
               updateAppt.type
             );
           }
+          this.alertType = "success";
+          this.alert =
+            "You have successfully updated your" +
+            this.selectedAppt.type +
+            " appointment on " +
+            this.selectedAppt.date +
+            " at " +
+            this.selectedAppt.startTime +
+            ".";
+          this.showAlert = true;
           await this.getAppointments();
         })
         .catch((error) => {
-          this.message = error.response.data.message;
+          this.alertType = "error";
+          this.alert = error.response.data.message;
+          this.showAlert = true;
+          console.log("There was an error:", error.response);
         });
     },
     //method for canceling appointments
@@ -578,18 +585,26 @@ export default {
                   await PersonAppointmentServices.addPersonAppointment(
                     pap
                   ).catch((error) => {
-                    console.log(error);
-                    this.message = error.response.data.message;
+                    this.alertType = "error";
+                    this.alert = error.response.data.message;
+                    this.showAlert = true;
+                    console.log("There was an error:", error.response);
                   });
                 });
                 await this.getAppointments();
               })
               .catch((error) => {
-                this.message = error.response.data.message;
+                this.alertType = "error";
+                this.alert = error.response.data.message;
+                this.showAlert = true;
+                console.log("There was an error:", error.response);
               });
           })
           .catch((error) => {
-            this.message = error.response.data.message;
+            this.alertType = "error";
+            this.alert = error.response.data.message;
+            this.showAlert = true;
+            console.log("There was an error:", error.response);
           });
       } else if (
         this.selectedAppt.type.includes("Private") &&
@@ -617,7 +632,10 @@ export default {
           updateAppt.id,
           updateAppt
         ).catch((error) => {
-          this.message = error.response.data.message;
+          this.alertType = "error";
+          this.alert = error.response.data.message;
+          this.showAlert = true;
+          console.log("There was an error:", error.response);
         });
         // only delete person appointment of student canceling
         for (let i = 0; i < this.students.length; i++) {
@@ -656,10 +674,24 @@ export default {
           updateAppt.id,
           updateAppt
         ).catch((error) => {
-          this.message = error.response.data.message;
+          this.alertType = "error";
+          this.alert = error.response.data.message;
+          this.showAlert = true;
+          console.log("There was an error:", error.response);
         });
         await this.getAppointments();
       }
+
+      this.alertType = "warning";
+      this.alert =
+        "You have successfully canceled your" +
+        this.selectedAppt.type +
+        " appointment on " +
+        this.selectedAppt.date +
+        " at " +
+        this.selectedAppt.startTime +
+        ".";
+      this.showAlert = true;
     },
     async getStudentRole() {
       await PersonRoleServices.getPersonRole(this.id)
@@ -669,6 +701,9 @@ export default {
           } else this.disabled = false;
         })
         .catch((error) => {
+          this.alertType = "error";
+          this.alert = error.response.data.message;
+          this.showAlert = true;
           console.log("There was an error:", error.response);
         });
     },
@@ -683,7 +718,9 @@ export default {
           this.students = response.data;
         })
         .catch((error) => {
-          this.message = error.response.data.message;
+          this.alertType = "error";
+          this.alert = error.response.data.message;
+          this.showAlert = true;
           console.log("There was an error:", error.response);
         });
       await PersonAppointmentServices.findTutorDataForTable(
@@ -693,23 +730,27 @@ export default {
           this.tutors = response.data;
         })
         .catch((error) => {
-          this.message = error.response.data.message;
+          this.alertType = "error";
+          this.alert = error.response.data.message;
+          this.showAlert = true;
           console.log("There was an error:", error.response);
         });
     },
-    getLocations() {
-      LocationServices.getActiveForGroup(this.group.id)
+    async getLocations() {
+      await LocationServices.getActiveForGroup(this.group.id)
         .then((response) => {
           this.locations = response.data;
         })
         .catch((error) => {
-          this.message = error.response.data.message;
+          this.alertType = "error";
+          this.alert = error.response.data.message;
+          this.showAlert = true;
           console.log("There was an error:", error.response);
         });
     },
-    getTopicsForTutor() {
+    async getTopicsForTutor() {
       console.log("in get topics");
-      PersonTopicServices.getTopicForPersonGroup(
+      await PersonTopicServices.getTopicForPersonGroup(
         this.group.id,
         this.tutors[0].personId
       )
@@ -717,7 +758,9 @@ export default {
           this.topics = response.data;
         })
         .catch((error) => {
-          this.message = error.response.data.message;
+          this.alertType = "error";
+          this.alert = error.response.data.message;
+          this.showAlert = true;
           console.log("There was an error:", error.response);
         });
     },
