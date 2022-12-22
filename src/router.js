@@ -6,12 +6,12 @@ import Calendar from "./views/Calendar.vue";
 import Contract from "./views/Contract.vue";
 import Help from "./views/Help.vue";
 import Login from "./views/Login.vue";
+import MyInfo from "./views/MyInfo.vue";
 import PageNotFound from "./views/PageNotFound.vue";
 
 // Admin Screens
 import AdminApprove from "./views/Admin/AdminApprove.vue";
 import AdminHome from "./views/Admin/AdminHome.vue";
-import AdminInfo from "./views/Admin/AdminInfo.vue";
 import AdminReports from "./views/Admin/AdminReports.vue";
 import AdminRequests from "./views/Admin/AdminRequests.vue";
 
@@ -49,7 +49,6 @@ import TopicView from "./views/Admin/Topic/TopicView.vue";
 import StudentAddRequest from "./views/Student/StudentAddRequest.vue";
 import StudentAppointmentFeedback from "./views/Student/StudentAppointmentFeedback.vue";
 import StudentHome from "./views/Student/StudentHome.vue";
-import StudentInfo from "./views/Student/StudentInfo.vue";
 
 // Tutor Screens
 
@@ -57,7 +56,6 @@ import TutorAddAvailability from "./views/Tutor/TutorAddAvailability.vue";
 import TutorAddTopics from "./views/Tutor/TutorAddTopics.vue";
 import TutorAppointmentFeedback from "./views/Tutor/TutorAppointmentFeedback.vue";
 import TutorHome from "./views/Tutor/TutorHome.vue";
-import TutorInfo from "./views/Tutor/TutorInfo.vue";
 
 Vue.use(Router);
 
@@ -96,6 +94,12 @@ const router = new Router({
       name: "login",
       alias: "/login",
       component: Login,
+    },
+    {
+      path: "/myInfo/:id",
+      name: "myInfo",
+      component: MyInfo,
+      props: true,
     },
     {
       path: "/groupAdd/:id",
@@ -224,12 +228,6 @@ const router = new Router({
       props: true,
     },
     {
-      path: "/adminInfo/:id",
-      name: "adminInfo",
-      component: AdminInfo,
-      props: true,
-    },
-    {
       path: "/adminReports/:id",
       name: "adminReports",
       component: AdminReports,
@@ -260,12 +258,6 @@ const router = new Router({
       props: true,
     },
     {
-      path: "/studentInfo/:id",
-      name: "studentInfo",
-      component: StudentInfo,
-      props: true,
-    },
-    {
       path: "/tutorAddAvailability/:id",
       name: "tutorAddAvailability",
       component: TutorAddAvailability,
@@ -287,12 +279,6 @@ const router = new Router({
       path: "/tutorHome/:id",
       name: "tutorHome",
       component: TutorHome,
-      props: true,
-    },
-    {
-      path: "/tutorInfo/:id",
-      name: "tutorInfo",
-      component: TutorInfo,
       props: true,
     },
     {

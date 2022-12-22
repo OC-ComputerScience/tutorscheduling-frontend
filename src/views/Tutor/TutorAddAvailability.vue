@@ -4,13 +4,20 @@
       <div>
         <v-toolbar>
           <v-toolbar-title>{{ this.message }}</v-toolbar-title>
+          <v-spacer></v-spacer>
+          <InformationComponent
+            message="Select date(s), times, and type, and click Save to indicate when you can tutor."></InformationComponent>
         </v-toolbar>
         <br />
         <b v-if="!group.allowSplittingAppointments"
           >Please create availabilities with specific appointments times, not
           big blocks of time.</b
         >
-        <br /><br />
+        <br />
+        <v-alert v-model="showAlert" dismissible :type="alertType">{{
+          this.alert
+        }}</v-alert
+        ><br />
         <template>
           <v-dialog v-model="doubleBookedDialog" max-width="600px">
             <v-card>
@@ -220,7 +227,7 @@
             <v-btn
               color="success"
               class="mr-4"
-              @click="groupHandler"
+              @click="groupHandler()"
               :disabled="
                 displayedEnd === '' ||
                 displayedEnd === null ||
@@ -269,13 +276,13 @@
                     </v-card-text>
                     <v-card-actions>
                       <v-spacer></v-spacer>
-                      <v-btn color="blue darken-1" text @click="closeDelete"
+                      <v-btn color="blue darken-1" text @click="closeDelete()"
                         >Cancel</v-btn
                       >
                       <v-btn
                         color="blue darken-1"
                         text
-                        @click="deleteItemConfirm"
+                        @click="deleteItemConfirm()"
                         >OK</v-btn
                       >
                       <v-spacer></v-spacer>
@@ -302,15 +309,20 @@ import TopicServices from "@/services/topicServices.js";
 import LocationServices from "@/services/locationServices.js";
 import AppointmentServices from "@/services/appointmentServices.js";
 import PersonAppointmentServices from "@/services/personAppointmentServices.js";
+import InformationComponent from "../../components/InformationComponent.vue";
 import Utils from "@/config/utils.js";
 
 export default {
   name: "TutorAddAvailability",
   props: ["id"],
-  components: {},
+  components: {
+    InformationComponent,
+  },
   data: () => ({
-    message:
-      "Availability - select date, times and type and click Save to indicate when you can tutor",
+    message: "Add Availability",
+    showAlert: false,
+    alert: "",
+    alertType: "success",
     nowDate: null,
     nowTime: null,
     availability: {},
@@ -573,8 +585,10 @@ export default {
       ) {
         console.log("group id wasn't set");
         await this.getGroupByPersonRoleId().catch((error) => {
-          this.message = error.response.data.message;
-          console.log(error);
+          this.alertType = "error";
+          this.alert = error.response.data.message;
+          this.showAlert = true;
+          console.log("There was an error:", error.response);
         });
       }
       for (var i = 0; i < this.dates.length; i++) {
@@ -625,21 +639,32 @@ export default {
                         await AppointmentServices.updateForGoogle(
                           tempApp.id,
                           tempApp
-                        );
+                        ).catch((error) => {
+                          this.alertType = "error";
+                          this.alert = error.response.data.message;
+                          this.showAlert = true;
+                          console.log("There was an error:", error.response);
+                        });
                     })
                     .catch((error) => {
-                      this.message = error.response.data.message;
-                      console.log(error);
+                      this.alertType = "error";
+                      this.alert = error.response.data.message;
+                      this.showAlert = true;
+                      console.log("There was an error:", error.response);
                     });
                 })
                 .catch((error) => {
-                  this.message = error.response.data.message;
-                  console.log(error);
+                  this.alertType = "error";
+                  this.alert = error.response.data.message;
+                  this.showAlert = true;
+                  console.log("There was an error:", error.response);
                 });
             })
             .catch((error) => {
-              this.message = error.response.data.message;
-              console.log(error);
+              this.alertType = "error";
+              this.alert = error.response.data.message;
+              this.showAlert = true;
+              console.log("There was an error:", error.response);
             });
         } else {
           this.doubleBookedDialog = true;
@@ -658,6 +683,10 @@ export default {
       this.secondTime = true;
       this.getAvailabilities();
       this.updateTimes();
+
+      this.alertType = "success";
+      this.alert = "You have successfully added availabilities.";
+      this.showAlert = true;
     },
     formatDate(date) {
       let formattedDate =
@@ -688,7 +717,9 @@ export default {
           this.upcoming = response.data;
         })
         .catch((error) => {
-          this.message = error.response.data.message;
+          this.alertType = "error";
+          this.alert = error.response.data.message;
+          this.showAlert = true;
           console.log("There was an error:", error.response);
         });
     },
@@ -733,7 +764,9 @@ export default {
           }
         })
         .catch((error) => {
-          this.message = error.response.data.message;
+          this.alertType = "error";
+          this.alert = error.response.data.message;
+          this.showAlert = true;
           console.log("There was an error:", error.response);
         });
     },
@@ -744,12 +777,13 @@ export default {
           await this.getTopicsForGroup();
         })
         .catch((error) => {
-          this.message = error.response.data.message;
+          this.alertType = "error";
+          this.alert = error.response.data.message;
+          this.showAlert = true;
           console.log("There was an error:", error.response);
         });
     },
     async getTopicsForGroup() {
-      console.log(this.group);
       await TopicServices.getTopicByGroupForPerson(
         this.group.id,
         this.user.userID
@@ -763,7 +797,9 @@ export default {
           );
         })
         .catch((error) => {
-          this.message = error.response.data.message;
+          this.alertType = "error";
+          this.alert = error.response.data.message;
+          this.showAlert = true;
           console.log("There was an error:", error.response);
         });
     },
@@ -777,17 +813,24 @@ export default {
     deleteItem(item) {
       this.editedIndex = this.availabilities.indexOf(item.id);
       this.editedItem = Object.assign({}, item);
+      this.alert =
+        "You have successfully deleted your availability on " + item.date + ".";
+
       this.dialogDelete = true;
     },
-    deleteItemConfirm() {
+    async deleteItemConfirm() {
       this.availabilities.splice(this.editedIndex, 1);
-      AvailabilityServices.deleteAvailability(this.editedItem.id)
+      await AvailabilityServices.deleteAvailability(this.editedItem.id)
         .then(() => {
+          this.alertType = "success";
+          this.showAlert = true;
           this.close();
           this.getAvailabilities();
         })
         .catch((error) => {
-          this.message = error.response.data.message;
+          this.alertType = "error";
+          this.alert = error.response.data.message;
+          this.showAlert = true;
           console.log("There was an error:", error.response);
         });
 

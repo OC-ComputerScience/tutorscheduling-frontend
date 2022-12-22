@@ -3,10 +3,18 @@
     <v-container>
       <v-toolbar>
         <v-toolbar-title>{{ this.message }}</v-toolbar-title>
+        <InformationComponent
+          message="Select an appointment to view information, book the appointment,
+            make changes, etc.
+            <br />
+            You can filter the appointments by a desired <b>Topic</b> or <b>Tutor</b>."></InformationComponent>
         <v-spacer></v-spacer>
         <v-toolbar-title>{{ this.role.type }}</v-toolbar-title>
       </v-toolbar>
       <br />
+      <v-alert v-model="showAlert" dismissible :type="alertType">{{
+        this.alert
+      }}</v-alert>
       <v-row class="fill-height">
         <v-col>
           <v-sheet height="64">
@@ -16,8 +24,7 @@
                 outlined
                 class="mr-4"
                 color="grey darken-2"
-                @click="viewMonth()"
-              >
+                @click="viewMonth()">
                 Reset
               </v-btn>
               <!-- Navigates calendar forward and back -->
@@ -41,8 +48,7 @@
                   item-value="id"
                   label="Topic"
                   outlined
-                  @change="loadAppointments()"
-                ></v-select>
+                  @change="loadAppointments()"></v-select>
               </v-col>
               <v-col cols="3" align-self="start">
                 <v-select
@@ -53,16 +59,14 @@
                   item-value="id"
                   label="Tutor"
                   outlined
-                  @change="loadAppointments()"
-                ></v-select>
+                  @change="loadAppointments()"></v-select>
               </v-col>
               <v-btn
                 outlined
                 class="mr-4"
                 color="grey darken-2"
                 @click="viewKey()"
-                right
-              >
+                right>
                 Key
               </v-btn>
               <!-- Dropdown menu to select format -->
@@ -73,8 +77,7 @@
                     outlined
                     color="grey darken-2"
                     v-bind="attrs"
-                    v-on="on"
-                  >
+                    v-on="on">
                     <span>{{ typeToLabel[type] }}</span>
                     <v-icon right>mdi-menu-down</v-icon>
                   </v-btn>
@@ -110,8 +113,7 @@
               :type="type"
               @click:event="showEvent"
               @click:more="viewDay"
-              @click:date="viewDay"
-            ></v-calendar>
+              @click:date="viewDay"></v-calendar>
 
             <!--Pop-up that appears when an event is selected -->
 
@@ -121,16 +123,14 @@
               :open-on-click="false"
               :close-on-content-click="false"
               :activator="selectedElement"
-              offset-x
-            >
+              offset-x>
               <v-card color="grey lighten-4" min-width="350px" flat>
                 <v-toolbar :color="selectedEvent.color" dark>
                   <v-btn icon>
                     <v-icon>mdi-pencil</v-icon>
                   </v-btn>
                   <v-toolbar-title
-                    v-html="selectedEvent.name"
-                  ></v-toolbar-title>
+                    v-html="selectedEvent.name"></v-toolbar-title>
                 </v-toolbar>
                 <!-- How to show tutor? -->
                 <v-card-text v-if="selectedAppointment != null">
@@ -190,8 +190,7 @@
                           selectedAppointment.status.includes('Cancel') ||
                           datePast
                         "
-                        @change="saveChanges = true"
-                      >
+                        @change="saveChanges = true">
                       </v-select>
 
                       <v-select
@@ -210,8 +209,7 @@
                             ) ||
                               !adminAddStudent)) ||
                           datePast
-                        "
-                      >
+                        ">
                       </v-select>
                     </v-container>
                   </span>
@@ -230,8 +228,7 @@
                         :readonly="
                           !isTutorEvent || (isTutorEvent && checkRole('Admin'))
                         "
-                        @change="saveChanges = true"
-                      >
+                        @change="saveChanges = true">
                       </v-select>
 
                       <v-select
@@ -248,8 +245,7 @@
                           (students.length > 0 && isTutorEvent) ||
                           (isTutorEvent && checkRole('Admin'))
                         "
-                        @change="saveChanges = true"
-                      >
+                        @change="saveChanges = true">
                       </v-select>
                     </v-container>
                   </span>
@@ -259,8 +255,7 @@
                       v-if="
                         appointmentType.includes('Private') &&
                         group.allowSplittingAppointments
-                      "
-                    >
+                      ">
                       <v-select
                         v-model="displayedStart"
                         :items="startTimes"
@@ -280,8 +275,7 @@
                               !adminAddStudent)) ||
                           datePast
                         "
-                        dense
-                      >
+                        dense>
                       </v-select>
                     </span>
                     <!-- show time as an unchangeable value -->
@@ -292,8 +286,7 @@
                         type="time"
                         required
                         dense
-                        readonly
-                      >
+                        readonly>
                       </v-text-field>
                     </span>
                   </v-container>
@@ -302,8 +295,7 @@
                       v-if="
                         appointmentType.includes('Private') &&
                         group.allowSplittingAppointments
-                      "
-                    >
+                      ">
                       <v-select
                         v-model="displayedEnd"
                         :items="endTimes"
@@ -323,8 +315,7 @@
                               !adminAddStudent)) ||
                           datePast
                         "
-                        dense
-                      >
+                        dense>
                       </v-select>
                     </span>
                     <span v-else>
@@ -334,8 +325,7 @@
                         type="time"
                         required
                         dense
-                        readonly
-                      >
+                        readonly>
                       </v-text-field>
                     </span>
                   </v-container>
@@ -359,8 +349,7 @@
                           ) ||
                             !adminAddStudent))
                       "
-                      @change="saveChanges = true"
-                    ></v-textarea>
+                      @change="saveChanges = true"></v-textarea>
                   </span>
                   <span v-else>
                     <v-textarea
@@ -374,8 +363,7 @@
                       rows="1"
                       :readonly="!isTutorEvent"
                       :disabled="datePast"
-                      @change="saveChanges = true"
-                    ></v-textarea>
+                      @change="saveChanges = true"></v-textarea>
                   </span>
                   <!-- admin signing a student up -->
                   <span v-if="adminAddStudent">
@@ -385,24 +373,21 @@
                       required
                       dense
                       max-width="300px"
-                      :rules="[rules.required, rules.email]"
-                    >
+                      :rules="[rules.required, rules.email]">
                     </v-text-field>
                     <v-row>
                       <v-btn
                         color="green"
                         text
                         @click="findEmail()"
-                        :disabled="!validateEmail()"
-                      >
+                        :disabled="!validateEmail()">
                         Search
                       </v-btn>
                       <v-text-field
                         v-if="emailStatus != ''"
                         v-model="emailStatus"
                         readonly
-                        dense
-                      ></v-text-field>
+                        dense></v-text-field>
                     </v-row>
                   </span>
                   <span v-if="studentNameInput">
@@ -411,16 +396,14 @@
                       label="Student's First Name"
                       required
                       dense
-                      max-width="300px"
-                    >
+                      max-width="300px">
                     </v-text-field>
                     <v-text-field
                       v-model="studentlName"
                       label="Student's Last Name"
                       required
                       dense
-                      max-width="300px"
-                    >
+                      max-width="300px">
                     </v-text-field>
                   </span>
                   <!-- User sign up here -->
@@ -460,8 +443,7 @@
                       displayedStart === '' ||
                       displayedEnd === '' ||
                       (selectedAppointment.type.includes('Group') && datePast)
-                    "
-                  >
+                    ">
                     Book
                   </v-btn>
                   <v-btn
@@ -470,8 +452,7 @@
                     "
                     color="#12f000"
                     @click="confirmAppointment(true)"
-                    :disabled="!checkStatus('pending') || datePast"
-                  >
+                    :disabled="!checkStatus('pending') || datePast">
                     Confirm
                   </v-btn>
                   <v-btn
@@ -480,8 +461,7 @@
                     "
                     color="error"
                     @click="confirmAppointment(false)"
-                    :disabled="!checkStatus('pending') || datePast"
-                  >
+                    :disabled="!checkStatus('pending') || datePast">
                     Reject
                   </v-btn>
                   <v-btn color="accent" @click="selectedOpen = false">
@@ -497,8 +477,7 @@
                     @click="
                       editAppointment();
                       selectedOpen = false;
-                    "
-                  >
+                    ">
                     Save Changes
                   </v-btn>
 
@@ -518,8 +497,7 @@
                     @click="
                       cancelAppointment();
                       selectedOpen = false;
-                    "
-                  >
+                    ">
                     Cancel Appointment
                   </v-btn>
 
@@ -532,8 +510,7 @@
                     "
                     color="green"
                     @click="adminAddStudent = true"
-                    :disabled="adminAddStudent"
-                  >
+                    :disabled="adminAddStudent">
                     Sign Up Student
                   </v-btn>
                 </v-card-actions>
@@ -551,8 +528,7 @@
             elevation="0"
             color="grey darken-1"
             class="white--text"
-            width="100"
-          >
+            width="100">
             Grey
           </v-btn>
           <span>
@@ -640,11 +616,18 @@ import TopicServices from "@/services/topicServices.js";
 //Plugin functions
 import TwilioServices from "@/services/twilioServices.js";
 import Utils from "@/config/utils.js";
+import InformationComponent from "@/components/InformationComponent.vue";
 
 export default {
-    name: "Calendar",
+  name: "Calendar",
   props: ["id"],
+  components: {
+    InformationComponent,
+  },
   data: () => ({
+    showAlert: false,
+    alert: "",
+    alertType: "success",
     overlay: true,
     message: "Calendar",
     mode: "stack",
@@ -746,12 +729,16 @@ export default {
               await this.loadAppointments();
             })
             .catch((error) => {
-              this.message = error.response.data.message;
+              this.alertType = "error";
+              this.alert = error.response.data.message;
+              this.showAlert = true;
               console.log("There was an error:", error.response);
             });
         })
         .catch((error) => {
-          this.message = error.response.data.message;
+          this.alertType = "error";
+          this.alert = error.response.data.message;
+          this.showAlert = true;
           console.log("There was an error:", error.response);
         });
       this.overlay = false;
@@ -765,24 +752,28 @@ export default {
           this.getLocations();
         })
         .catch((error) => {
-          this.message = error.response.data.message;
+          this.alertType = "error";
+          this.alert = error.response.data.message;
+          this.showAlert = true;
           console.log("There was an error:", error.response);
         });
     },
-    getTopicsForGroup() {
-      TopicServices.getAllForGroup(this.group.id)
+    async getTopicsForGroup() {
+      await TopicServices.getAllForGroup(this.group.id)
         .then((response) => {
           let temp = response.data;
           temp.push({ name: "Any", id: -1 });
           this.topics = temp;
         })
         .catch((error) => {
-          this.message = error.response.data.message;
+          this.alertType = "error";
+          this.alert = error.response.data.message;
+          this.showAlert = true;
           console.log("There was an error:", error.response);
         });
     },
-    getTutorsForGroup() {
-      PersonServices.getApprovedTutorsForGroup(this.group.id)
+    async getTutorsForGroup() {
+      await PersonServices.getApprovedTutorsForGroup(this.group.id)
         .then((response) => {
           let temp = response.data;
           this.tutorSelect.push({ name: "Any", id: -1 });
@@ -792,26 +783,44 @@ export default {
           }
         })
         .catch((error) => {
-          this.message = error.response.data.message;
-          console.log("There was an error:", error.response.data);
+          this.alertType = "error";
+          this.alert = error.response.data.message;
+          this.showAlert = true;
+          console.log("There was an error:", error.response);
         });
     },
-    getPrivilegesForPersonRole() {
-      PersonRolePrivilegeServices.getPrivilegeByPersonRole(this.id)
+    async getPrivilegesForPersonRole() {
+      await PersonRolePrivilegeServices.getPrivilegeByPersonRole(this.id)
         .then((response) => {
           this.personroleprivileges = response.data;
         })
         .catch((error) => {
-          this.message = error.response.data.message;
-          console.log("There was an error:", error.response.data);
+          this.alertType = "error";
+          this.alert = error.response.data.message;
+          this.showAlert = true;
+          console.log("There was an error:", error.response);
         });
     },
     async getRole() {
-      await PersonRoleServices.getPersonRole(this.id).then(async (response) => {
-        await RoleServices.getRole(response.data.roleId).then((result) => {
-          this.role = result.data;
+      await PersonRoleServices.getPersonRole(this.id)
+        .then(async (response) => {
+          await RoleServices.getRole(response.data.roleId)
+            .then((result) => {
+              this.role = result.data;
+            })
+            .catch((error) => {
+              this.alertType = "error";
+              this.alert = error.response.data.message;
+              this.showAlert = true;
+              console.log("There was an error:", error.response);
+            });
+        })
+        .catch((error) => {
+          this.alertType = "error";
+          this.alert = error.response.data.message;
+          this.showAlert = true;
+          console.log("There was an error:", error.response);
         });
-      });
     },
     // Check to see if the tutor in question is the tutor of the selected event
     async isTutorOfSelectedEvent() {
@@ -833,8 +842,10 @@ export default {
           this.isTutorEvent = false;
         })
         .catch((error) => {
-          this.message = error.response.data.message;
-          console.log("There was an error:", error.response.data);
+          this.alertType = "error";
+          this.alert = error.response.data.message;
+          this.showAlert = true;
+          console.log("There was an error:", error.response);
         });
     },
     //Check if student has already signed up for group appointment
@@ -857,8 +868,10 @@ export default {
             this.isGroupBook = false;
           })
           .catch((error) => {
-            this.message = error.response.data.message;
-            console.log("There was an error:", error.response.data);
+            this.alertType = "error";
+            this.alert = error.response.data.message;
+            this.showAlert = true;
+            console.log("There was an error:", error.response);
           });
       } else {
         await PersonAppointmentServices.getPersonAppointmentForPerson(
@@ -878,8 +891,10 @@ export default {
             this.isGroupBook = false;
           })
           .catch((error) => {
-            this.message = error.response.data.message;
-            console.log("There was an error:", error.response.data);
+            this.alertType = "error";
+            this.alert = error.response.data.message;
+            this.showAlert = true;
+            console.log("There was an error:", error.response);
           });
       }
     },
@@ -903,49 +918,55 @@ export default {
     },
     //Update on a session being booked
     async bookAppointment() {
-      await AppointmentServices.getAppointment(
-        this.selectedAppointment.id
-      ).then(async (response) => {
-        if (
-          response.data.status == "available" &&
-          response.data.type.includes("Private") &&
-          !this.checkRole("Admin") &&
-          !this.adminAddStudent
-        ) {
-          await this.splitAppointment().then(() => {
-            this.getAppointments();
-            this.selectedEvent.color = "yellow";
-          });
-        } else if (
-          this.adminAddStudent &&
-          !this.studentNameInput &&
-          response.data.type.includes("Private")
-        ) {
-          await this.splitAppointmentForAdminAdd().then(() => {
-            this.getAppointments();
-            this.selectedEvent.color = "blue";
-          });
-        } else if (
-          this.adminAddStudent &&
-          this.studentNameInput &&
-          response.data.type.includes("Private")
-        ) {
-          await this.adminAdd().then(() => {
-            this.splitAppointmentForAdminAdd().then(() => {
+      await AppointmentServices.getAppointment(this.selectedAppointment.id)
+        .then(async (response) => {
+          if (
+            response.data.status == "available" &&
+            response.data.type.includes("Private") &&
+            !this.checkRole("Admin") &&
+            !this.adminAddStudent
+          ) {
+            await this.splitAppointment().then(() => {
+              this.getAppointments();
+              this.selectedEvent.color = "yellow";
+            });
+          } else if (
+            this.adminAddStudent &&
+            !this.studentNameInput &&
+            response.data.type.includes("Private")
+          ) {
+            await this.splitAppointmentForAdminAdd().then(() => {
               this.getAppointments();
               this.selectedEvent.color = "blue";
             });
-          });
-        } else if (response.data.type.includes("Group")) {
-          this.bookGroupSession();
-        } else {
-          alert(
-            "This appointment has already been booked - Try a different slot"
-          );
-          this.getAppointments();
-          this.selectedOpen = false;
-        }
-      });
+          } else if (
+            this.adminAddStudent &&
+            this.studentNameInput &&
+            response.data.type.includes("Private")
+          ) {
+            await this.adminAdd().then(() => {
+              this.splitAppointmentForAdminAdd().then(() => {
+                this.getAppointments();
+                this.selectedEvent.color = "blue";
+              });
+            });
+          } else if (response.data.type.includes("Group")) {
+            this.bookGroupSession();
+          } else {
+            this.alertType = "warning";
+            this.alert =
+              "This appointment has already been booked. Try a different time.";
+            this.showAlert = true;
+            this.getAppointments();
+            this.selectedOpen = false;
+          }
+        })
+        .catch((error) => {
+          this.alertType = "error";
+          this.alert = error.response.data.message;
+          this.showAlert = true;
+          console.log("There was an error:", error.response);
+        });
     },
     //Update on tutor confirming booking
     async confirmAppointment(confirm) {
@@ -967,9 +988,22 @@ export default {
               this.selectedEvent.color = "blue";
             })
             .catch((error) => {
-              this.message = error.response.data.message;
+              this.alertType = "error";
+              this.alert = error.response.data.message;
+              this.showAlert = true;
+              console.log("There was an error:", error.response);
             });
         }
+        this.alertType = "success";
+        this.alert =
+          "You have successfully confirmed your " +
+          this.selectedAppointment.type +
+          " appointment on " +
+          this.selectedAppointment.date +
+          " at " +
+          this.selectedAppointment.startTime +
+          ".";
+        this.showAlert = true;
       } else {
         // don't need to update google cal because it's not even on there yet
         this.selectedAppointment.status = "tutorCancel";
@@ -982,8 +1016,21 @@ export default {
             this.selectedEvent.color = "red";
           })
           .catch((error) => {
-            this.message = error.response.data.message;
+            this.alertType = "error";
+            this.alert = error.response.data.message;
+            this.showAlert = true;
+            console.log("There was an error:", error.response);
           });
+        this.alertType = "warning";
+        this.alert =
+          "You have successfully rejected your " +
+          this.selectedAppointment.type +
+          " appointment on " +
+          this.selectedAppointment.date +
+          " at " +
+          this.selectedAppointment.startTime +
+          ".";
+        this.showAlert = true;
       }
     },
     //Add personAppointments from Group Sessions
@@ -1000,11 +1047,17 @@ export default {
                 this.getAppointments();
               })
               .catch((error) => {
-                this.message = error.response.data.message;
+                this.alertType = "error";
+                this.alert = error.response.data.message;
+                this.showAlert = true;
+                console.log("There was an error:", error.response);
               });
           })
           .catch((error) => {
-            this.message = error.response.data.message;
+            this.alertType = "error";
+            this.alert = error.response.data.message;
+            this.showAlert = true;
+            console.log("There was an error:", error.response);
           });
       } else if (this.adminAddStudent && !this.studentNameInput) {
         this.person.isTutor = false;
@@ -1015,7 +1068,10 @@ export default {
             this.getAppointments();
           })
           .catch((error) => {
-            this.message = error.response.data.message;
+            this.alertType = "error";
+            this.alert = error.response.data.message;
+            this.showAlert = true;
+            console.log("There was an error:", error.response);
           });
       } else {
         if (this.checkRole("Tutor")) {
@@ -1024,14 +1080,17 @@ export default {
           this.person.isTutor = false;
         }
         this.person.appointmentId = this.selectedAppointment.id;
-        this.person.personId = this.$store.state.loginUser.userID;
+        this.person.personId = this.user.userID;
         //Update stored data
         await PersonAppointmentServices.addPersonAppointment(this.person)
           .then(() => {
             this.getAppointments();
           })
           .catch((error) => {
-            this.message = error.response.data.message;
+            this.alertType = "error";
+            this.alert = error.response.data.message;
+            this.showAlert = true;
+            console.log("There was an error:", error.response);
           });
       }
       // need to update group session in google
@@ -1039,8 +1098,22 @@ export default {
         this.selectedAppointment.id,
         this.selectedAppointment
       ).catch((error) => {
-        this.message = error.response.data.message;
+        this.alertType = "error";
+        this.alert = error.response.data.message;
+        this.showAlert = true;
+        console.log("There was an error:", error.response);
       });
+
+      this.alertType = "success";
+      this.alert =
+        "You have successfully booked a " +
+        this.selectedAppointment.type +
+        " appointment on " +
+        this.selectedAppointment.date +
+        " at " +
+        this.selectedAppointment.startTime +
+        ".";
+      this.showAlert = true;
     },
 
     //Split appointments into more availablity slots when part of slot is booked by an Admin
@@ -1071,13 +1144,19 @@ export default {
               };
               await PersonAppointmentServices.addPersonAppointment(pap).catch(
                 (error) => {
-                  this.message = error.response.data.message;
+                  this.alertType = "error";
+                  this.alert = error.response.data.message;
+                  this.showAlert = true;
+                  console.log("There was an error:", error.response);
                 }
               );
             });
           })
           .catch((error) => {
-            this.message = error.response.data.message;
+            this.alertType = "error";
+            this.alert = error.response.data.message;
+            this.showAlert = true;
+            console.log("There was an error:", error.response);
           });
       }
       //If the end of the booked slot isn't the end of the slot, generate an open slot
@@ -1103,13 +1182,19 @@ export default {
               };
               await PersonAppointmentServices.addPersonAppointment(pap).catch(
                 (error) => {
-                  this.message = error.response.data.message;
+                  this.alertType = "error";
+                  this.alert = error.response.data.message;
+                  this.showAlert = true;
+                  console.log("There was an error:", error.response);
                 }
               );
             });
           })
           .catch((error) => {
-            this.message = error.response.data.message;
+            this.alertType = "error";
+            this.alert = error.response.data.message;
+            this.showAlert = true;
+            console.log("There was an error:", error.response);
           });
       }
       //Load appointment info
@@ -1125,11 +1210,17 @@ export default {
         this.selectedAppointment.id,
         this.selectedAppointment
       ).catch((error) => {
-        this.message = error.response.data.message;
+        this.alertType = "error";
+        this.alert = error.response.data.message;
+        this.showAlert = true;
+        console.log("There was an error:", error.response);
       });
       await PersonAppointmentServices.addPersonAppointment(this.person).catch(
         (error) => {
-          this.message = error.response.data.message;
+          this.alertType = "error";
+          this.alert = error.response.data.message;
+          this.showAlert = true;
+          console.log("There was an error:", error.response);
         }
       );
       this.adminSignUpMessage(
@@ -1140,6 +1231,24 @@ export default {
         this.selectedAppointment.id
       );
       this.adminAddStudent = false;
+      this.alertType = "success";
+      this.alert =
+        "You have successfully booked a " +
+        this.selectedAppointment.type +
+        " appointment for " +
+        this.walkInStudent.fName +
+        " " +
+        this.walkInStudent.lName +
+        " with " +
+        this.tutors[0].fName +
+        " " +
+        this.tutors[0].lName +
+        " on " +
+        this.selectedAppointment.date +
+        " at " +
+        this.selectedAppointment.startTime +
+        ".";
+      this.showAlert = true;
     },
 
     //Split appointments into more availablity slots when part of slot is booked
@@ -1168,14 +1277,20 @@ export default {
               };
               await PersonAppointmentServices.addPersonAppointment(pap).catch(
                 (error) => {
-                  this.message = error.response.data.message;
+                  this.alertType = "error";
+                  this.alert = error.response.data.message;
+                  this.showAlert = true;
+                  console.log("There was an error:", error.response);
                 }
               );
             });
           })
           .catch((error) => {
             console.log(error);
-            this.message = error.response.data.message;
+            this.alertType = "error";
+            this.alert = error.response.data.message;
+            this.showAlert = true;
+            console.log("There was an error:", error.response);
           });
       }
       //If the end of the booked slot isn't the end of the slot, generate an open slot
@@ -1201,13 +1316,19 @@ export default {
               };
               await PersonAppointmentServices.addPersonAppointment(pap).catch(
                 (error) => {
-                  this.message = error.response.data.message;
+                  this.alertType = "error";
+                  this.alert = error.response.data.message;
+                  this.showAlert = true;
+                  console.log("There was an error:", error.response);
                 }
               );
             });
           })
           .catch((error) => {
-            this.message = error.response.data.message;
+            this.alertType = "error";
+            this.alert = error.response.data.message;
+            this.showAlert = true;
+            console.log("There was an error:", error.response);
           });
       }
       //Load appointment info
@@ -1223,11 +1344,17 @@ export default {
         this.selectedAppointment.id,
         this.selectedAppointment
       ).catch((error) => {
-        this.message = error.response.data.message;
+        this.alertType = "error";
+        this.alert = error.response.data.message;
+        this.showAlert = true;
+        console.log("There was an error:", error.response);
       });
       await PersonAppointmentServices.addPersonAppointment(this.person).catch(
         (error) => {
-          this.message = error.response.data.message;
+          this.alertType = "error";
+          this.alert = error.response.data.message;
+          this.showAlert = true;
+          console.log("There was an error:", error.response);
         }
       );
       this.sendMessage(
@@ -1236,6 +1363,21 @@ export default {
         this.user.lName,
         this.selectedAppointment.id
       );
+
+      this.alertType = "success";
+      this.alert =
+        "You have successfully booked a " +
+        this.selectedAppointment.type +
+        " appointment with " +
+        this.tutors[0].fName +
+        " " +
+        this.tutors[0].lName +
+        " on " +
+        this.selectedAppointment.date +
+        " at " +
+        this.selectedAppointment.startTime +
+        ".";
+      this.showAlert = true;
     },
 
     //Formats time to be more user friendly
@@ -1361,36 +1503,45 @@ export default {
       this.endTimes.shift();
     },
     //Load data for info associated with events
-    getTopic(topicId) {
-      TopicServices.getTopic(topicId)
+    async getTopic(topicId) {
+      await TopicServices.getTopic(topicId)
         .then((response) => {
           this.topic = response.data;
         })
         .catch((error) => {
+          this.alertType = "error";
+          this.alert = error.response.data.message;
+          this.showAlert = true;
           console.log("There was an error:", error.response);
         });
     },
-    getLocations() {
-      LocationServices.getActiveForGroup(this.group.id)
+    async getLocations() {
+      await LocationServices.getActiveForGroup(this.group.id)
         .then((response) => {
           this.locations = response.data;
         })
         .catch((error) => {
-          this.message = error.response.data.message;
+          this.alertType = "error";
+          this.alert = error.response.data.message;
+          this.showAlert = true;
           console.log("There was an error:", error.response);
         });
     },
     async getTopicsForTutor(tutor) {
       this.currentTopics = [];
-      await TopicServices.getTopicByGroupForPerson(
-        this.group.id,
-        tutor.id
-      ).then((response) => {
-        let personTopics = response.data;
-        personTopics.forEach(async (topic) => {
-          this.currentTopics.push(topic);
+      await TopicServices.getTopicByGroupForPerson(this.group.id, tutor.id)
+        .then((response) => {
+          let personTopics = response.data;
+          personTopics.forEach(async (topic) => {
+            this.currentTopics.push(topic);
+          });
+        })
+        .catch((error) => {
+          this.alertType = "error";
+          this.alert = error.response.data.message;
+          this.showAlert = true;
+          console.log("There was an error:", error.response);
         });
-      });
     },
     // validate email function
     validateEmail() {
@@ -1620,7 +1771,10 @@ export default {
             );
           })
           .catch((error) => {
-            this.message = error.response.data.message;
+            this.alertType = "error";
+            this.alert = error.response.data.message;
+            this.showAlert = true;
+            console.log("There was an error:", error.response);
           });
       };
       if (this.selectedOpen) {
@@ -1658,7 +1812,10 @@ export default {
               }
             })
             .catch((error) => {
-              this.message = error.response.data.message;
+              this.alertType = "error";
+              this.alert = error.response.data.message;
+              this.showAlert = true;
+              console.log("There was an error:", error.response);
             });
         }
       });
@@ -1771,7 +1928,10 @@ export default {
           });
         })
         .catch((error) => {
-          this.message = error.response.data.message;
+          this.alertType = "error";
+          this.alert = error.response.data.message;
+          this.showAlert = true;
+          console.log("There was an error:", error.response);
         });
     },
 
@@ -1788,7 +1948,10 @@ export default {
           });
         })
         .catch((error) => {
-          this.message = error.response.data.message;
+          this.alertType = "error";
+          this.alert = error.response.data.message;
+          this.showAlert = true;
+          console.log("There was an error:", error.response);
         });
     },
 
@@ -1948,7 +2111,10 @@ export default {
             await this.getStudentNameForAppointment(
               this.appointments[i].personappointment
             ).catch((error) => {
-              this.message = error.response.data.message;
+              this.alertType = "error";
+              this.alert = error.response.data.message;
+              this.showAlert = true;
+              console.log("There was an error:", error.response);
             });
             events.push({
               name: "P: " + this.studentName,
@@ -1966,7 +2132,10 @@ export default {
             await this.getTutorNameForAppointment(
               this.appointments[i].personappointment
             ).catch((error) => {
-              this.message = error.response.data.message;
+              this.alertType = "error";
+              this.alert = error.response.data.message;
+              this.showAlert = true;
+              console.log("There was an error:", error.response);
             });
             events.push({
               name: "P: " + this.tutorName,
@@ -2046,7 +2215,10 @@ export default {
               //this.$router.go(0);
             })
             .catch((error) => {
-              this.message = error.response.data.message;
+              this.alertType = "error";
+              this.alert = error.response.data.message;
+              this.showAlert = true;
+              console.log("There was an error:", error.response);
             });
         });
       } else if (
@@ -2072,7 +2244,10 @@ export default {
             );
           })
           .catch((error) => {
-            this.message = error.response.data.message;
+            this.alertType = "error";
+            this.alert = error.response.data.message;
+            this.showAlert = true;
+            console.log("There was an error:", error.response);
           });
         for (let i = 0; i < this.personAppointments.length; i++) {
           if (
@@ -2108,7 +2283,10 @@ export default {
               this.selectedAppointment.id,
               this.selectedAppointment
             ).catch((error) => {
-              this.message = error.response.data.message;
+              this.alertType = "error";
+              this.alert = error.response.data.message;
+              this.showAlert = true;
+              console.log("There was an error:", error.response);
             });
             await this.getAppointments();
             //this.$router.go(0);
@@ -2178,7 +2356,10 @@ export default {
                 this.personAppointments = response.data;
               })
               .catch((error) => {
-                this.message = error.response.data.message;
+                this.alertType = "error";
+                this.alert = error.response.data.message;
+                this.showAlert = true;
+                console.log("There was an error:", error.response);
               });
             let found = false;
             for (let j = 0; j < this.personAppointments.length; j++) {
@@ -2205,19 +2386,28 @@ export default {
                 this.selectedAppointment.id,
                 this.selectedAppointment
               ).catch((error) => {
-                this.message = error.response.data.message;
+                this.alertType = "error";
+                this.alert = error.response.data.message;
+                this.showAlert = true;
+                console.log("There was an error:", error.response);
               });
             } else if (found) {
               await PersonAppointmentServices.deletePersonAppointment(
                 this.personAppointments[i].id
               ).catch((error) => {
-                this.message = error.response.data.message;
+                this.alertType = "error";
+                this.alert = error.response.data.message;
+                this.showAlert = true;
+                console.log("There was an error:", error.response);
               });
             } else {
               await AppointmentServices.deleteAppointment(
                 this.selectedAppointment.id
               ).catch((error) => {
-                this.message = error.response.data.message;
+                this.alertType = "error";
+                this.alert = error.response.data.message;
+                this.showAlert = true;
+                console.log("There was an error:", error.response);
               });
             }
             await this.getAppointments();
@@ -2226,9 +2416,19 @@ export default {
           }
         }
       }
+      this.alertType = "warning";
+      this.alert =
+        "You have successfully canceled your " +
+        this.selectedAppointment.type +
+        " appointment on " +
+        this.selectedAppointment.date +
+        " at " +
+        this.selectedAppointment.startTime +
+        ".";
+      this.showAlert = true;
     },
-    findEmail() {
-      PersonServices.getPersonForEmail(this.studentEmail)
+    async findEmail() {
+      await PersonServices.getPersonForEmail(this.studentEmail)
         .then((response) => {
           let temp = response.data;
           let onlyTutor = true;
@@ -2334,7 +2534,10 @@ export default {
           }
         })
         .catch((error) => {
-          this.message = error.response.data.message;
+          this.alertType = "error";
+          this.alert = error.response.data.message;
+          this.showAlert = true;
+          console.log("There was an error:", error.response);
         });
     },
     // add a student to the system and then to the current group
@@ -2346,10 +2549,10 @@ export default {
         createdAt: Date(),
         updatedAt: Date(),
       };
-      await PersonServices.addPerson(student).then((response) => {
+      await PersonServices.addPerson(student).then(async (response) => {
         let temp = response.data;
         this.walkInStudent = temp;
-        RoleServices.getAllForGroup(this.group.id)
+        await RoleServices.getAllForGroup(this.group.id)
           .then((responseRole) => {
             let roles = responseRole.data;
             for (let i = 0; i < roles.length; i++) {
@@ -2367,7 +2570,10 @@ export default {
             }
           })
           .catch((error) => {
-            this.message = error.response.data.message;
+            this.alertType = "error";
+            this.alert = error.response.data.message;
+            this.showAlert = true;
+            console.log("There was an error:", error.response);
           });
       });
     },
@@ -2384,11 +2590,24 @@ export default {
               this.user.lName,
               this.selectedAppointment.type
             );
+            this.alertType = "success";
+            this.alert =
+              "You have successfully updated your " +
+              this.selectedAppointment.type +
+              " appointment on " +
+              this.selectedAppointment.date +
+              " at " +
+              this.selectedAppointment.startTime +
+              ".";
+            this.showAlert = true;
           }
           await this.getAppointments();
         })
         .catch((error) => {
-          this.message = error.response.data.message;
+          this.alertType = "error";
+          this.alert = error.response.data.message;
+          this.showAlert = true;
+          console.log("There was an error:", error.response);
         });
     },
     checkAppointmentIfPast() {

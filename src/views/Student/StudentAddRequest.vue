@@ -3,12 +3,20 @@
     <v-container>
       <v-toolbar>
         <v-toolbar-title>{{ this.message }}</v-toolbar-title>
+        <v-spacer></v-spacer>
+        <InformationComponent
+          message="Enter information about what you are requesting and click Save."></InformationComponent>
       </v-toolbar>
+      <br />
+      <v-alert v-model="showAlert" dismissible :type="alertType">{{
+        this.alert
+      }}</v-alert>
+
       <br />
       <v-form ref="form" v-model="valid" lazy-validation>
         <v-select
           v-model="request.problem"
-          :items="Problems"
+          :items="problems"
           label="Why are you making this request?"
           required>
         </v-select>
@@ -44,7 +52,7 @@
           :disabled="!valid"
           color="success"
           class="mr-4"
-          @click="addRequest">
+          @click="addRequest()">
           Save
         </v-btn>
 
@@ -62,13 +70,20 @@ import PersonRoleServices from "@/services/personRoleServices.js";
 import RoleServices from "@/services/roleServices.js";
 import TwilioServices from "@/services/twilioServices.js";
 import Utils from "@/config/utils.js";
+import InformationComponent from "../../components/InformationComponent.vue";
 
 export default {
   name: "StudentAddRequest",
   props: ["id"],
+  components: {
+    InformationComponent,
+  },
   data() {
     return {
-      Problems: [
+      showAlert: false,
+      alert: "",
+      alertType: "success",
+      problems: [
         "No times work for me.",
         "The topic I am looking for is not here.",
         "Report an issue",
@@ -83,21 +98,16 @@ export default {
       topics: [],
       admins: [],
       roles: ["admin"],
-      message: "Add Request - enter data and click Save",
+      message: "Add A Request",
       valid: false,
     };
   },
 
   async created() {
     this.user = Utils.getStore("user");
-    await this.getGroupByPersonRoleId()
-      .then(() => {
-        this.getTopicsForGroup();
-      })
-      .catch((error) => {
-        this.message = error.response.data.message;
-      });
-    this.getPerson();
+    await this.getGroupByPersonRoleId();
+    await this.getTopicsForGroup();
+    await this.getPerson();
     //this.getAllTopics();
   },
   methods: {
@@ -107,17 +117,21 @@ export default {
           this.group = response.data[0].role.group;
         })
         .catch((error) => {
-          this.message = error.response.data.message;
+          this.alertType = "error";
+          this.alert = error.response.data.message;
+          this.showAlert = true;
           console.log("There was an error:", error.response);
         });
     },
-    getTopicsForGroup() {
-      TopicServices.getAllForGroup(this.group.id)
+    async getTopicsForGroup() {
+      await TopicServices.getAllForGroup(this.group.id)
         .then((response) => {
           this.topics = response.data;
         })
         .catch((error) => {
-          this.message = error.response.data.message;
+          this.alertType = "error";
+          this.alert = error.response.data.message;
+          this.showAlert = true;
           console.log("There was an error:", error.response);
         });
     },
@@ -143,8 +157,10 @@ export default {
           this.$router.go(-1);
         })
         .catch((error) => {
-          this.message = error.response.data.message;
-          console.log(error);
+          this.alertType = "error";
+          this.alert = error.response.data.message;
+          this.showAlert = true;
+          console.log("There was an error:", error.response);
         });
     },
     cancel() {
@@ -155,11 +171,11 @@ export default {
         await PersonServices.getPerson(this.user.userID)
           .then((response) => {
             this.person = response.data;
-
-            return;
           })
           .catch((error) => {
-            this.message = error.response.data.message;
+            this.alertType = "error";
+            this.alert = error.response.data.message;
+            this.showAlert = true;
             console.log("There was an error:", error.response);
           });
       }
@@ -178,7 +194,9 @@ export default {
           this.admins = response.data[0].personrole;
         })
         .catch((error) => {
-          this.message = error.response.data.message;
+          this.alertType = "error";
+          this.alert = error.response.data.message;
+          this.showAlert = true;
           console.log("There was an error:", error.response);
         });
     },

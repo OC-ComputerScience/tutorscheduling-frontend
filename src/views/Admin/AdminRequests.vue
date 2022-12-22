@@ -3,8 +3,15 @@
     <v-container>
       <v-toolbar>
         <v-toolbar-title>{{ this.message }}</v-toolbar-title>
+        <v-spacer></v-spacer>
+        <InformationComponent
+          message="View requests from people in your group and mark them as In-Progress or Completed appropriately."></InformationComponent>
       </v-toolbar>
-      <br /><br />
+      <br />
+      <v-alert v-model="showAlert" dismissible :type="alertType">{{
+        this.alert
+      }}</v-alert>
+      <br />
       <v-card>
         <v-card-title>
           <v-text-field
@@ -111,14 +118,21 @@
 import Utils from "@/config/utils.js";
 import PersonRoleServices from "@/services/personRoleServices.js";
 import RequestServices from "@/services/requestServices.js";
+import InformationComponent from "../../components/InformationComponent.vue";
 
 export default {
   name: "AdminRequests",
   props: ["id"],
+  components: {
+    InformationComponent,
+  },
   data() {
     return {
       valid: false,
       search: "",
+      showAlert: false,
+      alert: "",
+      alertType: "success",
       deleteMessage: "",
       deleteId: -1,
       expanded: [],
@@ -156,13 +170,8 @@ export default {
   },
   async created() {
     this.user = Utils.getStore("user");
-    await this.getGroupByPersonRoleId()
-      .then(async () => {
-        await this.getRequestsForGroup();
-      })
-      .catch((error) => {
-        this.message = error.response.data.message;
-      });
+    await this.getGroupByPersonRoleId();
+    await this.getRequestsForGroup();
   },
   methods: {
     async getGroupByPersonRoleId() {
@@ -171,7 +180,9 @@ export default {
           this.group = response.data[0].role.group;
         })
         .catch((error) => {
-          this.message = error.response.data.message;
+          this.alertType = "error";
+          this.alert = error.response.data.message;
+          this.showAlert = true;
           console.log("There was an error:", error.response);
         });
     },
@@ -181,8 +192,10 @@ export default {
           this.requests = response.data;
         })
         .catch((error) => {
-          this.message = error.response.data.message;
-          console.log("There was an error:", error);
+          this.alertType = "error";
+          this.alert = error.response.data.message;
+          this.showAlert = true;
+          console.log("There was an error:", error.response);
         });
 
       for (let i = 0; i < this.requests.length; i++) {
@@ -230,6 +243,8 @@ export default {
     },
     deleteItem(item) {
       this.deleteMessage = `Are you sure you want to delete this request made by ${item.fullName}?`;
+      this.alert =
+        "You have successfully deleted " + item.fullName + "'s request.";
       this.deleteId = item.id;
       this.dialogDelete = true;
     },
@@ -238,9 +253,13 @@ export default {
         .then(() => {
           this.getRequestsForGroup();
           this.closeDelete();
+          this.alertType = "success";
+          this.showAlert = true;
         })
         .catch((error) => {
-          this.message = error.response.data.message;
+          this.alertType = "error";
+          this.alert = error.response.data.message;
+          this.showAlert = true;
           console.log("There was an error:", error.response);
         });
     },
@@ -262,9 +281,18 @@ export default {
       await RequestServices.updateRequest(this.editedItem.id, this.editedItem)
         .then(() => {
           this.getRequestsForGroup();
+          this.alertType = "success";
+          this.alert =
+            "You have successfully updated " +
+            this.editedItem.fullName +
+            "'s request.";
+          this.showAlert = true;
         })
         .catch((error) => {
-          console.log(error);
+          this.alertType = "error";
+          this.alert = error.response.data.message;
+          this.showAlert = true;
+          console.log("There was an error:", error.response);
         });
       Object.assign(this.requests[this.editedIndex], this.editedItem);
       this.close();

@@ -3,8 +3,14 @@
     <v-container>
       <v-toolbar>
         <v-toolbar-title>{{ this.message }}</v-toolbar-title>
+        <v-spacer></v-spacer>
+        <InformationComponent
+          message="Provide feedback for your recent session."></InformationComponent>
       </v-toolbar>
       <br />
+      <v-alert v-model="showAlert" dismissible :type="alertType">{{
+        this.alert
+      }}</v-alert>
       <br />
       <v-row justify="center">
         <v-card flat color="grey lighten-4" min-width="500px">
@@ -80,13 +86,20 @@
 <script>
 import PersonAppointmentServices from "@/services/personAppointmentServices.js";
 import AppointmentServices from "@/services/appointmentServices.js";
+import InformationComponent from "../../components/InformationComponent.vue";
 
 export default {
   name: "TutorAppointmentFeedback",
   props: ["id", "userId"],
+  components: {
+    InformationComponent,
+  },
   data() {
     return {
       selected: false,
+      showAlert: false,
+      alert: "",
+      alertType: "success",
       valid: false,
       personAppointment: {},
       appointment: {
@@ -108,7 +121,7 @@ export default {
       textualfeedback: "",
       personAppointmentId: "",
       status: "",
-      message: "Provide feedback for your recent session",
+      message: "Tutor's Feedback",
       roles: ["admin"],
     };
   },
@@ -145,14 +158,16 @@ export default {
           }
         })
         .catch((error) => {
-          this.message = error.response.data.message;
+          this.alertType = "error";
+          this.alert = error.response.data.message;
+          this.showAlert = true;
           console.log("There was an error:", error.response);
         });
     },
     async updatePersonAppointment() {
       if (
         (this.status != "No-Show" && this.numericalfeedback == null) ||
-        this.textualfeedback.lenght == 0
+        this.textualfeedback.length == 0
       ) {
         this.message = "Please enter a star value and a comment";
       } else {
@@ -165,13 +180,17 @@ export default {
         }
         this.personAppointment.feedbacktext = this.textualfeedback;
         this.personAppointment.feedbacknumber = this.numericalfeedback;
-        AppointmentServices.updateAppointment(this.id, this.appointment).catch(
-          (error) => {
-            this.message = error.response.data.message;
-          }
-        );
+        await AppointmentServices.updateAppointment(
+          this.id,
+          this.appointment
+        ).catch((error) => {
+          this.alertType = "error";
+          this.alert = error.response.data.message;
+          this.showAlert = true;
+          console.log("There was an error:", error.response);
+        });
 
-        PersonAppointmentServices.updatePersonAppointment(
+        await PersonAppointmentServices.updatePersonAppointment(
           this.personAppointment.id,
           this.personAppointment
         )
@@ -180,8 +199,10 @@ export default {
             this.$router.go(-1);
           })
           .catch((error) => {
-            this.message = error.response.data.message;
-            console.log(error);
+            this.alertType = "error";
+            this.alert = error.response.data.message;
+            this.showAlert = true;
+            console.log("There was an error:", error.response);
           });
       }
     },

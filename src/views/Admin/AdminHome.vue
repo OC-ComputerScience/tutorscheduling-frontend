@@ -3,31 +3,14 @@
     <v-container>
       <v-toolbar>
         <v-toolbar-title>Hello, {{ this.user.fName }}!</v-toolbar-title>
-        <v-tooltip bottom>
-          <template v-slot:activator="{ on, attrs }">
-            <v-icon
-              class="mx-2"
-              color="grey darken"
-              dark
-              v-bind="attrs"
-              v-on="on">
-              mdi-information
-            </v-icon>
-          </template>
-          <span>
-            Welcome to your personalized dashboard for
-            {{ this.user.selectedGroup }}. View information on appointment
-            hours, tutor hours, and topic hours for the week.
-            <br />
-            Click on the "Student Requests" chart to view requests.
-            <br />
-            Click on "Tutor Applications" to view applications.
-          </span>
-        </v-tooltip>
+        <InformationComponent :message="headerMessage"></InformationComponent>
         <v-spacer></v-spacer>
         <v-toolbar-title>Admin</v-toolbar-title>
       </v-toolbar>
       <br />
+      <v-alert v-model="showAlert" dismissible :type="alertType">{{
+        this.alert
+      }}</v-alert>
       <br />
       <v-row justify="center">
         <v-col justify="center">
@@ -35,22 +18,9 @@
             <v-card-title>
               Upcoming Appointment Hours - {{ this.user.selectedGroup }}
               <v-spacer></v-spacer>
-              <v-tooltip bottom>
-                <template v-slot:activator="{ on, attrs }">
-                  <v-icon
-                    class="mx-2"
-                    color="grey darken"
-                    dark
-                    v-bind="attrs"
-                    v-on="on">
-                    mdi-information
-                  </v-icon>
-                </template>
-                <span>
-                  View a breakdown of appointment hours for last week, this
-                  week, and next week.
-                </span>
-              </v-tooltip>
+              <InformationComponent
+                message="View a breakdown of appointment hours for last week, this
+                  week, and next week."></InformationComponent>
             </v-card-title>
             <apexchart
               ref="chart"
@@ -62,26 +32,14 @@
         </v-col>
         <v-col justify="center">
           <v-row justify="center">
-            <!-- <v-col md="6"> -->
             <v-card
               :to="{ name: 'adminRequests' }"
               class="mx-auto my-3 justify-center">
               <v-card-title>
                 Student Requests
                 <v-spacer></v-spacer>
-                <v-tooltip bottom>
-                  <template v-slot:activator="{ on, attrs }">
-                    <v-icon
-                      class="mx-2"
-                      color="grey darken"
-                      dark
-                      v-bind="attrs"
-                      v-on="on">
-                      mdi-information
-                    </v-icon>
-                  </template>
-                  <span> Click here to view requests. </span>
-                </v-tooltip>
+                <InformationComponent
+                  message="Click here to view requests."></InformationComponent>
               </v-card-title>
               <apexchart
                 width="380"
@@ -92,33 +50,19 @@
             </v-card>
           </v-row>
           <v-row justify="center">
-            <!-- </v-col>
-            <v-col md="6"> -->
             <v-card
               :to="{ name: 'adminApprove' }"
               class="mx-auto my-5 justify-center">
               <v-card-title>
                 Tutor Applications
                 <v-spacer></v-spacer>
-                <v-tooltip bottom>
-                  <template v-slot:activator="{ on, attrs }">
-                    <v-icon
-                      class="mx-2"
-                      color="grey darken"
-                      dark
-                      v-bind="attrs"
-                      v-on="on">
-                      mdi-information
-                    </v-icon>
-                  </template>
-                  <span> Click here to view applications. </span>
-                </v-tooltip>
+                <InformationComponent
+                  message="Click here to view applications."></InformationComponent>
               </v-card-title>
               <v-card-text class="text-center">
                 <h1>{{ unapprovednum }}</h1>
               </v-card-text>
             </v-card>
-            <!-- </v-col> -->
           </v-row>
         </v-col>
       </v-row>
@@ -128,21 +72,8 @@
             <v-card-title>
               Tutors For Week Starting {{ current_week }}
               <v-spacer></v-spacer>
-              <v-tooltip bottom>
-                <template v-slot:activator="{ on, attrs }">
-                  <v-icon
-                    class="mx-2"
-                    color="grey darken"
-                    dark
-                    v-bind="attrs"
-                    v-on="on">
-                    mdi-information
-                  </v-icon>
-                </template>
-                <span>
-                  View a breakdown of the appointment hours for each tutor.
-                </span>
-              </v-tooltip>
+              <InformationComponent
+                message="View a breakdown of the appointment hours for each tutor."></InformationComponent>
             </v-card-title>
             <v-data-table
               :headers="tutorTable"
@@ -157,21 +88,8 @@
             <v-card-title>
               Topics For Week Starting {{ current_week }}
               <v-spacer></v-spacer>
-              <v-tooltip bottom>
-                <template v-slot:activator="{ on, attrs }">
-                  <v-icon
-                    class="mx-2"
-                    color="grey darken"
-                    dark
-                    v-bind="attrs"
-                    v-on="on">
-                    mdi-information
-                  </v-icon>
-                </template>
-                <span>
-                  View a breakdown of the appointment hours for each topic.
-                </span>
-              </v-tooltip>
+              <InformationComponent
+                message="View a breakdown of the appointment hours for each topic."></InformationComponent>
             </v-card-title>
             <v-data-table
               :headers="topicTable"
@@ -199,14 +117,21 @@ import RequestServices from "@/services/requestServices.js";
 import TopicServices from "@/services/topicServices.js";
 import PersonServices from "@/services/personServices.js";
 import PersonRoleServices from "@/services/personRoleServices.js";
+import InformationComponent from "@/components/InformationComponent.vue";
 import "@/plugins/apexcharts";
 
 export default {
   props: ["id"],
   name: "AdminHome",
-  components: {},
+  components: {
+    InformationComponent,
+  },
   data() {
     return {
+      headerMessage: "",
+      showAlert: false,
+      alert: "",
+      alertType: "success",
       series: [],
       pieSeries: [],
       chartOptions: {
@@ -339,6 +264,13 @@ export default {
   },
   async created() {
     this.user = Utils.getStore("user");
+    this.headerMessage =
+      "Welcome to your personalized dashboard for " +
+      this.user.selectedGroup +
+      ". View information on appointment hours, tutor hours, and topic hours for the week. <br />" +
+      " Click on the <b>Student Requests</b> chart to view requests. <br />" +
+      "Click on <b>Tutor Applications</b> to view applications.";
+
     await this.getGroupByPersonRoleId().then(() => {
       this.setWeeks();
       this.setTutorHours();
@@ -354,7 +286,9 @@ export default {
           this.group = response.data[0].role.group;
         })
         .catch((error) => {
-          this.message = error.response.data.message;
+          this.alertType = "error";
+          this.alert = error.response.data.message;
+          this.showAlert = true;
           console.log("There was an error:", error.response);
         });
     },
@@ -416,6 +350,9 @@ export default {
             }
           })
           .catch((error) => {
+            this.alertType = "error";
+            this.alert = error.response.data.message;
+            this.showAlert = true;
             console.log(
               "There was an error getting hour count:",
               error.responseHour
@@ -559,6 +496,9 @@ export default {
           this.tutors = responseHour.data;
         })
         .catch((error) => {
+          this.alertType = "error";
+          this.alert = error.response.data.message;
+          this.showAlert = true;
           console.log("There was an error getting hour count: ", error);
         });
       for (let i = 0; i < this.tutors.length; i++) {
@@ -591,6 +531,9 @@ export default {
           this.topics = responseHour.data;
         })
         .catch((error) => {
+          this.alertType = "error";
+          this.alert = error.response.data.message;
+          this.showAlert = true;
           console.log("There was an error getting topic hour count: ", error);
         });
 
@@ -687,6 +630,9 @@ export default {
           this.unapprovednum = response.data.length;
         })
         .catch((error) => {
+          this.alertType = "error";
+          this.alert = error.response.data.message;
+          this.showAlert = true;
           console.log("There was an error:", error.response);
         });
     },
@@ -711,7 +657,10 @@ export default {
           this.pieSeries.push(this.completerequests);
         })
         .catch((error) => {
-          console.log("There was an error:", error);
+          this.alertType = "error";
+          this.alert = error.response.data.message;
+          this.showAlert = true;
+          console.log("There was an error:", error.response);
         });
     },
   },
