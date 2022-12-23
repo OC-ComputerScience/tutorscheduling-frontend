@@ -373,7 +373,8 @@
                       required
                       dense
                       max-width="300px"
-                      :rules="[rules.required, rules.email]">
+                      :rules="[rules.required, rules.email]"
+                      v-on:keyup.enter="findEmail()">
                     </v-text-field>
                     <v-row>
                       <v-btn
@@ -759,7 +760,7 @@ export default {
         });
     },
     async getTopicsForGroup() {
-      await TopicServices.getAllForGroup(this.group.id)
+      await TopicServices.getActiveForGroup(this.group.id)
         .then((response) => {
           let temp = response.data;
           temp.push({ name: "Any", id: -1 });
@@ -2428,117 +2429,119 @@ export default {
       this.showAlert = true;
     },
     async findEmail() {
-      await PersonServices.getPersonForEmail(this.studentEmail)
-        .then((response) => {
-          let temp = response.data;
-          let onlyTutor = true;
-          if (this.user.userID == temp.id) {
-            this.emailStatus =
-              "You cannot sign yourself up for an appointment.";
-            this.emailFound = true;
-            return;
-          } else if (temp.id == this.tutors[0].id) {
-            this.emailStatus =
-              "You cannot sign-up the tutor for their own appointment.";
-            this.emailFound = true;
-            return;
-          } else if (!temp.email.includes("not found")) {
-            this.studentNameInput = false;
-            PersonServices.getAllForGroup(this.group.id).then(
-              async (responseGroup) => {
-                let people = responseGroup.data;
-                for (let i = 0; i < people.length; i++) {
-                  if (people[i].id == temp.id) {
-                    await RoleServices.getRoleByGroupForPerson(
-                      this.group.id,
-                      temp.id
-                    ).then(async (result) => {
-                      let role = result.data;
-                      for (let k = 0; k < role.length; k++) {
-                        if (role[k].type.includes("Student")) {
-                          onlyTutor = false;
+      if (this.validateEmail()) {
+        await PersonServices.getPersonForEmail(this.studentEmail)
+          .then((response) => {
+            let temp = response.data;
+            let onlyTutor = true;
+            if (this.user.userID == temp.id) {
+              this.emailStatus =
+                "You cannot sign yourself up for an appointment.";
+              this.emailFound = true;
+              return;
+            } else if (temp.id == this.tutors[0].id) {
+              this.emailStatus =
+                "You cannot sign-up the tutor for their own appointment.";
+              this.emailFound = true;
+              return;
+            } else if (!temp.email.includes("not found")) {
+              this.studentNameInput = false;
+              PersonServices.getAllForGroup(this.group.id).then(
+                async (responseGroup) => {
+                  let people = responseGroup.data;
+                  for (let i = 0; i < people.length; i++) {
+                    if (people[i].id == temp.id) {
+                      await RoleServices.getRoleByGroupForPerson(
+                        this.group.id,
+                        temp.id
+                      ).then(async (result) => {
+                        let role = result.data;
+                        for (let k = 0; k < role.length; k++) {
+                          if (role[k].type.includes("Student")) {
+                            onlyTutor = false;
+                          }
                         }
-                      }
-                      if (onlyTutor) {
-                        await RoleServices.getAllForGroup(this.group.id).then(
-                          (responseRole) => {
-                            let roles = responseRole.data;
-                            for (let i = 0; i < roles.length; i++) {
-                              if (roles[i].type == "Student") {
-                                let personRole = {
-                                  status: "applied",
-                                  roleId: roles[i].id,
-                                  personId: temp.id,
-                                  dateSigned: Date(),
-                                  agree: false,
-                                };
-                                PersonRoleServices.addPersonRole(personRole);
-                                this.emailStatus =
-                                  temp.fName +
-                                  " " +
-                                  temp.lName +
-                                  " has been added as a student!";
-                                this.emailFound = true;
-                                return;
+                        if (onlyTutor) {
+                          await RoleServices.getAllForGroup(this.group.id).then(
+                            (responseRole) => {
+                              let roles = responseRole.data;
+                              for (let i = 0; i < roles.length; i++) {
+                                if (roles[i].type == "Student") {
+                                  let personRole = {
+                                    status: "applied",
+                                    roleId: roles[i].id,
+                                    personId: temp.id,
+                                    dateSigned: Date(),
+                                    agree: false,
+                                  };
+                                  PersonRoleServices.addPersonRole(personRole);
+                                  this.emailStatus =
+                                    temp.fName +
+                                    " " +
+                                    temp.lName +
+                                    " has been added as a student!";
+                                  this.emailFound = true;
+                                  return;
+                                }
                               }
                             }
-                          }
-                        );
-                      }
-                    });
-                    this.emailStatus =
-                      "Student " + temp.fName + " " + temp.lName + " found!";
-                    this.walkInStudent = temp;
-                    this.emailFound = true;
-                    this.checkGroupBooking();
-                    return;
-                  }
-                }
-                this.emailStatus =
-                  "Student " +
-                  temp.fName +
-                  " " +
-                  temp.lName +
-                  " has been added to " +
-                  this.group.name +
-                  "!";
-                this.walkInStudent = temp;
-                RoleServices.getAllForGroup(this.group.id).then(
-                  (responseRole) => {
-                    let roles = responseRole.data;
-                    for (let i = 0; i < roles.length; i++) {
-                      if (roles[i].type == "Student") {
-                        let personRole = {
-                          status: "applied",
-                          roleId: roles[i].id,
-                          personId: temp.id,
-                          dateSigned: Date(),
-                          agree: false,
-                        };
-                        PersonRoleServices.addPersonRole(personRole);
-                        this.emailFound = true;
-                        return;
-                      }
+                          );
+                        }
+                      });
+                      this.emailStatus =
+                        "Student " + temp.fName + " " + temp.lName + " found!";
+                      this.walkInStudent = temp;
+                      this.emailFound = true;
+                      this.checkGroupBooking();
+                      return;
                     }
                   }
-                );
-              }
-            );
-          } else {
-            this.studentNameInput = true;
-            this.emailStatus = "No Student Found"; // get rid of popup and add to the open selecte event, then if email not found, add more blanks for student name
-            this.isGroupBook = false;
-            this.emailFound = false;
-            this.studentfName = "";
-            this.studentlName = "";
-          }
-        })
-        .catch((error) => {
-          this.alertType = "error";
-          this.alert = error.response.data.message;
-          this.showAlert = true;
-          console.log("There was an error:", error.response);
-        });
+                  this.emailStatus =
+                    "Student " +
+                    temp.fName +
+                    " " +
+                    temp.lName +
+                    " has been added to " +
+                    this.group.name +
+                    "!";
+                  this.walkInStudent = temp;
+                  RoleServices.getAllForGroup(this.group.id).then(
+                    (responseRole) => {
+                      let roles = responseRole.data;
+                      for (let i = 0; i < roles.length; i++) {
+                        if (roles[i].type == "Student") {
+                          let personRole = {
+                            status: "applied",
+                            roleId: roles[i].id,
+                            personId: temp.id,
+                            dateSigned: Date(),
+                            agree: false,
+                          };
+                          PersonRoleServices.addPersonRole(personRole);
+                          this.emailFound = true;
+                          return;
+                        }
+                      }
+                    }
+                  );
+                }
+              );
+            } else {
+              this.studentNameInput = true;
+              this.emailStatus = "No Student Found"; // get rid of popup and add to the open selecte event, then if email not found, add more blanks for student name
+              this.isGroupBook = false;
+              this.emailFound = false;
+              this.studentfName = "";
+              this.studentlName = "";
+            }
+          })
+          .catch((error) => {
+            this.alertType = "error";
+            this.alert = error.response.data.message;
+            this.showAlert = true;
+            console.log("There was an error:", error.response);
+          });
+      }
     },
     // add a student to the system and then to the current group
     async adminAdd() {

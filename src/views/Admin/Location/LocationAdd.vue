@@ -13,8 +13,7 @@
           label="Location Name"
           hint="Location Name"
           persistent-hint
-          required
-        ></v-text-field>
+          required></v-text-field>
 
         <v-text-field
           v-model="location.building"
@@ -23,8 +22,7 @@
           label="Building"
           hint="Build Name and Number"
           persistent-hint
-          required
-        ></v-text-field>
+          required></v-text-field>
 
         <v-text-field
           v-model="location.description"
@@ -33,15 +31,13 @@
           label="Description of Location"
           hint="Description of Location"
           persistent-hint
-          required
-        ></v-text-field>
+          required></v-text-field>
 
         <v-select
           v-model="location.status"
           :items="status"
           label="Status"
-          required
-        >
+          required>
         </v-select>
 
         <v-select v-model="location.type" :items="types" label="Type" required>
@@ -52,8 +48,7 @@
           v-model="this.user.selectedGroup"
           id="this.group.id"
           label="Group"
-          readonly
-        ></v-text-field>
+          readonly></v-text-field>
 
         <!-- <v-select
         v-model="location.groupId"
@@ -69,8 +64,7 @@
           :disabled="!valid"
           color="success"
           class="mr-4"
-          @click="addLocation"
-        >
+          @click="addLocation">
           Save
         </v-btn>
 
