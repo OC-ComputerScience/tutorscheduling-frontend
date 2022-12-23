@@ -305,10 +305,12 @@ import LocationServices from "@/services/locationServices.js";
 import PersonAppointmentServices from "@/services/personAppointmentServices.js";
 import TwilioServices from "@/services/twilioServices.js";
 import InformationComponent from "../../components/InformationComponent.vue";
+import { TimeFunctionsMixin } from "../../mixins/TimeFunctionsMixin";
 
 export default {
   props: ["id"],
   name: "TutorHome",
+  mixins: [TimeFunctionsMixin],
   components: {
     InformationComponent,
   },
@@ -437,29 +439,6 @@ export default {
           this.showAlert = true;
           console.log("There was an error:", error.response);
         });
-    },
-    formatDate(date) {
-      let formattedDate =
-        date.toString().substring(5, 10) +
-        "-" +
-        date.toString().substring(0, 4);
-      return formattedDate;
-    },
-    formatTime(time) {
-      let modST = time.toString().substring(0, 2) % 12;
-      let formattedTime = modST + ":" + time.toString().substring(3, 5);
-
-      if (time.toString().substring(0, 2) > 12) {
-        formattedTime = formattedTime + " P.M.";
-      } else if (modST == 0 && time.toString().substring(0, 2) == "12") {
-        formattedTime = "12:" + time.toString().substring(3, 5) + " P.M.";
-      } else if (modST == 0) {
-        formattedTime = "12:" + time.toString().substring(3, 5) + " A.M.";
-      } else {
-        formattedTime = formattedTime + " A.M.";
-      }
-
-      return formattedTime;
     },
     async getAppointments() {
       await AppointmentServices.getUpcomingAppointmentForPersonForGroup(
