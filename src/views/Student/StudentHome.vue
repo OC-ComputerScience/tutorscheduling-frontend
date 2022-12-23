@@ -212,7 +212,7 @@
             :headers="headers"
             :items="appointments"
             :items-per-page="50"
-            @click:row="rowClick()"></v-data-table>
+            @click:row="rowClick"></v-data-table>
         </v-card>
         <br />
         <v-card>
@@ -226,7 +226,7 @@
             :headers="headerFeedback"
             :items="appointmentsneedingfeedback"
             :items-per-page="50"
-            @click:row="provideFeedback()"></v-data-table>
+            @click:row="provideFeedback"></v-data-table>
         </v-card>
       </v-container>
       <v-container v-else>
