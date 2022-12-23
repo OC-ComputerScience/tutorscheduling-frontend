@@ -311,10 +311,12 @@ import AppointmentServices from "@/services/appointmentServices.js";
 import PersonAppointmentServices from "@/services/personAppointmentServices.js";
 import InformationComponent from "../../components/InformationComponent.vue";
 import Utils from "@/config/utils.js";
+import { TimeFunctionsMixin } from "../../mixins/TimeFunctionsMixin";
 
 export default {
   name: "TutorAddAvailability",
   props: ["id"],
+  mixins: [TimeFunctionsMixin],
   components: {
     InformationComponent,
   },
@@ -400,120 +402,14 @@ export default {
     this.updateTimes();
   },
   methods: {
-    calcTime(time) {
-      if (time == null) {
-        return null;
-      }
-      let temp = time.split(":");
-      let milHours = parseInt(temp[0]);
-      let minutes = temp[1];
-      let hours = milHours % 12;
-      if (hours == 0) {
-        hours = 12;
-      }
-      let dayTime = ~~(milHours / 12) > 0 ? "PM" : "AM";
-      return "" + hours + ":" + minutes + " " + dayTime;
-    },
-    generateTimeslots(startTime, endTime) {
-      let timeInterval = this.group.timeInterval;
-      // get the total minutes between the start and end times.
-      var totalMins = this.subtractTimes(startTime, endTime);
-
-      // set the initial timeSlots array to just the start time
-      var timeSlots = [startTime];
-
-      // get the rest of the time slots.
-      let generatedTimes = this.getTimeSlots(
-        timeInterval,
-        totalMins,
-        timeSlots
-      );
-
-      let newTimeText = "";
-
-      let times = [];
-      for (let i = 0; i < generatedTimes.length; i++) {
-        newTimeText = this.calcTime(generatedTimes[i]);
-        times.push({
-          time: generatedTimes[i],
-          timeText: newTimeText,
-        });
-      }
-      return times;
-    },
-    getTimeSlots(timeInterval, totalMins, timeSlots) {
-      // base case - there are still more minutes
-      if (totalMins - timeInterval >= 0) {
-        // get the previous time slot to add interval to
-        var prevTimeSlot = timeSlots[timeSlots.length - 1];
-        // add timeInterval to previousTimeSlot to get nextTimeSlot
-        var nextTimeSlot = this.addMinsToTime(timeInterval, prevTimeSlot);
-        timeSlots.push(nextTimeSlot);
-
-        // update totalMins
-        totalMins -= timeInterval;
-
-        // get next time slot
-        return this.getTimeSlots(timeInterval, totalMins, timeSlots);
-      } else {
-        // all done!
-        return timeSlots;
-      }
-    },
-    subtractTimes(t2, t1) {
-      // get each time's hour and min values
-      var [t1Hrs, t1Mins] = this.getHoursAndMinsFromTime(t1);
-      var [t2Hrs, t2Mins] = this.getHoursAndMinsFromTime(t2);
-
-      // time arithmetic (subtraction)
-      if (t1Mins < t2Mins) {
-        t1Hrs--;
-        t1Mins += 60;
-      }
-      var mins = t1Mins - t2Mins;
-      var hrs = t1Hrs - t2Hrs;
-
-      return hrs * 60 + mins;
-    },
-    getHoursAndMinsFromTime(time) {
-      return time.split(":").map(function (str) {
-        return parseInt(str);
-      });
-    },
-    addMinsToTime(mins, time) {
-      // get the times hour and min value
-      var [timeHrs, timeMins] = this.getHoursAndMinsFromTime(time);
-
-      // time arithmetic (addition)
-      if (timeMins + mins >= 60) {
-        var addedHrs = parseInt((timeMins + mins) / 60);
-        timeMins = (timeMins + mins) % 60;
-        if (timeHrs + addedHrs > 23) {
-          timeHrs = (timeHrs + addedHrs) % 24;
-        } else {
-          timeHrs += addedHrs;
-        }
-      } else {
-        timeMins += mins;
-      }
-
-      // make sure the time slots are padded correctly
-      return (
-        String("00" + timeHrs).slice(-2) +
-        ":" +
-        String("00" + timeMins).slice(-2)
-      );
-    },
-    getLocalDateString() {
-      let date = new Date();
-      date.setHours(date.getHours() - date.getTimezoneOffset() / 60);
-      return date.toISOString().slice(0, 10);
-    },
     updateTimes() {
       let maxEndTime = "23:" + (59 - (this.group.timeInterval - 1)).toString();
       // setting the minimum date and time for the picker components
       this.nowDate = this.getLocalDateString();
-      let temp = this.roundToNearestInterval(new Date());
+      let temp = this.roundToNearestInterval(
+        new Date(),
+        this.group.timeInterval
+      );
       // see if selected dates includes today -- if not, allow all times
       const test = this.dates.filter((date) => date === this.nowDate);
       if (test.length > 0) {
@@ -521,19 +417,20 @@ export default {
       } else {
         this.nowTime = "00:00";
       }
-      this.startTimes = this.generateTimeslots(this.nowTime, this.newEnd);
+      this.startTimes = this.generateTimeslots(
+        this.nowTime,
+        this.newEnd,
+        this.group.timeInterval
+      );
       // adding this to make sure that you can't start an appointment at the end time
       this.startTimes.pop();
-      this.endTimes = this.generateTimeslots(this.newStart, maxEndTime);
+      this.endTimes = this.generateTimeslots(
+        this.newStart,
+        maxEndTime,
+        this.group.timeInterval
+      );
       // adding this to make sure you can't end an appointment at the start time
       this.endTimes.shift();
-    },
-    roundToNearestInterval(date) {
-      const minutes = this.group.timeInterval;
-      const ms = 1000 * 60 * minutes;
-      let newHours = Math.ceil(date.getTime() / ms) * ms;
-      date.setTime(newHours);
-      return date;
     },
     async checkIfAvailable(tempAvail) {
       await this.getUpcoming();
@@ -687,29 +584,6 @@ export default {
       this.alertType = "success";
       this.alert = "You have successfully added availabilities.";
       this.showAlert = true;
-    },
-    formatDate(date) {
-      let formattedDate =
-        date.toString().substring(5, 10) +
-        "-" +
-        date.toString().substring(0, 4);
-      return formattedDate;
-    },
-    formatTime(time) {
-      let modST = time.toString().substring(0, 2) % 12;
-      let formattedTime = modST + ":" + time.toString().substring(3, 5);
-
-      if (time.toString().substring(0, 2) > 12) {
-        formattedTime = formattedTime + " P.M.";
-      } else if (modST == 0 && time.toString().substring(0, 2) == "12") {
-        formattedTime = "12:" + time.toString().substring(3, 5) + " P.M.";
-      } else if (modST == 0) {
-        formattedTime = "12:" + time.toString().substring(3, 5) + " A.M.";
-      } else {
-        formattedTime = formattedTime + " A.M.";
-      }
-
-      return formattedTime;
     },
     async getUpcoming() {
       await AppointmentServices.getUpcomingForPerson(this.user.userID)

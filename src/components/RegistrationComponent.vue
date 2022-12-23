@@ -139,14 +139,14 @@
 import GroupServices from "@/services/groupServices";
 import RoleServices from "@/services/roleServices";
 import PersonRoleServices from "@/services/personRoleServices";
-import TwilioServices from "@/services/twilioServices";
 import Utils from "@/config/utils.js";
 import GroupViewComponent from "./GroupViewComponent.vue";
 import { RedirectToPageMixin } from "../mixins/RedirectToPageMixin";
+import { SendTextsMixin } from "../mixins/SendTextsMixin";
 
 export default {
   name: "RegistrationComponent",
-  mixins: [RedirectToPageMixin],
+  mixins: [RedirectToPageMixin, SendTextsMixin],
   components: {
     GroupViewComponent,
   },
@@ -254,8 +254,12 @@ export default {
                       "Receive notifications for applications",
                       tempA.personroleprivilege
                     )
-                  )
-                    this.sendMessage(tempA, role.groupId);
+                  ) {
+                    let group = this.groups.find(
+                      (group) => group.id == role.groupId
+                    ).name;
+                    this.sendApplicationMessage(this.user, tempA, group);
+                  }
                 }
               }
             })
@@ -315,23 +319,6 @@ export default {
           this.message = error.response.data.message;
           console.log("There was an error:", error.response);
         });
-    },
-    sendMessage(admin, groupId) {
-      let temp = {
-        phoneNum: admin.person.phoneNum,
-        message: "",
-      };
-
-      temp.message =
-        "You have a new tutor application from " +
-        this.user.fName +
-        " " +
-        this.user.lName +
-        " for " +
-        this.groups.find((group) => group.id == groupId).name +
-        ".\nPlease view this application at http://tutorscheduling.oc.edu/";
-
-      TwilioServices.sendMessage(temp);
     },
   },
 };
