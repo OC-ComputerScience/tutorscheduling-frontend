@@ -511,18 +511,7 @@ export default {
           this.tutors[i].payingHours
         );
       }
-
-      this.tutors.sort(function (a, b) {
-        if (a.fName < b.fName) {
-          return -1;
-        }
-        if (a.fName > b.fName) {
-          return 1;
-        }
-        return 0;
-      });
     },
-
     async getTopics() {
       await this.setWeekList();
       var currWeek = this.current_week.slice(0, 10);
@@ -543,16 +532,6 @@ export default {
           this.topics[i].potentialHours
         );
       }
-
-      this.topics.sort(function (a, b) {
-        if (a.name < b.name) {
-          return -1;
-        }
-        if (a.name > b.name) {
-          return 1;
-        }
-        return 0;
-      });
     },
     async setWeekList() {
       var currentDate = new Date();
