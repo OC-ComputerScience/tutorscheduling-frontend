@@ -12,8 +12,7 @@
             append-icon="mdi-magnify"
             label="Search"
             single-line
-            hide-details
-          ></v-text-field>
+            hide-details></v-text-field>
           <v-spacer></v-spacer>
           <v-btn color="accent" class="mr-4" elevation="2" @click="addTopic">
             Add
@@ -26,8 +25,7 @@
           :search="search"
           :items="topics"
           :items-per-page="50"
-          @click:row="rowClick"
-        ></v-data-table>
+          @click:row="rowClick"></v-data-table>
       </v-card>
     </v-container>
   </div>
@@ -37,6 +35,7 @@
 import Utils from "@/config/utils.js";
 import PersonRoleServices from "@/services/personRoleServices.js";
 import TopicServices from "@/services/topicServices.js";
+import PersonTopicServices from "../../../services/personTopicServices";
 
 export default {
   name: "App",
@@ -51,6 +50,7 @@ export default {
         { text: "ID", value: "id" },
         { text: "Name", value: "name" },
         { text: "Abbreviation", value: "abbr" },
+        { text: "Status", value: "status" },
       ],
       message:
         "Topics - click topic to view or edit topic or click Add to add new topic",
@@ -59,14 +59,14 @@ export default {
   async created() {
     // this.getTopics();
     this.user = Utils.getStore("user");
-    await this.getGroupByPersonRoleId().then(() => {
-      this.getTopicsForGroup();
-    });
+    await this.getGroupByPersonRoleId();
+    await this.getTopicsForGroup();
+    await this.checkForDisabled();
   },
   methods: {
     async getGroupByPersonRoleId() {
       await PersonRoleServices.getGroupForPersonRole(this.id)
-        .then(async (response) => {
+        .then((response) => {
           this.group = response.data[0].role.group;
         })
         .catch((error) => {
@@ -74,8 +74,8 @@ export default {
           console.log("There was an error:", error.response);
         });
     },
-    getTopicsForGroup() {
-      TopicServices.getAllForGroup(this.group.id)
+    async getTopicsForGroup() {
+      await TopicServices.getAllForGroup(this.group.id)
         .then((response) => {
           this.topics = response.data;
         })
@@ -83,6 +83,19 @@ export default {
           this.message = error.response.data.message;
           console.log("There was an error:", error.response);
         });
+    },
+    async checkForDisabled() {
+      for (let i = 0; i < this.topics.length; i++) {
+        let topic = this.topics[i];
+        if (topic.status === "disabled") {
+          await PersonTopicServices.deletePersonTopicByTopicId(topic.id).catch(
+            (error) => {
+              this.message = error.response.data.message;
+              console.log("There was an error:", error.response);
+            }
+          );
+        }
+      }
     },
     deleteTopic(id, name) {
       let confirmed = confirm(`Are you sure you want to delete ${name}`);
