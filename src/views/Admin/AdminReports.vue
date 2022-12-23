@@ -189,25 +189,6 @@ export default {
     await this.getGroupByPersonRoleId();
     await this.getTopicsForGroup();
     await this.getAllAppointmentsForGroup();
-    // sort checkboxes
-    this.status.sort(function (a, b) {
-      if (a.title < b.title) {
-        return -1;
-      }
-      if (a.title > b.title) {
-        return 1;
-      }
-      return 0;
-    });
-    this.topics.sort(function (a, b) {
-      if (a.name < b.name) {
-        return -1;
-      }
-      if (a.name > b.name) {
-        return 1;
-      }
-      return 0;
-    });
   },
   methods: {
     async getGroupByPersonRoleId() {
@@ -561,24 +542,6 @@ export default {
           this.showAlert = true;
           console.log("There was an error:", error.response);
         });
-      this.tutors.sort(function (a, b) {
-        if (a.fName < b.fName) {
-          return -1;
-        }
-        if (a.fName > b.fName) {
-          return 1;
-        }
-        return 0;
-      });
-      this.students.sort(function (a, b) {
-        if (a.fName < b.fName) {
-          return -1;
-        }
-        if (a.fName > b.fName) {
-          return 1;
-        }
-        return 0;
-      });
     },
     filter() {
       // filter appointments by date
