@@ -58,7 +58,10 @@ export const RedirectToPageMixin = {
       } else {
         for (let i = 0; i < this.topicroles.length; i++) {
           let group = this.topicroles[i];
-          if (group.topic.length === 0) {
+          if (
+            group.topic.length === 0 &&
+            group.role[0].personrole[0].status !== "disabled"
+          ) {
             this.$router.push({
               name: "tutorAddTopics",
               params: { id: group.role[0].personrole[0].id },

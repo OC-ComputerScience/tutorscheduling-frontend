@@ -419,10 +419,7 @@
                       checkPrivilege('Sign up students for appointments')
                     "
                     color="primary"
-                    @click="
-                      bookAppointment(selectedAppointment.id, group.id);
-                      selectedOpen = false;
-                    "
+                    @click="sendAppointmentForBooking()"
                     :disabled="
                       !checkStatus('available') ||
                       isGroupBook ||
@@ -453,7 +450,7 @@
                       checkRole('Tutor') && !appointmentType.includes('Group')
                     "
                     color="#12f000"
-                    @click="confirmAppointment(true)"
+                    @click="confirmAppointment(true, user, selectedAppointment)"
                     :disabled="!checkStatus('pending') || datePast">
                     Confirm
                   </v-btn>
@@ -462,7 +459,9 @@
                       checkRole('Tutor') && !appointmentType.includes('Group')
                     "
                     color="error"
-                    @click="confirmAppointment(false)"
+                    @click="
+                      confirmAppointment(false, user, selectedAppointment)
+                    "
                     :disabled="!checkStatus('pending') || datePast">
                     Reject
                   </v-btn>
@@ -477,7 +476,8 @@
                     "
                     color="accent"
                     @click="
-                      editAppointment();
+                      editAppointment(user, selectedAppointment);
+                      initializeData();
                       selectedOpen = false;
                     ">
                     Save Changes
@@ -498,6 +498,7 @@
                     color="red"
                     @click="
                       cancelAppointment();
+                      intializeData();
                       selectedOpen = false;
                     ">
                     Cancel Appointment
@@ -705,57 +706,36 @@ export default {
     //editing appointment
     saveChanges: false,
     isPrivateBook: false,
-    allTopics: null,
-    allPeople: null,
     // check if date past
     datePast: false,
   }),
   async created() {
     this.user = Utils.getStore("user");
-    this.getGroupByPersonRoleId();
     this.role = this.user.selectedRole;
-    // this.getRole();
-    this.getPrivilegesForPersonRole();
-    this.getAppointments(this.group.id);
-    this.loadTopics();
-    this.loadPeople();
-    this.isTutorOfSelectedEvent();
+    await this.getPrivilegesForPersonRole();
+    await this.getGroupByPersonRoleId();
+    await this.getTopicsForGroup();
+    await this.getTutorsForGroup();
+    await this.getLocationsForGroup();
+    await this.initializeData();
   },
   methods: {
     // //Initialize data for calendar
-    async getAppointments() {
+    async initializeData() {
       this.overlay = true;
-      await this.getGroupByPersonRoleId();
-      await AppointmentServices.findAppointmentsForGroup(this.group.id)
-        .then(async (response) => {
-          this.appointments = response.data;
-          await PersonAppointmentServices.getAllPersonAppointments()
-            .then(async (response) => {
-              this.personAppointments = response.data;
-              await this.loadAppointments();
-            })
-            .catch((error) => {
-              this.alertType = "error";
-              this.alert = error.response.data.message;
-              this.showAlert = true;
-              console.log("There was an error:", error.response);
-            });
-        })
-        .catch((error) => {
-          this.alertType = "error";
-          this.alert = error.response.data.message;
-          this.showAlert = true;
-          console.log("There was an error:", error.response);
-        });
+      await this.getAppointmentsForGroup(this.group.id).then((response) => {
+        this.appointments = response;
+      });
+      await this.getAllPersonAppointments().then((response) => {
+        this.personAppointments = response;
+      });
+      await this.loadAppointments();
       this.overlay = false;
     },
     async getGroupByPersonRoleId() {
       await PersonRoleServices.getGroupForPersonRole(this.id)
         .then(async (response) => {
           this.group = response.data[0].role.group;
-          this.getTopicsForGroup();
-          this.getTutorsForGroup();
-          this.getLocations();
         })
         .catch((error) => {
           this.alertType = "error";
@@ -768,8 +748,22 @@ export default {
       await TopicServices.getActiveForGroup(this.group.id)
         .then((response) => {
           let temp = response.data;
-          temp.push({ name: "Any", id: -1 });
-          this.topics = temp;
+          this.topics.push({ name: "Any", id: -1 });
+          for (let i = 0; i < temp.length; i++) {
+            this.topics.push(temp[i]);
+          }
+        })
+        .catch((error) => {
+          this.alertType = "error";
+          this.alert = error.response.data.message;
+          this.showAlert = true;
+          console.log("There was an error:", error.response);
+        });
+    },
+    async getLocationsForGroup() {
+      await LocationServices.getActiveForGroup(this.group.id)
+        .then((response) => {
+          this.locations = response.data;
         })
         .catch((error) => {
           this.alertType = "error";
@@ -787,6 +781,22 @@ export default {
             temp[i].name = temp[i].fName + " " + temp[i].lName;
             this.tutorSelect.push(temp[i]);
           }
+        })
+        .catch((error) => {
+          this.alertType = "error";
+          this.alert = error.response.data.message;
+          this.showAlert = true;
+          console.log("There was an error:", error.response);
+        });
+    },
+    async getTopicsForTutor(tutor) {
+      this.currentTopics = [];
+      await TopicServices.getTopicByGroupForPerson(this.group.id, tutor.id)
+        .then((response) => {
+          let personTopics = response.data;
+          personTopics.forEach(async (topic) => {
+            this.currentTopics.push(topic);
+          });
         })
         .catch((error) => {
           this.alertType = "error";
@@ -901,470 +911,21 @@ export default {
         this.isPrivateBook = false;
       });
     },
-    //Update on a session being booked
-    async bookAppointment() {
-      await AppointmentServices.getAppointment(this.selectedAppointment.id)
-        .then(async (response) => {
-          if (
-            response.data.status == "available" &&
-            response.data.type.includes("Private") &&
-            !this.checkRole("Admin") &&
-            !this.adminAddStudent
-          ) {
-            await this.splitAppointment().then(() => {
-              this.getAppointments(this.group.id);
-              this.selectedEvent.color = "yellow";
-            });
-          } else if (
-            this.adminAddStudent &&
-            !this.studentNameInput &&
-            response.data.type.includes("Private")
-          ) {
-            await this.splitAppointmentForAdminAdd().then(() => {
-              this.getAppointments(this.group.id);
-              this.selectedEvent.color = "blue";
-            });
-          } else if (
-            this.adminAddStudent &&
-            this.studentNameInput &&
-            response.data.type.includes("Private")
-          ) {
-            await this.adminAdd().then(() => {
-              this.splitAppointmentForAdminAdd().then(() => {
-                this.getAppointments(this.group.id);
-                this.selectedEvent.color = "blue";
-              });
-            });
-          } else if (response.data.type.includes("Group")) {
-            this.bookGroupSession();
-          } else {
-            this.alertType = "warning";
-            this.alert =
-              "This appointment has already been booked. Try a different time.";
-            this.showAlert = true;
-            this.getAppointments(this.group.id);
-            this.selectedOpen = false;
-          }
-        })
-        .catch((error) => {
-          this.alertType = "error";
-          this.alert = error.response.data.message;
-          this.showAlert = true;
-          console.log("There was an error:", error.response);
-        });
-    },
-    //Update on tutor confirming booking
-    async confirmAppointment(confirm) {
-      if (confirm) {
-        if (this.appointmentType.includes("Private")) {
-          this.selectedAppointment.status = "booked";
-          await AppointmentServices.updateForGoogle(
-            this.selectedAppointment.id,
-            this.selectedAppointment
-          )
-            .then(async () => {
-              await this.sendConfirmedMessage(this.selectedAppointment.id);
-              this.getAppointments(this.group.id);
-              this.selectedEvent.color = "blue";
-            })
-            .catch((error) => {
-              this.alertType = "error";
-              this.alert = error.response.data.message;
-              this.showAlert = true;
-              console.log("There was an error:", error.response);
-            });
-        }
-        this.alertType = "success";
-        this.alert =
-          "You have successfully confirmed your " +
-          this.selectedAppointment.type +
-          " appointment on " +
-          this.selectedAppointment.date +
-          " at " +
-          this.selectedAppointment.startTime +
-          ".";
-        this.showAlert = true;
-      } else {
-        // don't need to update google cal because it's not even on there yet
-        this.selectedAppointment.status = "tutorCancel";
-        await AppointmentServices.updateAppointment(
-          this.selectedAppointment.id,
-          this.selectedAppointment
-        )
-          .then(() => {
-            this.sendCanceledMessage(this.user, this.selectedAppointment.id);
-            this.getAppointments(this.group.id);
-            this.selectedEvent.color = "red";
-          })
-          .catch((error) => {
-            this.alertType = "error";
-            this.alert = error.response.data.message;
-            this.showAlert = true;
-            console.log("There was an error:", error.response);
-          });
-        this.alertType = "warning";
-        this.alert =
-          "You have successfully rejected your " +
-          this.selectedAppointment.type +
-          " appointment on " +
-          this.selectedAppointment.date +
-          " at " +
-          this.selectedAppointment.startTime +
-          ".";
-        this.showAlert = true;
-      }
-    },
-    //Add personAppointments from Group Sessions
-    async bookGroupSession() {
-      //Load person info
+    async sendAppointmentForBooking() {
       if (this.adminAddStudent && this.studentNameInput) {
-        await this.adminAdd()
-          .then(async () => {
-            this.person.isTutor = false;
-            this.person.appointmentId = this.selectedAppointment.id;
-            this.person.personId = this.walkInStudent.id;
-            await PersonAppointmentServices.addPersonAppointment(this.person)
-              .then(() => {
-                this.getAppointments(this.group.id);
-              })
-              .catch((error) => {
-                this.alertType = "error";
-                this.alert = error.response.data.message;
-                this.showAlert = true;
-                console.log("There was an error:", error.response);
-              });
-          })
-          .catch((error) => {
-            this.alertType = "error";
-            this.alert = error.response.data.message;
-            this.showAlert = true;
-            console.log("There was an error:", error.response);
-          });
-        await this.sendMessageFromAdmin(
-          this.user,
-          this.walkInStudent,
-          this.selectedAppointment.id
-        );
-      } else if (this.adminAddStudent && !this.studentNameInput) {
-        this.person.isTutor = false;
-        this.person.appointmentId = this.selectedAppointment.id;
-        this.person.personId = this.walkInStudent.id;
-        await PersonAppointmentServices.addPersonAppointment(this.person)
-          .then(() => {
-            this.getAppointments(this.group.id);
-          })
-          .catch((error) => {
-            this.alertType = "error";
-            this.alert = error.response.data.message;
-            this.showAlert = true;
-            console.log("There was an error:", error.response);
-          });
-        await this.sendMessageFromAdmin(
-          this.user,
-          this.walkInStudent,
-          this.selectedAppointment.id
-        );
-      } else {
-        if (this.checkRole("Tutor")) {
-          this.person.isTutor = true;
-        } else {
-          this.person.isTutor = false;
-        }
-        this.person.appointmentId = this.selectedAppointment.id;
-        this.person.personId = this.user.userID;
-        //Update stored data
-        await PersonAppointmentServices.addPersonAppointment(this.person)
-          .then(() => {
-            this.getAppointments(this.group.id);
-          })
-          .catch((error) => {
-            this.alertType = "error";
-            this.alert = error.response.data.message;
-            this.showAlert = true;
-            console.log("There was an error:", error.response);
-          });
-        await this.sendGroupMessage(this.user, this.selectedAppointment.id);
+        await this.adminAdd();
       }
-      // need to update group session in google
-      await AppointmentServices.updateForGoogle(
-        this.selectedAppointment.id,
-        this.selectedAppointment
-      ).catch((error) => {
-        this.alertType = "error";
-        this.alert = error.response.data.message;
-        this.showAlert = true;
-        console.log("There was an error:", error.response);
-      });
-
-      this.alertType = "success";
-      this.alert =
-        "You have successfully booked a " +
-        this.selectedAppointment.type +
-        " appointment on " +
-        this.selectedAppointment.date +
-        " at " +
-        this.selectedAppointment.startTime +
-        ".";
-      this.showAlert = true;
-    },
-
-    //Split appointments into more availablity slots when part of slot is booked by an Admin
-    async splitAppointmentForAdminAdd() {
-      if (!this.checkStatus("available")) {
-        return;
-      }
-      //If the start of the booked slot isn't the start of the slot, generate an open slot
-      if (this.selectedAppointment.startTime < this.newStart) {
-        let temp = {
-          date: this.selectedAppointment.date,
-          startTime: this.selectedAppointment.startTime,
-          endTime: this.newStart,
-          type: this.selectedAppointment.type,
-          status: this.selectedAppointment.status,
-          preSessionInfo: "",
-          groupId: this.selectedAppointment.groupId,
-          //locationId: this.selectedAppointment.locationId,
-          //topicId: this.selectedAppointment.topicId,
-        };
-        await AppointmentServices.addAppointment(temp)
-          .then(async (response) => {
-            this.tutors.forEach(async (t) => {
-              let pap = {
-                isTutor: true,
-                appointmentId: response.data.id,
-                personId: t.id,
-              };
-              await PersonAppointmentServices.addPersonAppointment(pap).catch(
-                (error) => {
-                  this.alertType = "error";
-                  this.alert = error.response.data.message;
-                  this.showAlert = true;
-                  console.log("There was an error:", error.response);
-                }
-              );
-            });
-          })
-          .catch((error) => {
-            this.alertType = "error";
-            this.alert = error.response.data.message;
-            this.showAlert = true;
-            console.log("There was an error:", error.response);
-          });
-      }
-      //If the end of the booked slot isn't the end of the slot, generate an open slot
-      if (this.selectedAppointment.endTime > this.newEnd) {
-        let temp = {
-          date: this.selectedAppointment.date,
-          startTime: this.newEnd,
-          endTime: this.selectedAppointment.endTime,
-          type: this.selectedAppointment.type,
-          status: this.selectedAppointment.status,
-          preSessionInfo: "",
-          groupId: this.selectedAppointment.groupId,
-          //locationId: this.selectedAppointment.locationId,
-          //topicId: this.selectedAppointment.topicId,
-        };
-        await AppointmentServices.addAppointment(temp)
-          .then((response) => {
-            this.tutors.forEach(async (t) => {
-              let pap = {
-                isTutor: true,
-                appointmentId: response.data.id,
-                personId: t.id,
-              };
-              await PersonAppointmentServices.addPersonAppointment(pap).catch(
-                (error) => {
-                  this.alertType = "error";
-                  this.alert = error.response.data.message;
-                  this.showAlert = true;
-                  console.log("There was an error:", error.response);
-                }
-              );
-            });
-          })
-          .catch((error) => {
-            this.alertType = "error";
-            this.alert = error.response.data.message;
-            this.showAlert = true;
-            console.log("There was an error:", error.response);
-          });
-      }
-      //Load appointment info
-      this.selectedAppointment.status = "booked";
-      this.selectedAppointment.endTime = this.newEnd;
-      this.selectedAppointment.startTime = this.newStart;
-      //Load person info
-      this.person.isTutor = false;
-      this.person.appointmentId = this.selectedAppointment.id;
-      this.person.personId = this.walkInStudent.id;
-      //Update stored data
-      await AppointmentServices.updateForGoogle(
-        this.selectedAppointment.id,
-        this.selectedAppointment
-      ).catch((error) => {
-        this.alertType = "error";
-        this.alert = error.response.data.message;
-        this.showAlert = true;
-        console.log("There was an error:", error.response);
-      });
-      await PersonAppointmentServices.addPersonAppointment(this.person).catch(
-        (error) => {
-          this.alertType = "error";
-          this.alert = error.response.data.message;
-          this.showAlert = true;
-          console.log("There was an error:", error.response);
-        }
-      );
-      await this.sendMessageFromAdmin(
+      this.selectedAppointment.newStart = this.newStart;
+      this.selectedAppointment.newEnd = this.newEnd;
+      await this.bookAppointment(
+        this.adminAddStudent,
+        this.selectedAppointment,
         this.user,
-        this.walkInStudent,
-        this.selectedAppointment.id
+        this.walkInStudent
       );
-      this.adminAddStudent = false;
-      this.alertType = "success";
-      this.alert =
-        "You have successfully booked a " +
-        this.selectedAppointment.type +
-        " appointment for " +
-        this.walkInStudent.fName +
-        " " +
-        this.walkInStudent.lName +
-        " with " +
-        this.tutors[0].fName +
-        " " +
-        this.tutors[0].lName +
-        " on " +
-        this.selectedAppointment.date +
-        " at " +
-        this.selectedAppointment.startTime +
-        ".";
-      this.showAlert = true;
+      await this.initializeData();
+      this.selectedOpen = false;
     },
-
-    // Split appointments into more availablity slots when part of slot is booked
-    async splitAppointment() {
-      if (!this.checkStatus("available")) {
-        return;
-      }
-      //If the start of the booked slot isn't the start of the slot, generate an open slot
-      if (this.selectedAppointment.startTime < this.newStart) {
-        let temp = {
-          date: this.selectedAppointment.date,
-          startTime: this.selectedAppointment.startTime,
-          endTime: this.newStart,
-          type: this.selectedAppointment.type,
-          status: this.selectedAppointment.status,
-          preSessionInfo: "",
-          groupId: this.selectedAppointment.groupId,
-        };
-        await AppointmentServices.addAppointment(temp)
-          .then((response) => {
-            this.tutors.forEach(async (t) => {
-              let pap = {
-                isTutor: true,
-                appointmentId: response.data.id,
-                personId: t.id,
-              };
-              await PersonAppointmentServices.addPersonAppointment(pap).catch(
-                (error) => {
-                  this.alertType = "error";
-                  this.alert = error.response.data.message;
-                  this.showAlert = true;
-                  console.log("There was an error:", error.response);
-                }
-              );
-            });
-          })
-          .catch((error) => {
-            console.log(error);
-            this.alertType = "error";
-            this.alert = error.response.data.message;
-            this.showAlert = true;
-            console.log("There was an error:", error.response);
-          });
-      }
-      //If the end of the booked slot isn't the end of the slot, generate an open slot
-      if (this.selectedAppointment.endTime > this.newEnd) {
-        let temp = {
-          date: this.selectedAppointment.date,
-          startTime: this.newEnd,
-          endTime: this.selectedAppointment.endTime,
-          type: this.selectedAppointment.type,
-          status: this.selectedAppointment.status,
-          preSessionInfo: "",
-          groupId: this.selectedAppointment.groupId,
-          //locationId: this.selectedAppointment.locationId,
-          //topicId: this.selectedAppointment.topicId,
-        };
-        await AppointmentServices.addAppointment(temp)
-          .then((response) => {
-            this.tutors.forEach(async (t) => {
-              let pap = {
-                isTutor: true,
-                appointmentId: response.data.id,
-                personId: t.id,
-              };
-              await PersonAppointmentServices.addPersonAppointment(pap).catch(
-                (error) => {
-                  this.alertType = "error";
-                  this.alert = error.response.data.message;
-                  this.showAlert = true;
-                  console.log("There was an error:", error.response);
-                }
-              );
-            });
-          })
-          .catch((error) => {
-            this.alertType = "error";
-            this.alert = error.response.data.message;
-            this.showAlert = true;
-            console.log("There was an error:", error.response);
-          });
-      }
-      //Load appointment info
-      this.selectedAppointment.status = "pending";
-      this.selectedAppointment.endTime = this.newEnd;
-      this.selectedAppointment.startTime = this.newStart;
-      //Load person info
-      this.person.isTutor = false;
-      this.person.appointmentId = this.selectedAppointment.id;
-      this.person.personId = this.$store.state.loginUser.userID;
-      //Update stored data
-      await AppointmentServices.updateAppointment(
-        this.selectedAppointment.id,
-        this.selectedAppointment
-      ).catch((error) => {
-        this.alertType = "error";
-        this.alert = error.response.data.message;
-        this.showAlert = true;
-        console.log("There was an error:", error.response);
-      });
-      await PersonAppointmentServices.addPersonAppointment(this.person).catch(
-        (error) => {
-          this.alertType = "error";
-          this.alert = error.response.data.message;
-          this.showAlert = true;
-          console.log("There was an error:", error.response);
-        }
-      );
-      await this.sendPendingMessage(this.selectedAppointment.id);
-
-      this.alertType = "success";
-      this.alert =
-        "You have successfully booked a " +
-        this.selectedAppointment.type +
-        " appointment with " +
-        this.tutors[0].fName +
-        " " +
-        this.tutors[0].lName +
-        " on " +
-        this.selectedAppointment.date +
-        " at " +
-        this.selectedAppointment.startTime +
-        ".";
-      this.showAlert = true;
-    },
-
     updateTimes() {
       this.startTimes = this.generateTimeslots(
         this.selectedAppointment.startTime,
@@ -1380,47 +941,6 @@ export default {
       );
       // adding this to make sure you can't end an appointment at the start time
       this.endTimes.shift();
-    },
-    //Load data for info associated with events
-    async getTopic(topicId) {
-      await TopicServices.getTopic(topicId)
-        .then((response) => {
-          this.topic = response.data;
-        })
-        .catch((error) => {
-          this.alertType = "error";
-          this.alert = error.response.data.message;
-          this.showAlert = true;
-          console.log("There was an error:", error.response);
-        });
-    },
-    async getLocations() {
-      await LocationServices.getActiveForGroup(this.group.id)
-        .then((response) => {
-          this.locations = response.data;
-        })
-        .catch((error) => {
-          this.alertType = "error";
-          this.alert = error.response.data.message;
-          this.showAlert = true;
-          console.log("There was an error:", error.response);
-        });
-    },
-    async getTopicsForTutor(tutor) {
-      this.currentTopics = [];
-      await TopicServices.getTopicByGroupForPerson(this.group.id, tutor.id)
-        .then((response) => {
-          let personTopics = response.data;
-          personTopics.forEach(async (topic) => {
-            this.currentTopics.push(topic);
-          });
-        })
-        .catch((error) => {
-          this.alertType = "error";
-          this.alert = error.response.data.message;
-          this.showAlert = true;
-          console.log("There was an error:", error.response);
-        });
     },
     // validate email function
     validateEmail() {
@@ -1624,62 +1144,21 @@ export default {
       });
       return hasPriv;
     },
-    getPersonName(id) {
-      return this.allPeople.get(id).fName + " " + this.allPeople.get(id).lName;
-    },
     //Get the name of the student for the appointments
     async getStudentNameForAppointment(appoints) {
       var student = appoints.filter((person) => !person.isTutor);
       if (student.length !== 0) {
-        var studentId = student[0].personId;
-        this.studentName = this.getPersonName(studentId);
+        this.studentName =
+          student[0].person.fName + " " + student[0].person.lName;
       } else this.studentName = "Open";
     },
     //Get the name of the tutor for the appointments
     async getTutorNameForAppointment(appoints) {
       var tutor = appoints.filter((person) => person.isTutor);
       if (tutor.length !== 0) {
-        var tutorId = tutor[0].personId;
-        this.tutorName = this.getPersonName(tutorId);
+        this.tutorName = tutor[0].person.fName + " " + tutor[0].person.lName;
       } else this.tutorName = "Open";
     },
-    async loadTopics() {
-      this.allTopics = new Map();
-      TopicServices.getAllTopics()
-        .then((response) => {
-          let tempTopics = response.data;
-          tempTopics.forEach((topic) => {
-            this.allTopics.set(topic.id, topic.name);
-          });
-        })
-        .catch((error) => {
-          this.alertType = "error";
-          this.alert = error.response.data.message;
-          this.showAlert = true;
-          console.log("There was an error:", error.response);
-        });
-    },
-
-    getTopicName(id) {
-      return this.allTopics.get(id);
-    },
-    async loadPeople() {
-      this.allPeople = new Map();
-      PersonServices.getAllPersons()
-        .then((response) => {
-          let tempPersons = response.data;
-          tempPersons.forEach((person) => {
-            this.allPeople.set(person.id, person);
-          });
-        })
-        .catch((error) => {
-          this.alertType = "error";
-          this.alert = error.response.data.message;
-          this.showAlert = true;
-          console.log("There was an error:", error.response);
-        });
-    },
-
     //Load all appointments in backend into calendar events
     async loadAppointments() {
       let today = new Date();
@@ -1690,9 +1169,7 @@ export default {
       let filtered;
       for (let i = 0; i < this.appointments.length; i++) {
         await this.groupBookColor(this.appointments[i].personappointment);
-        await this.isStudentInGroupAppoint(
-          this.appointments[i].personappointment
-        );
+        await this.isStudentInGroupAppoint(this.appointments[i].students);
         //filter events to only add appropriate events
         filtered = true;
         //only add appointments from the current group
@@ -1898,345 +1375,121 @@ export default {
         }
       }
     },
-    //method for canceling appointments
-    async cancelAppointment() {
-      this.sendCanceledMessage(this.user, this.selectedAppointment.id);
-      //delete appointment as a student of a private session
-      if (
-        this.selectedAppointment.type.includes("Private") &&
-        this.checkRole("Student") &&
-        this.checkStatus("booked")
-      ) {
-        this.selectedAppointment.status = "studentCancel";
-        await AppointmentServices.updateForGoogle(
-          this.selectedAppointment.id,
-          this.selectedAppointment
-        ).then(async () => {
-          let temp = {
-            date: this.selectedAppointment.date,
-            startTime: this.selectedAppointment.startTime,
-            endTime: this.selectedAppointment.endTime,
-            type: this.selectedAppointment.type,
-            status: "available",
-            preSessionInfo: "",
-            groupId: this.selectedAppointment.groupId,
-          };
-          await AppointmentServices.addAppointment(temp)
-            .then(async (response) => {
-              this.tutors.forEach(async (t) => {
-                let pap = {
-                  isTutor: true,
-                  appointmentId: response.data.id,
-                  personId: t.id,
-                };
-                await PersonAppointmentServices.addPersonAppointment(pap);
-              });
-              await this.getAppointments(this.group.id);
-              //this.$router.go(0);
-            })
-            .catch((error) => {
-              this.alertType = "error";
-              this.alert = error.response.data.message;
-              this.showAlert = true;
-              console.log("There was an error:", error.response);
-            });
-        });
-      } else if (
-        this.selectedAppointment.type.includes("Private") &&
-        this.checkRole("Student") &&
-        this.checkStatus("pending")
-      ) {
-        this.selectedAppointment.status = "available";
-        this.selectedAppointment.locationId = null;
-        this.selectedAppointment.topicId = null;
-        this.selectedAppointment.preSessionInfo = "";
-        // don't need to update google event because it doesn't exist
-        await AppointmentServices.updateAppointment(
-          this.selectedAppointment.id,
-          this.selectedAppointment
-        ).catch((error) => {
-          this.alertType = "error";
-          this.alert = error.response.data.message;
-          this.showAlert = true;
-          console.log("There was an error:", error.response);
-        });
-        for (let i = 0; i < this.personAppointments.length; i++) {
-          if (
-            this.personAppointments[i].appointmentId ==
-              this.selectedAppointment.id &&
-            !this.personAppointments[i].isTutor &&
-            this.personAppointments[i].personId == this.user.userID
-          ) {
-            await PersonAppointmentServices.deletePersonAppointment(
-              this.personAppointments[i].id
-            );
-            await this.getAppointments(this.group.id);
-            //this.$router.go(0);
-          }
+    async findEmail() {
+      let tempStudent = {
+        id: "",
+        email: "",
+        fName: "",
+        lName: "",
+      };
+      let onlyTutor = true;
+      await PersonServices.getPersonForEmail(this.studentEmail).then(
+        (response) => {
+          tempStudent = response.data;
         }
-      }
-      //delete appointment as a student of a group session
-      else if (
-        this.selectedAppointment.type.includes("Group") &&
-        this.checkRole("Student")
-      ) {
-        for (let i = 0; i < this.personAppointments.length; i++) {
-          if (
-            this.personAppointments[i].appointmentId ==
-              this.selectedAppointment.id &&
-            !this.personAppointments[i].isTutor &&
-            this.personAppointments[i].personId == this.user.userID
-          ) {
-            await PersonAppointmentServices.deletePersonAppointment(
-              this.personAppointments[i].id
-            );
-            await AppointmentServices.updateForGoogle(
-              this.selectedAppointment.id,
-              this.selectedAppointment
-            ).catch((error) => {
-              this.alertType = "error";
-              this.alert = error.response.data.message;
-              this.showAlert = true;
-              console.log("There was an error:", error.response);
-            });
-            await this.getAppointments(this.group.id);
-            //this.$router.go(0);
-          }
-        }
-      }
-      //delete appointment as a tutor of a private session
-      else if (
-        this.selectedAppointment.type.includes("Private") &&
-        this.checkRole("Tutor")
-      ) {
-        for (let i = 0; i < this.personAppointments.length; i++) {
-          if (
-            this.personAppointments[i].appointmentId ==
-              this.selectedAppointment.id &&
-            this.personAppointments[i].isTutor
-          ) {
-            for (let j = 0; j < this.personAppointments.length; j++) {
-              if (
-                this.personAppointments[j].appointmentId ==
-                  this.selectedAppointment.id &&
-                !this.personAppointments[j].isTutor
-              ) {
-                this.selectedAppointment.status = "tutorCancel";
-                await AppointmentServices.updateForGoogle(
-                  this.selectedAppointment.id,
-                  this.selectedAppointment
-                );
-                await this.getAppointments(this.group.id);
+      );
+      if (this.user.userID == tempStudent.id) {
+        this.emailStatus = "You cannot sign yourself up for an appointment.";
+        this.emailFound = true;
+        return;
+      } else if (tempStudent.id == this.tutors[0].id) {
+        this.emailStatus =
+          "You cannot sign up the tutor for their own appointment.";
+        this.emailFound = true;
+        return;
+      } else if (!tempStudent.email.includes("not found")) {
+        this.studentNameInput = false;
+        await PersonServices.getAllForGroup(this.group.id).then(
+          async (responseGroup) => {
+            let people = responseGroup.data;
+            for (let i = 0; i < people.length; i++) {
+              if (people[i].id == tempStudent.id) {
+                await RoleServices.getRoleByGroupForPerson(
+                  this.group.id,
+                  tempStudent.id
+                ).then(async (result) => {
+                  let role = result.data;
+                  for (let k = 0; k < role.length; k++) {
+                    if (role[k].type.includes("Student")) {
+                      onlyTutor = false;
+                    }
+                  }
+                  if (onlyTutor) {
+                    await RoleServices.getAllForGroup(this.group.id).then(
+                      async (responseRole) => {
+                        let roles = responseRole.data;
+                        for (let i = 0; i < roles.length; i++) {
+                          if (roles[i].type == "Student") {
+                            let personRole = {
+                              status: "applied",
+                              roleId: roles[i].id,
+                              personId: tempStudent.id,
+                              dateSigned: Date(),
+                              agree: false,
+                            };
+                            await PersonRoleServices.addPersonRole(personRole);
+                            this.emailStatus =
+                              tempStudent.fName +
+                              " " +
+                              tempStudent.lName +
+                              " has been added as a student!";
+                            this.emailFound = true;
+                            return;
+                          }
+                        }
+                      }
+                    );
+                  }
+                });
+                this.emailStatus =
+                  "Student " +
+                  tempStudent.fName +
+                  " " +
+                  tempStudent.lName +
+                  " found!";
+                this.walkInStudent = tempStudent;
+                this.emailFound = true;
+                this.checkGroupBooking();
                 return;
               }
             }
-
-            await PersonAppointmentServices.deletePersonAppointment(
-              this.personAppointments[i].id
-            );
-
-            await AppointmentServices.deleteAppointment(
-              this.selectedAppointment.id
-            );
-
-            await this.getAppointments(this.group.id);
-            //this.$router.go(0);
-          }
-        }
-      }
-      //delete appointment as a tutor of a group session
-      else if (
-        this.selectedAppointment.type.includes("Group") &&
-        this.checkRole("Tutor")
-      ) {
-        for (let i = 0; i < this.personAppointments.length; i++) {
-          if (
-            this.personAppointments[i].appointmentId ==
-              this.selectedAppointment.id &&
-            this.personAppointments[i].isTutor &&
-            this.personAppointments[i].personId == this.user.userID
-          ) {
-            await PersonAppointmentServices.getAllPersonAppointments()
-              .then((response) => {
-                this.personAppointments = response.data;
-              })
-              .catch((error) => {
-                this.alertType = "error";
-                this.alert = error.response.data.message;
-                this.showAlert = true;
-                console.log("There was an error:", error.response);
-              });
-            let found = false;
-            for (let j = 0; j < this.personAppointments.length; j++) {
-              if (
-                this.personAppointments[j].appointmentId ==
-                  this.selectedAppointment.id &&
-                this.personAppointments[j].isTutor &&
-                this.personAppointments[j].personId != this.user.userID
-              ) {
-                found = true;
-              }
-            }
-            if (this.students.length > 0 && this.tutors.length == 1) {
-              this.selectedAppointment.status = "tutorCancel";
-              await AppointmentServices.updateForGoogle(
-                this.selectedAppointment.id,
-                this.selectedAppointment
-              ).catch((error) => {
-                this.alertType = "error";
-                this.alert = error.response.data.message;
-                this.showAlert = true;
-                console.log("There was an error:", error.response);
-              });
-            } else if (found) {
-              await PersonAppointmentServices.deletePersonAppointment(
-                this.personAppointments[i].id
-              ).catch((error) => {
-                this.alertType = "error";
-                this.alert = error.response.data.message;
-                this.showAlert = true;
-                console.log("There was an error:", error.response);
-              });
-            } else {
-              await AppointmentServices.deleteAppointment(
-                this.selectedAppointment.id
-              ).catch((error) => {
-                this.alertType = "error";
-                this.alert = error.response.data.message;
-                this.showAlert = true;
-                console.log("There was an error:", error.response);
-              });
-            }
-            await this.getAppointments(this.group.id);
-
-            //this.$router.go(0);
-          }
-        }
-      }
-      this.alertType = "warning";
-      this.alert =
-        "You have successfully canceled your " +
-        this.selectedAppointment.type +
-        " appointment on " +
-        this.selectedAppointment.date +
-        " at " +
-        this.selectedAppointment.startTime +
-        ".";
-      this.showAlert = true;
-    },
-    async findEmail() {
-      if (this.validateEmail()) {
-        await PersonServices.getPersonForEmail(this.studentEmail)
-          .then((response) => {
-            let temp = response.data;
-            let onlyTutor = true;
-            if (this.user.userID == temp.id) {
-              this.emailStatus =
-                "You cannot sign yourself up for an appointment.";
-              this.emailFound = true;
-              return;
-            } else if (temp.id == this.tutors[0].id) {
-              this.emailStatus =
-                "You cannot sign-up the tutor for their own appointment.";
-              this.emailFound = true;
-              return;
-            } else if (!temp.email.includes("not found")) {
-              this.studentNameInput = false;
-              PersonServices.getAllForGroup(this.group.id).then(
-                async (responseGroup) => {
-                  let people = responseGroup.data;
-                  for (let i = 0; i < people.length; i++) {
-                    if (people[i].id == temp.id) {
-                      await RoleServices.getRoleByGroupForPerson(
-                        this.group.id,
-                        temp.id
-                      ).then(async (result) => {
-                        let role = result.data;
-                        for (let k = 0; k < role.length; k++) {
-                          if (role[k].type.includes("Student")) {
-                            onlyTutor = false;
-                          }
-                        }
-                        if (onlyTutor) {
-                          await RoleServices.getAllForGroup(this.group.id).then(
-                            (responseRole) => {
-                              let roles = responseRole.data;
-                              for (let i = 0; i < roles.length; i++) {
-                                if (roles[i].type == "Student") {
-                                  let personRole = {
-                                    status: "applied",
-                                    roleId: roles[i].id,
-                                    personId: temp.id,
-                                    dateSigned: Date(),
-                                    agree: false,
-                                  };
-                                  PersonRoleServices.addPersonRole(personRole);
-                                  this.emailStatus =
-                                    temp.fName +
-                                    " " +
-                                    temp.lName +
-                                    " has been added as a student!";
-                                  this.emailFound = true;
-                                  return;
-                                }
-                              }
-                            }
-                          );
-                        }
-                      });
-                      this.emailStatus =
-                        "Student " + temp.fName + " " + temp.lName + " found!";
-                      this.walkInStudent = temp;
-                      this.emailFound = true;
-                      this.checkGroupBooking();
-                      return;
-                    }
+            this.emailStatus =
+              "Student " +
+              tempStudent.fName +
+              " " +
+              tempStudent.lName +
+              " has been added to " +
+              this.group.name +
+              "!";
+            this.walkInStudent = tempStudent;
+            await RoleServices.getAllForGroup(this.group.id).then(
+              (responseRole) => {
+                let roles = responseRole.data;
+                for (let i = 0; i < roles.length; i++) {
+                  if (roles[i].type == "Student") {
+                    let personRole = {
+                      status: "applied",
+                      roleId: roles[i].id,
+                      personId: tempStudent.id,
+                      dateSigned: Date(),
+                      agree: false,
+                    };
+                    PersonRoleServices.addPersonRole(personRole);
+                    this.emailFound = true;
+                    return;
                   }
-                  this.emailStatus =
-                    "Student " +
-                    temp.fName +
-                    " " +
-                    temp.lName +
-                    " has been added to " +
-                    this.group.name +
-                    "!";
-                  this.walkInStudent = temp;
-                  RoleServices.getAllForGroup(this.group.id).then(
-                    (responseRole) => {
-                      let roles = responseRole.data;
-                      for (let i = 0; i < roles.length; i++) {
-                        if (roles[i].type == "Student") {
-                          let personRole = {
-                            status: "applied",
-                            roleId: roles[i].id,
-                            personId: temp.id,
-                            dateSigned: Date(),
-                            agree: false,
-                          };
-                          PersonRoleServices.addPersonRole(personRole);
-                          this.emailFound = true;
-                          return;
-                        }
-                      }
-                    }
-                  );
                 }
-              );
-            } else {
-              this.studentNameInput = true;
-              this.emailStatus = "No Student Found"; // get rid of popup and add to the open selecte event, then if email not found, add more blanks for student name
-              this.isGroupBook = false;
-              this.emailFound = false;
-              this.studentfName = "";
-              this.studentlName = "";
-            }
-          })
-          .catch((error) => {
-            this.alertType = "error";
-            this.alert = error.response.data.message;
-            this.showAlert = true;
-            console.log("There was an error:", error.response);
-          });
+              }
+            );
+          }
+        );
+      } else {
+        this.studentNameInput = true;
+        this.emailStatus = "No Student Found"; // get rid of popup and add to the open selecte event, then if email not found, add more blanks for student name
+        this.isGroupBook = false;
+        this.emailFound = false;
+        this.studentfName = "";
+        this.studentlName = "";
       }
     },
     // add a student to the system and then to the current group
@@ -2249,8 +1502,8 @@ export default {
         updatedAt: Date(),
       };
       await PersonServices.addPerson(student).then(async (response) => {
-        let temp = response.data;
-        this.walkInStudent = temp;
+        let tempStudent = response.data;
+        this.walkInStudent = tempStudent;
         await RoleServices.getAllForGroup(this.group.id)
           .then((responseRole) => {
             let roles = responseRole.data;
@@ -2275,32 +1528,6 @@ export default {
             console.log("There was an error:", error.response);
           });
       });
-    },
-    async editAppointment() {
-      await AppointmentServices.updateForGoogle(
-        this.selectedAppointment.id,
-        this.selectedAppointment
-      )
-        .then(async () => {
-          this.sendEditedMessage(this.user, this.selectedAppointment.id);
-          this.alertType = "success";
-          this.alert =
-            "You have successfully updated your " +
-            this.selectedAppointment.type +
-            " appointment on " +
-            this.selectedAppointment.date +
-            " at " +
-            this.selectedAppointment.startTime +
-            ".";
-          this.showAlert = true;
-          await this.getAppointments(this.group.id);
-        })
-        .catch((error) => {
-          this.alertType = "error";
-          this.alert = error.response.data.message;
-          this.showAlert = true;
-          console.log("There was an error:", error.response);
-        });
     },
     checkAppointmentIfPast() {
       let checkDate = new Date();

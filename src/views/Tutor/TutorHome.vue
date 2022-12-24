@@ -149,7 +149,11 @@
             <v-btn
               v-if="!(selectedAppt.type === 'Group')"
               color="#12f000"
-              @click="confirmAppointment(true)"
+              @click="
+                confirmAppointment(true, user, selectedAppt);
+                getAppointments();
+                apptDialog = false;
+              "
               :disabled="!checkStatus('pending')">
               Confirm
             </v-btn>
@@ -157,7 +161,8 @@
               v-if="!(selectedAppt.type === 'Group')"
               color="error"
               @click="
-                confirmAppointment(false);
+                confirmAppointment(false, user, selectedAppt);
+                getAppointments();
                 apptDialog = false;
               "
               :disabled="!checkStatus('pending')">
@@ -175,7 +180,8 @@
               v-if="saveChanges"
               color="accent"
               @click="
-                editAppointment();
+                editAppointment(user, selectedAppt);
+                getAppointments();
                 apptDialog = false;
               ">
               Save Changes
@@ -190,7 +196,8 @@
               "
               color="red"
               @click="
-                cancelAppointment();
+                cancelAppointment(selectedAppt, user);
+                getAppointments();
                 apptDialog = false;
               ">
               Cancel Appointment
@@ -303,14 +310,14 @@ import PersonTopicServices from "@/services/personTopicServices.js";
 import AppointmentServices from "@/services/appointmentServices.js";
 import LocationServices from "@/services/locationServices.js";
 import PersonAppointmentServices from "@/services/personAppointmentServices.js";
-import TwilioServices from "@/services/twilioServices.js";
 import InformationComponent from "../../components/InformationComponent.vue";
+import { AppointmentActionMixin } from "../../mixins/AppointmentActionMixin";
 import { TimeFunctionsMixin } from "../../mixins/TimeFunctionsMixin";
 
 export default {
   props: ["id"],
   name: "TutorHome",
-  mixins: [TimeFunctionsMixin],
+  mixins: [AppointmentActionMixin, TimeFunctionsMixin],
   components: {
     InformationComponent,
   },
@@ -571,219 +578,6 @@ export default {
         params: { id: item.id, userId: this.user.userID },
       });
     },
-    //Update on tutor confirming booking
-    async confirmAppointment(confirm) {
-      if (confirm) {
-        this.selectedAppt.status = "booked";
-        if (this.selectedAppt.type.includes("Private")) {
-          let updateAppt = {
-            id: this.selectedAppt.id,
-            date: this.selectedAppt.originalDate,
-            startTime: this.selectedAppt.originalStart,
-            endTime: this.selectedAppt.originalEnd,
-            type: this.selectedAppt.type,
-            status: "booked",
-            preSessionInfo: this.selectedAppt.preSessionInfo,
-            groupId: this.selectedAppt.groupId,
-            topicId: this.selectedAppt.topicId,
-            locationId: this.selectedAppt.locationId,
-          };
-          await AppointmentServices.updateForGoogle(updateAppt.id, updateAppt)
-            .then(async () => {
-              this.tutorConfirmMessage(
-                this.students[0],
-                this.user.fName,
-                this.user.lName,
-                updateAppt.id
-              );
-              this.getAppointments();
-              this.selectedAppt.color = "blue";
-            })
-            .catch((error) => {
-              this.alertType = "error";
-              this.alert = error.response.data.message;
-              this.showAlert = true;
-              console.log("There was an error:", error.response);
-            });
-          this.alertType = "success";
-          this.alert =
-            "You have successfully confirmed your" +
-            this.selectedAppt.type +
-            " appointment on " +
-            this.selectedAppt.date +
-            " at " +
-            this.selectedAppt.startTime +
-            ".";
-          this.showAlert = true;
-        }
-      } else {
-        // don't need to update google cal because it's not even on there yet
-        this.selectedAppt.status = "tutorCancel";
-        let updateAppt = {
-          id: this.selectedAppt.id,
-          date: this.selectedAppt.originalDate,
-          startTime: this.selectedAppt.originalStart,
-          endTime: this.selectedAppt.originalEnd,
-          type: this.selectedAppt.type,
-          status: "tutorCancel",
-          preSessionInfo: this.selectedAppt.preSessionInfo,
-          groupId: this.selectedAppt.groupId,
-          topicId: this.selectedAppt.topicId,
-          locationId: this.selectedAppt.locationId,
-          googleEventId: this.selectedAppt.googleEventId,
-        };
-        await AppointmentServices.updateAppointment(updateAppt.id, updateAppt)
-          .then(() => {
-            this.getAppointments();
-            // don't want to keep this open since it's supposed to leave this list
-            this.apptDialog = false;
-          })
-          .catch((error) => {
-            this.alertType = "error";
-            this.alert = error.response.data.message;
-            this.showAlert = true;
-            console.log("There was an error:", error.response);
-          });
-        this.alertType = "warning";
-        this.alert =
-          "You have successfully rejected your" +
-          this.selectedAppt.type +
-          " appointment on " +
-          this.selectedAppt.date +
-          " at " +
-          this.selectedAppt.startTime +
-          ".";
-        this.showAlert = true;
-      }
-    },
-    async editAppointment() {
-      let updateAppt = {
-        id: this.selectedAppt.id,
-        date: this.selectedAppt.originalDate,
-        startTime: this.selectedAppt.originalStart,
-        endTime: this.selectedAppt.originalEnd,
-        type: this.selectedAppt.type,
-        status: this.selectedAppt.status,
-        preSessionInfo: this.selectedAppt.preSessionInfo,
-        groupId: this.selectedAppt.groupId,
-        topicId: this.selectedAppt.topicId,
-        locationId: this.selectedAppt.locationId,
-        googleEventId: this.selectedAppt.googleEventId,
-      };
-      await AppointmentServices.updateForGoogle(updateAppt.id, updateAppt)
-        .then(async () => {
-          for (let i = 0; i < this.students.length; i++) {
-            this.tutorEditMessage(
-              this.students[i],
-              this.user.fName,
-              this.user.lName,
-              updateAppt.type
-            );
-            this.alertType = "success";
-            this.alert =
-              "You have successfully updated your" +
-              this.selectedAppt.type +
-              " appointment on " +
-              this.selectedAppt.date +
-              " at " +
-              this.selectedAppt.startTime +
-              ".";
-            this.showAlert = true;
-          }
-          await this.getAppointments();
-        })
-        .catch((error) => {
-          this.alertType = "error";
-          this.alert = error.response.data.message;
-          this.showAlert = true;
-          console.log("There was an error:", error.response);
-        });
-    },
-    //method for canceling appointments
-    async cancelAppointment() {
-      // if students are NOT signed up for the appointment, delete it and delete the tutor personappointments
-      if (this.students.length === 0) {
-        for (let i = 0; i < this.tutors.length; i++) {
-          await PersonAppointmentServices.deletePersonAppointment(
-            this.tutors[i].id
-          ).catch((error) => {
-            this.alertType = "error";
-            this.alert = error.response.data.message;
-            this.showAlert = true;
-            console.log("There was an error:", error.response);
-          });
-        }
-        await AppointmentServices.deleteAppointment(this.selectedAppt.id).catch(
-          (error) => {
-            this.alertType = "error";
-            this.alert = error.response.data.message;
-            this.showAlert = true;
-            console.log("There was an error:", error.response);
-          }
-        );
-      }
-      // if students are, keep the appointment but delete all the personappointments
-      else {
-        for (let i = 0; i < this.students.length; i++) {
-          this.tutorCancelMessage(
-            this.students[i],
-            this.user.fName,
-            this.user.lName,
-            this.selectedAppt.id
-          );
-          await PersonAppointmentServices.deletePersonAppointment(
-            this.students[i].id
-          ).catch((error) => {
-            this.alertType = "error";
-            this.alert = error.response.data.message;
-            this.showAlert = true;
-            console.log("There was an error:", error.response);
-          });
-        }
-        for (let i = 0; i < this.tutors.length; i++) {
-          await PersonAppointmentServices.deletePersonAppointment(
-            this.tutors[i].id
-          ).catch((error) => {
-            this.alertType = "error";
-            this.alert = error.response.data.message;
-            this.showAlert = true;
-            console.log("There was an error:", error.response);
-          });
-        }
-        let updateAppt = {
-          id: this.selectedAppt.id,
-          date: this.selectedAppt.originalDate,
-          startTime: this.selectedAppt.originalStart,
-          endTime: this.selectedAppt.originalEnd,
-          type: this.selectedAppt.type,
-          status: "tutorCancel",
-          preSessionInfo: this.selectedAppt.preSessionInfo,
-          groupId: this.selectedAppt.groupId,
-          topicId: this.selectedAppt.topicId,
-          locationId: this.selectedAppt.locationId,
-        };
-        await AppointmentServices.updateForGoogle(
-          updateAppt.id,
-          updateAppt
-        ).catch((error) => {
-          this.alertType = "error";
-          this.alert = error.response.data.message;
-          this.showAlert = true;
-          console.log("There was an error:", error.response);
-        });
-      }
-      this.getAppointments();
-      this.alertType = "warning";
-      this.alert =
-        "You have successfully canceled your" +
-        this.selectedAppt.type +
-        " appointment on " +
-        this.selectedAppt.date +
-        " at " +
-        this.selectedAppt.startTime +
-        ".";
-      this.showAlert = true;
-    },
     async getTutorRole() {
       await PersonRoleServices.getPersonRole(this.id)
         .then((response) => {
@@ -881,57 +675,6 @@ export default {
       this.updatePeople();
       this.saveChanges = false;
       this.apptDialog = true;
-    },
-    tutorConfirmMessage(student, fName, lName) {
-      let temp = student;
-      temp.phoneNum = student.person.phoneNum;
-      temp.message =
-        "The " +
-        this.selectedAppt.type +
-        " appointment you booked on " +
-        this.selectedAppt.date +
-        " at " +
-        this.selectedAppt.startTime +
-        " has been confirmed by " +
-        fName +
-        " " +
-        lName +
-        ".\nPlease review this appointment at http://tutorscheduling.oc.edu/";
-      TwilioServices.sendMessage(temp);
-    },
-    tutorEditMessage(student, fName, lName) {
-      let temp = student;
-      temp.phoneNum = student.person.phoneNum;
-      temp.message =
-        "Your " +
-        this.selectedAppt.type +
-        " appointment with " +
-        fName +
-        " " +
-        lName +
-        " on " +
-        this.selectedAppt.date +
-        " at " +
-        this.selectedAppt.startTime +
-        " has been edited. \nPlease check changes at http://tutorscheduling.oc.edu/";
-      TwilioServices.sendMessage(temp);
-    },
-    tutorCancelMessage(student, fName, lName) {
-      let temp = student;
-      temp.phoneNum = student.person.phoneNum;
-      temp.message =
-        "Your " +
-        this.selectedAppt.type +
-        " appointment on " +
-        this.selectedAppt.date +
-        " at " +
-        this.selectedAppt.startTime +
-        " has been canceled by " +
-        fName +
-        " " +
-        lName +
-        ". We apologize for the inconvenience.";
-      TwilioServices.sendMessage(temp);
     },
   },
 };

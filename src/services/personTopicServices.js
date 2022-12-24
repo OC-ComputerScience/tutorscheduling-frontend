@@ -25,6 +25,11 @@ export default {
   deletePersonTopicByTopicId(topicId) {
     return apiClient.delete("persontopic/topic/" + topicId);
   },
+  deletePersonTopicsForPersonForGroup(personId, groupId) {
+    return apiClient.delete(
+      "persontopic/person/" + personId + "/group/" + groupId
+    );
+  },
   deletePersonTopic(personTopicId) {
     return apiClient.delete("persontopic/" + personTopicId);
   },

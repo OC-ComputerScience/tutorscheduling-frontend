@@ -361,11 +361,12 @@ import PersonTopicServices from "@/services/personTopicServices.js";
 import TopicServices from "@/services/topicServices.js";
 import AppointmentServices from "@/services/appointmentServices.js";
 import PersonAppointmentServices from "@/services/personAppointmentServices.js";
-import TwilioServices from "@/services/twilioServices.js";
+import { AppointmentActionMixin } from "../../../mixins/AppointmentActionMixin";
+import { TimeFunctionsMixin } from "../../../mixins/TimeFunctionsMixin";
 
 export default {
   props: ["id", "personId"],
-
+  mixins: [AppointmentActionMixin, TimeFunctionsMixin],
   data() {
     return {
       message: "Person - click Edit to update or Delete to remove person",
@@ -490,6 +491,7 @@ export default {
           }
         })
         .catch((error) => {
+          console.log(error);
           this.message = error.response.data.message;
           console.log("There was an error:", error.response);
         });
@@ -504,8 +506,8 @@ export default {
           console.log("There was an error:", error.response);
         });
     },
-    getPersonTopics() {
-      TopicServices.getTopicByGroupForPerson(this.group.id, this.personId)
+    async getPersonTopics() {
+      await TopicServices.getTopicByGroupForPerson(this.group.id, this.personId)
         .then((response) => {
           this.persontopics = response.data;
         })
@@ -737,11 +739,39 @@ export default {
       this.dialogDelete = false;
     },
     async disablePersonRole(personrole) {
+      // delete person role privileges
+      await PersonRolePrivilegeServices.deletePrivilegesForPersonRole(
+        this.disabledRole.personrole[0].id
+      ).catch((error) => {
+        this.message = error.response.data.message;
+        console.log("There was an error:", error.response);
+      });
+      // delete person topics
+      await PersonTopicServices.deletePersonTopicsForPersonForGroup(
+        this.person.id,
+        this.group.id
+      ).catch((error) => {
+        this.message = error.response.data.message;
+        console.log("There was an error:", error.response);
+      });
+      // delete requests
+      // TODO -- can only do once we allow tutors to also send requests
+      // delete availabilities?
       await this.getAppointments(personrole);
-      console.log(this.appointments);
+      let disableUser = {
+        fName: this.person.fName,
+        lName: this.person.lName,
+        userID: this.person.id,
+        selectedRole: {
+          type: this.disabledRole.type,
+        },
+      };
       for (let i = 0; i < this.appointments.length; i++) {
-        await this.cancelAppointment(this.appointments[i]);
+        console.log("in for loop");
+        await this.cancelAppointment(this.appointments[i], disableUser);
       }
+      await this.getPersonRoles();
+      await this.getPersonTopics();
     },
     async getAppointments(personrole) {
       await AppointmentServices.getUpcomingAppointmentForPersonForGroup(
@@ -778,272 +808,6 @@ export default {
           this.message = error.response.data.message;
           console.log("There was an error:", error.response);
         });
-    },
-    async cancelAppointment(appoint) {
-      let tempAppoint = {
-        id: appoint.id,
-        date: appoint.date,
-        startTime: appoint.startTime,
-        endTime: appoint.endTime,
-        status: appoint.status,
-        type: appoint.type,
-        preSessionInfo: "",
-        groupId: appoint.groupId,
-        locationId: appoint.locationId,
-        topicId: appoint.topicId,
-        googleEventId: appoint.googleEventId,
-      };
-      //delete appointment as a student of a private session
-      console.log(appoint);
-      if (
-        appoint.type.includes("Private") &&
-        this.disabledRole.type === "Student" &&
-        appoint.status === "booked"
-      ) {
-        tempAppoint.status = "studentCancel";
-        await AppointmentServices.updateForGoogle(appoint.id, tempAppoint).then(
-          async () => {
-            let temp = {
-              date: appoint.date,
-              startTime: appoint.startTime,
-              endTime: appoint.endTime,
-              type: appoint.type,
-              status: "available",
-              preSessionInfo: "",
-              groupId: appoint.groupId,
-            };
-            await AppointmentServices.addAppointment(temp)
-              .then(async (response) => {
-                appoint.tutors.forEach(async (t) => {
-                  let pap = {
-                    isTutor: true,
-                    appointmentId: response.data.id,
-                    personId: t.person.id,
-                  };
-                  await PersonAppointmentServices.addPersonAppointment(
-                    pap
-                  ).catch((error) => {
-                    console.log(error);
-                    this.message = error.response.data.message;
-                  });
-                });
-                this.cancelMessage(appoint.tutors[0], appoint);
-                // await this.getAppointments()
-                //this.$router.go(0);
-              })
-              .catch((error) => {
-                console.log(error);
-                this.message = error.response.data.message;
-              });
-          }
-        );
-      } else if (
-        appoint.type.includes("Private") &&
-        this.disabledRole.type === "Student" &&
-        appoint.status === "pending"
-      ) {
-        tempAppoint.status = "available";
-        tempAppoint.locationId = null;
-        tempAppoint.topicId = null;
-        tempAppoint.preSessionInfo = "";
-        // don't need to update google event because it doesn't exist
-        await AppointmentServices.updateAppointment(appoint.id, tempAppoint)
-          .then(() => {
-            this.cancelMessage(appoint.tutors[0], appoint);
-          })
-          .catch((error) => {
-            console.log(error);
-            this.message = error.response.data.message;
-          });
-        for (let i = 0; i < appoint.personappointment.length; i++) {
-          if (
-            appoint.personappointment[i].appointmentId == appoint.id &&
-            !appoint.personappointment[i].isTutor &&
-            appoint.personappointment[i].personId == this.person.id
-          ) {
-            await PersonAppointmentServices.deletePersonAppointment(
-              appoint.personappointment[i].id
-            );
-            // await this.getAppointments()
-            //this.$router.go(0);
-          }
-        }
-      }
-      //delete appointment as a student of a group session
-      else if (
-        appoint.type.includes("Group") &&
-        this.disabledRole.type === "Student"
-      ) {
-        for (let i = 0; i < appoint.personappointment.length; i++) {
-          if (
-            appoint.personappointment[i].appointmentId == appoint.id &&
-            !appoint.personappointment[i].isTutor &&
-            appoint.personappointment[i].personId == this.person.id
-          ) {
-            await PersonAppointmentServices.deletePersonAppointment(
-              appoint.personappointment[i].id
-            );
-            await AppointmentServices.updateForGoogle(
-              appoint.id,
-              tempAppoint
-            ).catch((error) => {
-              this.message = error.response.data.message;
-            });
-            // await this.getAppointments()
-            //this.$router.go(0);
-          }
-        }
-      }
-      //delete appointment as a tutor of a private session
-      else if (
-        appoint.type.includes("Private") &&
-        this.disabledRole.type === "Tutor"
-      ) {
-        console.log("in delete private for tutor");
-        for (let i = 0; i < appoint.personappointment.length; i++) {
-          if (
-            appoint.personappointment[i].appointmentId == appoint.id &&
-            appoint.personappointment[i].isTutor
-          ) {
-            for (let j = 0; j < appoint.personappointment.length; j++) {
-              if (
-                appoint.personappointment[j].appointmentId == appoint.id &&
-                !appoint.personappointment[j].isTutor
-              ) {
-                tempAppoint.status = "tutorCancel";
-                await AppointmentServices.updateForGoogle(
-                  appoint.id,
-                  tempAppoint
-                ).catch((error) => {
-                  this.message = error.response.data.message;
-                });
-                this.tutorCancelMessage(appoint.students[0], appoint);
-                // await this.getAppointments()
-                return;
-              }
-            }
-
-            await PersonAppointmentServices.deletePersonAppointment(
-              appoint.personappointment[i].id
-            );
-
-            await AppointmentServices.deleteAppointment(appoint.id);
-
-            // await this.getAppointments()
-            //this.$router.go(0);
-          }
-        }
-      }
-      //delete appointment as a tutor of a group session
-      else if (
-        appoint.type.includes("Group") &&
-        this.disabledRole.type === "Tutor"
-      ) {
-        for (let i = 0; i < appoint.personappointment.length; i++) {
-          if (
-            appoint.personappointment[i].appointmentId == appoint.id &&
-            appoint.personappointment[i].isTutor &&
-            appoint.personappointment[i].personId == this.person.id
-          ) {
-            let found = false;
-            for (let j = 0; j < appoint.personappointment.length; j++) {
-              if (
-                appoint.personappointment[j].appointmentId == appoint.id &&
-                appoint.personappointment[j].isTutor &&
-                appoint.personappointment[j].personId != this.person.id
-              ) {
-                found = true;
-              }
-            }
-            if (appoint.students.length > 0 && appoint.tutors.length == 1) {
-              for (let k = 0; k < appoint.students.length; k++) {
-                this.tutorCancelMessage(appoint.students[k], appoint);
-              }
-              tempAppoint.status = "tutorCancel";
-              await AppointmentServices.updateForGoogle(
-                appoint.id,
-                tempAppoint
-              ).catch((error) => {
-                this.message = error.response.data.message;
-              });
-            } else if (found) {
-              await PersonAppointmentServices.deletePersonAppointment(
-                appoint.personappointment[i].id
-              ).catch((error) => {
-                this.message = error.response.data.message;
-              });
-            } else {
-              await AppointmentServices.deleteAppointment(appoint.id).catch(
-                (error) => {
-                  this.message = error.response.data.message;
-                }
-              );
-            }
-            // await this.getAppointments()
-
-            //this.$router.go(0);
-          }
-        }
-      }
-      this.disabledRole = {};
-    },
-    cancelMessage(tutor, appoint) {
-      let temp = tutor.person;
-      console.log(tutor);
-      let start = this.calcTime(appoint.startTime);
-      let date =
-        appoint.date.toString().substring(5, 10) +
-        "-" +
-        appoint.date.toString().substring(0, 4);
-      temp.message =
-        "Your " +
-        appoint.type +
-        " appointment on " +
-        date +
-        " at " +
-        start +
-        " has been canceled by " +
-        this.person.fName +
-        " " +
-        this.person.lName +
-        ". This appointment is now open again for booking.";
-      TwilioServices.sendMessage(temp);
-    },
-    tutorCancelMessage(student, appoint) {
-      let temp = student.person;
-      let start = this.calcTime(appoint.startTime);
-      let date =
-        appoint.date.toString().substring(5, 10) +
-        "-" +
-        appoint.date.toString().substring(0, 4);
-      temp.message =
-        "Your " +
-        appoint.type +
-        " appointment on " +
-        date +
-        " at " +
-        start +
-        " has been canceled by " +
-        this.person.fName +
-        " " +
-        this.person.lName +
-        ". We apologize for the inconvenience.";
-      TwilioServices.sendMessage(temp);
-    },
-    //Formats time to be more user friendly
-    calcTime(time) {
-      if (time == null) {
-        return null;
-      }
-      let temp = time.split(":");
-      let milHours = parseInt(temp[0]);
-      let minutes = temp[1];
-      let hours = milHours % 12;
-      if (hours == 0) {
-        hours = 12;
-      }
-      let dayTime = ~~(milHours / 12) > 0 ? "PM" : "AM";
-      return "" + hours + ":" + minutes + " " + dayTime;
     },
   },
 };
