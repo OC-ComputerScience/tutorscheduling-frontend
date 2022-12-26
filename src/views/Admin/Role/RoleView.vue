@@ -9,9 +9,9 @@
         Edit
       </v-btn>
 
-      <v-btn color="error" class="mr-4" @click="deleteRole(role.id, role.name)">
+      <!-- <v-btn color="error" class="mr-4" @click="deleteRole(role.id, role.name)">
         Delete
-      </v-btn>
+      </v-btn> -->
 
       <v-btn class="mr-4" @click="cancel"> Back </v-btn>
 
@@ -22,16 +22,14 @@
         id="type"
         :counter="50"
         label="Type"
-        readonly
-      ></v-text-field>
+        readonly></v-text-field>
 
       <v-text-field
         v-model="group.name"
         id="name"
         :counter="25"
         label="Group Name"
-        readonly
-      ></v-text-field>
+        readonly></v-text-field>
     </v-container>
   </div>
 </template>

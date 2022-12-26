@@ -22,6 +22,9 @@ export default {
   updatePersonTopic(personTopicId, persontopic) {
     return apiClient.put("persontopic/" + personTopicId, persontopic);
   },
+  deletePersonTopicByTopicId(topicId) {
+    return apiClient.delete("persontopic/topic/" + topicId);
+  },
   deletePersonTopic(personTopicId) {
     return apiClient.delete("persontopic/" + personTopicId);
   },

@@ -9,13 +9,12 @@
         Edit
       </v-btn>
 
-      <v-btn
+      <!-- <v-btn
         color="error"
         class="mr-4"
-        @click="deleteTopic(topic.id, topic.name)"
-      >
+        @click="deleteTopic(topic.id, topic.name)">
         Delete
-      </v-btn>
+      </v-btn> -->
 
       <v-btn class="mr-4" @click="cancel"> Back </v-btn>
 
@@ -26,24 +25,28 @@
         id="name"
         :counter="50"
         label="Name"
-        readonly
-      ></v-text-field>
+        readonly></v-text-field>
 
       <v-text-field
         v-model="topic.abbr"
         id="abbr"
         :counter="25"
         label="Abbreviation"
-        readonly
-      ></v-text-field>
+        readonly></v-text-field>
 
       <v-text-field
         v-model="group.name"
         id="name"
         :counter="25"
         label="Group Name"
-        readonly
-      ></v-text-field>
+        readonly></v-text-field>
+
+      <v-text-field
+        v-model="topic.status"
+        id="status"
+        :counter="25"
+        label="Status"
+        readonly></v-text-field>
     </v-container>
   </div>
 </template>
@@ -62,9 +65,9 @@ export default {
       message: "View Topic - click Edit to update or Delete to remove topic",
     };
   },
-  created() {
-    this.getGroupByPersonRoleId();
-    this.getTopic();
+  async created() {
+    await this.getGroupByPersonRoleId();
+    await this.getTopic();
   },
   methods: {
     async getGroupByPersonRoleId() {
@@ -77,8 +80,8 @@ export default {
           console.log("There was an error:", error.response);
         });
     },
-    getTopic() {
-      TopicServices.getTopic(this.topicId)
+    async getTopic() {
+      await TopicServices.getTopic(this.topicId)
         .then((response) => {
           this.topic = response.data;
         })
