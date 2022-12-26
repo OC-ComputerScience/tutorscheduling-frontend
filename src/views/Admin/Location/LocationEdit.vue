@@ -5,6 +5,17 @@
         <v-toolbar-title>{{ this.message }}</v-toolbar-title>
       </v-toolbar>
       <br />
+
+      <v-dialog persistent v-model="showDisableConfirmation" max-width="750px">
+        <DeleteConfirmationComponent
+          type="location"
+          :item="location"
+          @handleReturningCancel="showDisableConfirmation = false"
+          @handleReturningSuccess="
+            updateLocation()
+          "></DeleteConfirmationComponent>
+      </v-dialog>
+
       <v-form ref="form" v-model="valid" lazy validation>
         <v-text-field
           v-model="location.name"
@@ -31,6 +42,7 @@
           v-model="location.status"
           :items="status"
           label="Status"
+          @change="statusChanged = true"
           required>
         </v-select>
 
@@ -50,7 +62,7 @@
           :disabled="!valid"
           color="success"
           class="mr-4"
-          @click="updateLocation">
+          @click="directToCancel()">
           Save
         </v-btn>
 
@@ -63,13 +75,18 @@
 <script>
 import LocationServices from "@/services/locationServices.js";
 import GroupServices from "@/services/groupServices.js";
+import DeleteConfirmationComponent from "../../../components/DeleteConfirmationComponent.vue";
 import Utils from "@/config/utils.js";
 
 export default {
   props: ["id"],
-
+  components: {
+    DeleteConfirmationComponent,
+  },
   data() {
     return {
+      showDisableConfirmation: false,
+      statusChanged: false,
       valid: false,
       user: {},
       message: "Edit Location - make updates to the fields and click Save",
@@ -99,8 +116,14 @@ export default {
         console.log("There was an error:", error.response);
       });
   },
-
   methods: {
+    directToCancel() {
+      if (this.location.status === "disabled" && this.statusChanged) {
+        this.showDisableConfirmation = true;
+      } else {
+        this.updateLocation();
+      }
+    },
     // only updating this replace issue once edits can be done on view page
     // also this.id is location id
     updateLocation() {
