@@ -15,7 +15,7 @@
           :item="selectedAppointment"
           @handleReturningCancel="showDeleteConfirmation = false"
           @handleReturningSuccess="
-            cancelAppointment(selectedAppt, user)
+            cancelAppointment(selectedAppointment, user)
           "></DeleteConfirmationComponent>
       </v-dialog>
       <v-container v-if="!disabled">
@@ -167,7 +167,7 @@
                 v-if="selectedAppointment.type === 'Private' && saveChanges"
                 color="accent"
                 @click="
-                  editAppointment(user, selectedAppt);
+                  editAppointment(user, selectedAppointment);
                   getAppointments();
                   apptDialog = false;
                 ">
