@@ -224,7 +224,9 @@
           <v-card-actions>
             <v-spacer></v-spacer>
             <v-btn color="error" text @click="closeRole()"> Cancel </v-btn>
-            <v-btn color="accent" text @click="directToCancel()"> Save </v-btn>
+            <v-btn color="accent" text @click="directToCancel(personrole)">
+              Save
+            </v-btn>
           </v-card-actions>
         </v-card>
       </v-dialog>
@@ -445,7 +447,7 @@ export default {
     },
   },
   async created() {
-    this.getPerson();
+    await this.getPerson();
     this.user = Utils.getStore("user");
     await this.getGroupByPersonRoleId()
       .then(() => {
@@ -469,8 +471,8 @@ export default {
           console.log("There was an error:", error.response);
         });
     },
-    getPerson() {
-      PersonServices.getPerson(this.personId)
+    async getPerson() {
+      await PersonServices.getPerson(this.personId)
         .then((response) => {
           this.person = response.data;
         })
@@ -599,6 +601,7 @@ export default {
       if (item.personrole[0].status === "disabled") this.disabledRole = item;
       console.log(this.disabledRole);
       this.personrole = Object.assign({}, item.personrole[0]);
+      this.personrole.type = item.type;
       this.dialogRole = true;
     },
     closeRole() {
@@ -651,6 +654,7 @@ export default {
     },
     directToCancel(item) {
       this.deleteItem = item;
+      console.log(this.deleteItem);
       this.deleteItem.person = this.person;
       this.showDisableConfirmation = true;
       if (this.deleteType === "personrole") {
@@ -660,7 +664,9 @@ export default {
       }
     },
     async confirmedDelete() {
-      if (this.deleteType === "privilege") {
+      if (this.deleteType === "personrole") {
+        this.saveRole();
+      } else if (this.deleteType === "privilege") {
         this.privilege = {
           id: this.deleteItem.id,
           privilege: this.deleteItem.privilege,

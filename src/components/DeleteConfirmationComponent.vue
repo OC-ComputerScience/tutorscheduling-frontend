@@ -111,9 +111,10 @@ export default {
       this.agreeButton = "Yes, delete";
     },
     setupForPersonRole() {
+      console.log(this.item);
       this.cancelTitle =
         "Are you sure you want to disable the " +
-        this.item.name +
+        this.item.type.toLowerCase() +
         " role for " +
         this.item.person.fName +
         " " +
@@ -121,8 +122,12 @@ export default {
         "?";
       this.cancelBody =
         "Disabling this role will cancel all future appointments";
-
-      this.type + " will make it unavailable for any future appointments.";
+      if (this.item.type === "Tutor") {
+        this.cancelBody +=
+          ", delete the tutor's topics, delete the tutor's privileges";
+      }
+      this.cancelBody +=
+        ", and make this role unavailable for this person to use.";
       this.agreeButton = "Yes, disable";
     },
   },
