@@ -118,11 +118,13 @@ import TopicServices from "@/services/topicServices.js";
 import PersonServices from "@/services/personServices.js";
 import PersonRoleServices from "@/services/personRoleServices.js";
 import InformationComponent from "@/components/InformationComponent.vue";
+import { TimeFunctionsMixin } from "@/mixins/TimeFunctionsMixin";
 import "@/plugins/apexcharts";
 
 export default {
   props: ["id"],
   name: "AdminHome",
+  mixins: [TimeFunctionsMixin],
   components: {
     InformationComponent,
   },
@@ -495,73 +497,17 @@ export default {
       }
     },
     setweekList() {
-      var currentDate = new Date();
-      var tempPrev = this.getPrevWeek(
-        new Date(this.getPreviousSunday(currentDate))
-      );
-      var prev = this.toSQLDate(tempPrev);
-      var current = this.toSQLDate(this.getPreviousSunday(currentDate));
-      var tempNext = this.getNextWeek(
-        this.getPreviousSunday(new Date(currentDate))
-      );
-      var next = this.toSQLDate(tempNext);
+      let prev = this.getStartOfPreviousWeek();
+      let current = this.getStartOfCurrentWeek();
+      let next = this.getStartOfNextWeek();
       this.weekList = [prev, current, next];
       this.currentWeek = current;
-    },
-    getPreviousSunday(date) {
-      const previousSunday = new Date();
-      previousSunday.setDate(date.getDate() - date.getDay());
-      // if adding to new week makes the new date bigger than the previous date, subtract a month
-      if (previousSunday > date)
-        previousSunday.setMonth(previousSunday.getMonth() - 1);
-      previousSunday.setHours(0, 0, 0, 0);
-      return previousSunday;
-    },
-    getNextWeek(week) {
-      var date = new Date(week.getTime() + 7 * 24 * 60 * 60 * 1000);
-      var next = this.toSQLDate(date);
-      return next;
-    },
-    getPrevWeek(week) {
-      var date = new Date(week.getTime() - 7 * 24 * 60 * 60 * 1000);
-      var prev = this.toSQLDate(date);
-      return prev;
-    },
-    toSQLDate(day) {
-      var date = day.toISOString().slice(0, 19).replace("T", " ").slice(0, 10);
-      return date;
     },
     checkNum(num) {
       if (!num) {
         return 0 + " total";
       }
       return num + " total";
-    },
-    checkHours(hours) {
-      if (!hours) {
-        return "00:00";
-      }
-      var total = this.toHoursAndMinutes(hours);
-      return total;
-    },
-    numifyHours(hours) {
-      if (!hours) {
-        return 0;
-      }
-      var total = this.toHours(hours);
-      return total;
-    },
-    toHours(totalMinutes) {
-      var hours = parseFloat(totalMinutes) / parseFloat(60);
-      return hours;
-    },
-    toHoursAndMinutes(totalMinutes) {
-      var minutes = parseInt(totalMinutes) % 60;
-      minutes = (minutes < 10 ? "0" : "") + minutes;
-      var hours = Math.floor(parseInt(totalMinutes) / 60);
-      hours = (hours < 10 ? "0" : "") + hours;
-
-      return hours + ":" + minutes;
     },
     async getTutorApplications() {
       await PersonServices.getPendingTutorsForGroup(this.group.id)
