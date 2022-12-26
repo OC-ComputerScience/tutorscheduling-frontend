@@ -12,25 +12,39 @@
       <v-alert v-model="showAlert" dismissible :type="alertType">{{
         this.alert
       }}</v-alert>
+      <v-dialog persistent v-model="showDeleteConfirmation" max-width="750px">
+        <DeleteConfirmationComponent
+          type="appointment"
+          :item="selectedAppointment"
+          @handleReturningCancel="showDeleteConfirmation = false"
+          @handleReturningSuccess="
+            directToCancel()
+          "></DeleteConfirmationComponent>
+      </v-dialog>
       <v-dialog v-model="apptDialog" max-width="800px">
         <v-card>
-          <v-toolbar :color="selectedAppt.color" dark>
+          <v-toolbar :color="selectedAppointment.color" dark>
             <v-card-title>
-              <span v-if="selectedAppt.type === 'Group'" class="text-h5"
-                >Upcoming Group Appointment on {{ selectedAppt.date }}</span
+              <span v-if="selectedAppointment.type === 'Group'" class="text-h5"
+                >Upcoming Group Appointment on
+                {{ selectedAppointment.date }}</span
               >
-              <span v-else-if="selectedAppt.type === 'Private'" class="text-h5"
-                >Upcoming Private Appointment on {{ selectedAppt.date }}</span
+              <span
+                v-else-if="selectedAppointment.type === 'Private'"
+                class="text-h5"
+                >Upcoming Private Appointment on
+                {{ selectedAppointment.date }}</span
               >
             </v-card-title>
           </v-toolbar>
           <v-card-text>
             <br />
             <b>Time slot:</b>
-            {{ selectedAppt.startTime }} - {{ selectedAppt.endTime }}
+            {{ selectedAppointment.startTime }} -
+            {{ selectedAppointment.endTime }}
             <br />
             <b>Status:</b>
-            {{ selectedAppt.status }}
+            {{ selectedAppointment.status }}
             <br />
             <b>Tutors: </b>
             <span v-if="tutors.length > 0">
@@ -65,9 +79,9 @@
             <br />
 
             <!-- make location and topic changable if the appointment type is private-->
-            <span v-if="selectedAppt.type === 'Private'">
+            <span v-if="selectedAppointment.type === 'Private'">
               <v-select
-                v-model="selectedAppt.locationId"
+                v-model="selectedAppointment.locationId"
                 :items="locations"
                 item-text="name"
                 item-value="id"
@@ -76,14 +90,14 @@
                 dense
                 :disabled="
                   !checkStatus('booked') ||
-                  selectedAppt.status === 'studentCancel' ||
-                  selectedAppt.status === 'tutorCancel'
+                  selectedAppointment.status === 'studentCancel' ||
+                  selectedAppointment.status === 'tutorCancel'
                 "
                 @change="saveChanges = true">
               </v-select>
 
               <v-select
-                v-model="selectedAppt.topicId"
+                v-model="selectedAppointment.topicId"
                 :items="topics"
                 item-text="name"
                 item-value="id"
@@ -95,7 +109,7 @@
             <!-- slots for location and topic to be unchangable if the session type is group -->
             <span v-else>
               <v-select
-                v-model="selectedAppt.locationId"
+                v-model="selectedAppointment.locationId"
                 :items="locations"
                 item-text="name"
                 item-value="id"
@@ -106,7 +120,7 @@
               </v-select>
 
               <v-select
-                v-model="selectedAppt.topicId"
+                v-model="selectedAppointment.topicId"
                 :items="topics"
                 item-text="name"
                 item-value="id"
@@ -120,20 +134,20 @@
             <!-- show time ad an changeable value for private lessons-->
 
             <v-text-field
-              v-model="selectedAppt.startTime"
+              v-model="selectedAppointment.startTime"
               label="Booked Start"
               dense
               readonly>
             </v-text-field>
             <v-text-field
-              v-model="selectedAppt.endTime"
+              v-model="selectedAppointment.endTime"
               label="Booked End"
               dense
               readonly>
             </v-text-field>
             <!-- put in presession-info for appointment for private appointments/ add a readonly if private -->
             <v-textarea
-              v-model="selectedAppt.preSessionInfo"
+              v-model="selectedAppointment.preSessionInfo"
               :counter="130"
               label="Pre-Session Info"
               hint="Enter Info About What You Need Help With..."
@@ -141,25 +155,22 @@
               required
               auto-grow
               rows="1"
-              :readonly="selectedAppt.type === 'Private'"
+              :readonly="selectedAppointment.type === 'Private'"
               @change="saveChanges = true"></v-textarea>
           </v-card-text>
           <v-card-actions>
             <v-spacer></v-spacer>
             <v-btn
-              v-if="!(selectedAppt.type === 'Group')"
+              v-if="!(selectedAppointment.type === 'Group')"
               color="#12f000"
               @click="confirmAppointment(true)"
               :disabled="!checkStatus('pending')">
               Confirm
             </v-btn>
             <v-btn
-              v-if="!(selectedAppt.type === 'Group')"
+              v-if="!(selectedAppointment.type === 'Group')"
               color="error"
-              @click="
-                confirmAppointment(false);
-                apptDialog = false;
-              "
+              @click="showDeleteConfirmation = true"
               :disabled="!checkStatus('pending')">
               Reject
             </v-btn>
@@ -183,16 +194,14 @@
 
             <v-btn
               v-if="
-                (checkStatus('booked') && selectedAppt.type === 'Private') ||
-                selectedAppt.type === 'Group' ||
+                (checkStatus('booked') &&
+                  selectedAppointment.type === 'Private') ||
+                selectedAppointment.type === 'Group' ||
                 checkStatus('available') ||
                 checkStatus('booked')
               "
               color="red"
-              @click="
-                cancelAppointment();
-                apptDialog = false;
-              ">
+              @click="showDeleteConfirmation = true">
               Cancel Appointment
             </v-btn>
           </v-card-actions>
@@ -305,6 +314,7 @@ import LocationServices from "@/services/locationServices.js";
 import PersonAppointmentServices from "@/services/personAppointmentServices.js";
 import TwilioServices from "@/services/twilioServices.js";
 import InformationComponent from "../../components/InformationComponent.vue";
+import DeleteConfirmationComponent from "../../components/DeleteConfirmationComponent.vue";
 import { TimeFunctionsMixin } from "../../mixins/TimeFunctionsMixin";
 
 export default {
@@ -312,6 +322,7 @@ export default {
   name: "TutorHome",
   mixins: [TimeFunctionsMixin],
   components: {
+    DeleteConfirmationComponent,
     InformationComponent,
   },
   watch: {
@@ -321,6 +332,7 @@ export default {
   },
   data() {
     return {
+      showDeleteConfirmation: false,
       showAlert: false,
       alert: "",
       alertType: "success",
@@ -336,7 +348,7 @@ export default {
       topics: [],
       students: [],
       tutors: [],
-      selectedAppt: {},
+      selectedAppointment: {},
       appointments: [],
       appointmentsneedingfeedback: [],
       headers: [
@@ -574,19 +586,19 @@ export default {
     //Update on tutor confirming booking
     async confirmAppointment(confirm) {
       if (confirm) {
-        this.selectedAppt.status = "booked";
-        if (this.selectedAppt.type.includes("Private")) {
+        this.selectedAppointment.status = "booked";
+        if (this.selectedAppointment.type.includes("Private")) {
           let updateAppt = {
-            id: this.selectedAppt.id,
-            date: this.selectedAppt.originalDate,
-            startTime: this.selectedAppt.originalStart,
-            endTime: this.selectedAppt.originalEnd,
-            type: this.selectedAppt.type,
+            id: this.selectedAppointment.id,
+            date: this.selectedAppointment.originalDate,
+            startTime: this.selectedAppointment.originalStart,
+            endTime: this.selectedAppointment.originalEnd,
+            type: this.selectedAppointment.type,
             status: "booked",
-            preSessionInfo: this.selectedAppt.preSessionInfo,
-            groupId: this.selectedAppt.groupId,
-            topicId: this.selectedAppt.topicId,
-            locationId: this.selectedAppt.locationId,
+            preSessionInfo: this.selectedAppointment.preSessionInfo,
+            groupId: this.selectedAppointment.groupId,
+            topicId: this.selectedAppointment.topicId,
+            locationId: this.selectedAppointment.locationId,
           };
           await AppointmentServices.updateForGoogle(updateAppt.id, updateAppt)
             .then(async () => {
@@ -597,7 +609,7 @@ export default {
                 updateAppt.id
               );
               this.getAppointments();
-              this.selectedAppt.color = "blue";
+              this.selectedAppointment.color = "blue";
             })
             .catch((error) => {
               this.alertType = "error";
@@ -607,30 +619,30 @@ export default {
             });
           this.alertType = "success";
           this.alert =
-            "You have successfully confirmed your" +
-            this.selectedAppt.type +
+            "You have successfully confirmed " +
+            this.selectedAppointment.type +
             " appointment on " +
-            this.selectedAppt.date +
+            this.selectedAppointment.date +
             " at " +
-            this.selectedAppt.startTime +
+            this.selectedAppointment.startTime +
             ".";
           this.showAlert = true;
         }
       } else {
         // don't need to update google cal because it's not even on there yet
-        this.selectedAppt.status = "tutorCancel";
+        this.selectedAppointment.status = "tutorCancel";
         let updateAppt = {
-          id: this.selectedAppt.id,
-          date: this.selectedAppt.originalDate,
-          startTime: this.selectedAppt.originalStart,
-          endTime: this.selectedAppt.originalEnd,
-          type: this.selectedAppt.type,
+          id: this.selectedAppointment.id,
+          date: this.selectedAppointment.originalDate,
+          startTime: this.selectedAppointment.originalStart,
+          endTime: this.selectedAppointment.originalEnd,
+          type: this.selectedAppointment.type,
           status: "tutorCancel",
-          preSessionInfo: this.selectedAppt.preSessionInfo,
-          groupId: this.selectedAppt.groupId,
-          topicId: this.selectedAppt.topicId,
-          locationId: this.selectedAppt.locationId,
-          googleEventId: this.selectedAppt.googleEventId,
+          preSessionInfo: this.selectedAppointment.preSessionInfo,
+          groupId: this.selectedAppointment.groupId,
+          topicId: this.selectedAppointment.topicId,
+          locationId: this.selectedAppointment.locationId,
+          googleEventId: this.selectedAppointment.googleEventId,
         };
         await AppointmentServices.updateAppointment(updateAppt.id, updateAppt)
           .then(() => {
@@ -646,29 +658,29 @@ export default {
           });
         this.alertType = "warning";
         this.alert =
-          "You have successfully rejected your" +
-          this.selectedAppt.type +
+          "You have successfully rejected your " +
+          this.selectedAppointment.type +
           " appointment on " +
-          this.selectedAppt.date +
+          this.selectedAppointment.date +
           " at " +
-          this.selectedAppt.startTime +
+          this.selectedAppointment.startTime +
           ".";
         this.showAlert = true;
       }
     },
     async editAppointment() {
       let updateAppt = {
-        id: this.selectedAppt.id,
-        date: this.selectedAppt.originalDate,
-        startTime: this.selectedAppt.originalStart,
-        endTime: this.selectedAppt.originalEnd,
-        type: this.selectedAppt.type,
-        status: this.selectedAppt.status,
-        preSessionInfo: this.selectedAppt.preSessionInfo,
-        groupId: this.selectedAppt.groupId,
-        topicId: this.selectedAppt.topicId,
-        locationId: this.selectedAppt.locationId,
-        googleEventId: this.selectedAppt.googleEventId,
+        id: this.selectedAppointment.id,
+        date: this.selectedAppointment.originalDate,
+        startTime: this.selectedAppointment.originalStart,
+        endTime: this.selectedAppointment.originalEnd,
+        type: this.selectedAppointment.type,
+        status: this.selectedAppointment.status,
+        preSessionInfo: this.selectedAppointment.preSessionInfo,
+        groupId: this.selectedAppointment.groupId,
+        topicId: this.selectedAppointment.topicId,
+        locationId: this.selectedAppointment.locationId,
+        googleEventId: this.selectedAppointment.googleEventId,
       };
       await AppointmentServices.updateForGoogle(updateAppt.id, updateAppt)
         .then(async () => {
@@ -681,12 +693,12 @@ export default {
             );
             this.alertType = "success";
             this.alert =
-              "You have successfully updated your" +
-              this.selectedAppt.type +
+              "You have successfully updated your " +
+              this.selectedAppointment.type +
               " appointment on " +
-              this.selectedAppt.date +
+              this.selectedAppointment.date +
               " at " +
-              this.selectedAppt.startTime +
+              this.selectedAppointment.startTime +
               ".";
             this.showAlert = true;
           }
@@ -698,6 +710,14 @@ export default {
           this.showAlert = true;
           console.log("There was an error:", error.response);
         });
+    },
+    async directToCancel() {
+      if (this.selectedAppointment.status === "pending")
+        await this.confirmAppointment(false);
+      else if (this.selectedAppointment.status === "booked")
+        await this.cancelAppointment();
+      this.apptDialog = false;
+      this.showDeleteConfirmation = false;
     },
     //method for canceling appointments
     async cancelAppointment() {
@@ -713,14 +733,14 @@ export default {
             console.log("There was an error:", error.response);
           });
         }
-        await AppointmentServices.deleteAppointment(this.selectedAppt.id).catch(
-          (error) => {
-            this.alertType = "error";
-            this.alert = error.response.data.message;
-            this.showAlert = true;
-            console.log("There was an error:", error.response);
-          }
-        );
+        await AppointmentServices.deleteAppointment(
+          this.selectedAppointment.id
+        ).catch((error) => {
+          this.alertType = "error";
+          this.alert = error.response.data.message;
+          this.showAlert = true;
+          console.log("There was an error:", error.response);
+        });
       }
       // if students are, keep the appointment but delete all the personappointments
       else {
@@ -729,7 +749,7 @@ export default {
             this.students[i],
             this.user.fName,
             this.user.lName,
-            this.selectedAppt.id
+            this.selectedAppointment.id
           );
           await PersonAppointmentServices.deletePersonAppointment(
             this.students[i].id
@@ -751,16 +771,16 @@ export default {
           });
         }
         let updateAppt = {
-          id: this.selectedAppt.id,
-          date: this.selectedAppt.originalDate,
-          startTime: this.selectedAppt.originalStart,
-          endTime: this.selectedAppt.originalEnd,
-          type: this.selectedAppt.type,
+          id: this.selectedAppointment.id,
+          date: this.selectedAppointment.originalDate,
+          startTime: this.selectedAppointment.originalStart,
+          endTime: this.selectedAppointment.originalEnd,
+          type: this.selectedAppointment.type,
           status: "tutorCancel",
-          preSessionInfo: this.selectedAppt.preSessionInfo,
-          groupId: this.selectedAppt.groupId,
-          topicId: this.selectedAppt.topicId,
-          locationId: this.selectedAppt.locationId,
+          preSessionInfo: this.selectedAppointment.preSessionInfo,
+          groupId: this.selectedAppointment.groupId,
+          topicId: this.selectedAppointment.topicId,
+          locationId: this.selectedAppointment.locationId,
         };
         await AppointmentServices.updateForGoogle(
           updateAppt.id,
@@ -775,12 +795,12 @@ export default {
       this.getAppointments();
       this.alertType = "warning";
       this.alert =
-        "You have successfully canceled your" +
-        this.selectedAppt.type +
+        "You have successfully canceled your " +
+        this.selectedAppointment.type +
         " appointment on " +
-        this.selectedAppt.date +
+        this.selectedAppointment.date +
         " at " +
-        this.selectedAppt.startTime +
+        this.selectedAppointment.startTime +
         ".";
       this.showAlert = true;
     },
@@ -817,7 +837,7 @@ export default {
       this.tutors = [];
       this.students = [];
       await PersonAppointmentServices.findStudentDataForTable(
-        this.selectedAppt.id
+        this.selectedAppointment.id
       )
         .then((response) => {
           this.students = response.data;
@@ -829,7 +849,7 @@ export default {
           console.log("There was an error:", error.response);
         });
       await PersonAppointmentServices.findTutorDataForTable(
-        this.selectedAppt.id
+        this.selectedAppointment.id
       )
         .then((response) => {
           this.tutors = response.data;
@@ -869,7 +889,10 @@ export default {
         });
     },
     checkStatus(status) {
-      if (this.selectedAppt != null && this.selectedAppt.status == status) {
+      if (
+        this.selectedAppointment != null &&
+        this.selectedAppointment.status == status
+      ) {
         return true;
       } else {
         return false;
@@ -877,7 +900,7 @@ export default {
     },
     rowClick: function (item, row) {
       row.select(true);
-      this.selectedAppt = item;
+      this.selectedAppointment = item;
       this.updatePeople();
       this.saveChanges = false;
       this.apptDialog = true;
@@ -887,11 +910,11 @@ export default {
       temp.phoneNum = student.person.phoneNum;
       temp.message =
         "The " +
-        this.selectedAppt.type +
+        this.selectedAppointment.type +
         " appointment you booked on " +
-        this.selectedAppt.date +
+        this.selectedAppointment.date +
         " at " +
-        this.selectedAppt.startTime +
+        this.selectedAppointment.startTime +
         " has been confirmed by " +
         fName +
         " " +
@@ -904,15 +927,15 @@ export default {
       temp.phoneNum = student.person.phoneNum;
       temp.message =
         "Your " +
-        this.selectedAppt.type +
+        this.selectedAppointment.type +
         " appointment with " +
         fName +
         " " +
         lName +
         " on " +
-        this.selectedAppt.date +
+        this.selectedAppointment.date +
         " at " +
-        this.selectedAppt.startTime +
+        this.selectedAppointment.startTime +
         " has been edited. \nPlease check changes at http://tutorscheduling.oc.edu/";
       TwilioServices.sendMessage(temp);
     },
@@ -921,11 +944,11 @@ export default {
       temp.phoneNum = student.person.phoneNum;
       temp.message =
         "Your " +
-        this.selectedAppt.type +
+        this.selectedAppointment.type +
         " appointment on " +
-        this.selectedAppt.date +
+        this.selectedAppointment.date +
         " at " +
-        this.selectedAppt.startTime +
+        this.selectedAppointment.startTime +
         " has been canceled by " +
         fName +
         " " +
