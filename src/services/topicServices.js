@@ -11,6 +11,9 @@ export default {
   getAllForGroup(id) {
     return apiClient.get("topic/group/" + id);
   },
+  getActiveForGroup(id) {
+    return apiClient.get("topic/active/group/" + id);
+  },
   getTopicForPerson(id) {
     return apiClient.get("topic/person/" + id);
   },

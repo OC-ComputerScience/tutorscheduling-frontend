@@ -13,8 +13,7 @@
           label="Name"
           hint="Name"
           persistent-hint
-          required
-        ></v-text-field>
+          required></v-text-field>
 
         <v-text-field
           v-model="topic.abbr"
@@ -23,16 +22,21 @@
           label="Abbreviation"
           hint="Abbreviation"
           persistent-hint
-          required
-        ></v-text-field>
+          required></v-text-field>
+
+        <v-select
+          v-model="topic.status"
+          :items="status"
+          label="Status"
+          required>
+        </v-select>
 
         <!-- group should be readonly -->
         <v-text-field
           v-model="this.user.selectedGroup"
           id="this.group.id"
           label="Group"
-          readonly
-        ></v-text-field>
+          readonly></v-text-field>
 
         <!-- <v-select
         v-model="topic.groupId"
@@ -48,8 +52,7 @@
           :disabled="!valid"
           color="success"
           class="mr-4"
-          @click="addTopic"
-        >
+          @click="addTopic">
           Save
         </v-btn>
 
@@ -74,6 +77,7 @@ export default {
       group: {},
       user: {},
       roles: ["admin"],
+      status: ["active", "disabled"],
       message: "Add Topic - enter data and click Save",
     };
   },

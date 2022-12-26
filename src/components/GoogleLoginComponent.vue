@@ -35,7 +35,6 @@
             text
             @click="
               dialog = false;
-              openRegistration = true;
               savePhoneNum();
             ">
             Continue
