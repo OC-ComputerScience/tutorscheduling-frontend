@@ -305,6 +305,7 @@
 <script>
 import AvailabilityServices from "@/services/availabilityServices.js";
 import PersonRoleServices from "@/services/personRoleServices.js";
+import PersonRolePrivilegeServices from "@/services/personRolePrivilegeServices.js";
 import TopicServices from "@/services/topicServices.js";
 import LocationServices from "@/services/locationServices.js";
 import AppointmentServices from "@/services/appointmentServices.js";
@@ -369,6 +370,7 @@ export default {
     topics: [],
     location: "",
     locations: [],
+    personroleprivileges: [],
     sessionValues: [
       { text: "Private", value: "Private" },
       { text: "Group", value: "Group" },
@@ -400,6 +402,7 @@ export default {
     this.newEnd = "23:" + (59 - (this.group.timeInterval - 1)).toString();
     this.getAvailabilities();
     this.updateTimes();
+    await this.getPrivilegesForPersonRole();
   },
   methods: {
     updateTimes() {
@@ -417,6 +420,9 @@ export default {
       } else {
         this.nowTime = "00:00";
       }
+      // if (this.checkPrivilege("Make flexible slots that allow for shorter appointments")) {
+
+      // }
       this.startTimes = this.generateTimeslots(
         this.nowTime,
         this.newEnd,
@@ -677,7 +683,25 @@ export default {
           console.log("There was an error:", error.response);
         });
     },
-
+    async getPrivilegesForPersonRole() {
+      await PersonRolePrivilegeServices.getPrivilegeByPersonRole(this.id)
+        .then((response) => {
+          this.personroleprivileges = response.data;
+        })
+        .catch((error) => {
+          this.alertType = "error";
+          this.alert = error.response.data.message;
+          this.showAlert = true;
+          console.log("There was an error:", error.response);
+        });
+    },
+    checkPrivilege(privilege) {
+      let hasPriv = false;
+      this.personroleprivileges.forEach((priv) => {
+        if (priv.privilege === privilege) hasPriv = true;
+      });
+      return hasPriv;
+    },
     // popup functions
     groupHandler() {
       if (this.groupSession.includes("Group")) {
