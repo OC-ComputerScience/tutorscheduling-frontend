@@ -143,5 +143,60 @@ export const TimeFunctionsMixin = {
 
       return formattedTime;
     },
+    getPreviousSunday(date) {
+      const previousSunday = new Date();
+      previousSunday.setDate(date.getDate() - date.getDay());
+      // if adding to new week makes the new date bigger than the previous date, subtract a month
+      if (previousSunday > date)
+        previousSunday.setMonth(previousSunday.getMonth() - 1);
+      previousSunday.setHours(0, 0, 0, 0);
+      return previousSunday;
+    },
+    getStartOfPreviousWeek() {
+      let currentDate = this.getPreviousSunday(new Date());
+      let previousStart = new Date(
+        currentDate.getTime() - 7 * 24 * 60 * 60 * 1000
+      );
+      return this.toSQLDate(previousStart);
+    },
+    getStartOfCurrentWeek() {
+      let currentDate = this.getPreviousSunday(new Date());
+      return this.toSQLDate(currentDate);
+    },
+    getStartOfNextWeek() {
+      let currentDate = this.getPreviousSunday(new Date());
+      let nextStart = new Date(currentDate.getTime() + 7 * 24 * 60 * 60 * 1000);
+      return this.toSQLDate(nextStart);
+    },
+    toSQLDate(day) {
+      var date = day.toISOString().slice(0, 19).replace("T", " ").slice(0, 10);
+      return date;
+    },
+    checkHours(hours) {
+      if (!hours) {
+        return "00:00";
+      }
+      var total = this.toHoursAndMinutes(hours);
+      return total;
+    },
+    numifyHours(hours) {
+      if (!hours) {
+        return 0;
+      }
+      var total = this.toHours(hours);
+      return total;
+    },
+    toHours(totalMinutes) {
+      var hours = parseFloat(totalMinutes) / parseFloat(60);
+      return hours;
+    },
+    toHoursAndMinutes(totalMinutes) {
+      var minutes = parseInt(totalMinutes) % 60;
+      minutes = (minutes < 10 ? "0" : "") + minutes;
+      var hours = Math.floor(parseInt(totalMinutes) / 60);
+      hours = (hours < 10 ? "0" : "") + hours;
+
+      return hours + ":" + minutes;
+    },
   },
 };
