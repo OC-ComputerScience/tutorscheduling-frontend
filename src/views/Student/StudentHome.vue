@@ -9,28 +9,42 @@
         <v-spacer></v-spacer>
         <v-toolbar-title>{{ this.message }}</v-toolbar-title>
       </v-toolbar>
+      <v-dialog persistent v-model="showDeleteConfirmation" max-width="750px">
+        <DeleteConfirmationComponent
+          type="appointment"
+          :item="selectedAppointment"
+          @handleReturningCancel="showDeleteConfirmation = false"
+          @handleReturningSuccess="
+            cancelAppointment(selectedAppt, user)
+          "></DeleteConfirmationComponent>
+      </v-dialog>
       <v-container v-if="!disabled">
         <v-dialog v-model="apptDialog" max-width="800px">
           <v-card>
-            <v-toolbar :color="selectedAppt.color" dark>
+            <v-toolbar :color="selectedAppointment.color" dark>
               <v-card-title>
-                <span v-if="selectedAppt.type === 'Group'" class="text-h5"
-                  >Upcoming Group Appointment on {{ selectedAppt.date }}</span
+                <span
+                  v-if="selectedAppointment.type === 'Group'"
+                  class="text-h5"
+                  >Upcoming Group Appointment on
+                  {{ selectedAppointment.date }}</span
                 >
                 <span
-                  v-else-if="selectedAppt.type === 'Private'"
+                  v-else-if="selectedAppointment.type === 'Private'"
                   class="text-h5"
-                  >Upcoming Private Appointment on {{ selectedAppt.date }}</span
+                  >Upcoming Private Appointment on
+                  {{ selectedAppointment.date }}</span
                 >
               </v-card-title>
             </v-toolbar>
             <v-card-text>
               <br />
               <b>Time slot:</b>
-              {{ selectedAppt.startTime }} - {{ selectedAppt.endTime }}
+              {{ selectedAppointment.startTime }} -
+              {{ selectedAppointment.endTime }}
               <br />
               <b>Status:</b>
-              {{ selectedAppt.status }}
+              {{ selectedAppointment.status }}
               <br />
               <b>Tutors: </b>
               <span v-if="tutors.length > 0">
@@ -65,26 +79,26 @@
               <br />
 
               <!-- make location and topic changable if the appointment type is private-->
-              <span v-if="selectedAppt.type === 'Private'">
+              <span v-if="selectedAppointment.type === 'Private'">
                 <v-select
-                  v-model="selectedAppt.locationId"
+                  v-model="selectedAppointment.locationId"
                   :items="locations"
                   item-text="name"
                   item-value="id"
                   label="Location"
-                  :disabled="selectedAppt.status === 'booked'"
+                  :disabled="selectedAppointment.status === 'booked'"
                   required
                   dense
                   @change="saveChanges = true">
                 </v-select>
 
                 <v-select
-                  v-model="selectedAppt.topicId"
+                  v-model="selectedAppointment.topicId"
                   :items="topics"
                   item-text="name"
                   item-value="id"
                   label="Topic"
-                  :disabled="selectedAppt.status === 'booked'"
+                  :disabled="selectedAppointment.status === 'booked'"
                   required
                   dense
                   @change="saveChanges = true">
@@ -93,7 +107,7 @@
               <!-- slots for location and topic to be unchangable if the session type is group -->
               <span v-else>
                 <v-select
-                  v-model="selectedAppt.locationId"
+                  v-model="selectedAppointment.locationId"
                   :items="locations"
                   item-text="name"
                   item-value="id"
@@ -103,7 +117,7 @@
                 </v-select>
 
                 <v-select
-                  v-model="selectedAppt.topicId"
+                  v-model="selectedAppointment.topicId"
                   :items="topics"
                   item-text="name"
                   item-value="id"
@@ -115,20 +129,20 @@
               <!-- show time for private lessons-->
 
               <v-text-field
-                v-model="selectedAppt.startTime"
+                v-model="selectedAppointment.startTime"
                 label="Booked Start"
                 dense
                 readonly>
               </v-text-field>
               <v-text-field
-                v-model="selectedAppt.endTime"
+                v-model="selectedAppointment.endTime"
                 label="Booked End"
                 dense
                 readonly>
               </v-text-field>
               <!-- put in presession-info for appointment for private appointments/ add a readonly if  group -->
               <v-textarea
-                v-model="selectedAppt.preSessionInfo"
+                v-model="selectedAppointment.preSessionInfo"
                 :counter="130"
                 label="Pre-Session Info"
                 hint="Enter Info About What You Need Help With..."
@@ -136,7 +150,7 @@
                 required
                 auto-grow
                 rows="1"
-                :readonly="selectedAppt.type === 'Group'"
+                :readonly="selectedAppointment.type === 'Group'"
                 @change="saveChanges = true"></v-textarea>
             </v-card-text>
             <v-card-actions>
@@ -150,7 +164,7 @@
                 Close
               </v-btn>
               <v-btn
-                v-if="selectedAppt.type === 'Private' && saveChanges"
+                v-if="selectedAppointment.type === 'Private' && saveChanges"
                 color="accent"
                 @click="
                   editAppointment(user, selectedAppt);
@@ -162,7 +176,7 @@
               <v-btn
                 color="red"
                 @click="
-                  cancelAppointment(selectedAppt, user);
+                  showDeleteConfirmation = true;
                   getAppointments();
                   apptDialog = false;
                 ">
@@ -248,6 +262,7 @@ import LocationServices from "@/services/locationServices.js";
 import PersonRoleServices from "@/services/personRoleServices.js";
 import PersonTopicServices from "@/services/personTopicServices.js";
 import PersonAppointmentServices from "@/services/personAppointmentServices.js";
+import DeleteConfirmationComponent from "../../components/DeleteConfirmationComponent.vue";
 import InformationComponent from "../../components/InformationComponent.vue";
 import { AppointmentActionMixin } from "../../mixins/AppointmentActionMixin";
 import { TimeFunctionsMixin } from "../../mixins/TimeFunctionsMixin";
@@ -257,6 +272,7 @@ export default {
   name: "StudentHome",
   mixins: [AppointmentActionMixin, TimeFunctionsMixin],
   components: {
+    DeleteConfirmationComponent,
     InformationComponent,
   },
   watch: {
@@ -266,6 +282,7 @@ export default {
   },
   data() {
     return {
+      showDeleteConfirmation: false,
       user: {},
       group: {},
       showAlert: false,
@@ -274,7 +291,7 @@ export default {
       disabled: false,
       apptDialog: false,
       saveChanges: false,
-      selectedAppt: {},
+      selectedAppointment: {},
       locations: [],
       topics: [],
       students: [],
@@ -469,7 +486,7 @@ export default {
       this.tutors = [];
       this.students = [];
       await PersonAppointmentServices.findStudentDataForTable(
-        this.selectedAppt.id
+        this.selectedAppointment.id
       )
         .then((response) => {
           this.students = response.data;
@@ -481,7 +498,7 @@ export default {
           console.log("There was an error:", error.response);
         });
       await PersonAppointmentServices.findTutorDataForTable(
-        this.selectedAppt.id
+        this.selectedAppointment.id
       )
         .then((response) => {
           this.tutors = response.data;
@@ -522,7 +539,10 @@ export default {
         });
     },
     checkStatus(status) {
-      if (this.selectedAppt != null && this.selectedAppt.status == status) {
+      if (
+        this.selectedAppointment != null &&
+        this.selectedAppointment.status == status
+      ) {
         return true;
       } else {
         return false;
@@ -530,7 +550,7 @@ export default {
     },
     rowClick: async function (item, row) {
       row.select(true);
-      this.selectedAppt = item;
+      this.selectedAppointment = item;
       await this.updatePeople();
       console.log(this.tutors);
       this.getTopicsForTutor();

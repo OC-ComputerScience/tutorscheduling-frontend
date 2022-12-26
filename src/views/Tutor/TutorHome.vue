@@ -12,25 +12,39 @@
       <v-alert v-model="showAlert" dismissible :type="alertType">{{
         this.alert
       }}</v-alert>
+      <v-dialog persistent v-model="showDeleteConfirmation" max-width="750px">
+        <DeleteConfirmationComponent
+          type="appointment"
+          :item="selectedAppointment"
+          @handleReturningCancel="showDeleteConfirmation = false"
+          @handleReturningSuccess="
+            directToCancel()
+          "></DeleteConfirmationComponent>
+      </v-dialog>
       <v-dialog v-model="apptDialog" max-width="800px">
         <v-card>
-          <v-toolbar :color="selectedAppt.color" dark>
+          <v-toolbar :color="selectedAppointment.color" dark>
             <v-card-title>
-              <span v-if="selectedAppt.type === 'Group'" class="text-h5"
-                >Upcoming Group Appointment on {{ selectedAppt.date }}</span
+              <span v-if="selectedAppointment.type === 'Group'" class="text-h5"
+                >Upcoming Group Appointment on
+                {{ selectedAppointment.date }}</span
               >
-              <span v-else-if="selectedAppt.type === 'Private'" class="text-h5"
-                >Upcoming Private Appointment on {{ selectedAppt.date }}</span
+              <span
+                v-else-if="selectedAppointment.type === 'Private'"
+                class="text-h5"
+                >Upcoming Private Appointment on
+                {{ selectedAppointment.date }}</span
               >
             </v-card-title>
           </v-toolbar>
           <v-card-text>
             <br />
             <b>Time slot:</b>
-            {{ selectedAppt.startTime }} - {{ selectedAppt.endTime }}
+            {{ selectedAppointment.startTime }} -
+            {{ selectedAppointment.endTime }}
             <br />
             <b>Status:</b>
-            {{ selectedAppt.status }}
+            {{ selectedAppointment.status }}
             <br />
             <b>Tutors: </b>
             <span v-if="tutors.length > 0">
@@ -65,9 +79,9 @@
             <br />
 
             <!-- make location and topic changable if the appointment type is private-->
-            <span v-if="selectedAppt.type === 'Private'">
+            <span v-if="selectedAppointment.type === 'Private'">
               <v-select
-                v-model="selectedAppt.locationId"
+                v-model="selectedAppointment.locationId"
                 :items="locations"
                 item-text="name"
                 item-value="id"
@@ -76,14 +90,14 @@
                 dense
                 :disabled="
                   !checkStatus('booked') ||
-                  selectedAppt.status === 'studentCancel' ||
-                  selectedAppt.status === 'tutorCancel'
+                  selectedAppointment.status === 'studentCancel' ||
+                  selectedAppointment.status === 'tutorCancel'
                 "
                 @change="saveChanges = true">
               </v-select>
 
               <v-select
-                v-model="selectedAppt.topicId"
+                v-model="selectedAppointment.topicId"
                 :items="topics"
                 item-text="name"
                 item-value="id"
@@ -95,7 +109,7 @@
             <!-- slots for location and topic to be unchangable if the session type is group -->
             <span v-else>
               <v-select
-                v-model="selectedAppt.locationId"
+                v-model="selectedAppointment.locationId"
                 :items="locations"
                 item-text="name"
                 item-value="id"
@@ -106,7 +120,7 @@
               </v-select>
 
               <v-select
-                v-model="selectedAppt.topicId"
+                v-model="selectedAppointment.topicId"
                 :items="topics"
                 item-text="name"
                 item-value="id"
@@ -120,20 +134,20 @@
             <!-- show time ad an changeable value for private lessons-->
 
             <v-text-field
-              v-model="selectedAppt.startTime"
+              v-model="selectedAppointment.startTime"
               label="Booked Start"
               dense
               readonly>
             </v-text-field>
             <v-text-field
-              v-model="selectedAppt.endTime"
+              v-model="selectedAppointment.endTime"
               label="Booked End"
               dense
               readonly>
             </v-text-field>
             <!-- put in presession-info for appointment for private appointments/ add a readonly if private -->
             <v-textarea
-              v-model="selectedAppt.preSessionInfo"
+              v-model="selectedAppointment.preSessionInfo"
               :counter="130"
               label="Pre-Session Info"
               hint="Enter Info About What You Need Help With..."
@@ -141,16 +155,16 @@
               required
               auto-grow
               rows="1"
-              :readonly="selectedAppt.type === 'Private'"
+              :readonly="selectedAppointment.type === 'Private'"
               @change="saveChanges = true"></v-textarea>
           </v-card-text>
           <v-card-actions>
             <v-spacer></v-spacer>
             <v-btn
-              v-if="!(selectedAppt.type === 'Group')"
+              v-if="!(selectedAppointment.type === 'Group')"
               color="#12f000"
               @click="
-                confirmAppointment(true, user, selectedAppt);
+                confirmAppointment(true, user, selectedAppointment);
                 getAppointments();
                 apptDialog = false;
               "
@@ -158,10 +172,10 @@
               Confirm
             </v-btn>
             <v-btn
-              v-if="!(selectedAppt.type === 'Group')"
+              v-if="!(selectedAppointment.type === 'Group')"
               color="error"
               @click="
-                confirmAppointment(false, user, selectedAppt);
+                showDeleteConfirmation = true;
                 getAppointments();
                 apptDialog = false;
               "
@@ -180,7 +194,7 @@
               v-if="saveChanges"
               color="accent"
               @click="
-                editAppointment(user, selectedAppt);
+                editAppointment(user, selectedAppointment);
                 getAppointments();
                 apptDialog = false;
               ">
@@ -189,14 +203,15 @@
 
             <v-btn
               v-if="
-                (checkStatus('booked') && selectedAppt.type === 'Private') ||
-                selectedAppt.type === 'Group' ||
+                (checkStatus('booked') &&
+                  selectedAppointment.type === 'Private') ||
+                selectedAppointment.type === 'Group' ||
                 checkStatus('available') ||
                 checkStatus('booked')
               "
               color="red"
               @click="
-                cancelAppointment(selectedAppt, user);
+                showDeleteConfirmation = true;
                 getAppointments();
                 apptDialog = false;
               ">
@@ -310,6 +325,7 @@ import PersonTopicServices from "@/services/personTopicServices.js";
 import AppointmentServices from "@/services/appointmentServices.js";
 import LocationServices from "@/services/locationServices.js";
 import PersonAppointmentServices from "@/services/personAppointmentServices.js";
+import DeleteConfirmationComponent from "../../components/DeleteConfirmationComponent.vue";
 import InformationComponent from "../../components/InformationComponent.vue";
 import { AppointmentActionMixin } from "../../mixins/AppointmentActionMixin";
 import { TimeFunctionsMixin } from "../../mixins/TimeFunctionsMixin";
@@ -319,6 +335,7 @@ export default {
   name: "TutorHome",
   mixins: [AppointmentActionMixin, TimeFunctionsMixin],
   components: {
+    DeleteConfirmationComponent,
     InformationComponent,
   },
   watch: {
@@ -328,6 +345,7 @@ export default {
   },
   data() {
     return {
+      showDeleteConfirmation: false,
       showAlert: false,
       alert: "",
       alertType: "success",
@@ -343,7 +361,7 @@ export default {
       topics: [],
       students: [],
       tutors: [],
-      selectedAppt: {},
+      selectedAppointment: {},
       appointments: [],
       appointmentsneedingfeedback: [],
       headers: [
@@ -578,6 +596,18 @@ export default {
         params: { id: item.id, userId: this.user.userID },
       });
     },
+    async directToCancel() {
+      if (this.selectedAppointment.status === "pending")
+        await this.confirmAppointment(
+          false,
+          this.user,
+          this.selectedAppointment
+        );
+      else if (this.selectedAppointment.status === "booked")
+        await this.cancelAppointment(this.selectedAppointment, this.user);
+      this.apptDialog = false;
+      this.showDeleteConfirmation = false;
+    },
     async getTutorRole() {
       await PersonRoleServices.getPersonRole(this.id)
         .then((response) => {
@@ -611,7 +641,7 @@ export default {
       this.tutors = [];
       this.students = [];
       await PersonAppointmentServices.findStudentDataForTable(
-        this.selectedAppt.id
+        this.selectedAppointment.id
       )
         .then((response) => {
           this.students = response.data;
@@ -623,7 +653,7 @@ export default {
           console.log("There was an error:", error.response);
         });
       await PersonAppointmentServices.findTutorDataForTable(
-        this.selectedAppt.id
+        this.selectedAppointment.id
       )
         .then((response) => {
           this.tutors = response.data;
@@ -663,7 +693,10 @@ export default {
         });
     },
     checkStatus(status) {
-      if (this.selectedAppt != null && this.selectedAppt.status == status) {
+      if (
+        this.selectedAppointment != null &&
+        this.selectedAppointment.status == status
+      ) {
         return true;
       } else {
         return false;
@@ -671,7 +704,7 @@ export default {
     },
     rowClick: function (item, row) {
       row.select(true);
-      this.selectedAppt = item;
+      this.selectedAppointment = item;
       this.updatePeople();
       this.saveChanges = false;
       this.apptDialog = true;
