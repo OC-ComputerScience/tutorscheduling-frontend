@@ -420,9 +420,7 @@ export default {
       } else {
         this.nowTime = "00:00";
       }
-      // if (this.checkPrivilege("Make flexible slots that allow for shorter appointments")) {
-
-      // }
+      // start times will always be in segments of group time interval
       this.startTimes = this.generateTimeslots(
         this.nowTime,
         this.newEnd,
@@ -430,11 +428,25 @@ export default {
       );
       // adding this to make sure that you can't start an appointment at the end time
       this.startTimes.pop();
-      this.endTimes = this.generateTimeslots(
-        this.newStart,
-        maxEndTime,
-        this.group.timeInterval
-      );
+      // end times will usually be in group's min appointment time, but could also be time interval if tutor has the right privilege
+      if (
+        this.checkPrivilege(
+          "Make flexible slots that allow for shorter appointments"
+        )
+      ) {
+        this.endTimes = this.generateTimeslots(
+          this.newStart,
+          maxEndTime,
+          this.group.timeInterval
+        );
+      } else {
+        this.endTimes = this.generateTimeslots(
+          this.newStart,
+          maxEndTime,
+          this.group.minApptTime
+        );
+      }
+
       // adding this to make sure you can't end an appointment at the start time
       this.endTimes.shift();
     },
