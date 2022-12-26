@@ -5,6 +5,15 @@
         <v-toolbar-title>{{ this.message }}</v-toolbar-title>
       </v-toolbar>
       <br />
+
+      <v-dialog persistent v-model="showDisableConfirmation" max-width="750px">
+        <DeleteConfirmationComponent
+          type="topic"
+          :item="topic"
+          @handleReturningCancel="showDisableConfirmation = false"
+          @handleReturningSuccess="updateTopic()"></DeleteConfirmationComponent>
+      </v-dialog>
+
       <v-form ref="form" v-model="valid" lazy validation>
         <v-text-field
           v-model="topic.name"
@@ -24,6 +33,7 @@
           v-model="topic.status"
           :items="status"
           label="Status"
+          @change="statusChanged = true"
           required>
         </v-select>
 
@@ -40,7 +50,7 @@
           :disabled="!valid"
           color="success"
           class="mr-4"
-          @click="updateTopic()">
+          @click="directToCancel()">
           Save
         </v-btn>
 
@@ -53,13 +63,18 @@
 <script>
 import TopicServices from "@/services/topicServices.js";
 import GroupServices from "@/services/groupServices.js";
+import DeleteConfirmationComponent from "../../../components/DeleteConfirmationComponent.vue";
 import Utils from "@/config/utils.js";
 
 export default {
   props: ["id"],
-
+  components: {
+    DeleteConfirmationComponent,
+  },
   data() {
     return {
+      showDisableConfirmation: false,
+      statusChanged: false,
       valid: false,
       user: {},
       topic: {},
@@ -77,6 +92,13 @@ export default {
     await this.getAllGroups();
   },
   methods: {
+    directToCancel() {
+      if (this.topic.status === "disabled" && this.statusChanged) {
+        this.showDisableConfirmation = true;
+      } else {
+        this.updateTopic();
+      }
+    },
     // only updating this replace issue once edits can be done on view page
     // also this.id is topic id
     async getTopic() {

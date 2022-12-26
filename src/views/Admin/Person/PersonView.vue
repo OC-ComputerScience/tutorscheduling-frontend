@@ -5,6 +5,17 @@
         <v-toolbar-title>{{ this.message }}</v-toolbar-title>
       </v-toolbar>
       <br />
+
+      <v-dialog persistent v-model="showDisableConfirmation" max-width="750px">
+        <DeleteConfirmationComponent
+          :type="deleteType"
+          :item="deleteItem"
+          @handleReturningCancel="showDisableConfirmation = false"
+          @handleReturningSuccess="
+            confirmedDelete()
+          "></DeleteConfirmationComponent>
+      </v-dialog>
+
       <v-btn
         color="accent"
         elevation="2"
@@ -74,7 +85,6 @@
             <v-icon small class="mr-2" @click="editRole(item)">
               mdi-pencil
             </v-icon>
-            <v-icon small @click="deleteRole(item)"> mdi-delete </v-icon>
           </template>
         </v-data-table>
       </v-card>
@@ -97,7 +107,14 @@
           :items="personroleprivileges"
           :items-per-page="50">
           <template v-slot:[`item.actions`]="{ item }">
-            <v-icon small @click="deletePrivilege(item)"> mdi-delete </v-icon>
+            <v-icon
+              small
+              @click="
+                deleteType = 'privilege';
+                directToCancel(item);
+              ">
+              mdi-delete
+            </v-icon>
           </template>
         </v-data-table>
       </v-card>
@@ -123,7 +140,14 @@
             <v-icon small class="mr-2" @click="editTopic(item)">
               mdi-pencil
             </v-icon>
-            <v-icon small @click="deleteTopic(item)"> mdi-delete </v-icon>
+            <v-icon
+              small
+              @click="
+                deleteType = 'persontopic';
+                directToCancel(item);
+              ">
+              mdi-delete
+            </v-icon>
           </template>
         </v-data-table>
       </v-card>
@@ -191,6 +215,7 @@
                 item-text="type"
                 item-value="id"
                 label="Status"
+                @change="deleteType = 'personrole'"
                 required>
               </v-select>
             </v-container>
@@ -198,8 +223,8 @@
 
           <v-card-actions>
             <v-spacer></v-spacer>
-            <v-btn color="error" text @click="closeRole"> Cancel </v-btn>
-            <v-btn color="accent" text @click="saveRole"> Save </v-btn>
+            <v-btn color="error" text @click="closeRole()"> Cancel </v-btn>
+            <v-btn color="accent" text @click="directToCancel()"> Save </v-btn>
           </v-card-actions>
         </v-card>
       </v-dialog>
@@ -333,20 +358,6 @@
           </v-card-actions>
         </v-card>
       </v-dialog>
-
-      <v-dialog v-model="dialogDelete" max-width="500px">
-        <v-card>
-          <v-card-title>Confirming Deletion:</v-card-title>
-          <v-card-text>
-            <h2>{{ deleteMessage }}</h2>
-          </v-card-text>
-          <v-card-actions>
-            <v-spacer></v-spacer>
-            <v-btn color="error" @click="dialogDelete = false">Cancel</v-btn>
-            <v-btn color="accent" @click="confirmedDelete()">OK</v-btn>
-          </v-card-actions>
-        </v-card>
-      </v-dialog>
     </v-container>
   </div>
 </template>
@@ -359,13 +370,17 @@ import PersonRolePrivilegeServices from "@/services/personRolePrivilegeServices.
 import RoleServices from "@/services/roleServices.js";
 import PersonTopicServices from "@/services/personTopicServices.js";
 import TopicServices from "@/services/topicServices.js";
+import DeleteConfirmationComponent from "../../../components/DeleteConfirmationComponent.vue";
 
 export default {
   props: ["id", "personId"],
-
+  components: {
+    DeleteConfirmationComponent,
+  },
   data() {
     return {
       message: "Person - click Edit to update or Delete to remove person",
+      showDisableConfirmation: false,
       person: {},
       persontopics: [],
       persontopic: {},
@@ -398,7 +413,6 @@ export default {
       dialogTopic: false,
       dialogTopicAdd: false,
       editedRoleIndex: -1,
-      editedPrivilegeIndex: -1,
       editedTopicIndex: -1,
       roleHeaders: [
         { text: "Type", value: "type" },
@@ -462,7 +476,6 @@ export default {
       await RoleServices.getRoleByGroupForPerson(this.group.id, this.personId)
         .then((response) => {
           this.personroles = response.data;
-          console.log(this.personroles);
           for (let i = 0; i < this.personroles.length; i++) {
             let personRoleArray = this.personroles[i].personrole;
             // set tutor boolean
@@ -515,12 +528,6 @@ export default {
           console.log("There was an error:", error.response);
         });
     },
-    deletePerson(id, fName) {
-      this.deleteMessage = `Are you sure you want to delete ${fName}?`;
-      this.deleteItem = id;
-      this.deleteType = "person";
-      this.dialogDelete = true;
-    },
     updatePerson() {
       PersonServices.updatePerson(this.personId, this.person)
         .then(() => {
@@ -544,7 +551,6 @@ export default {
         });
     },
     addPersonRolePrivilege() {
-      console.log(this.personroleprivilege);
       PersonRolePrivilegeServices.addPrivilege(this.personroleprivilege)
         .then(() => {
           this.dialogPrivilegeAdd = false;
@@ -578,12 +584,6 @@ export default {
       this.personrole = Object.assign({}, item.personrole[0]);
       this.dialogRole = true;
     },
-    deleteRole(item) {
-      this.deleteMessage = `Are you sure you want to delete the role ${item.type} for ${this.person.fName}?`;
-      this.deleteItem = item;
-      this.deleteType = "role";
-      this.dialogDelete = true;
-    },
     closeRole() {
       this.dialogRole = false;
       this.$nextTick(() => {
@@ -603,12 +603,6 @@ export default {
         });
       Object.assign(this.personroles[this.editedRoleIndex], this.personrole);
     },
-    deletePrivilege(item) {
-      this.deleteMessage = `Are you sure you want to delete the privilege ${item.privilege} for ${this.person.fName}?`;
-      this.deleteItem = item;
-      this.deleteType = "privilege";
-      this.dialogDelete = true;
-    },
     editTopic(item) {
       this.editedTopicIndex = this.persontopics.findIndex(
         (topic) => topic.id === item.id
@@ -616,32 +610,8 @@ export default {
       this.persontopic = Object.assign({}, item.persontopic[0]);
       this.dialogTopic = true;
     },
-    deleteTopic(item) {
-      this.deleteMessage = `Are you sure you want to delete the topic ${item.name} for ${this.person.fName}?`;
-      this.deleteItem = item;
-      this.deleteType = "topic";
-      this.dialogDelete = true;
-    },
-    deleteTopicConfirm() {
-      this.persontopics.splice(this.editedTopicIndex, 1);
-      PersonTopicServices.deletePersonTopic(this.persontopic.id)
-        .then(() => {})
-        .catch((error) => {
-          this.message = error.response.data.message;
-          console.log("There was an error:", error.response);
-        });
-
-      this.closeTopicDelete();
-    },
     closeTopic() {
       this.dialogTopic = false;
-    },
-    closeTopicDelete() {
-      this.dialogTopicDelete = false;
-      this.$nextTick(() => {
-        this.persontopic = Object.assign({}, {});
-        this.editedTopicIndex = -1;
-      });
     },
     saveTopic() {
       PersonTopicServices.updatePersonTopic(
@@ -658,61 +628,38 @@ export default {
         });
       Object.assign(this.persontopics[this.editedTopicIndex], this.persontopic);
     },
-    confirmedDelete() {
-      if (this.deleteType === "person") {
-        PersonServices.deletePerson(this.deleteItem.id)
-          .then(() => {
-            this.$router.push({ name: "personList" });
-          })
-          .catch((error) => {
-            this.message = error.response.data.message;
-            console.log("There was an error:", error.response);
-          });
-      } else if (this.deleteType === "role") {
-        this.editedRoleIndex = this.personroles.findIndex(
-          (role) => role.id === this.deleteItem.id
-        );
-        this.personrole = Object.assign({}, this.deleteItem.personrole[0]);
-        this.personroles.splice(this.editedRoleIndex, 1);
-        PersonRoleServices.deletePersonRole(this.personrole.id)
-          .then(() => {
-            this.$nextTick(() => {
-              this.personrole = Object.assign({}, {});
-              this.editedRoleIndex = -1;
-            });
-          })
-          .catch((error) => {
-            this.message = error.response.data.message;
-            console.log("There was an error:", error.response);
-          });
-      } else if (this.deleteType === "privilege") {
-        this.editedPrivilegeIndex = this.personroleprivileges.findIndex(
-          (priv) => priv.id === this.deleteItem.id
-        );
+    directToCancel(item) {
+      this.deleteItem = item;
+      this.deleteItem.person = this.person;
+      this.showDisableConfirmation = true;
+      if (this.deleteType === "personrole") {
+        this.showDisableConfirmation = true;
+      } else {
+        this.saveRole();
+      }
+    },
+    async confirmedDelete() {
+      if (this.deleteType === "privilege") {
         this.privilege = {
           id: this.deleteItem.id,
           privilege: this.deleteItem.privilege,
           personroleId: this.personrole.id,
         };
-        this.personroleprivileges.splice(this.editedPrivilegeIndex, 1);
-        PersonRolePrivilegeServices.deletePrivilege(this.privilege.id)
-          .then(() => {
-            this.$nextTick(() => {
-              this.privilege = Object.assign({}, {});
-              this.editedPrivilegeIndex = -1;
-            });
-          })
-          .catch((error) => {
-            this.message = error.response.data.message;
-            console.log("There was an error:", error.response);
-          });
-      } else if (this.deleteType === "topic") {
+        await PersonRolePrivilegeServices.deletePrivilege(
+          this.deleteItem.id
+        ).catch((error) => {
+          this.message = error.response.data.message;
+          console.log("There was an error:", error.response);
+        });
+        this.privilege = {};
+        await this.getPersonRoles();
+      } else if (this.deleteType === "persontopic") {
         this.editedTopicIndex = this.persontopics.findIndex(
           (topic) => topic.id === this.deleteItem.id
         );
         this.persontopic = Object.assign({}, this.deleteItem.persontopic[0]);
         this.persontopics.splice(this.editedTopicIndex, 1);
-        PersonTopicServices.deletePersonTopic(this.persontopic.id)
+        await PersonTopicServices.deletePersonTopic(this.persontopic.id)
           .then(() => {
             this.$nextTick(() => {
               this.persontopic = Object.assign({}, {});
@@ -725,7 +672,7 @@ export default {
           });
       }
 
-      this.dialogDelete = false;
+      this.showDisableConfirmation = false;
     },
   },
 };
