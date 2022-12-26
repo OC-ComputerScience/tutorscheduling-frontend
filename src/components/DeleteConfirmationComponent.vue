@@ -1,8 +1,8 @@
 <template>
   <div>
-    <!-- <v-dialog v-model="dialogDelete" max-width="750px"> -->
     <v-card>
-      <v-card-title>{{ cancelTitle }}</v-card-title>
+      <v-card-title>{{ cancelTitle }} </v-card-title>
+      <v-card-subtitle>{{ cancelSubtitle }}</v-card-subtitle>
       <v-card-text>
         {{ cancelBody }}
       </v-card-text>
@@ -19,7 +19,6 @@
         }}</v-btn>
       </v-card-actions>
     </v-card>
-    <!-- </v-dialog> -->
   </div>
 </template>
 
@@ -34,19 +33,25 @@ export default {
   data() {
     return {
       cancelTitle: "",
+      cancelSubtitle: "",
       cancelBody: "",
-      cancelButton: "",
+      cancelButton: "No, keep it",
       agreeButton: "",
     };
   },
   created() {
     if (this.type === "appointment") {
       this.setupForAppointment();
+    } else if (this.type === "location" || this.type === "topic") {
+      this.setupForLocationTopic();
+    } else if (this.type === "privilege" || this.type === "persontopic") {
+      this.setupForPrivilegeTopic();
+    } else if (this.type === "personrole") {
+      this.setupForPersonRole();
     }
   },
   methods: {
     setupForAppointment() {
-      console.log(this.item);
       if (this.item.status === "pending") {
         this.cancelTitle = "Are you sure you want to reject this appointment?";
         this.agreeButton = "Yes, reject";
@@ -60,8 +65,65 @@ export default {
         this.cancelBody = "Canceling ";
       }
       this.cancelBody += "this appointment cannot be undone.";
-      this.cancelButton = "No, keep it";
-      this.dialogDelete = true;
+    },
+    setupForLocationTopic() {
+      this.cancelTitle =
+        "Are you sure you want to disable the " +
+        this.item.name +
+        " " +
+        this.type +
+        "?";
+      this.cancelBody =
+        "Disabling this " +
+        this.type +
+        " will make it unavailable for any future appointments.";
+      this.agreeButton = "Yes, disable";
+    },
+    setupForPrivilegeTopic() {
+      console.log(this.item);
+      let type = "";
+      let name = "";
+      if (this.type === "persontopic") {
+        type = "topic";
+        name = this.item.name;
+      } else if (this.type === "privilege") {
+        type = this.type;
+        name = this.item.privilege;
+      }
+      this.cancelTitle =
+        "Are you sure you want to delete this " +
+        type +
+        " for " +
+        this.item.person.fName +
+        " " +
+        this.item.person.lName +
+        "?";
+      this.cancelSubtitle =
+        type.charAt(0).toUpperCase() + type.slice(1) + ": " + name;
+      this.cancelBody =
+        "\nDeleting this " +
+        type +
+        " will make it unavailable for " +
+        this.item.person.fName +
+        " " +
+        this.item.person.lName +
+        " to use.";
+      this.agreeButton = "Yes, delete";
+    },
+    setupForPersonRole() {
+      this.cancelTitle =
+        "Are you sure you want to disable the " +
+        this.item.name +
+        " role for " +
+        this.item.person.fName +
+        " " +
+        this.item.person.lName +
+        "?";
+      this.cancelBody =
+        "Disabling this role will cancel all future appointments";
+
+      this.type + " will make it unavailable for any future appointments.";
+      this.agreeButton = "Yes, disable";
     },
   },
 };
