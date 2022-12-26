@@ -373,7 +373,8 @@
                       required
                       dense
                       max-width="300px"
-                      :rules="[rules.required, rules.email]">
+                      :rules="[rules.required, rules.email]"
+                      v-on:keyup.enter="findEmail()">
                     </v-text-field>
                     <v-row>
                       <v-btn
@@ -412,13 +413,14 @@
                   <v-btn
                     v-if="
                       !isTutorEvent ||
+                      checkStatus('available') ||
                       checkRole('Student') ||
                       checkRole('Admin') ||
                       checkPrivilege('Sign up students for appointments')
                     "
                     color="primary"
                     @click="
-                      bookAppointment();
+                      bookAppointment(selectedAppointment.id, group.id);
                       selectedOpen = false;
                     "
                     :disabled="
@@ -548,7 +550,7 @@
             Red
           </v-btn>
           <span>
-            - This event marks a requested timeslot that has been cancelled by
+            - This event marks a requested timeslot that has been canceled by
             the tutor.</span
           >
           <br />
@@ -582,7 +584,7 @@
             session} <br
           /></span>
           <span v-if="checkRole('Admin')"
-            >S (Cancelled session): {Status of cancelled session}<br
+            >S (canceled session): {Status of canceled session}<br
           /></span>
         </v-card-text>
         <v-card-actions>
@@ -614,13 +616,16 @@ import RoleServices from "@/services/roleServices.js";
 import LocationServices from "@/services/locationServices.js";
 import TopicServices from "@/services/topicServices.js";
 //Plugin functions
-import TwilioServices from "@/services/twilioServices.js";
 import Utils from "@/config/utils.js";
 import InformationComponent from "@/components/InformationComponent.vue";
+import { AppointmentActionMixin } from "../mixins/AppointmentActionMixin";
+import { SendTextsMixin } from "../mixins/SendTextsMixin";
+import { TimeFunctionsMixin } from "../mixins/TimeFunctionsMixin";
 
 export default {
   name: "Calendar",
   props: ["id"],
+  mixins: [AppointmentActionMixin, SendTextsMixin, TimeFunctionsMixin],
   components: {
     InformationComponent,
   },
@@ -708,15 +713,16 @@ export default {
   async created() {
     this.user = Utils.getStore("user");
     this.getGroupByPersonRoleId();
-    this.getRole();
+    this.role = this.user.selectedRole;
+    // this.getRole();
     this.getPrivilegesForPersonRole();
-    this.getAppointments();
+    this.getAppointments(this.group.id);
     this.loadTopics();
     this.loadPeople();
     this.isTutorOfSelectedEvent();
   },
   methods: {
-    //Initialize data for calendar
+    // //Initialize data for calendar
     async getAppointments() {
       this.overlay = true;
       await this.getGroupByPersonRoleId();
@@ -759,7 +765,7 @@ export default {
         });
     },
     async getTopicsForGroup() {
-      await TopicServices.getAllForGroup(this.group.id)
+      await TopicServices.getActiveForGroup(this.group.id)
         .then((response) => {
           let temp = response.data;
           temp.push({ name: "Any", id: -1 });
@@ -793,27 +799,6 @@ export default {
       await PersonRolePrivilegeServices.getPrivilegeByPersonRole(this.id)
         .then((response) => {
           this.personroleprivileges = response.data;
-        })
-        .catch((error) => {
-          this.alertType = "error";
-          this.alert = error.response.data.message;
-          this.showAlert = true;
-          console.log("There was an error:", error.response);
-        });
-    },
-    async getRole() {
-      await PersonRoleServices.getPersonRole(this.id)
-        .then(async (response) => {
-          await RoleServices.getRole(response.data.roleId)
-            .then((result) => {
-              this.role = result.data;
-            })
-            .catch((error) => {
-              this.alertType = "error";
-              this.alert = error.response.data.message;
-              this.showAlert = true;
-              console.log("There was an error:", error.response);
-            });
         })
         .catch((error) => {
           this.alertType = "error";
@@ -927,7 +912,7 @@ export default {
             !this.adminAddStudent
           ) {
             await this.splitAppointment().then(() => {
-              this.getAppointments();
+              this.getAppointments(this.group.id);
               this.selectedEvent.color = "yellow";
             });
           } else if (
@@ -936,7 +921,7 @@ export default {
             response.data.type.includes("Private")
           ) {
             await this.splitAppointmentForAdminAdd().then(() => {
-              this.getAppointments();
+              this.getAppointments(this.group.id);
               this.selectedEvent.color = "blue";
             });
           } else if (
@@ -946,7 +931,7 @@ export default {
           ) {
             await this.adminAdd().then(() => {
               this.splitAppointmentForAdminAdd().then(() => {
-                this.getAppointments();
+                this.getAppointments(this.group.id);
                 this.selectedEvent.color = "blue";
               });
             });
@@ -957,7 +942,7 @@ export default {
             this.alert =
               "This appointment has already been booked. Try a different time.";
             this.showAlert = true;
-            this.getAppointments();
+            this.getAppointments(this.group.id);
             this.selectedOpen = false;
           }
         })
@@ -978,13 +963,8 @@ export default {
             this.selectedAppointment
           )
             .then(async () => {
-              await this.tutorConfirmMessage(
-                this.students[0],
-                this.user.fName,
-                this.user.lName,
-                this.selectedAppointment.id
-              );
-              this.getAppointments();
+              await this.sendConfirmedMessage(this.selectedAppointment.id);
+              this.getAppointments(this.group.id);
               this.selectedEvent.color = "blue";
             })
             .catch((error) => {
@@ -1012,7 +992,8 @@ export default {
           this.selectedAppointment
         )
           .then(() => {
-            this.getAppointments();
+            this.sendCanceledMessage(this.user, this.selectedAppointment.id);
+            this.getAppointments(this.group.id);
             this.selectedEvent.color = "red";
           })
           .catch((error) => {
@@ -1044,7 +1025,7 @@ export default {
             this.person.personId = this.walkInStudent.id;
             await PersonAppointmentServices.addPersonAppointment(this.person)
               .then(() => {
-                this.getAppointments();
+                this.getAppointments(this.group.id);
               })
               .catch((error) => {
                 this.alertType = "error";
@@ -1059,13 +1040,18 @@ export default {
             this.showAlert = true;
             console.log("There was an error:", error.response);
           });
+        await this.sendMessageFromAdmin(
+          this.user,
+          this.walkInStudent,
+          this.selectedAppointment.id
+        );
       } else if (this.adminAddStudent && !this.studentNameInput) {
         this.person.isTutor = false;
         this.person.appointmentId = this.selectedAppointment.id;
         this.person.personId = this.walkInStudent.id;
         await PersonAppointmentServices.addPersonAppointment(this.person)
           .then(() => {
-            this.getAppointments();
+            this.getAppointments(this.group.id);
           })
           .catch((error) => {
             this.alertType = "error";
@@ -1073,6 +1059,11 @@ export default {
             this.showAlert = true;
             console.log("There was an error:", error.response);
           });
+        await this.sendMessageFromAdmin(
+          this.user,
+          this.walkInStudent,
+          this.selectedAppointment.id
+        );
       } else {
         if (this.checkRole("Tutor")) {
           this.person.isTutor = true;
@@ -1084,7 +1075,7 @@ export default {
         //Update stored data
         await PersonAppointmentServices.addPersonAppointment(this.person)
           .then(() => {
-            this.getAppointments();
+            this.getAppointments(this.group.id);
           })
           .catch((error) => {
             this.alertType = "error";
@@ -1092,6 +1083,7 @@ export default {
             this.showAlert = true;
             console.log("There was an error:", error.response);
           });
+        await this.sendGroupMessage(this.user, this.selectedAppointment.id);
       }
       // need to update group session in google
       await AppointmentServices.updateForGoogle(
@@ -1223,10 +1215,8 @@ export default {
           console.log("There was an error:", error.response);
         }
       );
-      this.adminSignUpMessage(
-        this.tutors[0],
-        this.user.fName,
-        this.user.lName,
+      await this.sendMessageFromAdmin(
+        this.user,
         this.walkInStudent,
         this.selectedAppointment.id
       );
@@ -1251,7 +1241,7 @@ export default {
       this.showAlert = true;
     },
 
-    //Split appointments into more availablity slots when part of slot is booked
+    // Split appointments into more availablity slots when part of slot is booked
     async splitAppointment() {
       if (!this.checkStatus("available")) {
         return;
@@ -1357,12 +1347,7 @@ export default {
           console.log("There was an error:", error.response);
         }
       );
-      this.sendMessage(
-        this.tutors[0],
-        this.user.fName,
-        this.user.lName,
-        this.selectedAppointment.id
-      );
+      await this.sendPendingMessage(this.selectedAppointment.id);
 
       this.alertType = "success";
       this.alert =
@@ -1380,124 +1365,18 @@ export default {
       this.showAlert = true;
     },
 
-    //Formats time to be more user friendly
-    calcTime(time) {
-      if (time == null) {
-        return null;
-      }
-      let temp = time.split(":");
-      let milHours = parseInt(temp[0]);
-      let minutes = temp[1];
-      let hours = milHours % 12;
-      if (hours == 0) {
-        hours = 12;
-      }
-      let dayTime = ~~(milHours / 12) > 0 ? "PM" : "AM";
-      return "" + hours + ":" + minutes + " " + dayTime;
-    },
-    //Create time slots for users to select from
-    generateTimeslots(startTime, endTime) {
-      let timeInterval = this.group.timeInterval;
-      // get the total minutes between the start and end times.
-      var totalMins = this.subtractTimes(startTime, endTime);
-
-      // set the initial timeSlots array to just the start time
-      var timeSlots = [startTime];
-
-      // get the rest of the time slots.
-      let generatedTimes = this.getTimeSlots(
-        timeInterval,
-        totalMins,
-        timeSlots
-      );
-
-      let newTimeText = "";
-
-      let times = [];
-      for (let i = 0; i < generatedTimes.length; i++) {
-        if (generatedTimes[i].length < 8)
-          generatedTimes[i] = generatedTimes[i] + ":00";
-        newTimeText = this.calcTime(generatedTimes[i]);
-        times.push({
-          time: generatedTimes[i],
-          timeText: newTimeText,
-        });
-      }
-      return times;
-    },
-    getTimeSlots(timeInterval, totalMins, timeSlots) {
-      // base case - there are still more minutes
-      if (totalMins - timeInterval >= 0) {
-        // get the previous time slot to add interval to
-        var prevTimeSlot = timeSlots[timeSlots.length - 1];
-        // add timeInterval to previousTimeSlot to get nextTimeSlot
-        var nextTimeSlot = this.addMinsToTime(timeInterval, prevTimeSlot);
-        timeSlots.push(nextTimeSlot);
-
-        // update totalMins
-        totalMins -= timeInterval;
-
-        // get next time slot
-        return this.getTimeSlots(timeInterval, totalMins, timeSlots);
-      } else {
-        // all done!
-        return timeSlots;
-      }
-    },
-    subtractTimes(t2, t1) {
-      // get each time's hour and min values
-      var [t1Hrs, t1Mins] = this.getHoursAndMinsFromTime(t1);
-      var [t2Hrs, t2Mins] = this.getHoursAndMinsFromTime(t2);
-
-      // time arithmetic (subtraction)
-      if (t1Mins < t2Mins) {
-        t1Hrs--;
-        t1Mins += 60;
-      }
-      var mins = t1Mins - t2Mins;
-      var hrs = t1Hrs - t2Hrs;
-
-      return hrs * 60 + mins;
-    },
-    getHoursAndMinsFromTime(time) {
-      return time.split(":").map(function (str) {
-        return parseInt(str);
-      });
-    },
-    addMinsToTime(mins, time) {
-      // get the times hour and min value
-      var [timeHrs, timeMins] = this.getHoursAndMinsFromTime(time);
-
-      // time arithmetic (addition)
-      if (timeMins + mins >= 60) {
-        var addedHrs = parseInt((timeMins + mins) / 60);
-        timeMins = (timeMins + mins) % 60;
-        if (timeHrs + addedHrs > 23) {
-          timeHrs = (timeHrs + addedHrs) % 24;
-        } else {
-          timeHrs += addedHrs;
-        }
-      } else {
-        timeMins += mins;
-      }
-
-      // make sure the time slots are padded correctly
-      return (
-        String("00" + timeHrs).slice(-2) +
-        ":" +
-        String("00" + timeMins).slice(-2)
-      );
-    },
     updateTimes() {
       this.startTimes = this.generateTimeslots(
         this.selectedAppointment.startTime,
-        this.newEnd
+        this.newEnd,
+        this.group.timeInterval
       );
       // adding this to make sure that you can't start an appointment at the end time
       this.startTimes.pop();
       this.endTimes = this.generateTimeslots(
         this.newStart,
-        this.selectedAppointment.endTime
+        this.selectedAppointment.endTime,
+        this.group.timeInterval
       );
       // adding this to make sure you can't end an appointment at the start time
       this.endTimes.shift();
@@ -1583,160 +1462,6 @@ export default {
     },
     hideKey() {
       this.keyVisible = false;
-    },
-    sendMessage(tutor, fName, lName, appointId) {
-      AppointmentServices.getAppointment(appointId).then((response) => {
-        let appoint = response.data;
-        let temp = tutor;
-        let location = this.locations.find(
-          (location) => (location.id = this.selectedAppointment.locationId)
-        );
-        let start = this.calcTime(this.selectedAppointment.startTime);
-        let date =
-          this.selectedAppointment.date.toString().substring(5, 10) +
-          "-" +
-          this.selectedAppointment.date.toString().substring(0, 4);
-        temp.message =
-          "You have a new pending appointment:" +
-          "\n    Type: " +
-          appoint.type +
-          "\n    Date: " +
-          date +
-          "\n    Time: " +
-          start +
-          "\n    Location: " +
-          location.name +
-          "\n    Student: " +
-          fName +
-          " " +
-          lName +
-          "\nPlease view this pending appointment at http://tutorscheduling.oc.edu/";
-        TwilioServices.sendMessage(temp);
-      });
-    },
-    adminSignUpMessage(tutor, fName, lName, student, appointId) {
-      AppointmentServices.getAppointment(appointId).then((response) => {
-        let appoint = response.data;
-        let temp = tutor;
-        let start = this.calcTime(this.selectedAppointment.startTime);
-        let date =
-          this.selectedAppointment.date.toString().substring(5, 10) +
-          "-" +
-          this.selectedAppointment.date.toString().substring(0, 4);
-        temp.message =
-          "You have a new booked appointment:" +
-          "\n    Type: " +
-          appoint.type +
-          "\n    Date: " +
-          date +
-          "\n    Time: " +
-          start +
-          "\n    Location: " +
-          location.name +
-          "\n    Student: " +
-          student.fName +
-          " " +
-          student.lName +
-          "\n    Booked By: " +
-          fName +
-          " " +
-          lName +
-          "\nPlease view this booked appointment at http://tutorscheduling.oc.edu/";
-        TwilioServices.sendMessage(temp);
-      });
-    },
-    cancelMessage(tutor, fName, lName, appointId) {
-      AppointmentServices.getAppointment(appointId).then((response) => {
-        let appoint = response.data;
-        let temp = tutor;
-        let start = this.calcTime(this.selectedAppointment.startTime);
-        let date =
-          this.selectedAppointment.date.toString().substring(5, 10) +
-          "-" +
-          this.selectedAppointment.date.toString().substring(0, 4);
-        temp.message =
-          "Your " +
-          appoint.type +
-          " appointment on " +
-          date +
-          " at " +
-          start +
-          " has been canceled by " +
-          fName +
-          " " +
-          lName +
-          ". This appointment is now open again for booking.";
-        TwilioServices.sendMessage(temp);
-      });
-    },
-    tutorCancelMessage(student, fName, lName, appointId) {
-      AppointmentServices.getAppointment(appointId).then((response) => {
-        let appoint = response.data;
-        let temp = student;
-        let start = this.calcTime(this.selectedAppointment.startTime);
-        let date =
-          this.selectedAppointment.date.toString().substring(5, 10) +
-          "-" +
-          this.selectedAppointment.date.toString().substring(0, 4);
-        temp.message =
-          "Your " +
-          appoint.type +
-          " appointment on " +
-          date +
-          " at " +
-          start +
-          " has been canceled by " +
-          fName +
-          " " +
-          lName +
-          ". We apologize for the inconvenience.";
-        TwilioServices.sendMessage(temp);
-      });
-    },
-    async tutorConfirmMessage(student, fName, lName, appointId) {
-      AppointmentServices.getAppointment(appointId).then((response) => {
-        let appoint = response.data;
-        let temp = student;
-        let start = this.calcTime(this.selectedAppointment.startTime);
-        let date =
-          this.selectedAppointment.date.toString().substring(5, 10) +
-          "-" +
-          this.selectedAppointment.date.toString().substring(0, 4);
-        temp.message =
-          "The " +
-          appoint.type +
-          " appointment you booked on " +
-          date +
-          " at " +
-          start +
-          " has been confirmed by " +
-          fName +
-          " " +
-          lName +
-          ".\nPlease review this appointment at http://tutorscheduling.oc.edu/";
-        TwilioServices.sendMessage(temp);
-      });
-    },
-    tutorEditMessage(student, fName, lName, type) {
-      let temp = student;
-      let start = this.calcTime(this.selectedAppointment.startTime);
-      let date =
-        this.selectedAppointment.date.toString().substring(5, 10) +
-        "-" +
-        this.selectedAppointment.date.toString().substring(0, 4);
-      temp.message =
-        "Your " +
-        type +
-        " appointment with " +
-        fName +
-        " " +
-        lName +
-        " on " +
-        date +
-        " at " +
-        start +
-        " has been edited. \nPlease check changes at http://tutorscheduling.oc.edu/";
-      TwilioServices.sendMessage(temp);
     },
     //Animates Event card popping up
     showEvent({ nativeEvent, event }) {
@@ -2010,7 +1735,7 @@ export default {
           ) {
             filtered = false;
           }
-          //filter away cancelled appointments
+          //filter away canceled appointments
           if (
             this.appointments[i].status.includes("studentCancel") ||
             this.appointments[i].status.includes("tutorCancel")
@@ -2018,9 +1743,9 @@ export default {
             filtered = false;
           }
         }
-        //filter their appointments, all available appointments, all group appointments, and their cancelled appointments for TUTORS
+        //filter their appointments, all available appointments, all group appointments, and their canceled appointments for TUTORS
         else if (this.checkRole("Tutor")) {
-          //filter away cancelled appointments that aren't theirs
+          //filter away canceled appointments that aren't theirs
           if (
             !isTutor &&
             (this.appointments[i].status.includes("studentCancel") ||
@@ -2175,6 +1900,7 @@ export default {
     },
     //method for canceling appointments
     async cancelAppointment() {
+      this.sendCanceledMessage(this.user, this.selectedAppointment.id);
       //delete appointment as a student of a private session
       if (
         this.selectedAppointment.type.includes("Private") &&
@@ -2205,13 +1931,7 @@ export default {
                 };
                 await PersonAppointmentServices.addPersonAppointment(pap);
               });
-              this.cancelMessage(
-                this.tutors[0],
-                this.user.fName,
-                this.user.lName,
-                this.selectedAppointment.id
-              );
-              await this.getAppointments();
+              await this.getAppointments(this.group.id);
               //this.$router.go(0);
             })
             .catch((error) => {
@@ -2234,21 +1954,12 @@ export default {
         await AppointmentServices.updateAppointment(
           this.selectedAppointment.id,
           this.selectedAppointment
-        )
-          .then(() => {
-            this.cancelMessage(
-              this.tutors[0],
-              this.user.fName,
-              this.user.lName,
-              this.selectedAppointment.id
-            );
-          })
-          .catch((error) => {
-            this.alertType = "error";
-            this.alert = error.response.data.message;
-            this.showAlert = true;
-            console.log("There was an error:", error.response);
-          });
+        ).catch((error) => {
+          this.alertType = "error";
+          this.alert = error.response.data.message;
+          this.showAlert = true;
+          console.log("There was an error:", error.response);
+        });
         for (let i = 0; i < this.personAppointments.length; i++) {
           if (
             this.personAppointments[i].appointmentId ==
@@ -2259,7 +1970,7 @@ export default {
             await PersonAppointmentServices.deletePersonAppointment(
               this.personAppointments[i].id
             );
-            await this.getAppointments();
+            await this.getAppointments(this.group.id);
             //this.$router.go(0);
           }
         }
@@ -2288,7 +1999,7 @@ export default {
               this.showAlert = true;
               console.log("There was an error:", error.response);
             });
-            await this.getAppointments();
+            await this.getAppointments(this.group.id);
             //this.$router.go(0);
           }
         }
@@ -2315,13 +2026,7 @@ export default {
                   this.selectedAppointment.id,
                   this.selectedAppointment
                 );
-                this.tutorCancelMessage(
-                  this.students[0],
-                  this.user.fName,
-                  this.user.lName,
-                  this.selectedAppointment.id
-                );
-                await this.getAppointments();
+                await this.getAppointments(this.group.id);
                 return;
               }
             }
@@ -2334,7 +2039,7 @@ export default {
               this.selectedAppointment.id
             );
 
-            await this.getAppointments();
+            await this.getAppointments(this.group.id);
             //this.$router.go(0);
           }
         }
@@ -2373,14 +2078,6 @@ export default {
               }
             }
             if (this.students.length > 0 && this.tutors.length == 1) {
-              for (let k = 0; k < this.students.length; k++) {
-                this.tutorCancelMessage(
-                  this.students[k],
-                  this.user.fName,
-                  this.user.lName,
-                  this.selectedAppointment.id
-                );
-              }
               this.selectedAppointment.status = "tutorCancel";
               await AppointmentServices.updateForGoogle(
                 this.selectedAppointment.id,
@@ -2410,7 +2107,7 @@ export default {
                 console.log("There was an error:", error.response);
               });
             }
-            await this.getAppointments();
+            await this.getAppointments(this.group.id);
 
             //this.$router.go(0);
           }
@@ -2428,117 +2125,119 @@ export default {
       this.showAlert = true;
     },
     async findEmail() {
-      await PersonServices.getPersonForEmail(this.studentEmail)
-        .then((response) => {
-          let temp = response.data;
-          let onlyTutor = true;
-          if (this.user.userID == temp.id) {
-            this.emailStatus =
-              "You cannot sign yourself up for an appointment.";
-            this.emailFound = true;
-            return;
-          } else if (temp.id == this.tutors[0].id) {
-            this.emailStatus =
-              "You cannot sign-up the tutor for their own appointment.";
-            this.emailFound = true;
-            return;
-          } else if (!temp.email.includes("not found")) {
-            this.studentNameInput = false;
-            PersonServices.getAllForGroup(this.group.id).then(
-              async (responseGroup) => {
-                let people = responseGroup.data;
-                for (let i = 0; i < people.length; i++) {
-                  if (people[i].id == temp.id) {
-                    await RoleServices.getRoleByGroupForPerson(
-                      this.group.id,
-                      temp.id
-                    ).then(async (result) => {
-                      let role = result.data;
-                      for (let k = 0; k < role.length; k++) {
-                        if (role[k].type.includes("Student")) {
-                          onlyTutor = false;
+      if (this.validateEmail()) {
+        await PersonServices.getPersonForEmail(this.studentEmail)
+          .then((response) => {
+            let temp = response.data;
+            let onlyTutor = true;
+            if (this.user.userID == temp.id) {
+              this.emailStatus =
+                "You cannot sign yourself up for an appointment.";
+              this.emailFound = true;
+              return;
+            } else if (temp.id == this.tutors[0].id) {
+              this.emailStatus =
+                "You cannot sign-up the tutor for their own appointment.";
+              this.emailFound = true;
+              return;
+            } else if (!temp.email.includes("not found")) {
+              this.studentNameInput = false;
+              PersonServices.getAllForGroup(this.group.id).then(
+                async (responseGroup) => {
+                  let people = responseGroup.data;
+                  for (let i = 0; i < people.length; i++) {
+                    if (people[i].id == temp.id) {
+                      await RoleServices.getRoleByGroupForPerson(
+                        this.group.id,
+                        temp.id
+                      ).then(async (result) => {
+                        let role = result.data;
+                        for (let k = 0; k < role.length; k++) {
+                          if (role[k].type.includes("Student")) {
+                            onlyTutor = false;
+                          }
                         }
-                      }
-                      if (onlyTutor) {
-                        await RoleServices.getAllForGroup(this.group.id).then(
-                          (responseRole) => {
-                            let roles = responseRole.data;
-                            for (let i = 0; i < roles.length; i++) {
-                              if (roles[i].type == "Student") {
-                                let personRole = {
-                                  status: "applied",
-                                  roleId: roles[i].id,
-                                  personId: temp.id,
-                                  dateSigned: Date(),
-                                  agree: false,
-                                };
-                                PersonRoleServices.addPersonRole(personRole);
-                                this.emailStatus =
-                                  temp.fName +
-                                  " " +
-                                  temp.lName +
-                                  " has been added as a student!";
-                                this.emailFound = true;
-                                return;
+                        if (onlyTutor) {
+                          await RoleServices.getAllForGroup(this.group.id).then(
+                            (responseRole) => {
+                              let roles = responseRole.data;
+                              for (let i = 0; i < roles.length; i++) {
+                                if (roles[i].type == "Student") {
+                                  let personRole = {
+                                    status: "applied",
+                                    roleId: roles[i].id,
+                                    personId: temp.id,
+                                    dateSigned: Date(),
+                                    agree: false,
+                                  };
+                                  PersonRoleServices.addPersonRole(personRole);
+                                  this.emailStatus =
+                                    temp.fName +
+                                    " " +
+                                    temp.lName +
+                                    " has been added as a student!";
+                                  this.emailFound = true;
+                                  return;
+                                }
                               }
                             }
-                          }
-                        );
-                      }
-                    });
-                    this.emailStatus =
-                      "Student " + temp.fName + " " + temp.lName + " found!";
-                    this.walkInStudent = temp;
-                    this.emailFound = true;
-                    this.checkGroupBooking();
-                    return;
-                  }
-                }
-                this.emailStatus =
-                  "Student " +
-                  temp.fName +
-                  " " +
-                  temp.lName +
-                  " has been added to " +
-                  this.group.name +
-                  "!";
-                this.walkInStudent = temp;
-                RoleServices.getAllForGroup(this.group.id).then(
-                  (responseRole) => {
-                    let roles = responseRole.data;
-                    for (let i = 0; i < roles.length; i++) {
-                      if (roles[i].type == "Student") {
-                        let personRole = {
-                          status: "applied",
-                          roleId: roles[i].id,
-                          personId: temp.id,
-                          dateSigned: Date(),
-                          agree: false,
-                        };
-                        PersonRoleServices.addPersonRole(personRole);
-                        this.emailFound = true;
-                        return;
-                      }
+                          );
+                        }
+                      });
+                      this.emailStatus =
+                        "Student " + temp.fName + " " + temp.lName + " found!";
+                      this.walkInStudent = temp;
+                      this.emailFound = true;
+                      this.checkGroupBooking();
+                      return;
                     }
                   }
-                );
-              }
-            );
-          } else {
-            this.studentNameInput = true;
-            this.emailStatus = "No Student Found"; // get rid of popup and add to the open selecte event, then if email not found, add more blanks for student name
-            this.isGroupBook = false;
-            this.emailFound = false;
-            this.studentfName = "";
-            this.studentlName = "";
-          }
-        })
-        .catch((error) => {
-          this.alertType = "error";
-          this.alert = error.response.data.message;
-          this.showAlert = true;
-          console.log("There was an error:", error.response);
-        });
+                  this.emailStatus =
+                    "Student " +
+                    temp.fName +
+                    " " +
+                    temp.lName +
+                    " has been added to " +
+                    this.group.name +
+                    "!";
+                  this.walkInStudent = temp;
+                  RoleServices.getAllForGroup(this.group.id).then(
+                    (responseRole) => {
+                      let roles = responseRole.data;
+                      for (let i = 0; i < roles.length; i++) {
+                        if (roles[i].type == "Student") {
+                          let personRole = {
+                            status: "applied",
+                            roleId: roles[i].id,
+                            personId: temp.id,
+                            dateSigned: Date(),
+                            agree: false,
+                          };
+                          PersonRoleServices.addPersonRole(personRole);
+                          this.emailFound = true;
+                          return;
+                        }
+                      }
+                    }
+                  );
+                }
+              );
+            } else {
+              this.studentNameInput = true;
+              this.emailStatus = "No Student Found"; // get rid of popup and add to the open selecte event, then if email not found, add more blanks for student name
+              this.isGroupBook = false;
+              this.emailFound = false;
+              this.studentfName = "";
+              this.studentlName = "";
+            }
+          })
+          .catch((error) => {
+            this.alertType = "error";
+            this.alert = error.response.data.message;
+            this.showAlert = true;
+            console.log("There was an error:", error.response);
+          });
+      }
     },
     // add a student to the system and then to the current group
     async adminAdd() {
@@ -2583,25 +2282,18 @@ export default {
         this.selectedAppointment
       )
         .then(async () => {
-          for (let i = 0; i < this.students.length; i++) {
-            this.tutorEditMessage(
-              this.students[i],
-              this.user.fName,
-              this.user.lName,
-              this.selectedAppointment.type
-            );
-            this.alertType = "success";
-            this.alert =
-              "You have successfully updated your " +
-              this.selectedAppointment.type +
-              " appointment on " +
-              this.selectedAppointment.date +
-              " at " +
-              this.selectedAppointment.startTime +
-              ".";
-            this.showAlert = true;
-          }
-          await this.getAppointments();
+          this.sendEditedMessage(this.user, this.selectedAppointment.id);
+          this.alertType = "success";
+          this.alert =
+            "You have successfully updated your " +
+            this.selectedAppointment.type +
+            " appointment on " +
+            this.selectedAppointment.date +
+            " at " +
+            this.selectedAppointment.startTime +
+            ".";
+          this.showAlert = true;
+          await this.getAppointments(this.group.id);
         })
         .catch((error) => {
           this.alertType = "error";

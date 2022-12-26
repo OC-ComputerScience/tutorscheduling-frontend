@@ -11,16 +11,21 @@
           id="name"
           :counter="50"
           label="Name"
-          required
-        ></v-text-field>
+          required></v-text-field>
 
         <v-text-field
           v-model="topic.abbr"
           id="abbr"
           :counter="25"
           label="Abbreviation"
-          required
-        ></v-text-field>
+          required></v-text-field>
+
+        <v-select
+          v-model="topic.status"
+          :items="status"
+          label="Status"
+          required>
+        </v-select>
 
         <v-select
           v-model="topic.groupId"
@@ -28,16 +33,14 @@
           item-text="name"
           item-value="id"
           label="Group"
-          required
-        >
+          required>
         </v-select>
 
         <v-btn
           :disabled="!valid"
           color="success"
           class="mr-4"
-          @click="updateTopic"
-        >
+          @click="updateTopic()">
           Save
         </v-btn>
 
@@ -50,6 +53,7 @@
 <script>
 import TopicServices from "@/services/topicServices.js";
 import GroupServices from "@/services/groupServices.js";
+import Utils from "@/config/utils.js";
 
 export default {
   props: ["id"],
@@ -57,31 +61,46 @@ export default {
   data() {
     return {
       valid: false,
+      user: {},
       topic: {},
       group: {},
       groups: [],
       message: "Edit Topic - make updates to the fields and click Save",
       roles: ["admin"],
+      status: ["active", "disabled"],
     };
   },
   async created() {
-    await TopicServices.getTopic(this.id)
-      .then((response) => {
-        this.topic = response.data;
-      })
-      .catch((error) => {
-        this.message = error.response.data.message;
-        console.log("There was an error:", error.response);
-      }),
-      GroupServices.getGroup(this.topic.groupId)
+    this.user = Utils.getStore("user");
+    await this.getTopic();
+    await this.getGroup();
+    await this.getAllGroups();
+  },
+  methods: {
+    // only updating this replace issue once edits can be done on view page
+    // also this.id is topic id
+    async getTopic() {
+      await TopicServices.getTopic(this.id)
+        .then((response) => {
+          this.topic = response.data;
+        })
+        .catch((error) => {
+          this.message = error.response.data.message;
+          console.log("There was an error:", error.response);
+        });
+    },
+    async getGroup() {
+      await GroupServices.getGroup(this.topic.groupId)
         .then((response) => {
           this.group = response.data;
         })
         .catch((error) => {
           this.message = error.response.data.message;
           console.log("There was an error:", error.response);
-        }),
-      GroupServices.getAllGroups()
+        });
+    },
+    async getAllGroups() {
+      await GroupServices.getAllGroups()
         .then((response) => {
           this.groups = response.data;
         })
@@ -89,15 +108,14 @@ export default {
           this.message = error.response.data.message;
           console.log("There was an error:", error.response);
         });
-  },
-
-  methods: {
-    // only updating this replace issue once edits can be done on view page
-    // also this.id is topic id
-    updateTopic() {
-      TopicServices.updateTopic(this.id, this.topic)
+    },
+    async updateTopic() {
+      await TopicServices.updateTopic(this.id, this.topic)
         .then(() => {
-          this.$router.go(-1);
+          this.$router.push({
+            name: "topicList",
+            params: { id: this.user.selectedRole.personRoleId },
+          });
         })
         .catch((error) => {
           this.message = error.response.data.message;

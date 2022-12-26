@@ -60,7 +60,7 @@
                   message="Click here to view applications."></InformationComponent>
               </v-card-title>
               <v-card-text class="text-center">
-                <h1>{{ unapprovednum }}</h1>
+                <h1>{{ applicationNum }}</h1>
               </v-card-text>
             </v-card>
           </v-row>
@@ -70,7 +70,7 @@
         <v-col>
           <v-card class="tutor">
             <v-card-title>
-              Tutors For Week Starting {{ current_week }}
+              Tutors For Week Starting {{ currentWeek }}
               <v-spacer></v-spacer>
               <InformationComponent
                 message="View a breakdown of the appointment hours for each tutor."></InformationComponent>
@@ -86,7 +86,7 @@
         <v-col>
           <v-card class="tutor">
             <v-card-title>
-              Topics For Week Starting {{ current_week }}
+              Topics For Week Starting {{ currentWeek }}
               <v-spacer></v-spacer>
               <InformationComponent
                 message="View a breakdown of the appointment hours for each topic."></InformationComponent>
@@ -118,11 +118,13 @@ import TopicServices from "@/services/topicServices.js";
 import PersonServices from "@/services/personServices.js";
 import PersonRoleServices from "@/services/personRoleServices.js";
 import InformationComponent from "@/components/InformationComponent.vue";
+import { TimeFunctionsMixin } from "@/mixins/TimeFunctionsMixin";
 import "@/plugins/apexcharts";
 
 export default {
   props: ["id"],
   name: "AdminHome",
+  mixins: [TimeFunctionsMixin],
   components: {
     InformationComponent,
   },
@@ -134,6 +136,41 @@ export default {
       alertType: "success",
       series: [],
       pieSeries: [],
+      search: "",
+      user: {},
+      group: {},
+      requests: {},
+      receivedRequests: 0,
+      completedRequests: 0,
+      inProgressRequests: 0,
+      applicationNum: 0,
+      currentWeek: [],
+      weekList: [],
+      weeks: [],
+      tutors: [],
+      topics: [],
+      appointments: [],
+      apptCount: [],
+      availableCount: [],
+      groupCount: [],
+      pendingCount: [],
+      hourCount: [],
+      completeCount: [],
+      noShowCount: [],
+      bookedCount: [],
+      week: [],
+      // table headers
+      tutorTable: [
+        { text: "Name", value: "name" },
+        { text: "# Appointments", value: "apptCount" },
+        { text: "# Total Hours", value: "hours" },
+        { text: "# Hours to Pay", value: "payingHours" },
+      ],
+      topicTable: [
+        { text: "Topic Name", value: "name" },
+        { text: "# Booked Hours", value: "hours" },
+        { text: "# Potential Hours", value: "potentialHours" },
+      ],
       chartOptions: {
         chart: {
           type: "bar",
@@ -211,55 +248,6 @@ export default {
           },
         ],
       },
-      loaded: false,
-      dataentry: null,
-      datalabel: null,
-      search: "",
-
-      // user and group info
-      user: {},
-      group: {},
-
-      // current requests and availability
-      requests: {},
-      availability: {},
-
-      // current numbers
-      receivedrequests: 0,
-      completerequests: 0,
-      inprogressrequests: 0,
-      unapprovednum: 0,
-      requestnum: 0,
-
-      // table info
-      current_week: [],
-      weeklist: [],
-      weeks: [],
-      tutors: [],
-      topics: [],
-      appointments: [],
-      appt_count: [],
-      available_count: [],
-      group_count: [],
-      pending_count: [],
-      hour_count: [],
-      complete_count: [],
-      no_show_count: [],
-      booked_count: [],
-      week: [],
-
-      // table headers
-      tutorTable: [
-        { text: "Name", value: "name" },
-        { text: "# Appointments", value: "apptCount" },
-        { text: "# Total Hours", value: "hours" },
-        { text: "# Hours to Pay", value: "payingHours" },
-      ],
-      topicTable: [
-        { text: "Topic Name", value: "name" },
-        { text: "# Booked Hours", value: "hours" },
-        { text: "# Potential Hours", value: "potentialHours" },
-      ],
     };
   },
   async created() {
@@ -271,13 +259,12 @@ export default {
       " Click on the <b>Student Requests</b> chart to view requests. <br />" +
       "Click on <b>Tutor Applications</b> to view applications.";
 
-    await this.getGroupByPersonRoleId().then(() => {
-      this.setWeeks();
-      this.setTutorHours();
-      this.getTopics();
-      this.getRequests();
-      this.getTutorApplications();
-    });
+    await this.getGroupByPersonRoleId();
+    await this.setWeeks();
+    await this.setTutorHours();
+    await this.getTopics();
+    await this.getRequests();
+    await this.getTutorApplications();
   },
   methods: {
     async getGroupByPersonRoleId() {
@@ -292,14 +279,8 @@ export default {
           console.log("There was an error:", error.response);
         });
     },
-    async addData() {
-      this.dataset.push(this.dataentry);
-      this.labels.push(this.datalabel);
-      this.datalabel = "";
-      this.dataentry = "";
-    },
     async setWeeks() {
-      await this.setWeekList();
+      this.setweekList();
       var totalHourList = [];
       var totalAvailableList = [];
       var totalGroupList = [];
@@ -308,7 +289,7 @@ export default {
       var totalCompleteList = [];
       var totalNoShowList = [];
 
-      for (let index = 0; index < this.weeklist.length; ++index) {
+      for (let index = 0; index < this.weekList.length; ++index) {
         var currWeek = "";
         var apptCount = "";
         var hourCount = "";
@@ -319,7 +300,7 @@ export default {
         var completeCount = "";
         var noShowCount = "";
 
-        let element = this.weeklist[index];
+        let element = this.weekList[index];
         await AppointmentServices.getAppointmentHourCount(
           this.group.id,
           element
@@ -337,16 +318,14 @@ export default {
 
             if (index == 1) {
               this.week = currWeek;
-              this.appt_count = apptCount;
-              this.hour_count = hourCount;
-              this.available_count = availableCount;
-              this.group_count = groupCount;
-              this.pending_count = pendingCount;
-              this.booked_count = bookedCount;
-              this.complete_count = completeCount;
-              this.no_show_count = noShowCount;
-
-              this.loaded = true;
+              this.apptCount = apptCount;
+              this.hourCount = hourCount;
+              this.availableCount = availableCount;
+              this.groupCount = groupCount;
+              this.pendingCount = pendingCount;
+              this.bookedCount = bookedCount;
+              this.completeCount = completeCount;
+              this.noShowCount = noShowCount;
             }
           })
           .catch((error) => {
@@ -361,11 +340,11 @@ export default {
 
         this.weeks.push({
           week: currWeek,
-          appointmentNum: await this.checkNum(apptCount),
-          hours: await this.checkHours(hourCount),
-          availableAppointments: await this.checkHours(availableCount),
-          completedAppointments: await this.checkHours(completeCount),
-          scheduledAppointments: await this.checkHours(bookedCount),
+          appointmentNum: this.checkNum(apptCount),
+          hours: this.checkHours(hourCount),
+          availableAppointments: this.checkHours(availableCount),
+          completedAppointments: this.checkHours(completeCount),
+          scheduledAppointments: this.checkHours(bookedCount),
         });
 
         totalHourList.push(hourCount);
@@ -376,31 +355,17 @@ export default {
         totalCompleteList.push(completeCount);
         totalNoShowList.push(noShowCount);
       }
-      // this.series.push(
-      //   JSON.parse(
-      //     "{" +
-      //       '"name": "Total Hours",' +
-      //       '"data": [' +
-      //       (await this.numifyHours(totalHourList[0])) +
-      //       ", " +
-      //       (await this.numifyHours(totalHourList[1])) +
-      //       ", " +
-      //       (await this.numifyHours(totalHourList[2])) +
-      //       "]" +
-      //     "}"
-      //   )
-      // );
 
       this.series.push(
         JSON.parse(
           "{" +
             '"name": "Private Available",' +
             '"data": [' +
-            (await this.numifyHours(totalAvailableList[0])) +
+            this.numifyHours(totalAvailableList[0]) +
             ", " +
-            (await this.numifyHours(totalAvailableList[1])) +
+            this.numifyHours(totalAvailableList[1]) +
             ", " +
-            (await this.numifyHours(totalAvailableList[2])) +
+            this.numifyHours(totalAvailableList[2]) +
             "]" +
             "}"
         )
@@ -411,11 +376,11 @@ export default {
           "{" +
             '"name": "Group Available",' +
             '"data": [' +
-            (await this.numifyHours(totalGroupList[0])) +
+            this.numifyHours(totalGroupList[0]) +
             ", " +
-            (await this.numifyHours(totalGroupList[1])) +
+            this.numifyHours(totalGroupList[1]) +
             ", " +
-            (await this.numifyHours(totalGroupList[2])) +
+            this.numifyHours(totalGroupList[2]) +
             "]" +
             "}"
         )
@@ -426,11 +391,11 @@ export default {
           "{" +
             '"name": "Pending",' +
             '"data": [' +
-            (await this.numifyHours(totalPendingList[0])) +
+            this.numifyHours(totalPendingList[0]) +
             ", " +
-            (await this.numifyHours(totalPendingList[1])) +
+            this.numifyHours(totalPendingList[1]) +
             ", " +
-            (await this.numifyHours(totalPendingList[2])) +
+            this.numifyHours(totalPendingList[2]) +
             "]" +
             "}"
         )
@@ -441,11 +406,11 @@ export default {
           '{"' +
             'name": "Booked",' +
             '"data": [' +
-            (await this.numifyHours(totalBookedList[0])) +
+            this.numifyHours(totalBookedList[0]) +
             ", " +
-            (await this.numifyHours(totalBookedList[1])) +
+            this.numifyHours(totalBookedList[1]) +
             ", " +
-            (await this.numifyHours(totalBookedList[2])) +
+            this.numifyHours(totalBookedList[2]) +
             "]" +
             "}"
         )
@@ -456,11 +421,11 @@ export default {
           "{" +
             '"name": "Completed",' +
             '"data": [' +
-            (await this.numifyHours(totalCompleteList[0])) +
+            this.numifyHours(totalCompleteList[0]) +
             ", " +
-            (await this.numifyHours(totalCompleteList[1])) +
+            this.numifyHours(totalCompleteList[1]) +
             ", " +
-            (await this.numifyHours(totalCompleteList[2])) +
+            this.numifyHours(totalCompleteList[2]) +
             "]" +
             "}"
         )
@@ -471,11 +436,11 @@ export default {
           "{" +
             '"name": "No-Show",' +
             '"data": [' +
-            (await this.numifyHours(totalNoShowList[0])) +
+            this.numifyHours(totalNoShowList[0]) +
             ", " +
-            (await this.numifyHours(totalNoShowList[1])) +
+            this.numifyHours(totalNoShowList[1]) +
             ", " +
-            (await this.numifyHours(totalNoShowList[2])) +
+            this.numifyHours(totalNoShowList[2]) +
             "]" +
             "}"
         )
@@ -483,14 +448,14 @@ export default {
 
       this.$refs.chart.updateOptions({
         xaxis: {
-          categories: [this.weeklist[0], this.weeklist[1], this.weeklist[2]],
+          categories: [this.weekList[0], this.weekList[1], this.weekList[2]],
         },
         decimalsInFloat: 1,
       });
     },
     async setTutorHours() {
-      await this.setWeekList();
-      var currWeek = this.current_week.slice(0, 10);
+      this.setweekList();
+      var currWeek = this.currentWeek.slice(0, 10);
       await PersonServices.getHoursPerTutor(this.group.id, currWeek)
         .then((responseHour) => {
           this.tutors = responseHour.data;
@@ -503,29 +468,16 @@ export default {
         });
       for (let i = 0; i < this.tutors.length; i++) {
         this.tutors[i].name = `${this.tutors[i].fName} ${this.tutors[i].lName}`;
-        this.tutors[i].apptCount = await this.checkNum(
-          this.tutors[i].apptCount
-        );
-        this.tutors[i].hours = await this.checkHours(this.tutors[i].hours);
-        this.tutors[i].payingHours = await this.checkHours(
+        this.tutors[i].apptCount = this.checkNum(this.tutors[i].apptCount);
+        this.tutors[i].hours = this.checkHours(this.tutors[i].hours);
+        this.tutors[i].payingHours = this.checkHours(
           this.tutors[i].payingHours
         );
       }
-
-      this.tutors.sort(function (a, b) {
-        if (a.fName < b.fName) {
-          return -1;
-        }
-        if (a.fName > b.fName) {
-          return 1;
-        }
-        return 0;
-      });
     },
-
     async getTopics() {
-      await this.setWeekList();
-      var currWeek = this.current_week.slice(0, 10);
+      this.setweekList();
+      var currWeek = this.currentWeek.slice(0, 10);
       await TopicServices.getHoursPerTopic(this.group.id, currWeek)
         .then((responseHour) => {
           this.topics = responseHour.data;
@@ -538,96 +490,29 @@ export default {
         });
 
       for (let i = 0; i < this.topics.length; i++) {
-        this.topics[i].hours = await this.checkHours(this.topics[i].hours);
-        this.topics[i].potentialHours = await this.checkHours(
+        this.topics[i].hours = this.checkHours(this.topics[i].hours);
+        this.topics[i].potentialHours = this.checkHours(
           this.topics[i].potentialHours
         );
       }
-
-      this.topics.sort(function (a, b) {
-        if (a.name < b.name) {
-          return -1;
-        }
-        if (a.name > b.name) {
-          return 1;
-        }
-        return 0;
-      });
     },
-    async setWeekList() {
-      var currentDate = new Date();
-      var tempPrev = this.getPreviousSunday(
-        new Date(await this.getPrevWeek(currentDate))
-      );
-      var prev = await this.toSQLDate(tempPrev);
-      var current = await this.toSQLDate(this.getPreviousSunday(currentDate));
-      var tempNext = this.getPreviousSunday(
-        new Date(await this.getNextWeek(currentDate))
-      );
-      var next = await this.toSQLDate(tempNext);
-      this.weeklist = [prev, current, next];
-      this.current_week = current;
+    setweekList() {
+      let prev = this.getStartOfPreviousWeek();
+      let current = this.getStartOfCurrentWeek();
+      let next = this.getStartOfNextWeek();
+      this.weekList = [prev, current, next];
+      this.currentWeek = current;
     },
-    getPreviousSunday(date) {
-      // not sure why it's monday but this works
-      const previousMonday = new Date();
-      previousMonday.setDate(date.getDate() - date.getDay());
-      // if adding to new week makes the new date bigger than the previous date, subtract a month
-      if (previousMonday > date)
-        previousMonday.setMonth(previousMonday.getMonth() - 1);
-      previousMonday.setHours(0, 0, 0, 0);
-      return previousMonday;
-    },
-    async getNextWeek(week) {
-      var date = new Date(week.getTime() + 7 * 24 * 60 * 60 * 1000);
-      var next = await this.toSQLDate(date);
-      return next;
-    },
-    async getPrevWeek(week) {
-      var date = new Date(week.getTime() - 7 * 24 * 60 * 60 * 1000);
-      var prev = await this.toSQLDate(date);
-      return prev;
-    },
-    async toSQLDate(day) {
-      var date = day.toISOString().slice(0, 19).replace("T", " ").slice(0, 10);
-      return date;
-    },
-    async checkNum(num) {
+    checkNum(num) {
       if (!num) {
         return 0 + " total";
       }
       return num + " total";
     },
-    async checkHours(hours) {
-      if (!hours) {
-        return "00:00";
-      }
-      var total = await this.toHoursAndMinutes(hours);
-      return total;
-    },
-    numifyHours(hours) {
-      if (!hours) {
-        return 0;
-      }
-      var total = this.toHours(hours);
-      return total;
-    },
-    toHours(totalMinutes) {
-      var hours = parseFloat(totalMinutes) / parseFloat(60);
-      return hours;
-    },
-    async toHoursAndMinutes(totalMinutes) {
-      var minutes = parseInt(totalMinutes) % 60;
-      minutes = (minutes < 10 ? "0" : "") + minutes;
-      var hours = Math.floor(parseInt(totalMinutes) / 60);
-      hours = (hours < 10 ? "0" : "") + hours;
-
-      return hours + ":" + minutes;
-    },
     async getTutorApplications() {
       await PersonServices.getPendingTutorsForGroup(this.group.id)
         .then((response) => {
-          this.unapprovednum = response.data.length;
+          this.applicationNum = response.data.length;
         })
         .catch((error) => {
           this.alertType = "error";
@@ -642,19 +527,18 @@ export default {
           this.requests = response.data;
           for (let index = 0; index < this.requests.length; index++) {
             let request = this.requests[index];
-            this.requestnum++;
             if (request.status === "In-Progress") {
-              this.inprogressrequests++;
+              this.inProgressRequests++;
             } else if (request.status === "Received") {
-              this.receivedrequests++;
+              this.receivedRequests++;
             } else if (request.status === "Completed") {
-              this.completerequests++;
+              this.completedRequests++;
             }
           }
 
-          this.pieSeries.push(this.receivedrequests);
-          this.pieSeries.push(this.inprogressrequests);
-          this.pieSeries.push(this.completerequests);
+          this.pieSeries.push(this.receivedRequests);
+          this.pieSeries.push(this.inProgressRequests);
+          this.pieSeries.push(this.completedRequests);
         })
         .catch((error) => {
           this.alertType = "error";

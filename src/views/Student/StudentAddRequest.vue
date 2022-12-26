@@ -68,13 +68,14 @@ import TopicServices from "@/services/topicServices.js";
 import PersonServices from "@/services/personServices.js";
 import PersonRoleServices from "@/services/personRoleServices.js";
 import RoleServices from "@/services/roleServices.js";
-import TwilioServices from "@/services/twilioServices.js";
 import Utils from "@/config/utils.js";
 import InformationComponent from "../../components/InformationComponent.vue";
+import { SendTextsMixin } from "../../mixins/SendTextsMixin";
 
 export default {
   name: "StudentAddRequest",
   props: ["id"],
+  mixins: [SendTextsMixin],
   components: {
     InformationComponent,
   },
@@ -151,7 +152,7 @@ export default {
                 tempA.personroleprivilege
               )
             )
-              this.sendMessage(tempA);
+              this.sendRequestMessage(this.user, tempA);
           }
 
           this.$router.go(-1);
@@ -199,23 +200,6 @@ export default {
           this.showAlert = true;
           console.log("There was an error:", error.response);
         });
-    },
-    sendMessage(admin) {
-      let temp = {
-        phoneNum: admin.person.phoneNum,
-        message: "",
-      };
-
-      temp.message =
-        "You have a new request from " +
-        this.person.fName +
-        " " +
-        this.person.lName +
-        " for " +
-        this.group.name +
-        ".\nPlease view this request at http://tutorscheduling.oc.edu/";
-
-      TwilioServices.sendMessage(temp);
     },
   },
 };

@@ -212,7 +212,7 @@
             :headers="headers"
             :items="appointments"
             :items-per-page="50"
-            @click:row="rowClick()"></v-data-table>
+            @click:row="rowClick"></v-data-table>
         </v-card>
         <br />
         <v-card>
@@ -226,7 +226,7 @@
             :headers="headerFeedback"
             :items="appointmentsneedingfeedback"
             :items-per-page="50"
-            @click:row="provideFeedback()"></v-data-table>
+            @click:row="provideFeedback"></v-data-table>
         </v-card>
       </v-container>
       <v-container v-else>
@@ -248,10 +248,12 @@ import PersonRoleServices from "@/services/personRoleServices.js";
 import PersonTopicServices from "@/services/personTopicServices.js";
 import PersonAppointmentServices from "@/services/personAppointmentServices.js";
 import InformationComponent from "../../components/InformationComponent.vue";
+import { TimeFunctionsMixin } from "../../mixins/TimeFunctionsMixin";
 
 export default {
   props: ["id"],
   name: "StudentHome",
+  mixins: [TimeFunctionsMixin],
   components: {
     InformationComponent,
   },
@@ -319,29 +321,6 @@ export default {
           console.log("There was an error:", error.response);
         });
     },
-    formatDate(date) {
-      let formattedDate =
-        date.toString().substring(5, 10) +
-        "-" +
-        date.toString().substring(0, 4);
-      return formattedDate;
-    },
-    formatTime(time) {
-      let modST = time.toString().substring(0, 2) % 12;
-      let formattedTime = modST + ":" + time.toString().substring(3, 5);
-
-      if (time.toString().substring(0, 2) > 12) {
-        formattedTime = formattedTime + " P.M.";
-      } else if (modST == 0 && time.toString().substring(0, 2) == "12") {
-        formattedTime = "12:" + time.toString().substring(3, 5) + " P.M.";
-      } else if (modST == 0) {
-        formattedTime = "12:" + time.toString().substring(3, 5) + " A.M.";
-      } else {
-        formattedTime = formattedTime + " A.M.";
-      }
-
-      return formattedTime;
-    },
     async getAppointments() {
       await AppointmentServices.getUpcomingAppointmentForPersonForGroup(
         this.group.id,
@@ -349,29 +328,6 @@ export default {
       )
         .then(async (response) => {
           this.appointments = response.data;
-
-          let temp = this.appointments.length;
-          for (let i = 0; i < temp; i++) {
-            for (let j = 0; j < temp - i - 1; j++) {
-              if (this.appointments[j + 1].date < this.appointments[j].date) {
-                [this.appointments[j + 1], this.appointments[j]] = [
-                  this.appointments[j],
-                  this.appointments[j + 1],
-                ];
-              } else if (
-                this.appointments[j + 1].date === this.appointments[j].date
-              ) {
-                if (
-                  this.appointments[j + 1].startTime <
-                  this.appointments[j].startTime
-                )
-                  [this.appointments[j + 1], this.appointments[j]] = [
-                    this.appointments[j],
-                    this.appointments[j + 1],
-                  ];
-              }
-            }
-          }
           for (let index = 0; index < this.appointments.length; ++index) {
             this.appointments[index].tutor = "x";
             //  look up students

@@ -11,31 +11,27 @@
           id="name"
           :counter="40"
           label="Location Name"
-          required
-        ></v-text-field>
+          required></v-text-field>
 
         <v-text-field
           v-model="location.building"
           id="building"
           :counter="40"
           label="Building"
-          required
-        ></v-text-field>
+          required></v-text-field>
 
         <v-text-field
           v-model="location.description"
           id="description"
           :counter="200"
           label="Description of Location"
-          required
-        ></v-text-field>
+          required></v-text-field>
 
         <v-select
           v-model="location.status"
           :items="status"
           label="Status"
-          required
-        >
+          required>
         </v-select>
 
         <v-select v-model="location.type" :items="types" label="Type" required>
@@ -47,16 +43,14 @@
           item-text="name"
           item-value="id"
           label="Group"
-          required
-        >
+          required>
         </v-select>
 
         <v-btn
           :disabled="!valid"
           color="success"
           class="mr-4"
-          @click="updateLocation"
-        >
+          @click="updateLocation">
           Save
         </v-btn>
 
@@ -69,6 +63,7 @@
 <script>
 import LocationServices from "@/services/locationServices.js";
 import GroupServices from "@/services/groupServices.js";
+import Utils from "@/config/utils.js";
 
 export default {
   props: ["id"],
@@ -76,6 +71,7 @@ export default {
   data() {
     return {
       valid: false,
+      user: {},
       message: "Edit Location - make updates to the fields and click Save",
       location: {},
       groups: [],
@@ -85,6 +81,7 @@ export default {
     };
   },
   created() {
+    this.user = Utils.getStore("user");
     LocationServices.getLocation(this.id)
       .then((response) => {
         this.location = response.data;
@@ -109,7 +106,10 @@ export default {
     updateLocation() {
       LocationServices.updateLocation(this.location.id, this.location)
         .then(() => {
-          this.$router.go(-1);
+          this.$router.push({
+            name: "locationList",
+            params: { id: this.user.selectedRole.personRoleId },
+          });
         })
         .catch((error) => {
           this.message = error.response.data.message;

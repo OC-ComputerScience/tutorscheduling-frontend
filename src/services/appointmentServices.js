@@ -9,6 +9,10 @@ export default {
     // used to get all appointments for reporting
     return apiClient.get("appointment/group/" + id);
   },
+  getInfoForText(id) {
+    // used to get all appointments for reporting
+    return apiClient.get("appointment/text/" + id);
+  },
   getAppointmentHourCount(id, currWeek) {
     return apiClient.get("appointment/group/" + id + "/hours/week/" + currWeek);
   },
