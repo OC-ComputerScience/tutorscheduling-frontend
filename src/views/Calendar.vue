@@ -1929,8 +1929,7 @@ export default {
     async directToCancel() {
       if (this.selectedAppointment.status === "pending")
         await this.confirmAppointment(false);
-      else if (this.selectedAppointment.status === "booked")
-        await this.cancelAppointment();
+      else await this.cancelAppointment();
       this.selectedOpen = false;
       this.showDeleteConfirmation = false;
     },
