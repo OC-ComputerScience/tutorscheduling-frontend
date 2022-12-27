@@ -15,6 +15,15 @@
       <v-alert v-model="showAlert" dismissible :type="alertType">{{
         this.alert
       }}</v-alert>
+      <v-dialog persistent v-model="showDeleteConfirmation" max-width="750px">
+        <DeleteConfirmationComponent
+          type="appointment"
+          :item="selectedAppointment"
+          @handleReturningCancel="showDeleteConfirmation = false"
+          @handleReturningSuccess="
+            directToCancel()
+          "></DeleteConfirmationComponent>
+      </v-dialog>
       <v-row class="fill-height">
         <v-col>
           <v-sheet height="64">
@@ -254,7 +263,10 @@
                     <span
                       v-if="
                         appointmentType.includes('Private') &&
-                        group.allowSplittingAppointments
+                        group.allowSplittingAppointments &&
+                        selectedAppointment.endTime -
+                          selectedAppointment.startTime >=
+                          group.minApptTime
                       ">
                       <v-select
                         v-model="displayedStart"
@@ -294,7 +306,10 @@
                     <span
                       v-if="
                         appointmentType.includes('Private') &&
-                        group.allowSplittingAppointments
+                        group.allowSplittingAppointments &&
+                        selectedAppointment.endTime -
+                          selectedAppointment.startTime >=
+                          group.minApptTime
                       ">
                       <v-select
                         v-model="displayedEnd"
@@ -462,7 +477,7 @@
                       checkRole('Tutor') && !appointmentType.includes('Group')
                     "
                     color="error"
-                    @click="confirmAppointment(false)"
+                    @click="showDeleteConfirmation = true"
                     :disabled="!checkStatus('pending') || datePast">
                     Reject
                   </v-btn>
@@ -496,10 +511,7 @@
                       !datePast
                     "
                     color="red"
-                    @click="
-                      cancelAppointment();
-                      selectedOpen = false;
-                    ">
+                    @click="showDeleteConfirmation = true">
                     Cancel Appointment
                   </v-btn>
 
@@ -617,6 +629,7 @@ import LocationServices from "@/services/locationServices.js";
 import TopicServices from "@/services/topicServices.js";
 //Plugin functions
 import Utils from "@/config/utils.js";
+import DeleteConfirmationComponent from "../components/DeleteConfirmationComponent.vue";
 import InformationComponent from "@/components/InformationComponent.vue";
 import { AppointmentActionMixin } from "../mixins/AppointmentActionMixin";
 import { SendTextsMixin } from "../mixins/SendTextsMixin";
@@ -627,9 +640,11 @@ export default {
   props: ["id"],
   mixins: [AppointmentActionMixin, SendTextsMixin, TimeFunctionsMixin],
   components: {
+    DeleteConfirmationComponent,
     InformationComponent,
   },
   data: () => ({
+    showDeleteConfirmation: false,
     showAlert: false,
     alert: "",
     alertType: "success",
@@ -1482,7 +1497,10 @@ export default {
             if (
               this.selectedAppointment.type.includes("Private") &&
               this.selectedAppointment.status.includes("available") &&
-              this.group.allowSplittingAppointments
+              this.group.allowSplittingAppointments &&
+              this.selectedAppointment.endTime -
+                this.selectedAppointment.startTime >=
+                this.group.minApptTime
             ) {
               this.displayedStart = "";
               this.displayedEnd = "";
@@ -1897,6 +1915,14 @@ export default {
           return;
         }
       }
+    },
+    async directToCancel() {
+      if (this.selectedAppointment.status === "pending")
+        await this.confirmAppointment(false);
+      else if (this.selectedAppointment.status === "booked")
+        await this.cancelAppointment();
+      this.selectedOpen = false;
+      this.showDeleteConfirmation = false;
     },
     //method for canceling appointments
     async cancelAppointment() {

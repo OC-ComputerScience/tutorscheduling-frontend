@@ -141,7 +141,7 @@ export default {
         let group = this.groups[i];
         this.groups[i].selected = [];
         this.groups[i].grouptopics = [];
-        await TopicServices.getAllForGroup(group.id)
+        await TopicServices.getActiveForGroup(group.id)
           .then((response) => {
             for (let j = 0; j < response.data.length; j++) {
               let topic = response.data[j];

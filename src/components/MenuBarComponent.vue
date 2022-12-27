@@ -89,6 +89,17 @@
               <p class="text-caption mt-1">
                 {{ user.email }}
               </p>
+              <v-divider
+                class="my-3"
+                v-if="selectedRole.type.includes('Admin')"></v-divider>
+              <v-btn
+                depressed
+                rounded
+                text
+                @click="menuAction('groupEdit')"
+                v-if="selectedRole.type.includes('Admin')">
+                Group Settings
+              </v-btn>
               <v-divider class="my-3"></v-divider>
               <v-btn depressed rounded text @click="menuAction('myInfo')">
                 My Info
