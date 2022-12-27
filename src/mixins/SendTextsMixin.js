@@ -57,6 +57,7 @@ export const SendTextsMixin = {
     },
     async sendPendingMessage(appointId) {
       await this.getAppointmentInfo(appointId);
+      console.log(this.appointment.tutors[0].person);
       let text = {
         phoneNum: this.appointment.tutors[0].person.phoneNum,
         message:
@@ -73,7 +74,10 @@ export const SendTextsMixin = {
           this.appointment.students[0].person.fName +
           " " +
           this.appointment.students[0].person.lName +
-          "\nPlease view this pending appointment: http://tutorscheduling.oc.edu/",
+          "\nPlease confirm or reject this pending appointment: http://tutorscheduling.oc.edu/confirmAppointment/" +
+          this.appointment.id +
+          "/session/" +
+          this.appointment.tutors[0].person.session[0].token,
       };
       await TwilioServices.sendMessage(text);
     },

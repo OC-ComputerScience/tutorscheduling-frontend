@@ -3,6 +3,7 @@ import Router from "vue-router";
 
 import Apply from "./views/Apply.vue";
 import Calendar from "./views/Calendar.vue";
+import ConfirmAppointment from "./views/ConfirmAppointment.vue";
 import Contract from "./views/Contract.vue";
 import Help from "./views/Help.vue";
 import Login from "./views/Login.vue";
@@ -79,9 +80,16 @@ const router = new Router({
       props: true,
     },
     {
+      path: "/confirmAppointment/:id/session/:sessionToken",
+      name: "confirmAppointment",
+      component: ConfirmAppointment,
+      props: true,
+    },
+    {
       path: "/contract/:id",
       name: "contract",
       component: Contract,
+      props: true,
     },
     {
       path: "/help/:id",
@@ -290,9 +298,11 @@ const router = new Router({
 
 router.beforeEach((to, from, next) => {
   // redirect to login page if not logged in and trying to access a restricted page
+  console.log(from);
   const publicPages = ["/"];
   const authRequired = !publicPages.includes(to.path);
   const loggedIn = localStorage.getItem("user");
+
   if (authRequired && !loggedIn) {
     return next("/");
   }

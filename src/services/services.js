@@ -36,6 +36,7 @@ const apiClient = axios.create({
         console.log("error", error);
       });
       Utils.removeItem("user");
+      console.log(this.$router);
       Router.push({ name: "login" });
     }
     return data;
