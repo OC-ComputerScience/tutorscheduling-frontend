@@ -263,7 +263,10 @@
                     <span
                       v-if="
                         appointmentType.includes('Private') &&
-                        group.allowSplittingAppointments
+                        group.allowSplittingAppointments &&
+                        selectedAppointment.endTime -
+                          selectedAppointment.startTime >=
+                          group.minApptTime
                       ">
                       <v-select
                         v-model="displayedStart"
@@ -303,7 +306,10 @@
                     <span
                       v-if="
                         appointmentType.includes('Private') &&
-                        group.allowSplittingAppointments
+                        group.allowSplittingAppointments &&
+                        selectedAppointment.endTime -
+                          selectedAppointment.startTime >=
+                          group.minApptTime
                       ">
                       <v-select
                         v-model="displayedEnd"
@@ -1491,7 +1497,10 @@ export default {
             if (
               this.selectedAppointment.type.includes("Private") &&
               this.selectedAppointment.status.includes("available") &&
-              this.group.allowSplittingAppointments
+              this.group.allowSplittingAppointments &&
+              this.selectedAppointment.endTime -
+                this.selectedAppointment.startTime >=
+                this.group.minApptTime
             ) {
               this.displayedStart = "";
               this.displayedEnd = "";
