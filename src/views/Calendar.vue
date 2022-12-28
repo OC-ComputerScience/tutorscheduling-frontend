@@ -264,9 +264,10 @@
                       v-if="
                         appointmentType.includes('Private') &&
                         group.allowSplittingAppointments &&
-                        selectedAppointment.endTime -
-                          selectedAppointment.startTime >=
-                          group.minApptTime
+                        subtractTimes(
+                          selectedAppointment.startTime,
+                          selectedAppointment.endTime
+                        ) >= group.minApptTime
                       ">
                       <v-select
                         v-model="displayedStart"
@@ -307,9 +308,10 @@
                       v-if="
                         appointmentType.includes('Private') &&
                         group.allowSplittingAppointments &&
-                        selectedAppointment.endTime -
-                          selectedAppointment.startTime >=
-                          group.minApptTime
+                        subtractTimes(
+                          selectedAppointment.startTime,
+                          selectedAppointment.endTime
+                        ) >= group.minApptTime
                       ">
                       <v-select
                         v-model="displayedEnd"
@@ -951,7 +953,7 @@ export default {
               });
             });
           } else if (response.data.type.includes("Group")) {
-            this.bookGroupSession();
+            await this.bookGroupSession();
           } else {
             this.alertType = "warning";
             this.alert =
@@ -1485,6 +1487,13 @@ export default {
         AppointmentServices.getAppointment(event.appointmentId)
           .then(async (response) => {
             this.selectedAppointment = response.data;
+            console.log(
+              this.subtractTimes(
+                this.selectedAppointment.startTime,
+                this.selectedAppointment.endTime
+              )
+            );
+
             this.newStart = this.selectedAppointment.startTime;
             this.newEnd = this.selectedAppointment.endTime;
             this.appointmentType = this.selectedAppointment.type;
@@ -1498,9 +1507,10 @@ export default {
               this.selectedAppointment.type.includes("Private") &&
               this.selectedAppointment.status.includes("available") &&
               this.group.allowSplittingAppointments &&
-              this.selectedAppointment.endTime -
-                this.selectedAppointment.startTime >=
-                this.group.minApptTime
+              this.subtractTimes(
+                this.selectedAppointment.startTime,
+                this.selectedAppointment.endTime
+              ) >= this.group.minApptTime
             ) {
               this.displayedStart = "";
               this.displayedEnd = "";
@@ -1919,8 +1929,7 @@ export default {
     async directToCancel() {
       if (this.selectedAppointment.status === "pending")
         await this.confirmAppointment(false);
-      else if (this.selectedAppointment.status === "booked")
-        await this.cancelAppointment();
+      else await this.cancelAppointment();
       this.selectedOpen = false;
       this.showDeleteConfirmation = false;
     },
@@ -2338,11 +2347,7 @@ export default {
       let tempHours = checkTime.getHours();
       // check minutes for group's booking buffer
       let tempMins = checkTime.getMinutes();
-      if (
-        (this.checkRole("Admin") ||
-          this.checkPrivilege("Sign up students for appointments")) &&
-        this.group.bookPastMinutes > 0
-      ) {
+      if (this.group.bookPastMinutes > 0) {
         tempMins -= this.group.bookPastMinutes;
         while (tempMins < 0) {
           tempMins += 60;
