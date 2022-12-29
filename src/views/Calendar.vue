@@ -263,7 +263,11 @@
                     <span
                       v-if="
                         appointmentType.includes('Private') &&
-                        group.allowSplittingAppointments
+                        group.allowSplittingAppointments &&
+                        subtractTimes(
+                          selectedAppointment.startTime,
+                          selectedAppointment.endTime
+                        ) >= group.minApptTime
                       ">
                       <v-select
                         v-model="displayedStart"
@@ -275,6 +279,7 @@
                         @change="
                           newStart = displayedStart;
                           updateTimes();
+                          secondTime = false;
                         "
                         :disabled="
                           (checkRole('Tutor') &&
@@ -303,7 +308,11 @@
                     <span
                       v-if="
                         appointmentType.includes('Private') &&
-                        group.allowSplittingAppointments
+                        group.allowSplittingAppointments &&
+                        subtractTimes(
+                          selectedAppointment.startTime,
+                          selectedAppointment.endTime
+                        ) >= group.minApptTime
                       ">
                       <v-select
                         v-model="displayedEnd"
@@ -317,6 +326,7 @@
                           updateTimes();
                         "
                         :disabled="
+                          secondTime ||
                           (checkRole('Tutor') &&
                             (!checkPrivilege(
                               'Sign up students for appointments'
@@ -428,7 +438,11 @@
                       checkPrivilege('Sign up students for appointments')
                     "
                     color="primary"
-                    @click="sendAppointmentForBooking()"
+                    @click="
+                      sendAppointmentForBooking();
+                      selectedOpen = false;
+                      secondTime = true;
+                    "
                     :disabled="
                       !checkStatus('available') ||
                       isGroupBook ||
@@ -459,7 +473,10 @@
                       checkRole('Tutor') && !appointmentType.includes('Group')
                     "
                     color="#12f000"
-                    @click="confirmAppointment(true, user, selectedAppointment)"
+                    @click="
+                      confirmAppointment(true, user, selectedAppointment);
+                      secondTime = true;
+                    "
                     :disabled="!checkStatus('pending') || datePast">
                     Confirm
                   </v-btn>
@@ -468,11 +485,19 @@
                       checkRole('Tutor') && !appointmentType.includes('Group')
                     "
                     color="error"
-                    @click="showDeleteConfirmation = true"
+                    @click="
+                      showDeleteConfirmation = true;
+                      secondTime = true;
+                    "
                     :disabled="!checkStatus('pending') || datePast">
                     Reject
                   </v-btn>
-                  <v-btn color="accent" @click="selectedOpen = false">
+                  <v-btn
+                    color="accent"
+                    @click="
+                      selectedOpen = false;
+                      secondTime = true;
+                    ">
                     Close
                   </v-btn>
                   <v-btn
@@ -486,6 +511,7 @@
                       editAppointment(user, selectedAppointment);
                       initializeData();
                       selectedOpen = false;
+                      secondTime = true;
                     ">
                     Save Changes
                   </v-btn>
@@ -506,6 +532,8 @@
                     @click="
                       showDeleteConfirmation = true;
                       intializeData();
+                      selectedOpen = false;
+                      secondTime = true;
                     ">
                     Cancel Appointment
                   </v-btn>
@@ -518,7 +546,10 @@
                       !datePast
                     "
                     color="green"
-                    @click="adminAddStudent = true"
+                    @click="
+                      adminAddStudent = true;
+                      secondTime = true;
+                    "
                     :disabled="adminAddStudent">
                     Sign Up Student
                   </v-btn>
@@ -646,6 +677,7 @@ export default {
     overlay: true,
     message: "Calendar",
     mode: "stack",
+    secondTime: true,
     //appointment info
     appointments: [],
     appointmentType: "",
@@ -926,6 +958,7 @@ export default {
       }
       this.selectedAppointment.newStart = this.newStart;
       this.selectedAppointment.newEnd = this.newEnd;
+      this.selectedAppointment.minApptTime = this.group.minApptTime;
       await this.bookAppointment(
         this.adminAddStudent,
         this.selectedAppointment,
@@ -999,6 +1032,13 @@ export default {
         AppointmentServices.getAppointment(event.appointmentId)
           .then(async (response) => {
             this.selectedAppointment = response.data;
+            console.log(
+              this.subtractTimes(
+                this.selectedAppointment.startTime,
+                this.selectedAppointment.endTime
+              )
+            );
+
             this.newStart = this.selectedAppointment.startTime;
             this.newEnd = this.selectedAppointment.endTime;
             this.appointmentType = this.selectedAppointment.type;
@@ -1011,7 +1051,11 @@ export default {
             if (
               this.selectedAppointment.type.includes("Private") &&
               this.selectedAppointment.status.includes("available") &&
-              this.group.allowSplittingAppointments
+              this.group.allowSplittingAppointments &&
+              this.subtractTimes(
+                this.selectedAppointment.startTime,
+                this.selectedAppointment.endTime
+              ) >= this.group.minApptTime
             ) {
               this.displayedStart = "";
               this.displayedEnd = "";
@@ -1025,6 +1069,7 @@ export default {
             );
           })
           .catch((error) => {
+            console.log(error);
             this.alertType = "error";
             this.alert = error.response.data.message;
             this.showAlert = true;
@@ -1385,14 +1430,15 @@ export default {
       }
     },
     async directToCancel() {
-      if (this.selectedAppointment.status === "pending")
+      if (this.selectedAppointment.status === "pending") {
         await this.confirmAppointment(
           false,
           this.user,
           this.selectedAppointment
         );
-      else if (this.selectedAppointment.status === "booked")
+      } else {
         await this.cancelAppointment(this.selectedAppointment, this.user);
+      }
       this.selectedOpen = false;
       this.showDeleteConfirmation = false;
     },
@@ -1560,11 +1606,7 @@ export default {
       let tempHours = checkTime.getHours();
       // check minutes for group's booking buffer
       let tempMins = checkTime.getMinutes();
-      if (
-        (this.checkRole("Admin") ||
-          this.checkPrivilege("Sign up students for appointments")) &&
-        this.group.bookPastMinutes > 0
-      ) {
+      if (this.group.bookPastMinutes > 0) {
         tempMins -= this.group.bookPastMinutes;
         while (tempMins < 0) {
           tempMins += 60;

@@ -110,7 +110,6 @@ export default {
         .then((response) => {
           this.user = response.data;
           Utils.setStore("user", this.user);
-          console.log(this.user);
           this.fName = this.user.fName;
           this.lName = this.user.lName;
           this.openDialogs();

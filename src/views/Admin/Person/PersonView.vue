@@ -398,9 +398,10 @@ export default {
       personroleprivilege: {},
       personroleprivileges: [],
       privileges: [
-        "Sign up students for appointments",
-        "Receive notifications for requests",
+        "Make flexible slots that allow for shorter appointments",
         "Receive notifications for applications",
+        "Receive notifications for requests",
+        "Sign up students for appointments",
       ],
       tutor: false,
       skillLevels: ["Freshman", "Sophomore", "Junior", "Senior"],
