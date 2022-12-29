@@ -717,7 +717,6 @@ export default {
         this.message = error.response.data.message;
         console.log("There was an error:", error.response);
       });
-      // delete availabilities?
       await this.getAppointments(personrole);
       let disableUser = {
         fName: this.person.fName,
