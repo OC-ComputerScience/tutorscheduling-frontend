@@ -279,6 +279,7 @@
                         @change="
                           newStart = displayedStart;
                           updateTimes();
+                          secondTime = false;
                         "
                         :disabled="
                           (checkRole('Tutor') &&
@@ -325,6 +326,7 @@
                           updateTimes();
                         "
                         :disabled="
+                          secondTime ||
                           (checkRole('Tutor') &&
                             (!checkPrivilege(
                               'Sign up students for appointments'
@@ -439,6 +441,7 @@
                     @click="
                       bookAppointment(selectedAppointment.id, group.id);
                       selectedOpen = false;
+                      secondTime = true;
                     "
                     :disabled="
                       !checkStatus('available') ||
@@ -470,7 +473,10 @@
                       checkRole('Tutor') && !appointmentType.includes('Group')
                     "
                     color="#12f000"
-                    @click="confirmAppointment(true)"
+                    @click="
+                      confirmAppointment(true);
+                      secondTime = true;
+                    "
                     :disabled="!checkStatus('pending') || datePast">
                     Confirm
                   </v-btn>
@@ -479,11 +485,19 @@
                       checkRole('Tutor') && !appointmentType.includes('Group')
                     "
                     color="error"
-                    @click="showDeleteConfirmation = true"
+                    @click="
+                      showDeleteConfirmation = true;
+                      secondTime = true;
+                    "
                     :disabled="!checkStatus('pending') || datePast">
                     Reject
                   </v-btn>
-                  <v-btn color="accent" @click="selectedOpen = false">
+                  <v-btn
+                    color="accent"
+                    @click="
+                      selectedOpen = false;
+                      secondTime = true;
+                    ">
                     Close
                   </v-btn>
                   <v-btn
@@ -496,6 +510,7 @@
                     @click="
                       editAppointment();
                       selectedOpen = false;
+                      secondTime = true;
                     ">
                     Save Changes
                   </v-btn>
@@ -513,7 +528,11 @@
                       !datePast
                     "
                     color="red"
-                    @click="showDeleteConfirmation = true">
+                    @click="
+                      showDeleteConfirmation = true;
+                      selectedOpen = false;
+                      secondTime = true;
+                    ">
                     Cancel Appointment
                   </v-btn>
 
@@ -525,7 +544,10 @@
                       !datePast
                     "
                     color="green"
-                    @click="adminAddStudent = true"
+                    @click="
+                      adminAddStudent = true;
+                      secondTime = true;
+                    "
                     :disabled="adminAddStudent">
                     Sign Up Student
                   </v-btn>
@@ -653,6 +675,7 @@ export default {
     overlay: true,
     message: "Calendar",
     mode: "stack",
+    secondTime: true,
     //appointment info
     appointments: [],
     appointmentType: "",
@@ -996,9 +1019,11 @@ export default {
           "You have successfully confirmed your " +
           this.selectedAppointment.type +
           " appointment on " +
-          this.selectedAppointment.date +
+          this.selectedAppointment.date.toString().substring(5, 10) +
+          "-" +
+          this.selectedAppointment.date.toString().substring(0, 4) +
           " at " +
-          this.selectedAppointment.startTime +
+          this.calcTime(this.selectedAppointment.startTime) +
           ".";
         this.showAlert = true;
       } else {
@@ -1024,9 +1049,11 @@ export default {
           "You have successfully rejected your " +
           this.selectedAppointment.type +
           " appointment on " +
-          this.selectedAppointment.date +
+          this.selectedAppointment.date.toString().substring(5, 10) +
+          "-" +
+          this.selectedAppointment.date.toString().substring(0, 4) +
           " at " +
-          this.selectedAppointment.startTime +
+          this.calcTime(this.selectedAppointment.startTime) +
           ".";
         this.showAlert = true;
       }
@@ -1118,9 +1145,11 @@ export default {
         "You have successfully booked a " +
         this.selectedAppointment.type +
         " appointment on " +
-        this.selectedAppointment.date +
+        this.selectedAppointment.date.toString().substring(5, 10) +
+        "-" +
+        this.selectedAppointment.date.toString().substring(0, 4) +
         " at " +
-        this.selectedAppointment.startTime +
+        this.calcTime(this.selectedAppointment.startTime) +
         ".";
       this.showAlert = true;
     },
@@ -1131,7 +1160,11 @@ export default {
         return;
       }
       //If the start of the booked slot isn't the start of the slot, generate an open slot
-      if (this.selectedAppointment.startTime < this.newStart) {
+      if (
+        this.selectedAppointment.startTime < this.newStart &&
+        this.subtractTimes(this.selectedAppointment.startTime, this.newStart) >=
+          this.group.minApptTime
+      ) {
         let temp = {
           date: this.selectedAppointment.date,
           startTime: this.selectedAppointment.startTime,
@@ -1169,7 +1202,11 @@ export default {
           });
       }
       //If the end of the booked slot isn't the end of the slot, generate an open slot
-      if (this.selectedAppointment.endTime > this.newEnd) {
+      if (
+        this.selectedAppointment.endTime > this.newEnd &&
+        this.subtractTimes(this.newEnd, this.selectedAppointment.endTime) >=
+          this.group.minApptTime
+      ) {
         let temp = {
           date: this.selectedAppointment.date,
           startTime: this.newEnd,
@@ -1251,9 +1288,11 @@ export default {
         " " +
         this.tutors[0].lName +
         " on " +
-        this.selectedAppointment.date +
+        this.selectedAppointment.date.toString().substring(5, 10) +
+        "-" +
+        this.selectedAppointment.date.toString().substring(0, 4) +
         " at " +
-        this.selectedAppointment.startTime +
+        this.calcTime(this.selectedAppointment.startTime) +
         ".";
       this.showAlert = true;
     },
@@ -1264,7 +1303,11 @@ export default {
         return;
       }
       //If the start of the booked slot isn't the start of the slot, generate an open slot
-      if (this.selectedAppointment.startTime < this.newStart) {
+      if (
+        this.selectedAppointment.startTime < this.newStart &&
+        this.subtractTimes(this.selectedAppointment.startTime, this.newStart) >=
+          this.group.minApptTime
+      ) {
         let temp = {
           date: this.selectedAppointment.date,
           startTime: this.selectedAppointment.startTime,
@@ -1282,6 +1325,7 @@ export default {
                 appointmentId: response.data.id,
                 personId: t.id,
               };
+              console.log(response.data);
               await PersonAppointmentServices.addPersonAppointment(pap).catch(
                 (error) => {
                   this.alertType = "error";
@@ -1301,7 +1345,11 @@ export default {
           });
       }
       //If the end of the booked slot isn't the end of the slot, generate an open slot
-      if (this.selectedAppointment.endTime > this.newEnd) {
+      if (
+        this.selectedAppointment.endTime > this.newEnd &&
+        this.subtractTimes(this.newEnd, this.selectedAppointment.endTime) >=
+          this.group.minApptTime
+      ) {
         let temp = {
           date: this.selectedAppointment.date,
           startTime: this.newEnd,
@@ -1375,13 +1423,14 @@ export default {
         " " +
         this.tutors[0].lName +
         " on " +
-        this.selectedAppointment.date +
+        this.selectedAppointment.date.toString().substring(5, 10) +
+        "-" +
+        this.selectedAppointment.date.toString().substring(0, 4) +
         " at " +
-        this.selectedAppointment.startTime +
+        this.calcTime(this.selectedAppointment.startTime) +
         ".";
       this.showAlert = true;
     },
-
     updateTimes() {
       this.startTimes = this.generateTimeslots(
         this.selectedAppointment.startTime,
@@ -1524,6 +1573,7 @@ export default {
             );
           })
           .catch((error) => {
+            console.log(error);
             this.alertType = "error";
             this.alert = error.response.data.message;
             this.showAlert = true;
@@ -2074,8 +2124,7 @@ export default {
               this.selectedAppointment.id
             );
 
-            await this.getAppointments(this.group.id);
-            //this.$router.go(0);
+            await this.getAppointments();
           }
         }
       }
@@ -2142,9 +2191,7 @@ export default {
                 console.log("There was an error:", error.response);
               });
             }
-            await this.getAppointments(this.group.id);
-
-            //this.$router.go(0);
+            await this.getAppointments();
           }
         }
       }
@@ -2153,9 +2200,11 @@ export default {
         "You have successfully canceled your " +
         this.selectedAppointment.type +
         " appointment on " +
-        this.selectedAppointment.date +
+        this.selectedAppointment.date.toString().substring(5, 10) +
+        "-" +
+        this.selectedAppointment.date.toString().substring(0, 4) +
         " at " +
-        this.selectedAppointment.startTime +
+        this.calcTime(this.selectedAppointment.startTime) +
         ".";
       this.showAlert = true;
     },
@@ -2328,7 +2377,7 @@ export default {
             this.selectedAppointment.startTime +
             ".";
           this.showAlert = true;
-          await this.getAppointments(this.group.id);
+          await this.getAppointments();
         })
         .catch((error) => {
           this.alertType = "error";
