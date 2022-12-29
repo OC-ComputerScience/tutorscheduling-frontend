@@ -15,6 +15,15 @@
       <v-alert v-model="showAlert" dismissible :type="alertType">{{
         this.alert
       }}</v-alert>
+      <v-dialog persistent v-model="showDeleteConfirmation" max-width="750px">
+        <DeleteConfirmationComponent
+          type="appointment"
+          :item="selectedAppointment"
+          @handleReturningCancel="showDeleteConfirmation = false"
+          @handleReturningSuccess="
+            directToCancel()
+          "></DeleteConfirmationComponent>
+      </v-dialog>
       <v-row class="fill-height">
         <v-col>
           <v-sheet height="64">
@@ -254,7 +263,11 @@
                     <span
                       v-if="
                         appointmentType.includes('Private') &&
-                        group.allowSplittingAppointments
+                        group.allowSplittingAppointments &&
+                        subtractTimes(
+                          selectedAppointment.startTime,
+                          selectedAppointment.endTime
+                        ) >= group.minApptTime
                       ">
                       <v-select
                         v-model="displayedStart"
@@ -295,7 +308,11 @@
                     <span
                       v-if="
                         appointmentType.includes('Private') &&
-                        group.allowSplittingAppointments
+                        group.allowSplittingAppointments &&
+                        subtractTimes(
+                          selectedAppointment.startTime,
+                          selectedAppointment.endTime
+                        ) >= group.minApptTime
                       ">
                       <v-select
                         v-model="displayedEnd"
@@ -469,7 +486,7 @@
                     "
                     color="error"
                     @click="
-                      confirmAppointment(false);
+                      showDeleteConfirmation = true;
                       secondTime = true;
                     "
                     :disabled="!checkStatus('pending') || datePast">
@@ -512,7 +529,7 @@
                     "
                     color="red"
                     @click="
-                      cancelAppointment();
+                      showDeleteConfirmation = true;
                       selectedOpen = false;
                       secondTime = true;
                     ">
@@ -636,6 +653,7 @@ import LocationServices from "@/services/locationServices.js";
 import TopicServices from "@/services/topicServices.js";
 //Plugin functions
 import Utils from "@/config/utils.js";
+import DeleteConfirmationComponent from "../components/DeleteConfirmationComponent.vue";
 import InformationComponent from "@/components/InformationComponent.vue";
 import { AppointmentActionMixin } from "../mixins/AppointmentActionMixin";
 import { SendTextsMixin } from "../mixins/SendTextsMixin";
@@ -646,9 +664,11 @@ export default {
   props: ["id"],
   mixins: [AppointmentActionMixin, SendTextsMixin, TimeFunctionsMixin],
   components: {
+    DeleteConfirmationComponent,
     InformationComponent,
   },
   data: () => ({
+    showDeleteConfirmation: false,
     showAlert: false,
     alert: "",
     alertType: "success",
@@ -956,7 +976,7 @@ export default {
               });
             });
           } else if (response.data.type.includes("Group")) {
-            this.bookGroupSession();
+            await this.bookGroupSession();
           } else {
             this.alertType = "warning";
             this.alert =
@@ -1516,6 +1536,13 @@ export default {
         AppointmentServices.getAppointment(event.appointmentId)
           .then(async (response) => {
             this.selectedAppointment = response.data;
+            console.log(
+              this.subtractTimes(
+                this.selectedAppointment.startTime,
+                this.selectedAppointment.endTime
+              )
+            );
+
             this.newStart = this.selectedAppointment.startTime;
             this.newEnd = this.selectedAppointment.endTime;
             this.appointmentType = this.selectedAppointment.type;
@@ -1528,7 +1555,11 @@ export default {
             if (
               this.selectedAppointment.type.includes("Private") &&
               this.selectedAppointment.status.includes("available") &&
-              this.group.allowSplittingAppointments
+              this.group.allowSplittingAppointments &&
+              this.subtractTimes(
+                this.selectedAppointment.startTime,
+                this.selectedAppointment.endTime
+              ) >= this.group.minApptTime
             ) {
               this.displayedStart = "";
               this.displayedEnd = "";
@@ -1944,6 +1975,13 @@ export default {
         }
       }
     },
+    async directToCancel() {
+      if (this.selectedAppointment.status === "pending")
+        await this.confirmAppointment(false);
+      else await this.cancelAppointment();
+      this.selectedOpen = false;
+      this.showDeleteConfirmation = false;
+    },
     //method for canceling appointments
     async cancelAppointment() {
       this.sendCanceledMessage(this.user, this.selectedAppointment.id);
@@ -2357,11 +2395,7 @@ export default {
       let tempHours = checkTime.getHours();
       // check minutes for group's booking buffer
       let tempMins = checkTime.getMinutes();
-      if (
-        (this.checkRole("Admin") ||
-          this.checkPrivilege("Sign up students for appointments")) &&
-        this.group.bookPastMinutes > 0
-      ) {
+      if (this.group.bookPastMinutes > 0) {
         tempMins -= this.group.bookPastMinutes;
         while (tempMins < 0) {
           tempMins += 60;
