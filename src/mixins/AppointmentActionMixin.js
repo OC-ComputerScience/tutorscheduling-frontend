@@ -1,6 +1,3 @@
-// import GroupServices from "../services/groupServices";
-// import Utils from "../config/utils";
-
 import AppointmentServices from "@/services/appointmentServices.js";
 import PersonAppointmentServices from "@/services/personAppointmentServices.js";
 import { SendTextsMixin } from "./SendTextsMixin";
@@ -86,7 +83,11 @@ export const AppointmentActionMixin = {
       }
 
       //If the start of the booked slot isn't the start of the slot, generate an open slot
-      if (this.appointment.startTime < appointment.newStart) {
+      if (
+        this.appointment.startTime < appointment.newStart &&
+        this.subtractTimes(this.appointment.startTime, appointment.newStart) >=
+          appointment.minApptTime
+      ) {
         let temp = {
           date: this.appointment.date,
           startTime: this.appointment.startTime,
@@ -109,7 +110,11 @@ export const AppointmentActionMixin = {
         );
       }
       //If the end of the booked slot isn't the end of the slot, generate an open slot
-      if (this.appointment.endTime > appointment.newEnd) {
+      if (
+        this.appointment.endTime > appointment.newEnd &&
+        this.subtractTimes(appointment.newEnd, this.appointment.endTime) >=
+          appointment.minApptTime
+      ) {
         let temp = {
           date: this.appointment.date,
           startTime: appointment.newEnd,
