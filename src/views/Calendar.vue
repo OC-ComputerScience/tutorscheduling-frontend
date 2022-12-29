@@ -1432,14 +1432,14 @@ export default {
       this.showAlert = true;
     },
     updateTimes() {
-      this.startTimes = this.generateStartTimeslots(
+      this.startTimes = this.generateTimeslots(
         this.selectedAppointment.startTime,
         this.newEnd,
         this.group.timeInterval
       );
       // adding this to make sure that you can't start an appointment at the end time
       this.startTimes.pop();
-      this.endTimes = this.generateEndTimeslots(
+      this.endTimes = this.generateTimeslots(
         this.newStart,
         this.selectedAppointment.endTime,
         this.group.timeInterval
@@ -1573,6 +1573,7 @@ export default {
             );
           })
           .catch((error) => {
+            console.log(error);
             this.alertType = "error";
             this.alert = error.response.data.message;
             this.showAlert = true;
