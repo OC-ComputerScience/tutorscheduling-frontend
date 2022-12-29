@@ -717,8 +717,6 @@ export default {
         this.message = error.response.data.message;
         console.log("There was an error:", error.response);
       });
-      // delete requests
-      // TODO -- can only do once we allow tutors to also send requests
       // delete availabilities?
       await this.getAppointments(personrole);
       let disableUser = {
