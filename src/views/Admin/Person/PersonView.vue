@@ -10,7 +10,11 @@
         <DeleteConfirmationComponent
           :type="deleteType"
           :item="deleteItem"
-          @handleReturningCancel="showDisableConfirmation = false"
+          @handleReturningCancel="
+            showDisableConfirmation = false;
+            deleteItem = {};
+            deleteType = '';
+          "
           @handleReturningSuccess="
             confirmedDelete()
           "></DeleteConfirmationComponent>
@@ -201,11 +205,9 @@
 
       <v-dialog v-model="dialogRole" max-width="500px">
         <v-card>
-          <v-card-title v-if="personroles[editedRoleIndex] !== undefined"
-            >{{ personroles[editedRoleIndex].type }} Role for
-            {{ person.fName }}:</v-card-title
+          <v-card-title v-if="personrole !== undefined"
+            >{{ personrole.type }} Role for {{ person.fName }}:</v-card-title
           >
-          <!-- here -->
           <v-card-text>
             <v-container>
               <br />
@@ -215,7 +217,6 @@
                 item-text="type"
                 item-value="id"
                 label="Status"
-                @change="deleteType = 'personrole'"
                 required>
               </v-select>
             </v-container>
@@ -223,8 +224,16 @@
 
           <v-card-actions>
             <v-spacer></v-spacer>
-            <v-btn color="error" text @click="closeRole()"> Cancel </v-btn>
-            <v-btn color="accent" text @click="directToCancel(personrole)">
+            <v-btn color="error" text @click="dialogRole = false">
+              Cancel
+            </v-btn>
+            <v-btn
+              color="accent"
+              text
+              @click="
+                deleteType = 'personrole';
+                directToCancel(personrole);
+              ">
               Save
             </v-btn>
           </v-card-actions>
@@ -255,7 +264,7 @@
           </v-card-text>
           <v-card-actions>
             <v-spacer></v-spacer>
-            <v-btn color="accent" @click="addPersonRole">Save</v-btn>
+            <v-btn color="accent" @click="addPersonRole()">Save</v-btn>
             <v-btn color="error" @click="dialogRoleAdd = false">Cancel</v-btn>
           </v-card-actions>
         </v-card>
@@ -291,7 +300,7 @@
                 !personroleprivilege.privilege ||
                 !personroleprivilege.personroleId
               "
-              @click="addPersonRolePrivilege">
+              @click="addPersonRolePrivilege()">
               Save
             </v-btn>
             <v-btn color="error" @click="dialogPrivilegeAdd = false"
@@ -326,8 +335,10 @@
 
           <v-card-actions>
             <v-spacer></v-spacer>
-            <v-btn color="error" text @click="closeTopic"> Cancel </v-btn>
-            <v-btn color="accent" text @click="saveTopic"> Save </v-btn>
+            <v-btn color="error" text @click="dialogTopic = false">
+              Cancel
+            </v-btn>
+            <v-btn color="accent" text @click="saveTopic()"> Save </v-btn>
           </v-card-actions>
         </v-card>
       </v-dialog>
@@ -355,7 +366,7 @@
           </v-card-text>
           <v-card-actions>
             <v-spacer></v-spacer>
-            <v-btn color="accent" @click="addPersonTopic">Save</v-btn>
+            <v-btn color="accent" @click="addPersonTopic()">Save</v-btn>
             <v-btn color="error" @click="dialogTopicAdd = false">Cancel</v-btn>
           </v-card-actions>
         </v-card>
@@ -395,8 +406,8 @@ export default {
       persontopic: {},
       personroles: [],
       personrole: {},
-      personroleprivilege: {},
       personroleprivileges: [],
+      personroleprivilege: {},
       privileges: [
         "Make flexible slots that allow for shorter appointments",
         "Receive notifications for applications",
@@ -412,19 +423,15 @@ export default {
       user: {},
       valid: true,
       group: {},
-      deleteMessage: "",
       deleteItem: {},
       deleteType: "",
       disabledRole: {},
-      dialogDelete: false,
       dialogEdit: false,
       dialogRole: false,
       dialogRoleAdd: false,
       dialogPrivilegeAdd: false,
       dialogTopic: false,
       dialogTopicAdd: false,
-      editedRoleIndex: -1,
-      editedTopicIndex: -1,
       roleHeaders: [
         { text: "Type", value: "type" },
         { text: "Status", value: "personrole[0].status" },
@@ -441,11 +448,6 @@ export default {
         { text: "Actions", value: "actions", sortable: false },
       ],
     };
-  },
-  watch: {
-    dialogRole(val) {
-      val || this.closeRole();
-    },
   },
   async created() {
     await this.getPerson();
@@ -491,11 +493,6 @@ export default {
             let personRoleArray = this.personroles[i].personrole;
             // set tutor boolean
             if (this.personroles[i].type.includes("Tutor")) this.tutor = true;
-            // handle if a personrole is disabled
-            if (personRoleArray[0].status.includes("disabled")) {
-              this.disabledRole = this.personroles[i];
-              await this.disablePersonRole(personRoleArray[0]);
-            }
             // set up personroleprivilege array
             for (let j = 0; j < personRoleArray.length; j++) {
               let pr = personRoleArray[j];
@@ -510,7 +507,6 @@ export default {
           }
         })
         .catch((error) => {
-          console.log(error);
           this.message = error.response.data.message;
           console.log("There was an error:", error.response);
         });
@@ -555,11 +551,14 @@ export default {
           console.log(error);
         });
     },
-    addPersonRole() {
+    async addPersonRole() {
       this.personrole.personId = this.person.id;
-      PersonRoleServices.addPersonRole(this.personrole)
+      this.personrole.agree = true;
+      this.personrole.dateSigned = new Date();
+      await PersonRoleServices.addPersonRole(this.personrole)
         .then(() => {
           this.dialogRoleAdd = false;
+          this.personrole = {};
           this.getPersonRoles();
         })
         .catch((error) => {
@@ -567,8 +566,8 @@ export default {
           console.log("There was an error:", error.response);
         });
     },
-    addPersonRolePrivilege() {
-      PersonRolePrivilegeServices.addPrivilege(this.personroleprivilege)
+    async addPersonRolePrivilege() {
+      await PersonRolePrivilegeServices.addPrivilege(this.personroleprivilege)
         .then(() => {
           this.dialogPrivilegeAdd = false;
           this.personroleprivilege = {};
@@ -579,11 +578,12 @@ export default {
           console.log("There was an error:", error.response);
         });
     },
-    addPersonTopic() {
+    async addPersonTopic() {
       this.persontopic.personId = this.person.id;
-      PersonTopicServices.addPersonTopic(this.persontopic)
+      await PersonTopicServices.addPersonTopic(this.persontopic)
         .then(() => {
           this.dialogTopicAdd = false;
+          this.persontopic = {};
           this.getPersonTopics();
         })
         .catch((error) => {
@@ -595,104 +595,88 @@ export default {
       this.$router.go(-1);
     },
     editRole(item) {
-      this.editedRoleIndex = this.personroles.findIndex(
-        (role) => role.id === item.id
-      );
-      console.log(this.editedRoleIndex);
-      if (item.personrole[0].status === "disabled") this.disabledRole = item;
-      console.log(this.disabledRole);
-      this.personrole = Object.assign({}, item.personrole[0]);
+      this.personrole = item.personrole[0];
       this.personrole.type = item.type;
       this.dialogRole = true;
     },
-    closeRole() {
-      this.dialogRole = false;
-      this.$nextTick(() => {
-        this.personrole = Object.assign({}, {});
-        this.editedRoleIndex = -1;
-      });
-    },
     async saveRole() {
-      await PersonRoleServices.updatePersonRole(
-        this.personrole.id,
-        this.personrole
-      )
+      let temp = {
+        id: this.personrole.id,
+        status: this.personrole.status,
+        agree: this.personrole.agree,
+        dateSigned: this.personrole.dateSigned,
+        roleId: this.personrole.roleId,
+        personId: this.personrole.personId,
+      };
+      if (this.personrole.status === "disabled")
+        this.disabledRole = this.personrole;
+      await PersonRoleServices.updatePersonRole(this.personrole.id, temp)
         .then(() => {
-          this.closeRole();
+          this.dialogRole = false;
+          this.personrole = {};
           this.getPersonRoles();
         })
         .catch((error) => {
           this.message = error.response.data.message;
           console.log(error);
         });
-      console.log(this.editedRoleIndex);
-      Object.assign(this.personroles[this.editedRoleIndex], this.personrole);
     },
     editTopic(item) {
-      this.editedTopicIndex = this.persontopics.findIndex(
-        (topic) => topic.id === item.id
-      );
-      this.persontopic = Object.assign({}, item.persontopic[0]);
+      this.persontopic = item.persontopic[0];
       this.dialogTopic = true;
     },
-    closeTopic() {
-      this.dialogTopic = false;
-    },
-    saveTopic() {
-      PersonTopicServices.updatePersonTopic(
-        this.persontopic.id,
-        this.persontopic
-      )
+    async saveTopic() {
+      let temp = {
+        id: this.persontopic.id,
+        skillLevel: this.persontopic.skillLevel,
+        personId: this.persontopic.personId,
+        topicId: this.persontopic.topicId,
+      };
+      await PersonTopicServices.updatePersonTopic(this.persontopic.id, temp)
         .then(() => {
-          this.closeTopic();
+          this.dialogTopic = false;
+          this.persontopic = {};
           this.getPersonTopics();
         })
         .catch((error) => {
           this.message = error.response.data.message;
           console.log(error);
         });
-      Object.assign(this.persontopics[this.editedTopicIndex], this.persontopic);
     },
-    directToCancel(item) {
+    async directToCancel(item) {
       this.deleteItem = item;
-      console.log(this.deleteItem);
       this.deleteItem.person = this.person;
-      this.showDisableConfirmation = true;
-      if (this.deleteType === "personrole") {
+      if (
+        (this.deleteType === "personrole" &&
+          this.deleteItem.status === "disabled") ||
+        this.deleteType !== "personrole"
+      ) {
         this.showDisableConfirmation = true;
       } else {
-        this.saveRole();
+        this.showDisableConfirmation = false;
+        await this.saveRole();
       }
     },
     async confirmedDelete() {
       if (this.deleteType === "personrole") {
-        this.saveRole();
+        await this.saveRole();
+        await this.disablePersonRole();
       } else if (this.deleteType === "privilege") {
-        this.privilege = {
-          id: this.deleteItem.id,
-          privilege: this.deleteItem.privilege,
-          personroleId: this.personrole.id,
-        };
-        await PersonRolePrivilegeServices.deletePrivilege(
-          this.deleteItem.id
-        ).catch((error) => {
-          this.message = error.response.data.message;
-          console.log("There was an error:", error.response);
-        });
-        this.privilege = {};
+        await PersonRolePrivilegeServices.deletePrivilege(this.deleteItem.id)
+          .then(() => {
+            this.getPersonRoles();
+          })
+          .catch((error) => {
+            this.message = error.response.data.message;
+            console.log("There was an error:", error.response);
+          });
         await this.getPersonRoles();
       } else if (this.deleteType === "persontopic") {
-        this.editedTopicIndex = this.persontopics.findIndex(
-          (topic) => topic.id === this.deleteItem.id
-        );
-        this.persontopic = Object.assign({}, this.deleteItem.persontopic[0]);
-        this.persontopics.splice(this.editedTopicIndex, 1);
-        await PersonTopicServices.deletePersonTopic(this.persontopic.id)
+        await PersonTopicServices.deletePersonTopic(
+          this.deleteItem.persontopic[0].id
+        )
           .then(() => {
-            this.$nextTick(() => {
-              this.persontopic = Object.assign({}, {});
-              this.editedTopicIndex = -1;
-            });
+            this.getPersonTopics();
           })
           .catch((error) => {
             this.message = error.response.data.message;
@@ -701,11 +685,13 @@ export default {
       }
 
       this.showDisableConfirmation = false;
+      this.deleteItem = {};
+      this.deleteType = "";
     },
-    async disablePersonRole(personrole) {
+    async disablePersonRole() {
       // delete person role privileges
       await PersonRolePrivilegeServices.deletePrivilegesForPersonRole(
-        this.disabledRole.personrole[0].id
+        this.disabledRole.id
       ).catch((error) => {
         this.message = error.response.data.message;
         console.log("There was an error:", error.response);
@@ -718,7 +704,7 @@ export default {
         this.message = error.response.data.message;
         console.log("There was an error:", error.response);
       });
-      await this.getAppointments(personrole);
+      await this.getAppointments();
       let disableUser = {
         fName: this.person.fName,
         lName: this.person.lName,
@@ -728,18 +714,19 @@ export default {
         },
       };
       for (let i = 0; i < this.appointments.length; i++) {
-        console.log("in for loop");
         await this.cancelAppointment(this.appointments[i], disableUser);
       }
       await this.getPersonRoles();
       await this.getPersonTopics();
+      this.showDisableConfirmation = false;
     },
-    async getAppointments(personrole) {
+    async getAppointments() {
       await AppointmentServices.getUpcomingAppointmentForPersonForGroup(
         this.group.id,
-        personrole.personId
+        this.person.id
       )
         .then(async (response) => {
+          console.log(response);
           this.appointments = response.data;
           for (let i = 0; i < this.appointments.length; i++) {
             await PersonAppointmentServices.findStudentDataForTable(

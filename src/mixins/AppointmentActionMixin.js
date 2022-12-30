@@ -61,7 +61,7 @@ export const AppointmentActionMixin = {
       } else if (isAdminAdd && this.appointment.type === "Private") {
         await this.splitAppointment(
           isAdminAdd,
-          this.selectedAppointment,
+          this.appointment,
           fromUser,
           student
         );
@@ -103,7 +103,7 @@ export const AppointmentActionMixin = {
             let pap = {
               isTutor: true,
               appointmentId: response.data.id,
-              personId: this.tutors[0].id,
+              personId: this.appointment.tutors[0].personId,
             };
             await PersonAppointmentServices.addPersonAppointment(pap);
           }
@@ -132,7 +132,7 @@ export const AppointmentActionMixin = {
             let pap = {
               isTutor: true,
               appointmentId: response.data.id,
-              personId: this.tutors[0].id,
+              personId: this.appointment.tutors[0].personId,
             };
             await PersonAppointmentServices.addPersonAppointment(pap);
           }
@@ -166,25 +166,6 @@ export const AppointmentActionMixin = {
         temp.status = "booked";
         await AppointmentServices.updateForGoogle(this.appointment.id, temp);
         await this.sendMessageFromAdmin(fromUser, student, this.appointment.id);
-        this.adminAddStudent = false;
-        this.alertType = "success";
-        this.alert =
-          "You have successfully booked a " +
-          this.appointment.type +
-          " appointment for " +
-          this.walkInStudent.fName +
-          " " +
-          this.walkInStudent.lName +
-          " with " +
-          this.tutors[0].fName +
-          " " +
-          this.tutors[0].lName +
-          " on " +
-          this.appointment.date +
-          " at " +
-          this.appointment.startTime +
-          ".";
-        this.showAlert = true;
       } // handle if student added appointment
       else {
         pap.personId = fromUser.userID ? fromUser.userID : fromUser.id;
@@ -192,20 +173,6 @@ export const AppointmentActionMixin = {
         temp.status = "pending";
         await AppointmentServices.updateAppointment(this.appointment.id, temp);
         await this.sendPendingMessage(this.appointment.id);
-        this.alertType = "success";
-        this.alert =
-          "You have successfully booked a " +
-          this.appointment.type +
-          " appointment with " +
-          this.tutors[0].fName +
-          " " +
-          this.tutors[0].lName +
-          " on " +
-          this.appointment.date +
-          " at " +
-          this.appointment.startTime +
-          ".";
-        this.showAlert = true;
       }
     },
     async bookGroupSession(isAdminAdd, appointment, fromUser, student) {
@@ -229,17 +196,6 @@ export const AppointmentActionMixin = {
       }
       // need to update group session in google
       await AppointmentServices.updateForGoogle(appointment.id, appointment);
-
-      this.alertType = "success";
-      this.alert =
-        "You have successfully booked a " +
-        this.selectedAppointment.type +
-        " appointment on " +
-        this.selectedAppointment.date +
-        " at " +
-        this.selectedAppointment.startTime +
-        ".";
-      this.showAlert = true;
     },
     async editAppointment(fromUser, appointment) {
       let updateAppt = {
@@ -257,16 +213,6 @@ export const AppointmentActionMixin = {
       };
       await AppointmentServices.updateForGoogle(updateAppt.id, updateAppt);
       await this.sendEditedMessage(fromUser, appointment.id);
-      this.alertType = "success";
-      this.alert =
-        "You have successfully updated your " +
-        appointment.type +
-        " appointment on " +
-        appointment.date +
-        " at " +
-        appointment.startTime +
-        ".";
-      this.showAlert = true;
     },
     async confirmAppointment(confirm, fromUser, appointment) {
       let confirmAppt = {
@@ -292,16 +238,6 @@ export const AppointmentActionMixin = {
             await this.sendConfirmedMessage(appointment.id);
           });
         }
-        this.alertType = "success";
-        this.alert =
-          "You have successfully confirmed your " +
-          appointment.type +
-          " appointment on " +
-          appointment.date +
-          " at " +
-          appointment.startTime +
-          ".";
-        this.showAlert = true;
       } else {
         // don't need to update google cal because it's not even on there yet
         confirmAppt.status = "tutorCancel";
@@ -311,16 +247,6 @@ export const AppointmentActionMixin = {
         ).then(async () => {
           await this.sendCanceledMessage(fromUser, appointment.id);
         });
-        this.alertType = "warning";
-        this.alert =
-          "You have successfully rejected your " +
-          appointment.type +
-          " appointment on " +
-          appointment.date +
-          " at " +
-          appointment.startTime +
-          ".";
-        this.showAlert = true;
       }
     },
     async cancelAppointment(appointment, fromUser) {
@@ -383,8 +309,7 @@ export const AppointmentActionMixin = {
                 let pap = {
                   isTutor: true,
                   appointmentId: response.data.id,
-                  //TODO
-                  personId: this.tutors[0].id,
+                  personId: this.appointment.tutors[0].personId,
                 };
                 await PersonAppointmentServices.addPersonAppointment(pap);
               }

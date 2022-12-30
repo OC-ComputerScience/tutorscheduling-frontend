@@ -476,6 +476,8 @@
                     @click="
                       confirmAppointment(true, user, selectedAppointment);
                       secondTime = true;
+                      initializeData();
+                      selectedOpen = false;
                     "
                     :disabled="!checkStatus('pending') || datePast">
                     Confirm
@@ -771,6 +773,7 @@ export default {
         this.personAppointments = response;
       });
       await this.loadAppointments();
+      this.adminAddStudent = false;
       this.overlay = false;
     },
     async getGroupByPersonRoleId() {
@@ -979,7 +982,7 @@ export default {
       this.endTimes = this.generateTimeslots(
         this.newStart,
         this.selectedAppointment.endTime,
-        this.group.timeInterval
+        this.group.minApptTime
       );
       // adding this to make sure you can't end an appointment at the start time
       this.endTimes.shift();
@@ -1032,13 +1035,6 @@ export default {
         AppointmentServices.getAppointment(event.appointmentId)
           .then(async (response) => {
             this.selectedAppointment = response.data;
-            console.log(
-              this.subtractTimes(
-                this.selectedAppointment.startTime,
-                this.selectedAppointment.endTime
-              )
-            );
-
             this.newStart = this.selectedAppointment.startTime;
             this.newEnd = this.selectedAppointment.endTime;
             this.appointmentType = this.selectedAppointment.type;
@@ -1430,6 +1426,8 @@ export default {
       }
     },
     async directToCancel() {
+      this.selectedOpen = false;
+      this.showDeleteConfirmation = false;
       if (this.selectedAppointment.status === "pending") {
         await this.confirmAppointment(
           false,
@@ -1439,8 +1437,7 @@ export default {
       } else {
         await this.cancelAppointment(this.selectedAppointment, this.user);
       }
-      this.selectedOpen = false;
-      this.showDeleteConfirmation = false;
+      this.initializeData();
     },
     async findEmail() {
       let tempStudent = {
