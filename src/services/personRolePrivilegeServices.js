@@ -20,6 +20,9 @@ export default {
       personroleprivilege
     );
   },
+  deletePrivilegesForPersonRole(personRoleId) {
+    return apiClient.delete("personroleprivilege/personRole/" + personRoleId);
+  },
   deletePrivilege(personRolePrivilegeId) {
     return apiClient.delete("personroleprivilege/" + personRolePrivilegeId);
   },

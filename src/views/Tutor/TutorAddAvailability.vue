@@ -456,12 +456,13 @@ export default {
       for (let i = 0; i < this.upcoming.length && isAvail; i++) {
         let appoint = this.upcoming[i];
         appoint.date = appoint.date.substring(0, 10);
-        appoint.startTime = appoint.startTime.substring(0, 5);
-        appoint.endTime = appoint.endTime.substring(0, 5);
+        appoint.startTime = appoint.startTime.substring(0, 8);
+        appoint.endTime = appoint.endTime.substring(0, 8);
         if (tempAvail.date === appoint.date) {
           if (
             (tempAvail.startTime < appoint.startTime &&
-              tempAvail.endTime > appoint.startTime) || // new availability starts before and ends during existing
+              tempAvail.endTime > appoint.startTime &&
+              tempAvail.endTime < appoint.endTime) || // new availability starts before and ends during existing
             (tempAvail.startTime >= appoint.startTime &&
               tempAvail.endTime <= appoint.endTime) || // new availability is in the middle of an existing
             (tempAvail.startTime < appoint.startTime &&
@@ -674,7 +675,6 @@ export default {
       await PersonRoleServices.getGroupForPersonRole(this.id)
         .then(async (response) => {
           this.group = response.data[0].role.group;
-          console.log(this.group);
           await this.getTopicsForGroup();
         })
         .catch((error) => {

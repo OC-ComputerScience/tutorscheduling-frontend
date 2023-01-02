@@ -163,14 +163,22 @@
             <v-btn
               v-if="!(selectedAppointment.type === 'Group')"
               color="#12f000"
-              @click="confirmAppointment(true)"
+              @click="
+                confirmAppointment(true, user, selectedAppointment);
+                getAppointments();
+                apptDialog = false;
+              "
               :disabled="!checkStatus('pending')">
               Confirm
             </v-btn>
             <v-btn
               v-if="!(selectedAppointment.type === 'Group')"
               color="error"
-              @click="showDeleteConfirmation = true"
+              @click="
+                showDeleteConfirmation = true;
+                getAppointments();
+                apptDialog = false;
+              "
               :disabled="!checkStatus('pending')">
               Reject
             </v-btn>
@@ -186,7 +194,8 @@
               v-if="saveChanges"
               color="accent"
               @click="
-                editAppointment();
+                editAppointment(user, selectedAppointment);
+                getAppointments();
                 apptDialog = false;
               ">
               Save Changes
@@ -201,7 +210,11 @@
                 checkStatus('booked')
               "
               color="red"
-              @click="showDeleteConfirmation = true">
+              @click="
+                showDeleteConfirmation = true;
+                getAppointments();
+                apptDialog = false;
+              ">
               Cancel Appointment
             </v-btn>
           </v-card-actions>
@@ -312,15 +325,15 @@ import PersonTopicServices from "@/services/personTopicServices.js";
 import AppointmentServices from "@/services/appointmentServices.js";
 import LocationServices from "@/services/locationServices.js";
 import PersonAppointmentServices from "@/services/personAppointmentServices.js";
-import TwilioServices from "@/services/twilioServices.js";
-import InformationComponent from "../../components/InformationComponent.vue";
 import DeleteConfirmationComponent from "../../components/DeleteConfirmationComponent.vue";
+import InformationComponent from "../../components/InformationComponent.vue";
+import { AppointmentActionMixin } from "../../mixins/AppointmentActionMixin";
 import { TimeFunctionsMixin } from "../../mixins/TimeFunctionsMixin";
 
 export default {
   props: ["id"],
   name: "TutorHome",
-  mixins: [TimeFunctionsMixin],
+  mixins: [AppointmentActionMixin, TimeFunctionsMixin],
   components: {
     DeleteConfirmationComponent,
     InformationComponent,
@@ -583,226 +596,17 @@ export default {
         params: { id: item.id, userId: this.user.userID },
       });
     },
-    //Update on tutor confirming booking
-    async confirmAppointment(confirm) {
-      if (confirm) {
-        this.selectedAppointment.status = "booked";
-        if (this.selectedAppointment.type.includes("Private")) {
-          let updateAppt = {
-            id: this.selectedAppointment.id,
-            date: this.selectedAppointment.originalDate,
-            startTime: this.selectedAppointment.originalStart,
-            endTime: this.selectedAppointment.originalEnd,
-            type: this.selectedAppointment.type,
-            status: "booked",
-            preSessionInfo: this.selectedAppointment.preSessionInfo,
-            groupId: this.selectedAppointment.groupId,
-            topicId: this.selectedAppointment.topicId,
-            locationId: this.selectedAppointment.locationId,
-          };
-          await AppointmentServices.updateForGoogle(updateAppt.id, updateAppt)
-            .then(async () => {
-              this.tutorConfirmMessage(
-                this.students[0],
-                this.user.fName,
-                this.user.lName,
-                updateAppt.id
-              );
-              this.getAppointments();
-              this.selectedAppointment.color = "blue";
-            })
-            .catch((error) => {
-              this.alertType = "error";
-              this.alert = error.response.data.message;
-              this.showAlert = true;
-              console.log("There was an error:", error.response);
-            });
-          this.alertType = "success";
-          this.alert =
-            "You have successfully confirmed " +
-            this.selectedAppointment.type +
-            " appointment on " +
-            this.selectedAppointment.date +
-            " at " +
-            this.selectedAppointment.startTime +
-            ".";
-          this.showAlert = true;
-        }
-      } else {
-        // don't need to update google cal because it's not even on there yet
-        this.selectedAppointment.status = "tutorCancel";
-        let updateAppt = {
-          id: this.selectedAppointment.id,
-          date: this.selectedAppointment.originalDate,
-          startTime: this.selectedAppointment.originalStart,
-          endTime: this.selectedAppointment.originalEnd,
-          type: this.selectedAppointment.type,
-          status: "tutorCancel",
-          preSessionInfo: this.selectedAppointment.preSessionInfo,
-          groupId: this.selectedAppointment.groupId,
-          topicId: this.selectedAppointment.topicId,
-          locationId: this.selectedAppointment.locationId,
-          googleEventId: this.selectedAppointment.googleEventId,
-        };
-        await AppointmentServices.updateAppointment(updateAppt.id, updateAppt)
-          .then(() => {
-            this.getAppointments();
-            // don't want to keep this open since it's supposed to leave this list
-            this.apptDialog = false;
-          })
-          .catch((error) => {
-            this.alertType = "error";
-            this.alert = error.response.data.message;
-            this.showAlert = true;
-            console.log("There was an error:", error.response);
-          });
-        this.alertType = "warning";
-        this.alert =
-          "You have successfully rejected your " +
-          this.selectedAppointment.type +
-          " appointment on " +
-          this.selectedAppointment.date +
-          " at " +
-          this.selectedAppointment.startTime +
-          ".";
-        this.showAlert = true;
-      }
-    },
-    async editAppointment() {
-      let updateAppt = {
-        id: this.selectedAppointment.id,
-        date: this.selectedAppointment.originalDate,
-        startTime: this.selectedAppointment.originalStart,
-        endTime: this.selectedAppointment.originalEnd,
-        type: this.selectedAppointment.type,
-        status: this.selectedAppointment.status,
-        preSessionInfo: this.selectedAppointment.preSessionInfo,
-        groupId: this.selectedAppointment.groupId,
-        topicId: this.selectedAppointment.topicId,
-        locationId: this.selectedAppointment.locationId,
-        googleEventId: this.selectedAppointment.googleEventId,
-      };
-      await AppointmentServices.updateForGoogle(updateAppt.id, updateAppt)
-        .then(async () => {
-          for (let i = 0; i < this.students.length; i++) {
-            this.tutorEditMessage(
-              this.students[i],
-              this.user.fName,
-              this.user.lName,
-              updateAppt.type
-            );
-            this.alertType = "success";
-            this.alert =
-              "You have successfully updated your " +
-              this.selectedAppointment.type +
-              " appointment on " +
-              this.selectedAppointment.date +
-              " at " +
-              this.selectedAppointment.startTime +
-              ".";
-            this.showAlert = true;
-          }
-          await this.getAppointments();
-        })
-        .catch((error) => {
-          this.alertType = "error";
-          this.alert = error.response.data.message;
-          this.showAlert = true;
-          console.log("There was an error:", error.response);
-        });
-    },
     async directToCancel() {
       if (this.selectedAppointment.status === "pending")
-        await this.confirmAppointment(false);
+        await this.confirmAppointment(
+          false,
+          this.user,
+          this.selectedAppointment
+        );
       else if (this.selectedAppointment.status === "booked")
-        await this.cancelAppointment();
+        await this.cancelAppointment(this.selectedAppointment, this.user);
       this.apptDialog = false;
       this.showDeleteConfirmation = false;
-    },
-    //method for canceling appointments
-    async cancelAppointment() {
-      // if students are NOT signed up for the appointment, delete it and delete the tutor personappointments
-      if (this.students.length === 0) {
-        for (let i = 0; i < this.tutors.length; i++) {
-          await PersonAppointmentServices.deletePersonAppointment(
-            this.tutors[i].id
-          ).catch((error) => {
-            this.alertType = "error";
-            this.alert = error.response.data.message;
-            this.showAlert = true;
-            console.log("There was an error:", error.response);
-          });
-        }
-        await AppointmentServices.deleteAppointment(
-          this.selectedAppointment.id
-        ).catch((error) => {
-          this.alertType = "error";
-          this.alert = error.response.data.message;
-          this.showAlert = true;
-          console.log("There was an error:", error.response);
-        });
-      }
-      // if students are, keep the appointment but delete all the personappointments
-      else {
-        for (let i = 0; i < this.students.length; i++) {
-          this.tutorCancelMessage(
-            this.students[i],
-            this.user.fName,
-            this.user.lName,
-            this.selectedAppointment.id
-          );
-          await PersonAppointmentServices.deletePersonAppointment(
-            this.students[i].id
-          ).catch((error) => {
-            this.alertType = "error";
-            this.alert = error.response.data.message;
-            this.showAlert = true;
-            console.log("There was an error:", error.response);
-          });
-        }
-        for (let i = 0; i < this.tutors.length; i++) {
-          await PersonAppointmentServices.deletePersonAppointment(
-            this.tutors[i].id
-          ).catch((error) => {
-            this.alertType = "error";
-            this.alert = error.response.data.message;
-            this.showAlert = true;
-            console.log("There was an error:", error.response);
-          });
-        }
-        let updateAppt = {
-          id: this.selectedAppointment.id,
-          date: this.selectedAppointment.originalDate,
-          startTime: this.selectedAppointment.originalStart,
-          endTime: this.selectedAppointment.originalEnd,
-          type: this.selectedAppointment.type,
-          status: "tutorCancel",
-          preSessionInfo: this.selectedAppointment.preSessionInfo,
-          groupId: this.selectedAppointment.groupId,
-          topicId: this.selectedAppointment.topicId,
-          locationId: this.selectedAppointment.locationId,
-        };
-        await AppointmentServices.updateForGoogle(
-          updateAppt.id,
-          updateAppt
-        ).catch((error) => {
-          this.alertType = "error";
-          this.alert = error.response.data.message;
-          this.showAlert = true;
-          console.log("There was an error:", error.response);
-        });
-      }
-      this.getAppointments();
-      this.alertType = "warning";
-      this.alert =
-        "You have successfully canceled your " +
-        this.selectedAppointment.type +
-        " appointment on " +
-        this.selectedAppointment.date +
-        " at " +
-        this.selectedAppointment.startTime +
-        ".";
-      this.showAlert = true;
     },
     async getTutorRole() {
       await PersonRoleServices.getPersonRole(this.id)
@@ -904,57 +708,6 @@ export default {
       this.updatePeople();
       this.saveChanges = false;
       this.apptDialog = true;
-    },
-    tutorConfirmMessage(student, fName, lName) {
-      let temp = student;
-      temp.phoneNum = student.person.phoneNum;
-      temp.message =
-        "The " +
-        this.selectedAppointment.type +
-        " appointment you booked on " +
-        this.selectedAppointment.date +
-        " at " +
-        this.selectedAppointment.startTime +
-        " has been confirmed by " +
-        fName +
-        " " +
-        lName +
-        ".\nPlease review this appointment at http://tutorscheduling.oc.edu/";
-      TwilioServices.sendMessage(temp);
-    },
-    tutorEditMessage(student, fName, lName) {
-      let temp = student;
-      temp.phoneNum = student.person.phoneNum;
-      temp.message =
-        "Your " +
-        this.selectedAppointment.type +
-        " appointment with " +
-        fName +
-        " " +
-        lName +
-        " on " +
-        this.selectedAppointment.date +
-        " at " +
-        this.selectedAppointment.startTime +
-        " has been edited. \nPlease check changes at http://tutorscheduling.oc.edu/";
-      TwilioServices.sendMessage(temp);
-    },
-    tutorCancelMessage(student, fName, lName) {
-      let temp = student;
-      temp.phoneNum = student.person.phoneNum;
-      temp.message =
-        "Your " +
-        this.selectedAppointment.type +
-        " appointment on " +
-        this.selectedAppointment.date +
-        " at " +
-        this.selectedAppointment.startTime +
-        " has been canceled by " +
-        fName +
-        " " +
-        lName +
-        ". We apologize for the inconvenience.";
-      TwilioServices.sendMessage(temp);
     },
   },
 };
