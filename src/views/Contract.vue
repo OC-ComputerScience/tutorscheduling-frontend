@@ -35,11 +35,10 @@
                   >Sign a contract for {{ role.groupName }}:</span
                 >
               </v-card-title>
-              <pdf
+              <vue-pdf-embed
                 v-for="i in role.numPages"
                 :key="i"
-                :page="i"
-                :src="role.pdfName"></pdf>
+                :source="role.pdfName"></vue-pdf-embed>
               <v-container>
                 <v-text-field
                   v-model="signature"
@@ -77,7 +76,7 @@
 </template>
 
 <script>
-import pdf from "vue-pdf";
+import VuePdfEmbed from "vue-pdf-embed/dist/vue2-pdf-embed";
 import GroupServices from "@/services/groupServices.js";
 import PersonRoleServices from "@/services/personRoleServices.js";
 import Utils from "@/config/utils.js";
@@ -89,7 +88,7 @@ export default {
   name: "Contract",
   mixins: [RedirectToPageMixin],
   components: {
-    pdf,
+    VuePdfEmbed,
     GroupViewComponent,
     InformationComponent,
   },
@@ -151,14 +150,17 @@ export default {
             let group = response.data[i];
             for (let j = 0; j < group.role.length; j++) {
               let role = group.role[j];
+              console.log(role);
               for (let k = 0; k < role.personrole.length; k++) {
                 let personrole = role.personrole[k];
                 let tempFile = this.files.filter(function (file) {
+                  console.log(group.name.replace(/\s/g, ""));
                   return (
                     file.pdf.includes(group.name.replace(/\s/g, "")) &&
                     file.pdf.includes(role.type.toString())
                   );
                 });
+                console.log(tempFile);
                 personrole.pdfName = tempFile[0].pdf;
                 personrole.numPages = tempFile[0].pages;
                 personrole.groupName = group.name;
@@ -172,6 +174,7 @@ export default {
           }
         })
         .catch((error) => {
+          console.log(error);
           this.alertType = "error";
           this.alert = error.response.data.message;
           this.showAlert = true;
