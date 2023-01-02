@@ -27,7 +27,9 @@ jobs:
       - uses: actions/checkout@v2
         with:
           ref: dev
-      - uses: actions/setup-node@v1
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 16
       - run: |
           touch .env
           echo VUE_APP_CLIENT_ID="$VUE_APP_CLIENT_ID" >> .env
