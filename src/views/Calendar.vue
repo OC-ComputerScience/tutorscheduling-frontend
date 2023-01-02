@@ -1212,7 +1212,6 @@ export default {
     },
     //Load all appointments in backend into calendar events
     async loadAppointments() {
-      console.log("in load appointments to get colors")
       let today = new Date();
       today.setHours(today.getHours() - today.getTimezoneOffset() / 60);
       today.setHours(0, 0, 0, 0);
@@ -1306,9 +1305,6 @@ export default {
               color = "grey darken-1";
               break;
           }
-
-          console.log(this.appointments[i])
-          console.log(this.groupColor)
 
           if (
             this.appointments[i].type.includes("Group") &&
