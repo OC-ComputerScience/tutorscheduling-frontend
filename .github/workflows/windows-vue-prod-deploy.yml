@@ -24,7 +24,7 @@ jobs:
       GOOGLE_AUDIENCE: ${{secrets.GOOGLE_AUDIENCE}}
       CLIENT_SECRET: ${{secrets.CLIENT_SECRET}}
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           ref: main
       - uses: actions/setup-node@v3
