@@ -658,6 +658,7 @@ export default {
       }
     },
     async confirmedDelete() {
+      this.showDisableConfirmation = false;
       if (this.deleteType === "personrole") {
         await this.saveRole();
         await this.disablePersonRole();
@@ -718,7 +719,6 @@ export default {
       }
       await this.getPersonRoles();
       await this.getPersonTopics();
-      this.showDisableConfirmation = false;
     },
     async getAppointments() {
       await AppointmentServices.getUpcomingAppointmentForPersonForGroup(

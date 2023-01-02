@@ -261,7 +261,8 @@ export const SendTextsMixin = {
         this.appointment.type === "Group" &&
         fromUser.selectedRole.type === "Student"
       ) {
-        "A student has left your group appointment:" +
+        text.message = 
+          "A student has left your group appointment:" +
           "\n    Date: " +
           this.formatDate(this.appointment.date) +
           "\n    Time: " +
