@@ -69,7 +69,6 @@ export const RedirectToPageMixin = {
             break;
           }
         }
-        // TODO fix this for admins
         if (
           this.user.selectedGroup === null ||
           this.user.selectedGroup === "" ||

@@ -317,9 +317,12 @@ export const AppointmentActionMixin = {
           }
         } else if (this.appointment.type === "Group") {
           await this.sendCanceledMessage(fromUser, appointment.id);
+          let studentPersonAppointment = this.appointment.students.filter(
+            (student) => student.personId === fromUser.userID
+          );
           // delete student's pa
           await PersonAppointmentServices.deletePersonAppointment(
-            this.appointment.students[0].id
+            studentPersonAppointment.id
           );
           await AppointmentServices.updateForGoogle(updateAppt.id, updateAppt);
         }
@@ -331,7 +334,7 @@ export const AppointmentActionMixin = {
           // if an available group appointment has more tutors, send messages and delete all personappointments
           if (
             this.appointment.type === "Group" &&
-            this.appointment.tutors.length > 0
+            this.appointment.tutors.length > 1
           ) {
             await this.sendCanceledMessage(fromUser, appointment.id);
             for (
@@ -344,7 +347,7 @@ export const AppointmentActionMixin = {
             }
           } else {
             await PersonAppointmentServices.deletePersonAppointment(
-              this.appointment.personappointment[0]
+              this.appointment.personappointment[0].id
             );
           }
           await AppointmentServices.deleteAppointment(this.appointment.id);

@@ -660,13 +660,12 @@ import Utils from "@/config/utils.js";
 import DeleteConfirmationComponent from "../components/DeleteConfirmationComponent.vue";
 import InformationComponent from "@/components/InformationComponent.vue";
 import { AppointmentActionMixin } from "../mixins/AppointmentActionMixin";
-import { SendTextsMixin } from "../mixins/SendTextsMixin";
 import { TimeFunctionsMixin } from "../mixins/TimeFunctionsMixin";
 
 export default {
   name: "Calendar",
   props: ["id"],
-  mixins: [AppointmentActionMixin, SendTextsMixin, TimeFunctionsMixin],
+  mixins: [AppointmentActionMixin, TimeFunctionsMixin],
   components: {
     DeleteConfirmationComponent,
     InformationComponent,
