@@ -474,9 +474,8 @@
                     "
                     color="#12f000"
                     @click="
-                      confirmAppointment(true, user, selectedAppointment);
+                      sendAppointmentForConfirmation();
                       secondTime = true;
-                      initializeData();
                       selectedOpen = false;
                     "
                     :disabled="!checkStatus('pending') || datePast">
@@ -954,6 +953,10 @@ export default {
         this.isPrivateBook = false;
       });
     },
+    async sendAppointmentForConfirmation() {
+      await this.confirmAppointment(true, this.user, this.selectedAppointment);
+      await this.initializeData();
+    },
     async sendAppointmentForBooking() {
       if (this.adminAddStudent && this.studentNameInput) {
         await this.adminAdd();
@@ -968,7 +971,6 @@ export default {
         this.walkInStudent
       );
       await this.initializeData();
-      this.selectedOpen = false;
     },
     updateTimes() {
       this.startTimes = this.generateTimeslots(
@@ -1210,6 +1212,7 @@ export default {
     },
     //Load all appointments in backend into calendar events
     async loadAppointments() {
+      console.log("in load appointments to get colors")
       let today = new Date();
       today.setHours(today.getHours() - today.getTimezoneOffset() / 60);
       today.setHours(0, 0, 0, 0);
@@ -1303,6 +1306,9 @@ export default {
               color = "grey darken-1";
               break;
           }
+
+          console.log(this.appointments[i])
+          console.log(this.groupColor)
 
           if (
             this.appointments[i].type.includes("Group") &&

@@ -51,27 +51,10 @@ export const AppointmentActionMixin = {
     },
     async bookAppointment(isAdminAdd, appointment, fromUser, student) {
       await this.getAppointmentInfo(appointment.id);
-      if (
-        this.appointment.status === "available" &&
-        this.appointment.type === "Private" &&
-        fromUser.selectedRole.type !== "Admin" &&
-        !isAdminAdd
-      ) {
-        await this.splitAppointment(isAdminAdd, appointment, fromUser, null);
-      } else if (isAdminAdd && this.appointment.type === "Private") {
-        await this.splitAppointment(
-          isAdminAdd,
-          this.appointment,
-          fromUser,
-          student
-        );
+      if (this.appointment.type === "Private") {
+        await this.splitAppointment(isAdminAdd, appointment, fromUser, student);
       } else if (this.appointment.type === "Group") {
-        this.bookGroupSession(isAdminAdd, appointment, fromUser, student);
-      } else {
-        this.alertType = "warning";
-        this.alert =
-          "This appointment has already been booked. Try a different time.";
-        this.showAlert = true;
+        await this.bookGroupSession(isAdminAdd, appointment, fromUser, student);
       }
     },
     // Split appointments into more availablity slots when part of slot is booked
