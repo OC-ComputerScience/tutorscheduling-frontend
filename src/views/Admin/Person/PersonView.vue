@@ -67,9 +67,11 @@
       <v-text-field
         id="phoneNum"
         v-model="person.phoneNum"
-        :counter="13"
-        label="Mobile Phone"
-        readonly
+        :counter="25"
+        label="phoneNum"
+        hint="4054255555"
+        persistent-hint
+        required
       ></v-text-field>
 
       <v-checkbox
@@ -175,7 +177,7 @@
       </v-card>
       <br />
 
-      <v-dialog v-model="dialogEdit" max-width="500px">
+      <v-dialog v-model="dialogEdit" max-width="600px">
         <v-card>
           <v-card-title>{{ person.fName }} {{ person.lName }}</v-card-title>
           <v-card-text>
@@ -200,21 +202,18 @@
                 id="email"
                 v-model="person.email"
                 :counter="25"
-                label="email"
+                label="Email"
                 hint="you@email.com"
                 persistent-hint
                 required
               ></v-text-field>
 
-              <v-text-field
-                id="phoneNum"
-                v-model="person.phoneNum"
-                :counter="13"
-                label="phoneNum"
-                hint="111-222-3333"
-                persistent-hint
-                required
-              ></v-text-field>
+              <br />
+
+              <PhoneNumberComponent
+                :phoneNum="person.phoneNum"
+                @editedPhoneNumber="setPhoneNumber"
+              ></PhoneNumberComponent>
 
               <v-checkbox
                 v-model="person.textOptIn"
@@ -224,7 +223,7 @@
           </v-card-text>
           <v-card-actions>
             <v-spacer></v-spacer>
-            <v-btn color="accent" @click="updatePerson">Save</v-btn>
+            <v-btn color="accent" @click="updatePerson()">Save</v-btn>
             <v-btn color="error" @click="dialogEdit = false">Cancel</v-btn>
           </v-card-actions>
         </v-card>
@@ -424,6 +423,7 @@ import TopicServices from "@/services/topicServices.js";
 import AppointmentServices from "@/services/appointmentServices.js";
 import PersonAppointmentServices from "@/services/personAppointmentServices.js";
 import DeleteConfirmationComponent from "../../../components/DeleteConfirmationComponent.vue";
+import PhoneNumberComponent from "../../../components/PhoneNumberComponent.vue";
 
 import { AppointmentActionMixin } from "../../../mixins/AppointmentActionMixin";
 import { TimeFunctionsMixin } from "../../../mixins/TimeFunctionsMixin";
@@ -431,6 +431,7 @@ import { TimeFunctionsMixin } from "../../../mixins/TimeFunctionsMixin";
 export default {
   components: {
     DeleteConfirmationComponent,
+    PhoneNumberComponent,
   },
   mixins: [AppointmentActionMixin, TimeFunctionsMixin],
   props: ["id", "personId"],
@@ -579,8 +580,11 @@ export default {
           console.log("There was an error:", error.response);
         });
     },
-    updatePerson() {
-      PersonServices.updatePerson(this.personId, this.person)
+    setPhoneNumber(phoneNumber) {
+      this.person.phoneNumber = phoneNumber;
+    },
+    async updatePerson() {
+      await PersonServices.updatePerson(this.personId, this.person)
         .then(() => {
           this.dialogEdit = false;
         })

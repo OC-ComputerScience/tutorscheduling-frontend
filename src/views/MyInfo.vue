@@ -23,16 +23,12 @@
         readonly
       ></v-text-field>
 
-      <v-text-field
-        id="phoneNum"
-        v-model="person.phoneNum"
-        :counter="13"
-        label="Mobile Phone"
-        hint="111-222-3333"
-        persistent-hint
-        required
-        @change="enableUpdate = true"
-      ></v-text-field>
+      <br />
+
+      <PhoneNumberComponent
+        :phoneNum="person.phoneNum"
+        @editedPhoneNumber="setPhoneNumber"
+      ></PhoneNumberComponent>
 
       <v-checkbox
         v-model="person.textOptIn"
@@ -45,7 +41,7 @@
         :disabled="!enableUpdate"
         color="accent"
         class="justify-center white--text"
-        @click="savePhoneNum()"
+        @click="saveChanges()"
       >
         Update
       </v-btn>
@@ -93,10 +89,11 @@ import RoleServices from "@/services/roleServices";
 import TopicServices from "@/services/topicServices";
 import Utils from "@/config/utils.js";
 import InformationComponent from "../components/InformationComponent.vue";
+import PhoneNumberComponent from "../components/PhoneNumberComponent.vue";
 
 export default {
   name: "MyInfo",
-  components: { InformationComponent },
+  components: { InformationComponent, PhoneNumberComponent },
   props: ["id"],
   data() {
     return {
@@ -143,13 +140,18 @@ export default {
           this.person = response.data;
           this.fullName = this.person.fName + " " + this.person.lName;
           this.message = this.fullName + "'s Information";
+          console.log(this.person);
         })
         .catch((error) => {
           this.message = error.response.data.message;
           console.log("There was an error:", error.response);
         });
     },
-    async savePhoneNum() {
+    setPhoneNumber(phoneNumber) {
+      this.person.phoneNumber = phoneNumber;
+      this.enableUpdate = true;
+    },
+    async saveChanges() {
       await PersonServices.updatePerson(this.person.id, this.person)
         .then(() => {
           this.alert =
