@@ -35,10 +35,7 @@
                   >Sign a contract for {{ role.groupName }}:</span
                 >
               </v-card-title>
-              <vue-pdf-embed
-                v-for="i in role.numPages"
-                :key="i"
-                :source="role.pdfName"></vue-pdf-embed>
+              <vue-pdf-embed :source="role.pdfName"></vue-pdf-embed>
               <v-container>
                 <v-text-field
                   v-model="signature"
