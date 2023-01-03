@@ -7,31 +7,35 @@
           src="../assets/oc_logo_social.png"
           max-height="50"
           max-width="50"
-          contain></v-img>
+          contain
+        ></v-img>
       </router-link>
       <v-toolbar-title class="title">
-        <div>{{ this.title }}</div>
+        <div>{{ title }}</div>
       </v-toolbar-title>
       <v-spacer></v-spacer>
       <v-toolbar-items
         v-for="item in activeMenus"
         :key="item.link"
-        class="hidden-md-and-down">
+        class="hidden-md-and-down"
+      >
         <v-btn
-          exact
           :ref="item.link"
+          exact
           link
           :to="{ name: item.name, params: { id: selectedRole.personRoleId } }"
           :color="item.color"
-          text>
+          text
+        >
           {{ item.text }}
         </v-btn>
       </v-toolbar-items>
       <v-menu
         v-if="isUserPopulated() && selectedGroup != '' && isSelectedRoleValid()"
-        offset-y>
-        <template v-slot:activator="{ on, attrs }">
-          <v-btn color="accent" dark v-bind="attrs" v-on="on" class="mr-4 ml-4">
+        offset-y
+      >
+        <template #activator="{ on, attrs }">
+          <v-btn color="accent" dark v-bind="attrs" class="mr-4 ml-4" v-on="on">
             {{ selectedGroup }}
           </v-btn>
         </template>
@@ -41,8 +45,9 @@
             :key="group.id"
             no-action
             sub-group
-            @click.stop.prevent>
-            <template v-slot:activator>
+            @click.stop.prevent
+          >
+            <template #activator>
               <v-list-item-title v-text="group.name"></v-list-item-title>
             </template>
 
@@ -54,7 +59,8 @@
                 selectedGroup = group.name;
                 saveGroupRole();
                 menuAction(`${selectedRole.type.toLowerCase()}Home`);
-              ">
+              "
+            >
               <v-list-item-content>
                 <v-list-item-title v-text="role.type"></v-list-item-title>
               </v-list-item-content>
@@ -63,16 +69,18 @@
         </v-list>
       </v-menu>
       <v-menu
+        v-if="isUserPopulated() && isSelectedRoleValid()"
         bottom
         min-width="200px"
         rounded
         offset-y
-        v-if="isUserPopulated() && isSelectedRoleValid()">
-        <template v-slot:activator="{ on, attrs }">
-          <v-btn icon x-large v-on="on" v-bind="attrs">
+      >
+        <template #activator="{ on, attrs }">
+          <v-btn icon x-large v-bind="attrs" v-on="on">
             <v-avatar
               v-if="isUserPopulated() && isSelectedRoleValid()"
-              color="secondary">
+              color="secondary"
+            >
               <span class="accent--text font-weight-bold">{{ initials }}</span>
             </v-avatar>
           </v-btn>
@@ -90,14 +98,16 @@
                 {{ user.email }}
               </p>
               <v-divider
+                v-if="selectedRole.type.includes('Admin')"
                 class="my-3"
-                v-if="selectedRole.type.includes('Admin')"></v-divider>
+              ></v-divider>
               <v-btn
+                v-if="selectedRole.type.includes('Admin')"
                 depressed
                 rounded
                 text
                 @click="menuAction('groupEdit')"
-                v-if="selectedRole.type.includes('Admin')">
+              >
                 Group Settings
               </v-btn>
               <v-divider class="my-3"></v-divider>
@@ -105,25 +115,29 @@
                 My Info
               </v-btn>
               <v-divider
+                v-if="!selectedRole.type.includes('Admin')"
                 class="my-3"
-                v-if="!selectedRole.type.includes('Admin')"></v-divider>
+              ></v-divider>
               <v-btn
+                v-if="!selectedRole.type.includes('Admin')"
                 depressed
                 rounded
                 text
                 @click="menuAction('apply')"
-                v-if="!selectedRole.type.includes('Admin')">
+              >
                 Apply
               </v-btn>
               <v-divider
+                v-if="!selectedRole.type.includes('Admin')"
                 class="my-3"
-                v-if="!selectedRole.type.includes('Admin')"></v-divider>
+              ></v-divider>
               <v-btn
+                v-if="!selectedRole.type.includes('Admin')"
                 depressed
                 rounded
                 text
                 @click="menuAction('help')"
-                v-if="!selectedRole.type.includes('Admin')">
+              >
                 Help
               </v-btn>
               <v-divider class="my-3"></v-divider>
@@ -136,26 +150,29 @@
         v-if="isUserPopulated() && isSelectedRoleValid()"
         dark
         class="hidden-lg-and-up"
-        @click="drawer = !drawer"></v-app-bar-nav-icon>
+        @click="drawer = !drawer"
+      ></v-app-bar-nav-icon>
     </v-app-bar>
 
     <v-navigation-drawer
       v-if="drawer && isUserPopulated() && isSelectedRoleValid()"
-      class="hidden-lg-and-up"
       v-model="drawer"
+      class="hidden-lg-and-up"
       app
       right
       :mini-variant.sync="$vuetify.breakpoint.smAndDown"
-      color="primary">
+      color="primary"
+    >
       <v-list>
         <v-list-item
-          exact
           v-for="item in activeMenus"
+          :key="item.text"
+          exact
           :to="{ name: item.name, params: { id: selectedRole.personRoleId } }"
           :color="item.color"
-          :key="item.text">
+        >
           <v-list-item-action>
-            <v-icon color="white" v-if="item.icon">{{ item.icon }}</v-icon>
+            <v-icon v-if="item.icon" color="white">{{ item.icon }}</v-icon>
           </v-list-item-action>
           <v-list-item-content>
             <v-list-item-title class="white--text"

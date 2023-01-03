@@ -2,27 +2,29 @@
   <div>
     <v-container>
       <v-toolbar>
-        <v-toolbar-title>{{ this.message }}</v-toolbar-title>
+        <v-toolbar-title>{{ message }}</v-toolbar-title>
         <v-spacer></v-spacer>
         <InformationComponent
           message="Before continuing to this service, you must sign contracts for the
             following positions.
             <br />
-            Please click on each title to sign its contract."></InformationComponent>
+            Please click on each title to sign its contract."
+        ></InformationComponent>
       </v-toolbar>
       <br />
       <v-alert v-model="showAlert" dismissible :type="alertType">{{
-        this.alert
+        alert
       }}</v-alert>
       <v-row justify="center">
         <v-col v-for="role in roles" :key="role.id">
           <v-card
-            @click="role.dialog = true"
             class="mx-auto my-12 d-flex justify-center"
             max-width="400"
             height="100"
             elevation="10"
-            :style="{ 'background-color': role.color }">
+            :style="{ 'background-color': role.color }"
+            @click="role.dialog = true"
+          >
             <v-card-title class="justify-center white--text">
               {{ role.type }} - {{ role.groupName }}
             </v-card-title>
@@ -42,10 +44,11 @@
                   label="Digital Signature"
                   :hint="user.fullName"
                   persistent-hint
-                  v-on:keyup.enter="
+                  @keyup.enter="
                     role.dialog = false;
                     save(role);
-                  "></v-text-field>
+                  "
+                ></v-text-field>
               </v-container>
               <v-card-actions>
                 <v-spacer></v-spacer>
@@ -57,7 +60,8 @@
                     role.dialog = false;
                     signature = '';
                     save(role);
-                  ">
+                  "
+                >
                   Agree
                 </v-btn>
               </v-card-actions>
@@ -83,12 +87,12 @@ import { RedirectToPageMixin } from "../mixins/RedirectToPageMixin";
 
 export default {
   name: "Contract",
-  mixins: [RedirectToPageMixin],
   components: {
     VuePdfEmbed,
     GroupViewComponent,
     InformationComponent,
   },
+  mixins: [RedirectToPageMixin],
   data() {
     return {
       showAlert: false,

@@ -2,11 +2,11 @@
   <div style="">
     <v-container>
       <v-toolbar>
-        <v-toolbar-title>{{ this.message }}</v-toolbar-title>
+        <v-toolbar-title>{{ message }}</v-toolbar-title>
       </v-toolbar>
       <br />
 
-      <v-dialog persistent v-model="showDisableConfirmation" max-width="750px">
+      <v-dialog v-model="showDisableConfirmation" persistent max-width="750px">
         <DeleteConfirmationComponent
           :type="deleteType"
           :item="deleteItem"
@@ -15,16 +15,16 @@
             deleteItem = {};
             deleteType = '';
           "
-          @handleReturningSuccess="
-            confirmedDelete()
-          "></DeleteConfirmationComponent>
+          @handleReturningSuccess="confirmedDelete()"
+        ></DeleteConfirmationComponent>
       </v-dialog>
 
       <v-btn
         color="accent"
         elevation="2"
         class="mr-4"
-        @click="dialogEdit = true">
+        @click="dialogEdit = true"
+      >
         Edit
       </v-btn>
 
@@ -41,56 +41,63 @@
       <br /><br />
 
       <v-text-field
-        v-model="person.fName"
         id="fName"
+        v-model="person.fName"
         :counter="25"
         label="First Name"
-        readonly></v-text-field>
+        readonly
+      ></v-text-field>
 
       <v-text-field
-        v-model="person.lName"
         id="lName"
+        v-model="person.lName"
         :counter="25"
         label="Last Name"
-        readonly></v-text-field>
+        readonly
+      ></v-text-field>
 
       <v-text-field
-        v-model="person.email"
         id="email"
+        v-model="person.email"
         :counter="25"
         label="Email"
-        readonly></v-text-field>
+        readonly
+      ></v-text-field>
 
       <v-text-field
-        v-model="person.phoneNum"
         id="phoneNum"
+        v-model="person.phoneNum"
         :counter="13"
         label="Mobile Phone"
-        readonly></v-text-field>
+        readonly
+      ></v-text-field>
 
       <v-checkbox
         v-model="person.textOptIn"
         label="Text Opt In"
-        readonly></v-checkbox>
+        readonly
+      ></v-checkbox>
 
       <br />
       <v-card>
         <v-card-title>
-          Roles for {{ this.group.name }}
+          Roles for {{ group.name }}
           <v-spacer></v-spacer>
           <v-btn
             color="accent"
             class="mr-4"
             elevation="2"
-            @click="dialogRoleAdd = true">
+            @click="dialogRoleAdd = true"
+          >
             Add
           </v-btn>
         </v-card-title>
         <v-data-table
           :headers="roleHeaders"
           :items="personroles"
-          :items-per-page="50">
-          <template v-slot:[`item.actions`]="{ item }">
+          :items-per-page="50"
+        >
+          <template #[`item.actions`]="{ item }">
             <v-icon small class="mr-2" @click="editRole(item)">
               mdi-pencil
             </v-icon>
@@ -101,27 +108,30 @@
       <br />
       <v-card>
         <v-card-title>
-          Additional Privileges for {{ this.group.name }}
+          Additional Privileges for {{ group.name }}
           <v-spacer></v-spacer>
           <v-btn
             color="accent"
             class="mr-4"
             elevation="2"
-            @click="dialogPrivilegeAdd = true">
+            @click="dialogPrivilegeAdd = true"
+          >
             Add
           </v-btn>
         </v-card-title>
         <v-data-table
           :headers="privilegeHeaders"
           :items="personroleprivileges"
-          :items-per-page="50">
-          <template v-slot:[`item.actions`]="{ item }">
+          :items-per-page="50"
+        >
+          <template #[`item.actions`]="{ item }">
             <v-icon
               small
               @click="
                 deleteType = 'privilege';
                 directToCancel(item);
-              ">
+              "
+            >
               mdi-delete
             </v-icon>
           </template>
@@ -131,21 +141,23 @@
       <br />
       <v-card v-if="tutor">
         <v-card-title>
-          Topics for {{ this.group.name }}
+          Topics for {{ group.name }}
           <v-spacer></v-spacer>
           <v-btn
             color="accent"
             class="mr-4"
             elevation="2"
-            @click="dialogTopicAdd = true">
+            @click="dialogTopicAdd = true"
+          >
             Add
           </v-btn>
         </v-card-title>
         <v-data-table
           :headers="topicHeaders"
           :items="persontopics"
-          :items-per-page="50">
-          <template v-slot:[`item.actions`]="{ item }">
+          :items-per-page="50"
+        >
+          <template #[`item.actions`]="{ item }">
             <v-icon small class="mr-2" @click="editTopic(item)">
               mdi-pencil
             </v-icon>
@@ -154,7 +166,8 @@
               @click="
                 deleteType = 'persontopic';
                 directToCancel(item);
-              ">
+              "
+            >
               mdi-delete
             </v-icon>
           </template>
@@ -168,40 +181,45 @@
           <v-card-text>
             <v-form ref="form" v-model="valid" lazy validation>
               <v-text-field
-                v-model="person.fName"
                 id="fname"
+                v-model="person.fName"
                 :counter="25"
                 label="First Name"
-                required></v-text-field>
+                required
+              ></v-text-field>
 
               <v-text-field
-                v-model="person.lName"
                 id="lname"
+                v-model="person.lName"
                 :counter="25"
                 label="Last Name"
-                required></v-text-field>
+                required
+              ></v-text-field>
 
               <v-text-field
-                v-model="person.email"
                 id="email"
+                v-model="person.email"
                 :counter="25"
                 label="email"
                 hint="you@email.com"
                 persistent-hint
-                required></v-text-field>
+                required
+              ></v-text-field>
 
               <v-text-field
-                v-model="person.phoneNum"
                 id="phoneNum"
+                v-model="person.phoneNum"
                 :counter="13"
                 label="phoneNum"
                 hint="111-222-3333"
                 persistent-hint
-                required></v-text-field>
+                required
+              ></v-text-field>
 
               <v-checkbox
                 v-model="person.textOptIn"
-                label="Text Opt In"></v-checkbox>
+                label="Text Opt In"
+              ></v-checkbox>
             </v-form>
           </v-card-text>
           <v-card-actions>
@@ -226,7 +244,8 @@
                 item-text="type"
                 item-value="id"
                 label="Status"
-                required>
+                required
+              >
               </v-select>
             </v-container>
           </v-card-text>
@@ -242,7 +261,8 @@
               @click="
                 deleteType = 'personrole';
                 directToCancel(personrole);
-              ">
+              "
+            >
               Save
             </v-btn>
           </v-card-actions>
@@ -260,14 +280,16 @@
                 item-text="type"
                 item-value="id"
                 label="Role"
-                required>
+                required
+              >
               </v-select>
 
               <v-select
                 v-model="personrole.status"
                 :items="status"
                 label="Status"
-                required>
+                required
+              >
               </v-select>
             </v-form>
           </v-card-text>
@@ -288,7 +310,8 @@
                 v-model="personroleprivilege.privilege"
                 :items="privileges"
                 label="Privilege"
-                required>
+                required
+              >
               </v-select>
 
               <v-select
@@ -297,7 +320,8 @@
                 item-text="type"
                 item-value="personrole[0].id"
                 label="Associated Role"
-                required>
+                required
+              >
               </v-select>
             </v-form>
           </v-card-text>
@@ -309,7 +333,8 @@
                 !personroleprivilege.privilege ||
                 !personroleprivilege.personroleId
               "
-              @click="addPersonRolePrivilege()">
+              @click="addPersonRolePrivilege()"
+            >
               Save
             </v-btn>
             <v-btn color="error" @click="dialogPrivilegeAdd = false"
@@ -331,13 +356,15 @@
                 item-text="name"
                 item-value="id"
                 label="Topic"
-                required>
+                required
+              >
               </v-select>
               <v-select
                 v-model="persontopic.skillLevel"
                 :items="skillLevels"
                 label="Skill Level"
-                required>
+                required
+              >
               </v-select>
             </v-container>
           </v-card-text>
@@ -363,13 +390,15 @@
                 item-text="name"
                 item-value="id"
                 label="Topic"
-                required>
+                required
+              >
               </v-select>
               <v-select
                 v-model="persontopic.skillLevel"
                 :items="skillLevels"
                 label="Skill Level"
-                required>
+                required
+              >
               </v-select>
             </v-form>
           </v-card-text>
@@ -400,11 +429,11 @@ import { AppointmentActionMixin } from "../../../mixins/AppointmentActionMixin";
 import { TimeFunctionsMixin } from "../../../mixins/TimeFunctionsMixin";
 
 export default {
-  props: ["id", "personId"],
-  mixins: [AppointmentActionMixin, TimeFunctionsMixin],
   components: {
     DeleteConfirmationComponent,
   },
+  mixins: [AppointmentActionMixin, TimeFunctionsMixin],
+  props: ["id", "personId"],
   data() {
     return {
       message: "Person - click Edit to update or Delete to remove person",

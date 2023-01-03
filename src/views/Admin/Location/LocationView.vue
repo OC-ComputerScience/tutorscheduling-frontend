@@ -2,7 +2,7 @@
   <div style="">
     <v-container>
       <v-toolbar>
-        <v-toolbar-title>{{ this.message }}</v-toolbar-title>
+        <v-toolbar-title>{{ message }}</v-toolbar-title>
       </v-toolbar>
       <br />
       <v-btn color="accent" elevation="2" class="mr-4" @click="toEdit">
@@ -22,46 +22,52 @@
       <br /><br />
 
       <v-text-field
-        v-model="location.name"
         id="name"
+        v-model="location.name"
         :counter="40"
         label="Location Name"
-        readonly></v-text-field>
+        readonly
+      ></v-text-field>
 
       <v-text-field
-        v-model="location.building"
         id="building"
+        v-model="location.building"
         :counter="40"
         label="Building"
-        readonly></v-text-field>
+        readonly
+      ></v-text-field>
 
       <v-text-field
-        v-model="location.description"
         id="description"
+        v-model="location.description"
         :counter="200"
         label="Description of Location"
-        readonly></v-text-field>
+        readonly
+      ></v-text-field>
 
       <v-text-field
-        v-model="location.type"
         id="type"
+        v-model="location.type"
         :counter="25"
         label="Type"
-        readonly></v-text-field>
+        readonly
+      ></v-text-field>
 
       <v-text-field
-        v-model="location.status"
         id="status"
+        v-model="location.status"
         :counter="25"
         label="Status"
-        readonly></v-text-field>
+        readonly
+      ></v-text-field>
 
       <v-text-field
-        v-model="group.name"
         id="name"
+        v-model="group.name"
         :counter="25"
         label="Group Name"
-        readonly></v-text-field>
+        readonly
+      ></v-text-field>
     </v-container>
   </div>
 </template>

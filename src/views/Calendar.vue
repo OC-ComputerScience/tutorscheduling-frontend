@@ -2,27 +2,27 @@
   <div>
     <v-container>
       <v-toolbar>
-        <v-toolbar-title>{{ this.message }}</v-toolbar-title>
+        <v-toolbar-title>{{ message }}</v-toolbar-title>
         <InformationComponent
           message="Select an appointment to view information, book the appointment,
             make changes, etc.
             <br />
-            You can filter the appointments by a desired <b>Topic</b> or <b>Tutor</b>."></InformationComponent>
+            You can filter the appointments by a desired <b>Topic</b> or <b>Tutor</b>."
+        ></InformationComponent>
         <v-spacer></v-spacer>
-        <v-toolbar-title>{{ this.role.type }}</v-toolbar-title>
+        <v-toolbar-title>{{ role.type }}</v-toolbar-title>
       </v-toolbar>
       <br />
       <v-alert v-model="showAlert" dismissible :type="alertType">{{
-        this.alert
+        alert
       }}</v-alert>
-      <v-dialog persistent v-model="showDeleteConfirmation" max-width="750px">
+      <v-dialog v-model="showDeleteConfirmation" persistent max-width="750px">
         <DeleteConfirmationComponent
           type="appointment"
           :item="selectedAppointment"
           @handleReturningCancel="showDeleteConfirmation = false"
-          @handleReturningSuccess="
-            directToCancel()
-          "></DeleteConfirmationComponent>
+          @handleReturningSuccess="directToCancel()"
+        ></DeleteConfirmationComponent>
       </v-dialog>
       <v-row class="fill-height">
         <v-col>
@@ -33,7 +33,8 @@
                 outlined
                 class="mr-4"
                 color="grey darken-2"
-                @click="viewMonth()">
+                @click="viewMonth()"
+              >
                 Reset
               </v-btn>
               <!-- Navigates calendar forward and back -->
@@ -50,43 +51,47 @@
               <v-spacer></v-spacer>
               <v-col cols="3" align-self="start">
                 <v-select
-                  dense
                   v-model="selectedTopic"
+                  dense
                   :items="topics"
                   item-text="name"
                   item-value="id"
                   label="Topic"
                   outlined
-                  @change="loadAppointments()"></v-select>
+                  @change="loadAppointments()"
+                ></v-select>
               </v-col>
               <v-col cols="3" align-self="start">
                 <v-select
-                  dense
                   v-model="selectedTutor"
+                  dense
                   :items="tutorSelect"
                   item-text="name"
                   item-value="id"
                   label="Tutor"
                   outlined
-                  @change="loadAppointments()"></v-select>
+                  @change="loadAppointments()"
+                ></v-select>
               </v-col>
               <v-btn
                 outlined
                 class="mr-4"
                 color="grey darken-2"
+                right
                 @click="viewKey()"
-                right>
+              >
                 Key
               </v-btn>
               <!-- Dropdown menu to select format -->
               <!-- Will modify to only include relevant formats -->
               <v-menu bottom right>
-                <template v-slot:activator="{ on, attrs }">
+                <template #activator="{ on, attrs }">
                   <v-btn
                     outlined
                     color="grey darken-2"
                     v-bind="attrs"
-                    v-on="on">
+                    v-on="on"
+                  >
                     <span>{{ typeToLabel[type] }}</span>
                     <v-icon right>mdi-menu-down</v-icon>
                   </v-btn>
@@ -122,7 +127,8 @@
               :type="type"
               @click:event="showEvent"
               @click:more="viewDay"
-              @click:date="viewDay"></v-calendar>
+              @click:date="viewDay"
+            ></v-calendar>
 
             <!--Pop-up that appears when an event is selected -->
 
@@ -132,14 +138,16 @@
               :open-on-click="false"
               :close-on-content-click="false"
               :activator="selectedElement"
-              offset-x>
+              offset-x
+            >
               <v-card color="grey lighten-4" min-width="350px" flat>
                 <v-toolbar :color="selectedEvent.color" dark>
                   <v-btn icon>
                     <v-icon>mdi-pencil</v-icon>
                   </v-btn>
                   <v-toolbar-title
-                    v-html="selectedEvent.name"></v-toolbar-title>
+                    v-html="selectedEvent.name"
+                  ></v-toolbar-title>
                 </v-toolbar>
                 <!-- How to show tutor? -->
                 <v-card-text v-if="selectedAppointment != null">
@@ -199,7 +207,8 @@
                           selectedAppointment.status.includes('Cancel') ||
                           datePast
                         "
-                        @change="saveChanges = true">
+                        @change="saveChanges = true"
+                      >
                       </v-select>
 
                       <v-select
@@ -218,7 +227,8 @@
                             ) ||
                               !adminAddStudent)) ||
                           datePast
-                        ">
+                        "
+                      >
                       </v-select>
                     </v-container>
                   </span>
@@ -237,7 +247,8 @@
                         :readonly="
                           !isTutorEvent || (isTutorEvent && checkRole('Admin'))
                         "
-                        @change="saveChanges = true">
+                        @change="saveChanges = true"
+                      >
                       </v-select>
 
                       <v-select
@@ -254,7 +265,8 @@
                           (students.length > 0 && isTutorEvent) ||
                           (isTutorEvent && checkRole('Admin'))
                         "
-                        @change="saveChanges = true">
+                        @change="saveChanges = true"
+                      >
                       </v-select>
                     </v-container>
                   </span>
@@ -268,7 +280,8 @@
                           selectedAppointment.startTime,
                           selectedAppointment.endTime
                         ) >= group.minApptTime
-                      ">
+                      "
+                    >
                       <v-select
                         v-model="displayedStart"
                         :items="startTimes"
@@ -276,11 +289,6 @@
                         item-value="time"
                         label="Booked Start"
                         required
-                        @change="
-                          newStart = displayedStart;
-                          updateTimes();
-                          secondTime = false;
-                        "
                         :disabled="
                           (checkRole('Tutor') &&
                             (!checkPrivilege(
@@ -289,7 +297,13 @@
                               !adminAddStudent)) ||
                           datePast
                         "
-                        dense>
+                        dense
+                        @change="
+                          newStart = displayedStart;
+                          updateTimes();
+                          secondTime = false;
+                        "
+                      >
                       </v-select>
                     </span>
                     <!-- show time as an unchangeable value -->
@@ -300,7 +314,8 @@
                         type="time"
                         required
                         dense
-                        readonly>
+                        readonly
+                      >
                       </v-text-field>
                     </span>
                   </v-container>
@@ -313,7 +328,8 @@
                           selectedAppointment.startTime,
                           selectedAppointment.endTime
                         ) >= group.minApptTime
-                      ">
+                      "
+                    >
                       <v-select
                         v-model="displayedEnd"
                         :items="endTimes"
@@ -321,10 +337,6 @@
                         item-value="time"
                         label="Booked End"
                         required
-                        @change="
-                          newEnd = displayedEnd;
-                          updateTimes();
-                        "
                         :disabled="
                           secondTime ||
                           (checkRole('Tutor') &&
@@ -334,7 +346,12 @@
                               !adminAddStudent)) ||
                           datePast
                         "
-                        dense>
+                        dense
+                        @change="
+                          newEnd = displayedEnd;
+                          updateTimes();
+                        "
+                      >
                       </v-select>
                     </span>
                     <span v-else>
@@ -344,15 +361,16 @@
                         type="time"
                         required
                         dense
-                        readonly>
+                        readonly
+                      >
                       </v-text-field>
                     </span>
                   </v-container>
                   <!-- put in presession-info for appointment for private appointments/ add a readonly if  group-->
                   <span v-if="appointmentType.includes('Private')">
                     <v-textarea
-                      v-model="selectedAppointment.preSessionInfo"
                       id="preSession"
+                      v-model="selectedAppointment.preSessionInfo"
                       :counter="130"
                       label="Pre-Session Info"
                       hint="Enter Info About What You Need Help With..."
@@ -368,7 +386,8 @@
                           ) ||
                             !adminAddStudent))
                       "
-                      @change="saveChanges = true"></v-textarea>
+                      @change="saveChanges = true"
+                    ></v-textarea>
                   </span>
                   <span v-else>
                     <v-textarea
@@ -382,7 +401,8 @@
                       rows="1"
                       :readonly="!isTutorEvent"
                       :disabled="datePast"
-                      @change="saveChanges = true"></v-textarea>
+                      @change="saveChanges = true"
+                    ></v-textarea>
                   </span>
                   <!-- admin signing a student up -->
                   <span v-if="adminAddStudent">
@@ -393,21 +413,24 @@
                       dense
                       max-width="300px"
                       :rules="[rules.required, rules.email]"
-                      v-on:keyup.enter="findEmail()">
+                      @keyup.enter="findEmail()"
+                    >
                     </v-text-field>
                     <v-row>
                       <v-btn
                         color="green"
                         text
+                        :disabled="!validateEmail()"
                         @click="findEmail()"
-                        :disabled="!validateEmail()">
+                      >
                         Search
                       </v-btn>
                       <v-text-field
                         v-if="emailStatus != ''"
                         v-model="emailStatus"
                         readonly
-                        dense></v-text-field>
+                        dense
+                      ></v-text-field>
                     </v-row>
                   </span>
                   <span v-if="studentNameInput">
@@ -416,14 +439,16 @@
                       label="Student's First Name"
                       required
                       dense
-                      max-width="300px">
+                      max-width="300px"
+                    >
                     </v-text-field>
                     <v-text-field
                       v-model="studentlName"
                       label="Student's Last Name"
                       required
                       dense
-                      max-width="300px">
+                      max-width="300px"
+                    >
                     </v-text-field>
                   </span>
                   <!-- User sign up here -->
@@ -438,11 +463,6 @@
                       checkPrivilege('Sign up students for appointments')
                     "
                     color="primary"
-                    @click="
-                      sendAppointmentForBooking();
-                      selectedOpen = false;
-                      secondTime = true;
-                    "
                     :disabled="
                       !checkStatus('available') ||
                       isGroupBook ||
@@ -465,7 +485,13 @@
                       displayedStart === '' ||
                       displayedEnd === '' ||
                       (selectedAppointment.type.includes('Group') && datePast)
-                    ">
+                    "
+                    @click="
+                      sendAppointmentForBooking();
+                      selectedOpen = false;
+                      secondTime = true;
+                    "
+                  >
                     Book
                   </v-btn>
                   <v-btn
@@ -473,12 +499,13 @@
                       checkRole('Tutor') && !appointmentType.includes('Group')
                     "
                     color="#12f000"
+                    :disabled="!checkStatus('pending') || datePast"
                     @click="
                       sendAppointmentForConfirmation();
                       secondTime = true;
                       selectedOpen = false;
                     "
-                    :disabled="!checkStatus('pending') || datePast">
+                  >
                     Confirm
                   </v-btn>
                   <v-btn
@@ -486,11 +513,12 @@
                       checkRole('Tutor') && !appointmentType.includes('Group')
                     "
                     color="error"
+                    :disabled="!checkStatus('pending') || datePast"
                     @click="
                       showDeleteConfirmation = true;
                       secondTime = true;
                     "
-                    :disabled="!checkStatus('pending') || datePast">
+                  >
                     Reject
                   </v-btn>
                   <v-btn
@@ -498,7 +526,8 @@
                     @click="
                       selectedOpen = false;
                       secondTime = true;
-                    ">
+                    "
+                  >
                     Close
                   </v-btn>
                   <v-btn
@@ -513,7 +542,8 @@
                       initializeData();
                       selectedOpen = false;
                       secondTime = true;
-                    ">
+                    "
+                  >
                     Save Changes
                   </v-btn>
 
@@ -535,7 +565,8 @@
                       intializeData();
                       selectedOpen = false;
                       secondTime = true;
-                    ">
+                    "
+                  >
                     Cancel Appointment
                   </v-btn>
 
@@ -547,11 +578,12 @@
                       !datePast
                     "
                     color="green"
+                    :disabled="adminAddStudent"
                     @click="
                       adminAddStudent = true;
                       secondTime = true;
                     "
-                    :disabled="adminAddStudent">
+                  >
                     Sign Up Student
                   </v-btn>
                 </v-card-actions>
@@ -569,7 +601,8 @@
             elevation="0"
             color="grey darken-1"
             class="white--text"
-            width="100">
+            width="100"
+          >
             Grey
           </v-btn>
           <span>
@@ -663,12 +696,12 @@ import { TimeFunctionsMixin } from "../mixins/TimeFunctionsMixin";
 
 export default {
   name: "Calendar",
-  props: ["id"],
-  mixins: [AppointmentActionMixin, TimeFunctionsMixin],
   components: {
     DeleteConfirmationComponent,
     InformationComponent,
   },
+  mixins: [AppointmentActionMixin, TimeFunctionsMixin],
+  props: ["id"],
   data: () => ({
     showDeleteConfirmation: false,
     showAlert: false,

@@ -29,14 +29,6 @@ export default {
     type: String,
     item: Object,
   },
-  watch: {
-    item(newItem, oldItem) {
-      if (newItem !== oldItem) {
-        this.direct();
-      }
-    },
-  },
-  computed: {},
   data() {
     return {
       cancelTitle: "",
@@ -45,6 +37,14 @@ export default {
       cancelButton: "No, keep it",
       agreeButton: "",
     };
+  },
+  computed: {},
+  watch: {
+    item(newItem, oldItem) {
+      if (newItem !== oldItem) {
+        this.direct();
+      }
+    },
   },
   created() {
     this.direct();

@@ -2,14 +2,15 @@
   <div>
     <v-container>
       <v-toolbar>
-        <v-toolbar-title>{{ this.message }}</v-toolbar-title>
+        <v-toolbar-title>{{ message }}</v-toolbar-title>
         <v-spacer></v-spacer>
         <InformationComponent
-          message="View requests from people in your group and mark them as In-Progress or Completed appropriately."></InformationComponent>
+          message="View requests from people in your group and mark them as In-Progress or Completed appropriately."
+        ></InformationComponent>
       </v-toolbar>
       <br />
       <v-alert v-model="showAlert" dismissible :type="alertType">{{
-        this.alert
+        alert
       }}</v-alert>
       <br />
       <v-card>
@@ -19,7 +20,8 @@
             append-icon="mdi-magnify"
             label="Search"
             single-line
-            hide-details></v-text-field>
+            hide-details
+          ></v-text-field>
           <v-spacer></v-spacer>
           <v-btn class="mr-4" @click="cancel()"> Back </v-btn>
         </v-card-title>
@@ -27,8 +29,9 @@
           :headers="headers"
           :search="search"
           :items="requests"
-          :items-per-page="50">
-          <template v-slot:[`item.actions`]="{ item }">
+          :items-per-page="50"
+        >
+          <template #[`item.actions`]="{ item }">
             <v-icon small class="mr-2" @click="editItem(item)"
               >mdi-pencil</v-icon
             >
@@ -49,19 +52,23 @@
               <v-text-field
                 v-model="editedItem.date"
                 label="Date"
-                readonly></v-text-field>
+                readonly
+              ></v-text-field>
               <v-text-field
                 v-model="editedItem.time"
                 label="Time"
-                readonly></v-text-field>
+                readonly
+              ></v-text-field>
               <v-text-field
                 v-model="editedItem.fullName"
                 label="Student"
-                readonly></v-text-field>
+                readonly
+              ></v-text-field>
               <v-text-field
                 v-model="editedItem.problem"
                 label="Problem"
-                readonly></v-text-field>
+                readonly
+              ></v-text-field>
 
               <v-text-field
                 v-if="
@@ -69,23 +76,27 @@
                 "
                 v-model="editedItem.topic.name"
                 label="Topic"
-                readonly></v-text-field>
+                readonly
+              ></v-text-field>
 
               <v-text-field
                 v-model="editedItem.courseNum"
                 label="Course Number"
-                readonly></v-text-field>
+                readonly
+              ></v-text-field>
 
               <v-text-field
                 v-model="editedItem.description"
                 label="Description"
-                readonly></v-text-field>
+                readonly
+              ></v-text-field>
 
               <v-select
                 v-model="editedItem.status"
                 :items="StatusSelect"
                 label="Status"
-                required>
+                required
+              >
               </v-select>
             </v-form>
           </v-card-text>
@@ -122,10 +133,10 @@ import InformationComponent from "../../components/InformationComponent.vue";
 
 export default {
   name: "AdminRequests",
-  props: ["id"],
   components: {
     InformationComponent,
   },
+  props: ["id"],
   data() {
     return {
       valid: false,

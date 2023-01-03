@@ -1,30 +1,31 @@
 <template>
   <div class="signup-buttons">
     <v-row justify="center">
-      <div display="flex" id="parent_id"></div>
+      <div id="parent_id" display="flex"></div>
     </v-row>
 
     <v-dialog v-model="dialog" persistent max-width="800">
       <v-card tile>
         <v-card-title>
-          Hello, {{ this.user.fName }}! We're happy you're here.
+          Hello, {{ user.fName }}! We're happy you're here.
         </v-card-title>
         <v-card-text>
           <h3>Finish setting up your account below:</h3>
           <v-container>
             <v-row>
               <v-text-field
-                v-model="phoneNum"
                 id="phoneNum"
+                v-model="phoneNum"
                 :counter="50"
                 label="Mobile Phone Number"
                 hint="123-456-7890"
                 persistent-hint
                 required
-                v-on:keyup.enter="
+                @keyup.enter="
                   dialog = false;
                   savePhoneNum();
-                "></v-text-field>
+                "
+              ></v-text-field>
             </v-row>
           </v-container>
         </v-card-text>
@@ -36,7 +37,8 @@
             @click="
               dialog = false;
               savePhoneNum();
-            ">
+            "
+          >
             Continue
           </v-btn>
         </v-card-actions>
@@ -44,9 +46,8 @@
     </v-dialog>
 
     <RegistrationComponent
-      v-if="
-        openRegistration && this.user !== null && !dialog && this.fName !== ''
-      "></RegistrationComponent>
+      v-if="openRegistration && user !== null && !dialog && fName !== ''"
+    ></RegistrationComponent>
 
     <GroupViewComponent v-if="openSelect"></GroupViewComponent>
   </div>

@@ -2,7 +2,7 @@
   <div>
     <v-container>
       <v-toolbar>
-        <v-toolbar-title>{{ this.message }}</v-toolbar-title>
+        <v-toolbar-title>{{ message }}</v-toolbar-title>
       </v-toolbar>
       <br /><br />
       <v-card>
@@ -12,7 +12,8 @@
             append-icon="mdi-magnify"
             label="Search"
             single-line
-            hide-details></v-text-field>
+            hide-details
+          ></v-text-field>
           <v-spacer></v-spacer>
           <v-btn color="accent" class="mr-4" elevation="2" @click="addTopic">
             Add
@@ -25,7 +26,8 @@
           :search="search"
           :items="topics"
           :items-per-page="50"
-          @click:row="rowClick"></v-data-table>
+          @click:row="rowClick"
+        ></v-data-table>
       </v-card>
     </v-container>
   </div>

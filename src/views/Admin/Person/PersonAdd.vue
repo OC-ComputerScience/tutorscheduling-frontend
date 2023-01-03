@@ -2,45 +2,49 @@
   <div>
     <v-container>
       <v-toolbar>
-        <v-toolbar-title>{{ this.message }}</v-toolbar-title>
+        <v-toolbar-title>{{ message }}</v-toolbar-title>
       </v-toolbar>
       <br />
       <v-form ref="form" v-model="valid" lazy validation>
         <v-text-field
-          v-model="person.fName"
           id="fName"
+          v-model="person.fName"
           :counter="25"
           label="First Name"
           hint="First Name"
           persistent-hint
-          required></v-text-field>
+          required
+        ></v-text-field>
 
         <v-text-field
-          v-model="person.lName"
           id="lName"
+          v-model="person.lName"
           :counter="25"
           label="Last Name"
           hint="Last Name"
           persistent-hint
-          required></v-text-field>
+          required
+        ></v-text-field>
 
         <v-text-field
-          v-model="person.email"
           id="email"
+          v-model="person.email"
           :counter="25"
           label="email"
           hint="you@email.com"
           persistent-hint
-          required></v-text-field>
+          required
+        ></v-text-field>
 
         <v-text-field
-          v-model="person.phoneNum"
           id="phoneNum"
+          v-model="person.phoneNum"
           :counter="13"
           label="Mobile Phone"
           hint="111-222-3333"
           persistent-hint
-          required></v-text-field>
+          required
+        ></v-text-field>
 
         <v-checkbox v-model="person.textOptIn" label="Text Opt In"></v-checkbox>
 
@@ -48,7 +52,8 @@
           :disabled="!valid"
           color="success"
           class="mr-4"
-          @click="addPerson">
+          @click="addPerson"
+        >
           Save
         </v-btn>
 

@@ -2,13 +2,13 @@
   <div>
     <v-container>
       <v-toolbar>
-        <v-toolbar-title>{{ this.message }}</v-toolbar-title>
+        <v-toolbar-title>{{ message }}</v-toolbar-title>
       </v-toolbar>
       <br />
       <v-form ref="form" v-model="valid" lazy validation>
         <v-text-field
-          v-model="group.name"
           id="name"
+          v-model="group.name"
           :counter="50"
           label="name"
           hint="Name"
@@ -17,8 +17,8 @@
         ></v-text-field>
 
         <v-text-field
-          v-model="group.description"
           id="description"
+          v-model="group.description"
           :counter="500"
           label="description"
           hint="Description..."
