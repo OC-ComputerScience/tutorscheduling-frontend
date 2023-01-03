@@ -18,10 +18,7 @@
                 "
                 height="100"
                 elevation="10"
-                @click="
-                  selectedGroup = group.name;
-                  roles = group.role;
-                ">
+                @click="directToRole(group)">
                 <v-card-title
                   v-bind:class="
                     selectedGroup === group.name ? 'white--text' : 'black--text'
@@ -32,20 +29,7 @@
             </v-col>
           </v-row>
         </v-card-text>
-        <v-card-actions>
-          <v-spacer></v-spacer>
-          <v-btn
-            color="accent"
-            text
-            :disabled="selectedGroup === ''"
-            @click="
-              groupDialog = false;
-              if (roles.length > 1) roleDialog = true;
-              else saveGroupRoleSelection();
-            ">
-            Continue
-          </v-btn>
-        </v-card-actions>
+        <v-card-actions></v-card-actions>
       </v-card>
     </v-dialog>
 
@@ -70,7 +54,10 @@
                     : 'grey lighten-2'
                 "
                 x-large
-                @click="selectedRole = role"
+                @click="
+                  selectedRole = role;
+                  saveGroupRoleSelection(role);
+                "
                 class="white--text">
                 {{ role.type }}
               </v-btn>
@@ -84,21 +71,11 @@
             @click="
               roleDialog = false;
               groupDialog = true;
-              selectedRole = Object;
+              selectedGroup = Object;
             ">
             Back
           </v-btn>
           <v-spacer></v-spacer>
-          <v-btn
-            color="accent"
-            text
-            @click="
-              roleDialog = false;
-              groupDialog = true;
-              saveGroupRoleSelection();
-            ">
-            Continue
-          </v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -130,25 +107,43 @@ export default {
     this.openDialogsOrRedirect();
   },
   methods: {
+    directToRole(group) {
+      this.selectedGroup = group.name;
+      this.roles = group.role;
+      this.groupDialog = false;
+      if (this.roles.length > 1) {
+        this.roleDialog = true;
+      } else {
+        this.saveGroupRoleSelection(this.roles[0]);
+      }
+    },
     async getPersonGroups() {
-      await GroupServices.getGroupsForPerson(this.user.userID)
+      await GroupServices.getActiveGroupsForPerson(this.user.userID)
         .then((response) => {
           this.groups = response.data;
+          console.log(this.groups);
         })
         .catch((error) => {
           console.log("There was an error:", error.response);
         });
     },
     openDialogsOrRedirect() {
-      if (this.groups.length > 1) this.groupDialog = true;
-      else {
+      if (this.groups.length > 1) {
+        this.groupDialog = true;
+      } else {
         this.selectedGroup = this.groups[0].name;
         this.roles = this.groups[0].role;
-        if (this.groups[0].role.length > 1) this.roleDialog = true;
-        else this.saveGroupRoleSelection();
+        if (this.roles.length > 1) {
+          this.roleDialog = true;
+        } else {
+          this.saveGroupRoleSelection(this.roles[0]);
+        }
       }
     },
-    saveGroupRoleSelection() {
+    saveGroupRoleSelection(role) {
+      this.selectedRole = role;
+      this.roleDialog = false;
+      this.groupDialog = true;
       this.user.selectedGroup = this.selectedGroup;
       if (this.selectedRole.type === undefined) {
         this.selectedRole = this.roles[0];
