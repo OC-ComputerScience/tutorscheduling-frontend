@@ -13,10 +13,7 @@
       }}</v-alert>
       <br />
       <!-- <button @click="$refs.myPdfComponent.print()">print</button> -->
-      <vue-pdf-embed
-        v-for="i in tutorial.pages"
-        :key="i"
-        :source="tutorial.pdf"></vue-pdf-embed>
+      <vue-pdf-embed :source="tutorial.pdf"></vue-pdf-embed>
     </v-container>
   </div>
 </template>
