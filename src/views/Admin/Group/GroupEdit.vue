@@ -2,71 +2,79 @@
   <div>
     <v-container>
       <v-toolbar>
-        <v-toolbar-title>{{ this.message }}</v-toolbar-title>
+        <v-toolbar-title>{{ message }}</v-toolbar-title>
         <v-spacer></v-spacer>
         <InformationComponent
-          message="View or make changes to your group's settings."></InformationComponent>
+          message="View or make changes to your group's settings."
+        ></InformationComponent>
       </v-toolbar>
       <br />
       <v-alert v-model="showAlert" dismissible :type="alertType">{{
-        this.alert
+        alert
       }}</v-alert>
       <v-form ref="form" v-model="valid" lazy validation>
         <v-text-field
-          v-if="this.user.selectedRole.type === 'superadmin'"
-          v-model="group.name"
+          v-if="user.selectedRole.type === 'superadmin'"
           id="name"
+          v-model="group.name"
           :counter="50"
           label="Name"
-          readonly></v-text-field>
+          readonly
+        ></v-text-field>
 
         <v-textarea
+          id="description"
           v-model="group.description"
           auto-grow
           rows="2"
-          id="description"
           :counter="500"
           label="Description"
+          required
           @change="enableUpdate = true"
-          required></v-textarea>
+        ></v-textarea>
 
         <v-select
           v-model="group.timeInterval"
           :items="intervals"
           label="Appointment Time Interval"
+          required
           @change="enableUpdate = true"
-          required>
+        >
         </v-select>
 
         <v-select
           v-model="group.minApptTime"
           :items="minApptTimes"
           label="Minimum Appointment Length"
+          required
           @change="enableUpdate = true"
-          required>
+        >
         </v-select>
 
         <v-select
           v-model="group.bookPastMinutes"
           :items="pastMinutes"
           label="Minutes to Book Past Start Time"
+          required
           @change="enableUpdate = true"
-          required>
+        >
         </v-select>
 
         <v-select
           v-model="group.allowSplittingAppointments"
           :items="splittingAppts"
           label="Allow Splitting Appointments"
+          required
           @change="enableUpdate = true"
-          required>
+        >
         </v-select>
 
         <v-btn
           :disabled="!valid || !enableUpdate"
           color="success"
           class="mr-4"
-          @click="updateGroup()">
+          @click="updateGroup()"
+        >
           Update Settings
         </v-btn>
       </v-form>
@@ -77,12 +85,14 @@
           Available Privileges
           <v-spacer></v-spacer>
           <InformationComponent
-            message="Listed are privileges available to give to people in your group."></InformationComponent>
+            message="Listed are privileges available to give to people in your group."
+          ></InformationComponent>
         </v-card-title>
         <v-data-table
           :headers="privilegeHeaders"
           :items="privileges"
-          :items-per-page="50">
+          :items-per-page="50"
+        >
         </v-data-table>
       </v-card>
     </v-container>
@@ -96,10 +106,10 @@ import InformationComponent from "../../../components/InformationComponent.vue";
 import Utils from "../../../config/utils";
 
 export default {
-  props: ["id"],
   components: {
     InformationComponent,
   },
+  props: ["id"],
   data() {
     return {
       alertType: "success",

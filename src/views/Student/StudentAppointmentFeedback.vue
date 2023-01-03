@@ -2,14 +2,15 @@
   <div>
     <v-container>
       <v-toolbar>
-        <v-toolbar-title>{{ this.message }}</v-toolbar-title>
+        <v-toolbar-title>{{ message }}</v-toolbar-title>
         <v-spacer></v-spacer>
         <InformationComponent
-          message="Provide feedback for your recent session."></InformationComponent>
+          message="Provide feedback for your recent session."
+        ></InformationComponent>
       </v-toolbar>
       <br />
       <v-alert v-model="showAlert" dismissible :type="alertType">{{
-        this.alert
+        alert
       }}</v-alert>
       <br />
       <v-row justify="center">
@@ -40,8 +41,8 @@
             <br />
             <v-layout justify-center>
               <v-rating
-                class="justify-center"
                 v-model="numericalfeedback"
+                class="justify-center"
                 background-color="grey"
                 color="primary"
                 empty-icon="mdi-star-outline"
@@ -49,21 +50,24 @@
                 hover
                 length="5"
                 size="45"
-                value="3"></v-rating>
+                value="3"
+              ></v-rating>
             </v-layout>
           </div>
           <v-text-field
-            v-model="textualfeedback"
             id="description"
+            v-model="textualfeedback"
             :counter="500"
             label="Provide Feedback..."
-            required></v-text-field>
+            required
+          ></v-text-field>
 
           <v-btn
             :disabled="!valid || !textualfeedback"
             color="success"
             class="mr-4"
-            @click="updatePersonAppointment">
+            @click="updatePersonAppointment"
+          >
             Save
           </v-btn>
 
@@ -82,10 +86,10 @@ import InformationComponent from "../../components/InformationComponent.vue";
 
 export default {
   name: "StudentAppointmentFeedback",
-  props: ["id", "userId"],
   components: {
     InformationComponent,
   },
+  props: ["id", "userId"],
   data() {
     return {
       valid: false,

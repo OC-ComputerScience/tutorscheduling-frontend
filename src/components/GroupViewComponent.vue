@@ -2,10 +2,10 @@
   <div>
     <v-overlay color="white" :absolute="absolute" :opacity="opacity">
     </v-overlay>
-    <v-dialog v-if="this.user !== null" v-model="groupDialog" max-width="1000">
+    <v-dialog v-if="user !== null" v-model="groupDialog" max-width="1000">
       <v-card tile>
         <v-card-title>
-          {{ this.user.fName }}, which group would you like work in right now?
+          {{ user.fName }}, which group would you like work in right now?
         </v-card-title>
         <br />
         <v-card-text>
@@ -13,16 +13,18 @@
             <v-col v-for="group in groups" :key="group.id">
               <v-card
                 class="mx-auto my-12 d-flex justify-center"
-                v-bind:color="
+                :color="
                   selectedGroup === group.name ? 'primary' : 'grey lighten-2'
                 "
                 height="100"
                 elevation="10"
-                @click="directToRole(group)">
+                @click="directToRole(group)"
+              >
                 <v-card-title
-                  v-bind:class="
+                  :class="
                     selectedGroup === group.name ? 'white--text' : 'black--text'
-                  ">
+                  "
+                >
                   {{ group.name }}
                 </v-card-title>
               </v-card>
@@ -33,10 +35,10 @@
       </v-card>
     </v-dialog>
 
-    <v-dialog v-if="this.user !== null" v-model="roleDialog" max-width="800">
+    <v-dialog v-if="user !== null" v-model="roleDialog" max-width="800">
       <v-card tile>
         <v-card-title>
-          {{ this.user.fName }}, what would you like to do right now?
+          {{ user.fName }}, what would you like to do right now?
         </v-card-title>
         <br />
         <v-card-text>
@@ -44,9 +46,10 @@
             <v-col
               v-for="role in roles"
               :key="role.id"
-              class="d-flex justify-center align-center">
+              class="d-flex justify-center align-center"
+            >
               <v-btn
-                v-bind:color="
+                :color="
                   selectedRole.type == 'Student' && selectedRole.id == role.id
                     ? '#EE5044'
                     : selectedRole.type == 'Tutor' && selectedRole.id == role.id
@@ -54,11 +57,12 @@
                     : 'grey lighten-2'
                 "
                 x-large
+                class="white--text"
                 @click="
                   selectedRole = role;
                   saveGroupRoleSelection(role);
                 "
-                class="white--text">
+              >
                 {{ role.type }}
               </v-btn>
             </v-col>
@@ -72,7 +76,8 @@
               roleDialog = false;
               groupDialog = true;
               selectedGroup = Object;
-            ">
+            "
+          >
             Back
           </v-btn>
           <v-spacer></v-spacer>

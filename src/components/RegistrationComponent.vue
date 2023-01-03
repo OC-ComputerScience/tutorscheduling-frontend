@@ -1,34 +1,33 @@
 <template>
   <div>
     <v-dialog
-      v-if="this.user !== null"
+      v-if="user !== null"
       v-model="roleDialog"
-      v-bind:persistent="!hasAnyRoles ? true : false"
-      max-width="800">
+      :persistent="!hasAnyRoles ? true : false"
+      max-width="800"
+    >
       <v-card tile>
         <v-card-title>
-          {{ this.user.fName }}, what best describes your situation right now?
+          {{ user.fName }}, what best describes your situation right now?
         </v-card-title>
         <br />
         <v-card-text>
           <v-row align-center>
             <v-col class="d-flex justify-center align-center">
               <v-btn
-                v-bind:color="
-                  roleSelect == 'Student' ? 'primary' : 'grey lighten-2'
-                "
+                :color="roleSelect == 'Student' ? 'primary' : 'grey lighten-2'"
                 x-large
-                @click="roleSelect = 'Student'">
+                @click="roleSelect = 'Student'"
+              >
                 <v-icon class="mx-2">mdi-chair-school</v-icon> Student
               </v-btn>
             </v-col>
             <v-col class="d-flex justify-center align-center">
               <v-btn
-                v-bind:color="
-                  roleSelect == 'Tutor' ? 'primary' : 'grey lighten-2'
-                "
+                :color="roleSelect == 'Tutor' ? 'primary' : 'grey lighten-2'"
                 x-large
-                @click="roleSelect = 'Tutor'">
+                @click="roleSelect = 'Tutor'"
+              >
                 <v-icon class="mx-2">mdi-human-male-board-poll</v-icon> Tutor
               </v-btn>
             </v-col>
@@ -51,7 +50,8 @@
               roleDialog = false;
               groupDialog = true;
               haveRoleAlready();
-            ">
+            "
+          >
             Continue
           </v-btn>
         </v-card-actions>
@@ -59,14 +59,15 @@
     </v-dialog>
 
     <v-dialog
-      v-if="this.user !== null"
+      v-if="user !== null"
       v-model="groupDialog"
-      v-bind:persistent="!hasAnyRoles ? true : false"
-      max-width="1000">
+      :persistent="!hasAnyRoles ? true : false"
+      max-width="1000"
+    >
       <v-card tile>
         <v-card-title>
-          {{ this.user.fName }}, which group would you like to be a
-          {{ this.roleSelect.toLowerCase() }} in?
+          {{ user.fName }}, which group would you like to be a
+          {{ roleSelect.toLowerCase() }} in?
         </v-card-title>
         <br />
         <v-card-text>
@@ -74,31 +75,33 @@
             <v-col v-for="group in groups" :key="group.id">
               <v-card
                 :disabled="group.haveRole"
-                v-bind:color="
-                  groupSelect === group.id ? 'primary' : 'grey lighten-2'
-                "
+                :color="groupSelect === group.id ? 'primary' : 'grey lighten-2'"
                 height="200"
                 elevation="10"
                 v-on="
                   !group.haveRole
                     ? { click: () => (groupSelect = group.id) }
                     : {}
-                ">
+                "
+              >
                 <v-card-title
-                  v-bind:class="
+                  :class="
                     groupSelect === group.id ? 'white--text' : 'black--text'
-                  ">
+                  "
+                >
                   {{ group.name }}
                 </v-card-title>
                 <v-card-text
-                  v-bind:class="
+                  :class="
                     groupSelect === group.id ? 'white--text' : 'black--text'
-                  ">
+                  "
+                >
                   {{ group.description }}
                   <v-overlay
                     :absolute="absolute"
                     :opacity="opacity"
-                    :value="group.haveRole">
+                    :value="group.haveRole"
+                  >
                     <h3>
                       {{ group.sentenceHaveRole }}
                     </h3>
@@ -116,7 +119,8 @@
               roleDialog = true;
               groupDialog = false;
               groupSelect = '';
-            ">
+            "
+          >
             Back
           </v-btn>
           <v-spacer></v-spacer>
@@ -124,7 +128,8 @@
             color="accent"
             text
             :disabled="groupSelect === ''"
-            @click="savePersonRoles()">
+            @click="savePersonRoles()"
+          >
             Continue
           </v-btn>
         </v-card-actions>
@@ -146,10 +151,10 @@ import { SendTextsMixin } from "../mixins/SendTextsMixin";
 
 export default {
   name: "RegistrationComponent",
-  mixins: [RedirectToPageMixin, SendTextsMixin],
   components: {
     GroupViewComponent,
   },
+  mixins: [RedirectToPageMixin, SendTextsMixin],
   data() {
     return {
       roleDialog: true,

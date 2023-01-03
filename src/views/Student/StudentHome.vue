@@ -2,21 +2,21 @@
   <div>
     <v-container>
       <v-toolbar>
-        <v-toolbar-title>Hello, {{ this.user.fName }}!</v-toolbar-title>
+        <v-toolbar-title>Hello, {{ user.fName }}!</v-toolbar-title>
         <InformationComponent
           v-if="!disabled"
-          message="Click on <b>View Calendar</b> to see available appointments!"></InformationComponent>
+          message="Click on <b>View Calendar</b> to see available appointments!"
+        ></InformationComponent>
         <v-spacer></v-spacer>
-        <v-toolbar-title>{{ this.message }}</v-toolbar-title>
+        <v-toolbar-title>{{ message }}</v-toolbar-title>
       </v-toolbar>
-      <v-dialog persistent v-model="showDeleteConfirmation" max-width="750px">
+      <v-dialog v-model="showDeleteConfirmation" persistent max-width="750px">
         <DeleteConfirmationComponent
           type="appointment"
           :item="selectedAppointment"
           @handleReturningCancel="showDeleteConfirmation = false"
-          @handleReturningSuccess="
-            cancelAppointment(selectedAppointment, user)
-          "></DeleteConfirmationComponent>
+          @handleReturningSuccess="cancelAppointment(selectedAppointment, user)"
+        ></DeleteConfirmationComponent>
       </v-dialog>
       <v-container v-if="!disabled">
         <v-dialog v-model="apptDialog" max-width="800px">
@@ -89,7 +89,8 @@
                   :disabled="selectedAppointment.status === 'booked'"
                   required
                   dense
-                  @change="saveChanges = true">
+                  @change="saveChanges = true"
+                >
                 </v-select>
 
                 <v-select
@@ -101,7 +102,8 @@
                   :disabled="selectedAppointment.status === 'booked'"
                   required
                   dense
-                  @change="saveChanges = true">
+                  @change="saveChanges = true"
+                >
                 </v-select>
               </span>
               <!-- slots for location and topic to be unchangable if the session type is group -->
@@ -113,7 +115,8 @@
                   item-value="id"
                   label="Location"
                   dense
-                  readonly>
+                  readonly
+                >
                 </v-select>
 
                 <v-select
@@ -123,7 +126,8 @@
                   item-value="id"
                   label="Topic"
                   dense
-                  readonly>
+                  readonly
+                >
                 </v-select>
               </span>
               <!-- show time for private lessons-->
@@ -132,13 +136,15 @@
                 v-model="selectedAppointment.startTime"
                 label="Booked Start"
                 dense
-                readonly>
+                readonly
+              >
               </v-text-field>
               <v-text-field
                 v-model="selectedAppointment.endTime"
                 label="Booked End"
                 dense
-                readonly>
+                readonly
+              >
               </v-text-field>
               <!-- put in presession-info for appointment for private appointments/ add a readonly if  group -->
               <v-textarea
@@ -151,7 +157,8 @@
                 auto-grow
                 rows="1"
                 :readonly="selectedAppointment.type === 'Group'"
-                @change="saveChanges = true"></v-textarea>
+                @change="saveChanges = true"
+              ></v-textarea>
             </v-card-text>
             <v-card-actions>
               <v-spacer></v-spacer>
@@ -160,7 +167,8 @@
                 @click="
                   apptDialog = false;
                   getAppointments();
-                ">
+                "
+              >
                 Close
               </v-btn>
               <v-btn
@@ -170,7 +178,8 @@
                   editAppointment(user, selectedAppointment);
                   getAppointments();
                   apptDialog = false;
-                ">
+                "
+              >
                 Save Changes
               </v-btn>
               <v-btn
@@ -179,14 +188,15 @@
                   showDeleteConfirmation = true;
                   getAppointments();
                   apptDialog = false;
-                ">
+                "
+              >
                 Cancel Appointment
               </v-btn>
             </v-card-actions>
           </v-card>
         </v-dialog>
         <v-alert v-model="showAlert" dismissible :type="alertType">{{
-          this.alert
+          alert
         }}</v-alert>
         <v-row>
           <v-col>
@@ -196,7 +206,8 @@
               max-width="400"
               height="100"
               elevation="10"
-              color="#EE5044">
+              color="#EE5044"
+            >
               <v-card-title class="justify-center white--text">
                 View Calendar
               </v-card-title>
@@ -209,7 +220,8 @@
               max-width="400"
               height="100"
               elevation="10"
-              color="#F8C545">
+              color="#F8C545"
+            >
               <v-card-title class="justify-center white--text">
                 Make A Request
               </v-card-title>
@@ -218,31 +230,35 @@
         </v-row>
         <v-card>
           <v-card-title>
-            Upcoming Appointments for {{ this.user.selectedGroup }} as a student
+            Upcoming Appointments for {{ user.selectedGroup }} as a student
             <v-spacer></v-spacer>
             <InformationComponent
               message="Click on an appointment to view information, make changes, or
-              cancel."></InformationComponent>
+              cancel."
+            ></InformationComponent>
           </v-card-title>
           <v-data-table
             :headers="headers"
             :items="appointments"
             :items-per-page="50"
-            @click:row="rowClick"></v-data-table>
+            @click:row="rowClick"
+          ></v-data-table>
         </v-card>
         <br />
         <v-card>
           <v-card-title>
-            Provide Appointment Feedback for {{ this.user.selectedGroup }}
+            Provide Appointment Feedback for {{ user.selectedGroup }}
             <v-spacer></v-spacer>
             <InformationComponent
-              message="Click on an appointment to provide feedback."></InformationComponent>
+              message="Click on an appointment to provide feedback."
+            ></InformationComponent>
           </v-card-title>
           <v-data-table
             :headers="headerFeedback"
             :items="appointmentsneedingfeedback"
             :items-per-page="50"
-            @click:row="provideFeedback"></v-data-table>
+            @click:row="provideFeedback"
+          ></v-data-table>
         </v-card>
       </v-container>
       <v-container v-else>
@@ -268,18 +284,13 @@ import { AppointmentActionMixin } from "../../mixins/AppointmentActionMixin";
 import { TimeFunctionsMixin } from "../../mixins/TimeFunctionsMixin";
 
 export default {
-  props: ["id"],
   name: "StudentHome",
-  mixins: [AppointmentActionMixin, TimeFunctionsMixin],
   components: {
     DeleteConfirmationComponent,
     InformationComponent,
   },
-  watch: {
-    id: function () {
-      console.log(this.id);
-    },
-  },
+  mixins: [AppointmentActionMixin, TimeFunctionsMixin],
+  props: ["id"],
   data() {
     return {
       showDeleteConfirmation: false,
@@ -316,6 +327,11 @@ export default {
       ],
       message: "Student",
     };
+  },
+  watch: {
+    id: function () {
+      console.log(this.id);
+    },
   },
   async created() {
     this.user = Utils.getStore("user");

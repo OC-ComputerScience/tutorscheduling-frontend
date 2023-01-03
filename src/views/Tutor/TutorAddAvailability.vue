@@ -3,10 +3,11 @@
     <v-container>
       <div>
         <v-toolbar>
-          <v-toolbar-title>{{ this.message }}</v-toolbar-title>
+          <v-toolbar-title>{{ message }}</v-toolbar-title>
           <v-spacer></v-spacer>
           <InformationComponent
-            message="Select date(s), times, and type, and click Save to indicate when you can tutor."></InformationComponent>
+            message="Select date(s), times, and type, and click Save to indicate when you can tutor."
+          ></InformationComponent>
         </v-toolbar>
         <br />
         <b v-if="!group.allowSplittingAppointments"
@@ -15,7 +16,7 @@
         >
         <br />
         <v-alert v-model="showAlert" dismissible :type="alertType">{{
-          this.alert
+          alert
         }}</v-alert
         ><br />
         <template>
@@ -57,7 +58,8 @@
                 <v-btn
                   color="blue darken-1"
                   text
-                  @click="doubleBookedDialog = false">
+                  @click="doubleBookedDialog = false"
+                >
                   Close
                 </v-btn>
               </v-card-actions>
@@ -79,7 +81,8 @@
                         item-value="id"
                         label="Location"
                         required
-                        dense>
+                        dense
+                      >
                       </v-select>
                     </v-col>
                     <v-col cols="12" sm="6" md="4">
@@ -90,7 +93,8 @@
                         item-value="id"
                         label="Topic"
                         required
-                        dense>
+                        dense
+                      >
                       </v-select>
                     </v-col>
                   </v-row>
@@ -101,7 +105,8 @@
                         label="Pre-session info"
                         hint="Information for the session"
                         required
-                        outlined></v-textarea>
+                        outlined
+                      ></v-textarea>
                     </v-col>
                   </v-row>
                 </v-container>
@@ -114,10 +119,6 @@
                 <v-btn
                   color="blue darken-1"
                   text
-                  @click="
-                    addAvailability();
-                    groupDialog = false;
-                  "
                   :disabled="
                     location === '' ||
                     location === null ||
@@ -125,7 +126,12 @@
                     topic === '' ||
                     topic === null ||
                     topic === undefined
-                  ">
+                  "
+                  @click="
+                    addAvailability();
+                    groupDialog = false;
+                  "
+                >
                   Save
                 </v-btn>
               </v-card-actions>
@@ -139,7 +145,8 @@
               :min="nowDate"
               show-adjacent-months
               multiple
-              @input="updateTimes()"></v-date-picker>
+              @input="updateTimes()"
+            ></v-date-picker>
           </v-col>
           <v-col cols="12" sm="6">
             <v-menu
@@ -149,8 +156,9 @@
               :return-value.sync="dates"
               transition="scale-transition"
               offset-y
-              min-width="auto">
-              <template v-slot:activator="{ on, attrs }">
+              min-width="auto"
+            >
+              <template #activator="{ on, attrs }">
                 <v-combobox
                   v-model="dates"
                   multiple
@@ -160,7 +168,8 @@
                   prepend-icon="mdi-calendar"
                   readonly
                   v-bind="attrs"
-                  v-on="on"></v-combobox>
+                  v-on="on"
+                ></v-combobox>
               </template>
               <v-date-picker
                 v-model="dates"
@@ -169,7 +178,8 @@
                 multiple
                 no-title
                 scrollable
-                @input="updateTimes()">
+                @input="updateTimes()"
+              >
                 <v-spacer></v-spacer>
                 <v-btn text color="primary" @click="menu = false">
                   Cancel
@@ -190,12 +200,13 @@
               item-value="time"
               menu-props="auto"
               required
+              dense
               @change="
                 newStart = displayedStart;
                 updateTimes();
                 secondTime = false;
               "
-              dense>
+            >
             </v-select>
           </v-col>
           <v-col cols="11" sm="5">
@@ -207,12 +218,13 @@
               item-text="timeText"
               item-value="time"
               required
+              :disabled="secondTime"
+              dense
               @change="
                 newEnd = displayedEnd;
                 updateTimes();
               "
-              :disabled="secondTime"
-              dense>
+            >
             </v-select>
           </v-col>
           <v-container>
@@ -223,12 +235,12 @@
               item-value="value"
               label="Choose a session type"
               required
-              dense>
+              dense
+            >
             </v-select>
             <v-btn
               color="success"
               class="mr-4"
-              @click="groupHandler()"
               :disabled="
                 displayedEnd === '' ||
                 displayedEnd === null ||
@@ -240,7 +252,9 @@
                 groupSession === null ||
                 groupSession === undefined ||
                 dates.length === 0
-              ">
+              "
+              @click="groupHandler()"
+            >
               Save
             </v-btn>
           </v-container>
@@ -255,8 +269,9 @@
           <v-data-table
             :headers="headers"
             :items="availabilities"
-            :items-per-page="50">
-            <template v-slot:top>
+            :items-per-page="50"
+          >
+            <template #top>
               <v-toolbar flat>
                 <!--  popup for deleting an availability  -->
                 <v-dialog v-model="dialogDelete" max-width="800px">
@@ -293,7 +308,7 @@
               </v-toolbar>
             </template>
 
-            <template v-slot:[`item.actions`]="{ item }">
+            <template #[`item.actions`]="{ item }">
               <v-icon small @click="deleteItem(item)"> mdi-delete </v-icon>
             </template>
           </v-data-table>
@@ -317,11 +332,11 @@ import { TimeFunctionsMixin } from "../../mixins/TimeFunctionsMixin";
 
 export default {
   name: "TutorAddAvailability",
-  props: ["id"],
-  mixins: [TimeFunctionsMixin],
   components: {
     InformationComponent,
   },
+  mixins: [TimeFunctionsMixin],
+  props: ["id"],
   data: () => ({
     message: "Add Availability",
     showAlert: false,

@@ -5,11 +5,12 @@
         <v-toolbar-title>Help</v-toolbar-title>
         <v-spacer></v-spacer>
         <InformationComponent
-          message="This document details how to use this application."></InformationComponent>
+          message="This document details how to use this application."
+        ></InformationComponent>
       </v-toolbar>
       <br />
       <v-alert v-model="showAlert" dismissible :type="alertType">{{
-        this.alert
+        alert
       }}</v-alert>
       <br />
       <!-- <button @click="$refs.myPdfComponent.print()">print</button> -->
@@ -27,11 +28,11 @@ import InformationComponent from "../components/InformationComponent.vue";
 
 export default {
   name: "Help",
-  props: ["id"],
   components: {
     VuePdfEmbed,
     InformationComponent,
   },
+  props: ["id"],
   data() {
     return {
       showAlert: false,

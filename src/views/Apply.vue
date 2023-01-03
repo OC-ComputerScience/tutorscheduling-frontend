@@ -2,21 +2,23 @@
   <div>
     <v-container>
       <v-toolbar>
-        <v-toolbar-title>{{ this.message }}</v-toolbar-title>
+        <v-toolbar-title>{{ message }}</v-toolbar-title>
         <v-spacer></v-spacer>
         <InformationComponent
-          message="Apply to be a student or a tutor in a different group."></InformationComponent>
+          message="Apply to be a student or a tutor in a different group."
+        ></InformationComponent>
       </v-toolbar>
       <br />
       <br />
       <v-row justify="center">
         <v-col justify="center">
           <v-card
-            @click="openRegistration = true"
             height="100"
             elevation="10"
             color="primary"
-            class="d-flex justify-center align-center">
+            class="d-flex justify-center align-center"
+            @click="openRegistration = true"
+          >
             <v-card-title class="justify-center white--text">
               Apply
             </v-card-title>
@@ -24,7 +26,8 @@
         </v-col>
       </v-row>
       <RegistrationComponent
-        v-if="this.user !== null && openRegistration"></RegistrationComponent>
+        v-if="user !== null && openRegistration"
+      ></RegistrationComponent>
     </v-container>
   </div>
 </template>

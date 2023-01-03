@@ -1,43 +1,47 @@
 <template>
   <v-container>
     <v-toolbar>
-      <v-toolbar-title>{{ this.message }}</v-toolbar-title>
+      <v-toolbar-title>{{ message }}</v-toolbar-title>
       <v-spacer></v-spacer>
       <InformationComponent
-        message="Click on topics that you can tutor in. You will then need to specify your skill level on each."></InformationComponent>
+        message="Click on topics that you can tutor in. You will then need to specify your skill level on each."
+      ></InformationComponent>
     </v-toolbar>
     <br />
     <v-alert v-model="showAlert" dismissible :type="alertType">{{
-      this.alert
+      alert
     }}</v-alert>
     <v-btn
       right
       color="accent"
+      class="justify-center white--text"
       @click="
         dialog = true;
         getSelectedGroupTopics();
       "
-      class="justify-center white--text">
+    >
       Continue
     </v-btn>
     <br />
     <br />
     <v-item-group
       v-for="group in groups"
-      v-model="group.selected"
       :key="group.id"
-      multiple>
+      v-model="group.selected"
+      multiple
+    >
       <h3>{{ group.name }}</h3>
       <v-row justify="center">
         <v-col v-for="topic in group.grouptopics" :key="topic.id" md="4">
           <v-item v-slot="{ active, toggle }">
             <v-card
-              @click="toggle()"
               class="mx-auto my-12 d-flex justify-center"
               max-width="400"
               height="100"
               elevation="10"
-              :style="{ 'background-color': topic.color }">
+              :style="{ 'background-color': topic.color }"
+              @click="toggle()"
+            >
               <v-card-title class="justify-center white--text">
                 {{ topic.name }}
               </v-card-title>
@@ -56,7 +60,8 @@
         v-for="group in selectedGroupTopics"
         :key="group.id"
         flat
-        rounded="0">
+        rounded="0"
+      >
         <v-card-title>
           <span class="text-h5"
             >Select your skill level for {{ group.name }} topics:</span
@@ -71,7 +76,8 @@
             item-text="name"
             item-value="id"
             label="Skill Level"
-            required>
+            required
+          >
           </v-select>
         </v-card-text>
         <v-card-actions>
@@ -82,7 +88,8 @@
             @click="
               savePersonTopics();
               goToPage(user.userID);
-            ">
+            "
+          >
             Continue
           </v-btn>
         </v-card-actions>
@@ -102,12 +109,12 @@ import { RedirectToPageMixin } from "@/mixins/RedirectToPageMixin";
 
 export default {
   name: "TutorAddTopics",
-  props: ["id"],
-  mixins: [RedirectToPageMixin],
   components: {
     GroupViewComponent,
     InformationComponent,
   },
+  mixins: [RedirectToPageMixin],
+  props: ["id"],
   data: () => ({
     showAlert: false,
     alert: "",

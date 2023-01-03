@@ -2,7 +2,7 @@
   <div>
     <v-container>
       <v-toolbar>
-        <v-toolbar-title>{{ this.message }}</v-toolbar-title>
+        <v-toolbar-title>{{ message }}</v-toolbar-title>
       </v-toolbar>
       <br /><br />
       <v-card>
@@ -40,8 +40,8 @@ import PersonRoleServices from "@/services/personRoleServices.js";
 
 export default {
   name: "App",
-  props: ["id"],
   components: {},
+  props: ["id"],
   data() {
     return {
       search: "",

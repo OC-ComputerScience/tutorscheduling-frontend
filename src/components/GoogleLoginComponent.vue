@@ -1,32 +1,23 @@
 <template>
   <div class="signup-buttons">
     <v-row justify="center">
-      <div display="flex" id="parent_id"></div>
+      <div id="parent_id" display="flex"></div>
     </v-row>
 
-    <v-dialog v-model="dialog" persistent max-width="800">
+    <v-dialog v-model="dialog" persistent max-width="600">
       <v-card tile>
         <v-card-title>
-          Hello, {{ this.user.fName }}! We're happy you're here.
+          Hello, {{ user.fName }}! We're happy you're here.
         </v-card-title>
         <v-card-text>
-          <h3>Finish setting up your account below:</h3>
-          <v-container>
-            <v-row>
-              <v-text-field
-                v-model="phoneNum"
-                id="phoneNum"
-                :counter="50"
-                label="Mobile Phone Number"
-                hint="123-456-7890"
-                persistent-hint
-                required
-                v-on:keyup.enter="
-                  dialog = false;
-                  savePhoneNum();
-                "></v-text-field>
-            </v-row>
-          </v-container>
+          <h3>
+            Enter your US phone number below to finish setting up your account:
+          </h3>
+          <br />
+          <PhoneNumberComponent
+            :phoneNum="''"
+            @editedPhoneNumber="setPhoneNumber"
+          ></PhoneNumberComponent>
         </v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
@@ -36,7 +27,8 @@
             @click="
               dialog = false;
               savePhoneNum();
-            ">
+            "
+          >
             Continue
           </v-btn>
         </v-card-actions>
@@ -44,9 +36,8 @@
     </v-dialog>
 
     <RegistrationComponent
-      v-if="
-        openRegistration && this.user !== null && !dialog && this.fName !== ''
-      "></RegistrationComponent>
+      v-if="openRegistration && user !== null && !dialog && fName !== ''"
+    ></RegistrationComponent>
 
     <GroupViewComponent v-if="openSelect"></GroupViewComponent>
   </div>
@@ -58,13 +49,15 @@ import PersonServices from "@/services/personServices";
 import Utils from "@/config/utils.js";
 import RegistrationComponent from "./RegistrationComponent.vue";
 import GroupViewComponent from "./GroupViewComponent.vue";
+import PhoneNumberComponent from "./PhoneNumberComponent.vue";
 import { RedirectToPageMixin } from "../mixins/RedirectToPageMixin";
 
 export default {
   name: "GoogleLoginComponent",
   components: {
-    RegistrationComponent,
     GroupViewComponent,
+    PhoneNumberComponent,
+    RegistrationComponent,
   },
   mixins: [RedirectToPageMixin],
   data() {
@@ -127,6 +120,9 @@ export default {
           console.log("There was an error:", error.response);
         });
     },
+    setPhoneNumber(phoneNumber) {
+      this.phoneNum = phoneNumber;
+    },
     async savePhoneNum() {
       // use this to also update name if it's the first time a student is logging in
       await this.getPerson();
@@ -138,11 +134,11 @@ export default {
       this.user.fName = this.fName;
       this.user.lName = this.lName;
       Utils.setStore("user", this.user);
-      await PersonServices.updatePerson(this.person.id, this.person)
-        .then()
-        .catch((error) => {
+      await PersonServices.updatePerson(this.person.id, this.person).catch(
+        (error) => {
           console.log("There was an error:", error.response);
-        });
+        }
+      );
       this.openDialogs();
     },
     openDialogs() {
