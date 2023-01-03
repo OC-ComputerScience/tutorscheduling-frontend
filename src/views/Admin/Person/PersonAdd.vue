@@ -13,8 +13,7 @@
           label="First Name"
           hint="First Name"
           persistent-hint
-          required
-        ></v-text-field>
+          required></v-text-field>
 
         <v-text-field
           v-model="person.lName"
@@ -23,8 +22,7 @@
           label="Last Name"
           hint="Last Name"
           persistent-hint
-          required
-        ></v-text-field>
+          required></v-text-field>
 
         <v-text-field
           v-model="person.email"
@@ -33,8 +31,7 @@
           label="email"
           hint="you@email.com"
           persistent-hint
-          required
-        ></v-text-field>
+          required></v-text-field>
 
         <v-text-field
           v-model="person.phoneNum"
@@ -43,15 +40,15 @@
           label="Mobile Phone"
           hint="111-222-3333"
           persistent-hint
-          required
-        ></v-text-field>
+          required></v-text-field>
+
+        <v-checkbox v-model="person.textOptIn" label="Text Opt In"></v-checkbox>
 
         <v-btn
           :disabled="!valid"
           color="success"
           class="mr-4"
-          @click="addPerson"
-        >
+          @click="addPerson">
           Save
         </v-btn>
 
