@@ -188,6 +188,7 @@
               prepend-icon="mdi-clock-time-four-outline"
               item-text="timeText"
               item-value="time"
+              menu-props="auto"
               required
               @change="
                 newStart = displayedStart;
@@ -429,6 +430,14 @@ export default {
       // adding this to make sure that you can't start an appointment at the end time
       this.startTimes.pop();
       // end times will usually be in group's min appointment time, but could also be time interval if tutor has the right privilege
+
+      // set default displayed start
+      if (this.displayedStart === "") {
+        this.displayedStart = this.startTimes.find(
+          (time) => time.time === "08:00:00"
+        ).time;
+      }
+
       if (
         this.checkPrivilege(
           "Make flexible slots that allow for shorter appointments"
