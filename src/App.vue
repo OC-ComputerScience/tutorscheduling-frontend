@@ -1,28 +1,24 @@
 <template>
   <v-app>
-    <MenuBar></MenuBar>
-      <v-main>
-          <router-view :key="$route.fullPath"></router-view>
-      </v-main>
+    <MenuBarComponent :key="$route.fullPath"></MenuBarComponent>
+    <v-main>
+      <router-view :key="$route.fullPath"></router-view>
+    </v-main>
   </v-app>
 </template>
 
 <script>
-import MenuBar from '@/components/MenuBar.vue'
+import MenuBarComponent from "@/components/MenuBarComponent.vue";
 
 export default {
-  name: 'App',
+  name: "App",
   components: {
-    MenuBar
+    MenuBarComponent,
   },
   data() {
-      return {
-      }
+    return {};
   },
-  created() {
-
-  },
-  methods: {
-  },
+  created() {},
+  methods: {},
 };
 </script>

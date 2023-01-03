@@ -1,0 +1,21 @@
+<template>
+  <div>
+    <v-tooltip bottom>
+      <template #activator="{ on, attrs }">
+        <v-icon class="mx-2" color="grey darken" dark v-bind="attrs" v-on="on">
+          mdi-information
+        </v-icon>
+      </template>
+      <span v-html="message"></span>
+    </v-tooltip>
+  </div>
+</template>
+
+<script>
+export default {
+  name: "InformationComponent",
+  props: {
+    message: String,
+  },
+};
+</script>
