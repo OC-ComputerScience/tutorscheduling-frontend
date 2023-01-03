@@ -68,6 +68,11 @@
         label="Mobile Phone"
         readonly></v-text-field>
 
+      <v-checkbox
+        v-model="person.textOptIn"
+        label="Text Opt In"
+        readonly></v-checkbox>
+
       <br />
       <v-card>
         <v-card-title>
@@ -193,6 +198,10 @@
                 hint="111-222-3333"
                 persistent-hint
                 required></v-text-field>
+
+              <v-checkbox
+                v-model="person.textOptIn"
+                label="Text Opt In"></v-checkbox>
             </v-form>
           </v-card-text>
           <v-card-actions>

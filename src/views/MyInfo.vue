@@ -4,7 +4,7 @@
       <v-toolbar>
         <v-toolbar-title>{{ this.message }}</v-toolbar-title>
         <InformationComponent
-          message="Make changes to your phone number or view your information below."></InformationComponent>
+          message="Make changes to your phone number or text opt in, or view your information below."></InformationComponent>
         <v-spacer></v-spacer>
         <v-toolbar-title>{{ this.user.selectedRole.type }}</v-toolbar-title>
       </v-toolbar>
@@ -31,13 +31,18 @@
         persistent-hint
         required></v-text-field>
 
+      <v-checkbox
+        v-model="person.textOptIn"
+        label="Text Opt In"
+        @change="enableUpdate = true"></v-checkbox>
+
       <br />
       <v-btn
         :disabled="!enableUpdate"
         color="accent"
         @click="savePhoneNum()"
         class="justify-center white--text">
-        Update Phone Number
+        Update
       </v-btn>
 
       <br /><br />
@@ -139,7 +144,8 @@ export default {
     async savePhoneNum() {
       await PersonServices.updatePerson(this.person.id, this.person)
         .then(() => {
-          this.alert = "Your phone number was successfully updated.";
+          this.alert =
+            "Your phone number or text opt in was successfully updated.";
           this.enableUpdate = false;
           this.showAlert = true;
         })
