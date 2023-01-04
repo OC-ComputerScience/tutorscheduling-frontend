@@ -136,7 +136,12 @@ export default {
   components: {
     InformationComponent,
   },
-  props: ["id"],
+  props: {
+    id: {
+      type: Number,
+      default: 0,
+    },
+  },
   data() {
     return {
       valid: false,

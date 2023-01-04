@@ -94,7 +94,12 @@ import PhoneNumberComponent from "../components/PhoneNumberComponent.vue";
 export default {
   name: "MyInfo",
   components: { InformationComponent, PhoneNumberComponent },
-  props: ["id"],
+  props: {
+    id: {
+      type: Number,
+      default: 0,
+    },
+  },
   data() {
     return {
       user: {},

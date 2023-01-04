@@ -86,7 +86,12 @@ import LocationServices from "@/services/locationServices.js";
 import PersonRoleServices from "@/services/personRoleServices.js";
 
 export default {
-  props: ["id"],
+  props: {
+    id: {
+      type: Number,
+      default: 0,
+    },
+  },
   data() {
     return {
       message: "Add Location - enter data and click Save",

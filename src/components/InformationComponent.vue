@@ -15,7 +15,10 @@
 export default {
   name: "InformationComponent",
   props: {
-    message: String,
+    message: {
+      type: String,
+      default: "",
+    },
   },
 };
 </script>

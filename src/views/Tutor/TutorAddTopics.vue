@@ -114,7 +114,12 @@ export default {
     InformationComponent,
   },
   mixins: [RedirectToPageMixin],
-  props: ["id"],
+  props: {
+    id: {
+      type: Number,
+      default: 0,
+    },
+  },
   data: () => ({
     showAlert: false,
     alert: "",

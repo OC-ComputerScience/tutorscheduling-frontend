@@ -133,11 +133,16 @@ import { TimeFunctionsMixin } from "@/mixins/TimeFunctionsMixin";
 import "@/plugins/apexcharts";
 
 export default {
-  props: ["id"],
   name: "AdminHome",
   mixins: [TimeFunctionsMixin],
   components: {
     InformationComponent,
+  },
+  props: {
+    id: {
+      type: Number,
+      default: 0,
+    },
   },
   data() {
     return {

@@ -43,6 +43,12 @@ export default {
     RegistrationComponent,
     InformationComponent,
   },
+  props: {
+    id: {
+      type: Number,
+      default: 0,
+    },
+  },
   data() {
     return {
       message: "Apply",

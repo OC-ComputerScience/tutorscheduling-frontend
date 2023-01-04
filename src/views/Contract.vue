@@ -93,6 +93,12 @@ export default {
     InformationComponent,
   },
   mixins: [RedirectToPageMixin],
+  props: {
+    id: {
+      type: Number,
+      default: 0,
+    },
+  },
   data() {
     return {
       showAlert: false,

@@ -434,7 +434,16 @@ export default {
     PhoneNumberComponent,
   },
   mixins: [AppointmentActionMixin, TimeFunctionsMixin],
-  props: ["id", "personId"],
+  props: {
+    id: {
+      type: Number,
+      default: 0,
+    },
+    personId: {
+      type: Number,
+      default: 0,
+    },
+  },
   data() {
     return {
       message: "Person - click Edit to update or Delete to remove person",

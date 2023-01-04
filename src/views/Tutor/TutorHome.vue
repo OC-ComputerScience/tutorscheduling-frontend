@@ -356,7 +356,12 @@ export default {
     InformationComponent,
   },
   mixins: [AppointmentActionMixin, TimeFunctionsMixin],
-  props: ["id"],
+  props: {
+    id: {
+      type: Number,
+      default: 0,
+    },
+  },
   data() {
     return {
       showDeleteConfirmation: false,

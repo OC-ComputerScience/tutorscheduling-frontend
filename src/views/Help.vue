@@ -32,7 +32,12 @@ export default {
     VuePdfEmbed,
     InformationComponent,
   },
-  props: ["id"],
+  props: {
+    id: {
+      type: Number,
+      default: 0,
+    },
+  },
   data() {
     return {
       showAlert: false,

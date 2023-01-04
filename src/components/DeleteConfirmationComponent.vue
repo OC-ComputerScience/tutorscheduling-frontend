@@ -26,8 +26,14 @@
 export default {
   name: "DeleteConfirmationComponent",
   props: {
-    type: String,
-    item: Object,
+    type: {
+      type: String,
+      default: "",
+    },
+    item: {
+      type: Object,
+      default: () => ({}),
+    },
   },
   data() {
     return {

@@ -336,7 +336,12 @@ export default {
     InformationComponent,
   },
   mixins: [TimeFunctionsMixin],
-  props: ["id"],
+  props: {
+    id: {
+      type: Number,
+      default: 0,
+    },
+  },
   data: () => ({
     message: "Add Availability",
     showAlert: false,
@@ -451,6 +456,8 @@ export default {
         this.displayedStart = this.startTimes.find(
           (time) => time.time === "08:00:00"
         ).time;
+        this.newStart = this.displayedStart;
+        this.secondTime = false;
       }
 
       if (

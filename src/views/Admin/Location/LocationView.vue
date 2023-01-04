@@ -77,8 +77,16 @@ import LocationServices from "@/services/locationServices.js";
 import PersonRoleServices from "@/services/personRoleServices.js";
 
 export default {
-  props: ["id", "locationId"],
-
+  props: {
+    id: {
+      type: Number,
+      default: 0,
+    },
+    locationId: {
+      type: Number,
+      default: 0,
+    },
+  },
   data() {
     return {
       location: {},
