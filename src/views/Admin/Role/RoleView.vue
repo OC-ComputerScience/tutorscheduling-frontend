@@ -39,16 +39,14 @@
 <script>
 import RoleServices from "@/services/roleServices.js";
 import PersonRoleServices from "@/services/personRoleServices.js";
-
-//import UserDisplay from '@/components/UserDisplay.vue'
 export default {
   props: {
     id: {
-      type: Number,
+      type: [Number, String],
       default: 0,
     },
     roleId: {
-      type: Number,
+      type: [Number, String],
       default: 0,
     },
   },

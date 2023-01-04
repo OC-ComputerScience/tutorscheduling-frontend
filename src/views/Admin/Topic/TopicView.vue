@@ -62,11 +62,11 @@ import PersonRoleServices from "@/services/personRoleServices.js";
 export default {
   props: {
     id: {
-      type: Number,
+      type: [Number, String],
       default: 0,
     },
     topicId: {
-      type: Number,
+      type: [Number, String],
       default: 0,
     },
   },

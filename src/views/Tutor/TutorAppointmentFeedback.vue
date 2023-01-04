@@ -100,11 +100,11 @@ export default {
   },
   props: {
     id: {
-      type: Number,
+      type: [Number, String],
       default: 0,
     },
     userId: {
-      type: Number,
+      type: [Number, String],
       default: 0,
     },
   },

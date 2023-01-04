@@ -703,7 +703,7 @@ export default {
   mixins: [AppointmentActionMixin, TimeFunctionsMixin],
   props: {
     id: {
-      type: Number,
+      type: [Number, String],
       default: 0,
     },
   },

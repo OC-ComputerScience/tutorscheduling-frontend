@@ -15,7 +15,7 @@
           </h3>
           <br />
           <PhoneNumberComponent
-            :phoneNum="''"
+            :phone-num="''"
             @editedPhoneNumber="setPhoneNumber"
           ></PhoneNumberComponent>
         </v-card-text>

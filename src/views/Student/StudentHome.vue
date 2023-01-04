@@ -201,7 +201,10 @@
         <v-row>
           <v-col>
             <v-card
-              :to="{ name: 'calendar' }"
+              :to="{
+                name: 'calendar',
+                params: { id: user.selectedRole.personRoleId },
+              }"
               class="mx-auto my-12 d-flex justify-center"
               max-width="400"
               height="100"
@@ -215,7 +218,10 @@
           </v-col>
           <v-col>
             <v-card
-              :to="{ name: 'studentAddRequest' }"
+              :to="{
+                name: 'studentAddRequest',
+                params: { id: user.selectedRole.personRoleId },
+              }"
               class="mx-auto my-12 d-flex justify-center"
               max-width="400"
               height="100"
@@ -292,7 +298,7 @@ export default {
   mixins: [AppointmentActionMixin, TimeFunctionsMixin],
   props: {
     id: {
-      type: Number,
+      type: [Number, String],
       default: 0,
     },
   },

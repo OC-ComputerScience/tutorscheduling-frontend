@@ -211,7 +211,7 @@
               <br />
 
               <PhoneNumberComponent
-                :phoneNum="person.phoneNum"
+                :phone-num="person.phoneNum"
                 @editedPhoneNumber="setPhoneNumber"
               ></PhoneNumberComponent>
 
@@ -436,11 +436,11 @@ export default {
   mixins: [AppointmentActionMixin, TimeFunctionsMixin],
   props: {
     id: {
-      type: Number,
+      type: [Number, String],
       default: 0,
     },
     personId: {
-      type: Number,
+      type: [Number, String],
       default: 0,
     },
   },
@@ -777,7 +777,6 @@ export default {
         this.person.id
       )
         .then(async (response) => {
-          console.log(response);
           this.appointments = response.data;
           for (let i = 0; i < this.appointments.length; i++) {
             await PersonAppointmentServices.findStudentDataForTable(

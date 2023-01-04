@@ -35,7 +35,10 @@
         <v-col justify="center">
           <v-row justify="center">
             <v-card
-              :to="{ name: 'adminRequests' }"
+              :to="{
+                name: 'adminRequests',
+                params: { id: user.selectedRole.personRoleId },
+              }"
               class="mx-auto my-3 justify-center"
             >
               <v-card-title>
@@ -56,7 +59,10 @@
           </v-row>
           <v-row justify="center">
             <v-card
-              :to="{ name: 'adminApprove' }"
+              :to="{
+                name: 'adminApprove',
+                params: { id: user.selectedRole.personRoleId },
+              }"
               class="mx-auto my-5 justify-center"
             >
               <v-card-title>
@@ -140,7 +146,7 @@ export default {
   },
   props: {
     id: {
-      type: Number,
+      type: [Number, String],
       default: 0,
     },
   },

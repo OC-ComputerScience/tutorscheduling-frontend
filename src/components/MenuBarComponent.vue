@@ -341,12 +341,10 @@ export default {
   methods: {
     createLink() {
       if (this.isSelectedRoleValid()) {
-        return (
-          "/" +
-          this.selectedRole.type.toLowerCase() +
-          "Home/" +
-          this.selectedRole.personRoleId
-        );
+        return {
+          name: `${this.selectedRole.type.toLowerCase()}Home`,
+          params: { id: this.selectedRole.personRoleId },
+        };
       } else {
         return "/";
       }

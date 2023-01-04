@@ -19,125 +19,123 @@
           alert
         }}</v-alert
         ><br />
-        <template>
-          <v-dialog v-model="doubleBookedDialog" max-width="600px">
-            <v-card>
-              <v-card-title>
-                <span class="text-h5"
-                  >You already have an appointment during this time:</span
-                >
-              </v-card-title>
-              <v-card-text>
-                <br />
+        <v-dialog v-model="doubleBookedDialog" max-width="600px">
+          <v-card>
+            <v-card-title>
+              <span class="text-h5"
+                >You already have an appointment during this time:</span
+              >
+            </v-card-title>
+            <v-card-text>
+              <br />
+              <v-row>
+                <v-col>
+                  <h3>Existing Appointment:</h3>
+                  <br />
+                  <p>Date: {{ conflictAvailability.existing.date }}</p>
+                  <p>
+                    Start Time: {{ conflictAvailability.existing.startTime }}
+                  </p>
+                  <p>End Time: {{ conflictAvailability.existing.endTime }}</p>
+                </v-col>
+                <v-col>
+                  <h3>Conflicting Appointment:</h3>
+                  <br />
+                  <p>Date: {{ conflictAvailability.conflicting.date }}</p>
+                  <p>
+                    Start Time:
+                    {{ conflictAvailability.conflicting.startTime }}
+                  </p>
+                  <p>
+                    End Time: {{ conflictAvailability.conflicting.endTime }}
+                  </p>
+                </v-col>
+              </v-row>
+            </v-card-text>
+            <v-card-actions>
+              <v-spacer></v-spacer>
+              <v-btn
+                color="blue darken-1"
+                text
+                @click="doubleBookedDialog = false"
+              >
+                Close
+              </v-btn>
+            </v-card-actions>
+          </v-card>
+        </v-dialog>
+        <v-dialog v-model="groupDialog" persistent max-width="600px">
+          <v-card>
+            <v-card-title>
+              <span class="text-h5">Information for Session</span>
+            </v-card-title>
+            <v-card-text>
+              <v-container>
                 <v-row>
-                  <v-col>
-                    <h3>Existing Appointment:</h3>
-                    <br />
-                    <p>Date: {{ conflictAvailability.existing.date }}</p>
-                    <p>
-                      Start Time: {{ conflictAvailability.existing.startTime }}
-                    </p>
-                    <p>End Time: {{ conflictAvailability.existing.endTime }}</p>
+                  <v-col cols="12" sm="6" md="4">
+                    <v-select
+                      v-model="location"
+                      :items="locations"
+                      item-text="name"
+                      item-value="id"
+                      label="Location"
+                      required
+                      dense
+                    >
+                    </v-select>
                   </v-col>
-                  <v-col>
-                    <h3>Conflicting Appointment:</h3>
-                    <br />
-                    <p>Date: {{ conflictAvailability.conflicting.date }}</p>
-                    <p>
-                      Start Time:
-                      {{ conflictAvailability.conflicting.startTime }}
-                    </p>
-                    <p>
-                      End Time: {{ conflictAvailability.conflicting.endTime }}
-                    </p>
+                  <v-col cols="12" sm="6" md="4">
+                    <v-select
+                      v-model="topic"
+                      :items="topics"
+                      item-text="name"
+                      item-value="id"
+                      label="Topic"
+                      required
+                      dense
+                    >
+                    </v-select>
                   </v-col>
                 </v-row>
-              </v-card-text>
-              <v-card-actions>
-                <v-spacer></v-spacer>
-                <v-btn
-                  color="blue darken-1"
-                  text
-                  @click="doubleBookedDialog = false"
-                >
-                  Close
-                </v-btn>
-              </v-card-actions>
-            </v-card>
-          </v-dialog>
-          <v-dialog v-model="groupDialog" persistent max-width="600px">
-            <v-card>
-              <v-card-title>
-                <span class="text-h5">Information for Session</span>
-              </v-card-title>
-              <v-card-text>
-                <v-container>
-                  <v-row>
-                    <v-col cols="12" sm="6" md="4">
-                      <v-select
-                        v-model="location"
-                        :items="locations"
-                        item-text="name"
-                        item-value="id"
-                        label="Location"
-                        required
-                        dense
-                      >
-                      </v-select>
-                    </v-col>
-                    <v-col cols="12" sm="6" md="4">
-                      <v-select
-                        v-model="topic"
-                        :items="topics"
-                        item-text="name"
-                        item-value="id"
-                        label="Topic"
-                        required
-                        dense
-                      >
-                      </v-select>
-                    </v-col>
-                  </v-row>
-                  <v-row>
-                    <v-col>
-                      <v-textarea
-                        v-model="preSessionInfo"
-                        label="Pre-session info"
-                        hint="Information for the session"
-                        required
-                        outlined
-                      ></v-textarea>
-                    </v-col>
-                  </v-row>
-                </v-container>
-              </v-card-text>
-              <v-card-actions>
-                <v-spacer></v-spacer>
-                <v-btn color="blue darken-1" text @click="groupDialog = false">
-                  Close
-                </v-btn>
-                <v-btn
-                  color="blue darken-1"
-                  text
-                  :disabled="
-                    location === '' ||
-                    location === null ||
-                    location === undefined ||
-                    topic === '' ||
-                    topic === null ||
-                    topic === undefined
-                  "
-                  @click="
-                    addAvailability();
-                    groupDialog = false;
-                  "
-                >
-                  Save
-                </v-btn>
-              </v-card-actions>
-            </v-card>
-          </v-dialog>
-        </template>
+                <v-row>
+                  <v-col>
+                    <v-textarea
+                      v-model="preSessionInfo"
+                      label="Pre-session info"
+                      hint="Information for the session"
+                      required
+                      outlined
+                    ></v-textarea>
+                  </v-col>
+                </v-row>
+              </v-container>
+            </v-card-text>
+            <v-card-actions>
+              <v-spacer></v-spacer>
+              <v-btn color="blue darken-1" text @click="groupDialog = false">
+                Close
+              </v-btn>
+              <v-btn
+                color="blue darken-1"
+                text
+                :disabled="
+                  location === '' ||
+                  location === null ||
+                  location === undefined ||
+                  topic === '' ||
+                  topic === null ||
+                  topic === undefined
+                "
+                @click="
+                  addAvailability();
+                  groupDialog = false;
+                "
+              >
+                Save
+              </v-btn>
+            </v-card-actions>
+          </v-card>
+        </v-dialog>
         <v-row>
           <v-col cols="12" sm="6">
             <v-date-picker
@@ -265,54 +263,52 @@
         <v-toolbar>
           <v-toolbar-title>Your Availabilities</v-toolbar-title>
         </v-toolbar>
-        <template>
-          <v-data-table
-            :headers="headers"
-            :items="availabilities"
-            :items-per-page="50"
-          >
-            <template #top>
-              <v-toolbar flat>
-                <!--  popup for deleting an availability  -->
-                <v-dialog v-model="dialogDelete" max-width="800px">
-                  <v-card>
-                    <v-card-title class="text-h5"
-                      >Are you sure you want to delete this
-                      availability?</v-card-title
+        <v-data-table
+          :headers="headers"
+          :items="availabilities"
+          :items-per-page="50"
+        >
+          <template #top>
+            <v-toolbar flat>
+              <!--  popup for deleting an availability  -->
+              <v-dialog v-model="dialogDelete" max-width="800px">
+                <v-card>
+                  <v-card-title class="text-h5"
+                    >Are you sure you want to delete this
+                    availability?</v-card-title
+                  >
+                  <v-card-text>
+                    <br />
+                    <v-row>
+                      <v-col>
+                        <p>Date: {{ editedItem.date }}</p>
+                        <p>Start Time: {{ editedItem.startTime }}</p>
+                        <p>End Time: {{ editedItem.endTime }}</p>
+                      </v-col>
+                    </v-row>
+                  </v-card-text>
+                  <v-card-actions>
+                    <v-spacer></v-spacer>
+                    <v-btn color="blue darken-1" text @click="closeDelete()"
+                      >Cancel</v-btn
                     >
-                    <v-card-text>
-                      <br />
-                      <v-row>
-                        <v-col>
-                          <p>Date: {{ editedItem.date }}</p>
-                          <p>Start Time: {{ editedItem.startTime }}</p>
-                          <p>End Time: {{ editedItem.endTime }}</p>
-                        </v-col>
-                      </v-row>
-                    </v-card-text>
-                    <v-card-actions>
-                      <v-spacer></v-spacer>
-                      <v-btn color="blue darken-1" text @click="closeDelete()"
-                        >Cancel</v-btn
-                      >
-                      <v-btn
-                        color="blue darken-1"
-                        text
-                        @click="deleteItemConfirm()"
-                        >OK</v-btn
-                      >
-                      <v-spacer></v-spacer>
-                    </v-card-actions>
-                  </v-card>
-                </v-dialog>
-              </v-toolbar>
-            </template>
+                    <v-btn
+                      color="blue darken-1"
+                      text
+                      @click="deleteItemConfirm()"
+                      >OK</v-btn
+                    >
+                    <v-spacer></v-spacer>
+                  </v-card-actions>
+                </v-card>
+              </v-dialog>
+            </v-toolbar>
+          </template>
 
-            <template #[`item.actions`]="{ item }">
-              <v-icon small @click="deleteItem(item)"> mdi-delete </v-icon>
-            </template>
-          </v-data-table>
-        </template>
+          <template #[`item.actions`]="{ item }">
+            <v-icon small @click="deleteItem(item)"> mdi-delete </v-icon>
+          </template>
+        </v-data-table>
       </div>
     </v-container>
   </div>
@@ -338,7 +334,7 @@ export default {
   mixins: [TimeFunctionsMixin],
   props: {
     id: {
-      type: Number,
+      type: [Number, String],
       default: 0,
     },
   },

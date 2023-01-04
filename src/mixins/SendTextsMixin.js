@@ -66,7 +66,7 @@ export const SendTextsMixin = {
       let text = {
         phoneNum: this.appointment.tutors[0].person.phoneNum,
         message:
-          "You have a new pending private appointment:" +
+          "You have a new pending private appointment." +
           "\n    Date: " +
           this.formatDate(this.appointment.date) +
           "\n    Time: " +
@@ -112,7 +112,7 @@ export const SendTextsMixin = {
       };
       if (this.appointment.type === "Private") {
         text.message =
-          "You have a new booked private appointment:" +
+          "You have a new booked private appointment." +
           "\n    Date: " +
           this.formatDate(this.appointment.date) +
           "\n    Time: " +
@@ -132,7 +132,7 @@ export const SendTextsMixin = {
           "\nPlease view this booked appointment: http://tutorscheduling.oc.edu/";
       } else if (this.appointment.type === "Group") {
         text.message =
-          "A student has joined your group appointment:" +
+          "A student has joined your group appointment." +
           "\n    Date: " +
           this.formatDate(this.appointment.date) +
           "\n    Time: " +
@@ -163,7 +163,7 @@ export const SendTextsMixin = {
         message:
           "A " +
           fromUser.selectedRole.type.toLowerCase() +
-          " has joined your group appointment:" +
+          " has joined your group appointment." +
           "\n    Date: " +
           this.formatDate(this.appointment.date) +
           "\n    Time: " +
@@ -262,7 +262,7 @@ export const SendTextsMixin = {
         fromUser.selectedRole.type === "Student"
       ) {
         text.message =
-          "A student has left your group appointment:" +
+          "A student has left your group appointment." +
           "\n    Date: " +
           this.formatDate(this.appointment.date) +
           "\n    Time: " +
@@ -297,20 +297,14 @@ export const SendTextsMixin = {
           if (this.appointment.students[i].personId !== fromUser.userID) {
             text.phoneNum = this.appointment.students[i].person.phoneNum;
             if (text.phoneNum !== "") {
-              console.log("in text for loop");
-              await TwilioServices.sendMessage(text)
-                .then(() => {
-                  console.log("successfully sent text");
-                })
-                .catch((error) => {
-                  this.message = error.response.data.message;
-                  console.log("There was an error:", error.response);
-                });
+              await TwilioServices.sendMessage(text).catch((error) => {
+                this.message = error.response.data.message;
+                console.log("There was an error:", error.response);
+              });
             }
           }
         }
       }
-      console.log("end of cancel message");
     },
   },
 };

@@ -263,7 +263,10 @@
         <v-row>
           <v-col>
             <v-card
-              :to="{ name: 'calendar' }"
+              :to="{
+                name: 'calendar',
+                params: { id: user.selectedRole.personRoleId },
+              }"
               class="mx-auto my-12 d-flex justify-center"
               max-width="400"
               height="100"
@@ -277,7 +280,10 @@
           </v-col>
           <v-col>
             <v-card
-              :to="{ name: 'tutorAddAvailability' }"
+              :to="{
+                name: 'tutorAddAvailability',
+                params: { id: user.selectedRole.personRoleId },
+              }"
               class="mx-auto my-12 d-flex justify-center"
               max-width="400"
               height="100"
@@ -358,7 +364,7 @@ export default {
   mixins: [AppointmentActionMixin, TimeFunctionsMixin],
   props: {
     id: {
-      type: Number,
+      type: [Number, String],
       default: 0,
     },
   },
@@ -412,6 +418,7 @@ export default {
     this.user = Utils.getStore("user");
     if (this.id !== 0) {
       this.getTutorRole();
+      console.log(this.user);
     }
     await this.getGroupByPersonRoleId();
     await this.getAppointments();
@@ -422,6 +429,8 @@ export default {
   methods: {
     checkForAuthorization() {
       var now = new Date().toISOString();
+      console.log(now);
+      console.log(this.user.expiration_date);
       if (
         this.user.refresh_token !== null &&
         this.user.refresh_token !== undefined &&
@@ -436,8 +445,13 @@ export default {
     },
     doAuthorization() {
       // the commented line is for local machine only
-      // this.url = (process.env.VUE_APP_SITE_URL ? process.env.VUE_APP_SITE_URL : "http://localhost") + '/tutoring-api/authorize/' + this.user.userID;
-      this.url = "/tutoring-api/authorize/" + this.user.userID;
+      this.url =
+        (process.env.VUE_APP_SITE_URL
+          ? process.env.VUE_APP_SITE_URL
+          : "http://localhost") +
+        "/tutoring-api/authorize/" +
+        this.user.userID;
+      // this.url = "/tutoring-api/authorize/" + this.user.userID;
 
       const client = global.google.accounts.oauth2.initCodeClient({
         client_id: process.env.VUE_APP_CLIENT_ID,
@@ -451,6 +465,7 @@ export default {
           const xhr = new XMLHttpRequest();
           xhr.onreadystatechange = function () {
             if (this.readyState == 4 && this.status == 200) {
+              console.log("in on ready state change");
               let responseData = JSON.parse(this.responseText);
               let user = Utils.getStore("user");
               user.refresh_token = responseData.refresh_token;
@@ -466,16 +481,16 @@ export default {
           xhr.setRequestHeader("X-Requested-With", "XMLHttpRequest");
           xhr.setRequestHeader("Access-Control-Allow-Origin", "*");
           xhr.send("code=" + response.code);
+          this.alertType = "success";
+          this.alert =
+            "You have successfully authorized Tutor Scheduling to link your Google calendar to ours.";
+          this.showAlert = true;
           // After receipt, the code is exchanged for an access token and
           // refresh token, and the platform then updates this web app
           // running in user's browser with the requested calendar info.
         },
       });
       client.requestCode();
-      this.alertType = "success";
-      this.alert =
-        "You have successfully authorized Tutor Scheduling to link your Google calendar to ours.";
-      this.showAlert = true;
     },
     async getGroupByPersonRoleId() {
       await PersonRoleServices.getGroupForPersonRole(this.id)

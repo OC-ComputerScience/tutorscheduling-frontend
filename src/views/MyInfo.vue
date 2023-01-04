@@ -26,7 +26,7 @@
       <br />
 
       <PhoneNumberComponent
-        :phoneNum="person.phoneNum"
+        :phone-num="person.phoneNum"
         @editedPhoneNumber="setPhoneNumber"
       ></PhoneNumberComponent>
 
@@ -96,7 +96,7 @@ export default {
   components: { InformationComponent, PhoneNumberComponent },
   props: {
     id: {
-      type: Number,
+      type: [Number, String],
       default: 0,
     },
   },

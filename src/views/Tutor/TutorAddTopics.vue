@@ -116,7 +116,7 @@ export default {
   mixins: [RedirectToPageMixin],
   props: {
     id: {
-      type: Number,
+      type: [Number, String],
       default: 0,
     },
   },
