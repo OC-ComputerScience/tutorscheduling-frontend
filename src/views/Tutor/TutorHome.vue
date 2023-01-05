@@ -624,8 +624,9 @@ export default {
           this.user,
           this.selectedAppointment
         );
-      else if (this.selectedAppointment.status === "booked")
+      else {
         await this.cancelAppointment(this.selectedAppointment, this.user);
+      }
       await this.getAppointments();
       this.apptDialog = false;
       this.showDeleteConfirmation = false;
