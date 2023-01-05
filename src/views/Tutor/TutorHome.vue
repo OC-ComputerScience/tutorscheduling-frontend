@@ -171,11 +171,7 @@
               v-if="!(selectedAppointment.type === 'Group')"
               color="#12f000"
               :disabled="!checkStatus('pending')"
-              @click="
-                confirmAppointment(true, user, selectedAppointment);
-                getAppointments();
-                apptDialog = false;
-              "
+              @click="directToConfirm()"
             >
               Confirm
             </v-btn>
@@ -183,11 +179,7 @@
               v-if="!(selectedAppointment.type === 'Group')"
               color="error"
               :disabled="!checkStatus('pending')"
-              @click="
-                showDeleteConfirmation = true;
-                getAppointments();
-                apptDialog = false;
-              "
+              @click="showDeleteConfirmation = true"
             >
               Reject
             </v-btn>
@@ -200,15 +192,7 @@
             >
               Close
             </v-btn>
-            <v-btn
-              v-if="saveChanges"
-              color="accent"
-              @click="
-                editAppointment(user, selectedAppointment);
-                getAppointments();
-                apptDialog = false;
-              "
-            >
+            <v-btn v-if="saveChanges" color="accent" @click="directToEdit()">
               Save Changes
             </v-btn>
 
@@ -221,11 +205,7 @@
                 checkStatus('booked')
               "
               color="red"
-              @click="
-                showDeleteConfirmation = true;
-                getAppointments();
-                apptDialog = false;
-              "
+              @click="showDeleteConfirmation = true"
             >
               Cancel Appointment
             </v-btn>
@@ -646,8 +626,19 @@ export default {
         );
       else if (this.selectedAppointment.status === "booked")
         await this.cancelAppointment(this.selectedAppointment, this.user);
+      await this.getAppointments();
       this.apptDialog = false;
       this.showDeleteConfirmation = false;
+    },
+    async directToConfirm() {
+      await this.confirmAppointment(true, this.user, this.selectedAppointment);
+      await this.getAppointments();
+      this.apptDialog = false;
+    },
+    async directToEdit() {
+      await this.editAppointment(this.user, this.selectedAppointment);
+      await this.getAppointments();
+      this.apptDialog = false;
     },
     async getTutorRole() {
       await PersonRoleServices.getPersonRole(this.id)
