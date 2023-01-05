@@ -15,7 +15,7 @@
           type="appointment"
           :item="selectedAppointment"
           @handleReturningCancel="showDeleteConfirmation = false"
-          @handleReturningSuccess="cancelAppointment(selectedAppointment, user)"
+          @handleReturningSuccess="directToCancel()"
         ></DeleteConfirmationComponent>
       </v-dialog>
       <v-container v-if="!disabled">
@@ -360,6 +360,11 @@ export default {
     }
   },
   methods: {
+    async directToCancel() {
+      await this.cancelAppointment(this.selectedAppointment, this.user);
+      this.apptDialog = false;
+      this.showDeleteConfirmation = false;
+    },
     async getGroupByPersonRoleId() {
       await PersonRoleServices.getGroupForPersonRole(this.id)
         .then(async (response) => {
