@@ -153,7 +153,7 @@ export default {
         });
     },
     setPhoneNumber(phoneNumber) {
-      this.person.phoneNumber = phoneNumber;
+      this.person.phoneNum = phoneNumber;
       this.enableUpdate = true;
     },
     async saveChanges() {
