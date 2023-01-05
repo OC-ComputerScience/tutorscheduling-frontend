@@ -84,7 +84,12 @@ export default {
     InformationComponent,
   },
   mixins: [SendTextsMixin],
-  props: ["id"],
+  props: {
+    id: {
+      type: [Number, String],
+      default: 0,
+    },
+  },
   data() {
     return {
       showAlert: false,

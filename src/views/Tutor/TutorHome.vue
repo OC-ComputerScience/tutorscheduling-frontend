@@ -263,12 +263,17 @@
         <v-row>
           <v-col>
             <v-card
-              :to="{ name: 'calendar' }"
               class="mx-auto my-12 d-flex justify-center"
               max-width="400"
               height="100"
               elevation="10"
               color="#196CA2"
+              @click="
+                handleRedundantNavigation(
+                  'calendar',
+                  user.selectedRole.personRoleId
+                )
+              "
             >
               <v-card-title class="justify-center white--text">
                 View Calendar
@@ -277,12 +282,17 @@
           </v-col>
           <v-col>
             <v-card
-              :to="{ name: 'tutorAddAvailability' }"
               class="mx-auto my-12 d-flex justify-center"
               max-width="400"
               height="100"
               elevation="10"
               color="#63BAC0"
+              @click="
+                handleRedundantNavigation(
+                  'tutorAddAvailability',
+                  user.selectedRole.personRoleId
+                )
+              "
             >
               <v-card-title class="justify-center white--text">
                 Manage Availability
@@ -347,6 +357,7 @@ import PersonAppointmentServices from "@/services/personAppointmentServices.js";
 import DeleteConfirmationComponent from "../../components/DeleteConfirmationComponent.vue";
 import InformationComponent from "../../components/InformationComponent.vue";
 import { AppointmentActionMixin } from "../../mixins/AppointmentActionMixin";
+import { RedirectToPageMixin } from "../../mixins/RedirectToPageMixin";
 import { TimeFunctionsMixin } from "../../mixins/TimeFunctionsMixin";
 
 export default {
@@ -355,8 +366,13 @@ export default {
     DeleteConfirmationComponent,
     InformationComponent,
   },
-  mixins: [AppointmentActionMixin, TimeFunctionsMixin],
-  props: ["id"],
+  mixins: [AppointmentActionMixin, RedirectToPageMixin, TimeFunctionsMixin],
+  props: {
+    id: {
+      type: [Number, String],
+      default: 0,
+    },
+  },
   data() {
     return {
       showDeleteConfirmation: false,
@@ -431,8 +447,13 @@ export default {
     },
     doAuthorization() {
       // the commented line is for local machine only
-      // this.url = (process.env.VUE_APP_SITE_URL ? process.env.VUE_APP_SITE_URL : "http://localhost") + '/tutoring-api/authorize/' + this.user.userID;
-      this.url = "/tutoring-api/authorize/" + this.user.userID;
+      this.url =
+        (process.env.VUE_APP_SITE_URL
+          ? process.env.VUE_APP_SITE_URL
+          : "http://localhost") +
+        "/tutoring-api/authorize/" +
+        this.user.userID;
+      // this.url = "/tutoring-api/authorize/" + this.user.userID;
 
       const client = global.google.accounts.oauth2.initCodeClient({
         client_id: process.env.VUE_APP_CLIENT_ID,
@@ -446,6 +467,7 @@ export default {
           const xhr = new XMLHttpRequest();
           xhr.onreadystatechange = function () {
             if (this.readyState == 4 && this.status == 200) {
+              console.log("in on ready state change");
               let responseData = JSON.parse(this.responseText);
               let user = Utils.getStore("user");
               user.refresh_token = responseData.refresh_token;
@@ -461,16 +483,16 @@ export default {
           xhr.setRequestHeader("X-Requested-With", "XMLHttpRequest");
           xhr.setRequestHeader("Access-Control-Allow-Origin", "*");
           xhr.send("code=" + response.code);
+          this.alertType = "success";
+          this.alert =
+            "You have successfully authorized Tutor Scheduling to link your Google calendar to ours.";
+          this.showAlert = true;
           // After receipt, the code is exchanged for an access token and
           // refresh token, and the platform then updates this web app
           // running in user's browser with the requested calendar info.
         },
       });
       client.requestCode();
-      this.alertType = "success";
-      this.alert =
-        "You have successfully authorized Tutor Scheduling to link your Google calendar to ours.";
-      this.showAlert = true;
     },
     async getGroupByPersonRoleId() {
       await PersonRoleServices.getGroupForPersonRole(this.id)

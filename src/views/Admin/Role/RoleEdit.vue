@@ -44,8 +44,12 @@ import RoleServices from "@/services/roleServices.js";
 import GroupServices from "@/services/groupServices.js";
 
 export default {
-  props: ["id"],
-
+  props: {
+    id: {
+      type: [Number, String],
+      default: 0,
+    },
+  },
   data() {
     return {
       valid: false,

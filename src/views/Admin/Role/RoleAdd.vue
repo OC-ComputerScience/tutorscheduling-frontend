@@ -41,7 +41,12 @@ import PersonRoleServices from "@/services/personRoleServices.js";
 
 export default {
   components: {},
-  props: ["id"],
+  props: {
+    id: {
+      type: Number,
+      default: 0,
+    },
+  },
   data() {
     return {
       valid: true,

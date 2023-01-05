@@ -11,6 +11,44 @@ export const RedirectToPageMixin = {
     };
   },
   methods: {
+    handleRedundantNavigation(name, id) {
+      if (id === null) {
+        this.$router
+          .push({
+            name: name,
+          })
+          .catch((err) => {
+            // Ignore the vuex err regarding  navigating to the page they are already on.
+            if (
+              err.name !== "NavigationDuplicated" &&
+              !err.message.includes(
+                "Avoided redundant navigation to current location"
+              )
+            ) {
+              // But print any other errors to the console
+              console.log(err);
+            }
+          });
+      } else {
+        this.$router
+          .push({
+            name: name,
+            params: { id: id },
+          })
+          .catch((err) => {
+            // Ignore the vuex err regarding  navigating to the page they are already on.
+            if (
+              err.name !== "NavigationDuplicated" &&
+              !err.message.includes(
+                "Avoided redundant navigation to current location"
+              )
+            ) {
+              // But print any other errors to the console
+              console.log(err);
+            }
+          });
+      }
+    },
     async getPersonRoles(personId) {
       await GroupServices.getContractsNeededForPerson(personId)
         .then((response) => {
@@ -18,6 +56,7 @@ export const RedirectToPageMixin = {
         })
         .catch((error) => {
           console.log("There was an error:", error.response);
+          return;
         });
 
       // if the user doesn't have any incomplete roles, get normal roles
@@ -29,6 +68,7 @@ export const RedirectToPageMixin = {
           })
           .catch((error) => {
             console.log("There was an error:", error.response);
+            return;
           });
         await GroupServices.getGroupsForPerson(personId)
           .then((response) => {
@@ -36,6 +76,7 @@ export const RedirectToPageMixin = {
           })
           .catch((error) => {
             console.log("There was an error:", error.response);
+            return;
           });
       }
     },
@@ -47,11 +88,8 @@ export const RedirectToPageMixin = {
           for (let j = 0; j < group.role.length; j++) {
             let role = group.role[j];
             if (role.type === "Student" || role.type === "Tutor") {
-              this.$router.push({
-                name: "contract",
-                params: { id: role.personrole[0].id },
-              });
-              break;
+              this.handleRedundantNavigation("contract", role.personrole[0].id);
+              return;
             }
           }
         }
@@ -62,11 +100,11 @@ export const RedirectToPageMixin = {
             group.topic.length === 0 &&
             group.role[0].personrole[0].status !== "disabled"
           ) {
-            this.$router.push({
-              name: "tutorAddTopics",
-              params: { id: group.role[0].personrole[0].id },
-            });
-            break;
+            this.handleRedundantNavigation(
+              "tutorAddTopics",
+              group.role[0].personrole[0].id
+            );
+            return;
           }
         }
         if (
@@ -85,11 +123,11 @@ export const RedirectToPageMixin = {
                   personRoleId: role.personrole[0].id,
                 };
                 Utils.setStore("user", this.user);
-                this.$router.push({
-                  name: "adminHome",
-                  params: { id: role.personrole[0].id },
-                });
-                break;
+                this.handleRedundantNavigation(
+                  "adminHome",
+                  role.personrole[0].id
+                );
+                return;
               }
             }
           }

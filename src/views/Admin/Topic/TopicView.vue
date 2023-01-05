@@ -60,8 +60,16 @@ import TopicServices from "@/services/topicServices.js";
 import PersonRoleServices from "@/services/personRoleServices.js";
 
 export default {
-  props: ["id", "topicId"],
-
+  props: {
+    id: {
+      type: [Number, String],
+      default: 0,
+    },
+    topicId: {
+      type: [Number, String],
+      default: 0,
+    },
+  },
   data() {
     return {
       topic: {},

@@ -201,12 +201,17 @@
         <v-row>
           <v-col>
             <v-card
-              :to="{ name: 'calendar' }"
               class="mx-auto my-12 d-flex justify-center"
               max-width="400"
               height="100"
               elevation="10"
               color="#EE5044"
+              @click="
+                handleRedundantNavigation(
+                  'calendar',
+                  user.selectedRole.personRoleId
+                )
+              "
             >
               <v-card-title class="justify-center white--text">
                 View Calendar
@@ -215,12 +220,17 @@
           </v-col>
           <v-col>
             <v-card
-              :to="{ name: 'studentAddRequest' }"
               class="mx-auto my-12 d-flex justify-center"
               max-width="400"
               height="100"
               elevation="10"
               color="#F8C545"
+              @click="
+                handleRedundantNavigation(
+                  'studentAddRequest',
+                  user.selectedRole.personRoleId
+                )
+              "
             >
               <v-card-title class="justify-center white--text">
                 Make A Request
@@ -281,6 +291,7 @@ import PersonAppointmentServices from "@/services/personAppointmentServices.js";
 import DeleteConfirmationComponent from "../../components/DeleteConfirmationComponent.vue";
 import InformationComponent from "../../components/InformationComponent.vue";
 import { AppointmentActionMixin } from "../../mixins/AppointmentActionMixin";
+import { RedirectToPageMixin } from "../../mixins/RedirectToPageMixin";
 import { TimeFunctionsMixin } from "../../mixins/TimeFunctionsMixin";
 
 export default {
@@ -289,8 +300,13 @@ export default {
     DeleteConfirmationComponent,
     InformationComponent,
   },
-  mixins: [AppointmentActionMixin, TimeFunctionsMixin],
-  props: ["id"],
+  mixins: [AppointmentActionMixin, RedirectToPageMixin, TimeFunctionsMixin],
+  props: {
+    id: {
+      type: [Number, String],
+      default: 0,
+    },
+  },
   data() {
     return {
       showDeleteConfirmation: false,

@@ -139,7 +139,12 @@ export default {
     InformationComponent,
   },
   mixins: [TimeFunctionsMixin],
-  props: ["id"],
+  props: {
+    id: {
+      type: [Number, String],
+      default: 0,
+    },
+  },
   data() {
     return {
       message: "Create Reports",

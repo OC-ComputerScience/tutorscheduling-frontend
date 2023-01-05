@@ -1,7 +1,7 @@
 <template>
   <div>
     <v-app-bar app color="primary" dark>
-      <router-link :to="link">
+      <div @click="createLink()">
         <v-img
           class="mr-4"
           src="../assets/oc_logo_social.png"
@@ -9,7 +9,7 @@
           max-width="50"
           contain
         ></v-img>
-      </router-link>
+      </div>
       <v-toolbar-title class="title">
         <div>{{ title }}</div>
       </v-toolbar-title>
@@ -23,9 +23,11 @@
           :ref="item.link"
           exact
           link
-          :to="{ name: item.name, params: { id: selectedRole.personRoleId } }"
           :color="item.color"
           text
+          @click="
+            handleRedundantNavigation(item.name, selectedRole.personRoleId)
+          "
         >
           {{ item.text }}
         </v-btn>
@@ -168,8 +170,10 @@
           v-for="item in activeMenus"
           :key="item.text"
           exact
-          :to="{ name: item.name, params: { id: selectedRole.personRoleId } }"
           :color="item.color"
+          @click="
+            handleRedundantNavigation(item.name, selectedRole.personRoleId)
+          "
         >
           <v-list-item-action>
             <v-icon v-if="item.icon" color="white">{{ item.icon }}</v-icon>
@@ -196,7 +200,6 @@ export default {
   mixins: [RedirectToPageMixin],
   data: () => ({
     user: {},
-    link: "",
     drawer: false,
     title: "OC Tutoring",
     initials: "",
@@ -334,21 +337,18 @@ export default {
       this.name = this.user.fName + " " + this.user.lName;
       this.selectedRole = this.user.selectedRole;
       this.selectedGroup = this.user.selectedGroup;
-      this.link = this.createLink();
       await this.resetMenu();
     }
   },
   methods: {
     createLink() {
       if (this.isSelectedRoleValid()) {
-        return (
-          "/" +
-          this.selectedRole.type.toLowerCase() +
-          "Home/" +
+        this.handleRedundantNavigation(
+          `${this.selectedRole.type.toLowerCase()}Home`,
           this.selectedRole.personRoleId
         );
       } else {
-        return "/";
+        this.handleRedundantNavigation("login", null);
       }
     },
     saveGroupRole() {
@@ -371,12 +371,9 @@ export default {
     },
     menuAction(route) {
       if (!this.isSelectedRoleValid()) {
-        this.$router.push({ name: "login" });
+        this.handleRedundantNavigation("login", null);
       } else {
-        this.$router.push({
-          name: route,
-          params: { id: this.selectedRole.personRoleId },
-        });
+        this.handleRedundantNavigation(route, this.selectedRole.personRoleId);
       }
     },
     async resetMenu() {
@@ -408,7 +405,7 @@ export default {
         console.log("error", error);
       });
       Utils.removeItem("user");
-      this.$router.push({ name: "login" });
+      this.handleRedundantNavigation("login", null);
     },
     async limitTutorMenu() {
       if (this.selectedRole.type.includes("Tutor")) {

@@ -42,7 +42,12 @@ import PersonTopicServices from "../../../services/personTopicServices";
 export default {
   name: "App",
   components: {},
-  props: ["id"],
+  props: {
+    id: {
+      type: [Number, String],
+      default: 0,
+    },
+  },
   data() {
     return {
       search: "",

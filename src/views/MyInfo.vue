@@ -26,7 +26,7 @@
       <br />
 
       <PhoneNumberComponent
-        :phoneNum="person.phoneNum"
+        :phone-num="person.phoneNum"
         @editedPhoneNumber="setPhoneNumber"
       ></PhoneNumberComponent>
 
@@ -94,7 +94,12 @@ import PhoneNumberComponent from "../components/PhoneNumberComponent.vue";
 export default {
   name: "MyInfo",
   components: { InformationComponent, PhoneNumberComponent },
-  props: ["id"],
+  props: {
+    id: {
+      type: [Number, String],
+      default: 0,
+    },
+  },
   data() {
     return {
       user: {},

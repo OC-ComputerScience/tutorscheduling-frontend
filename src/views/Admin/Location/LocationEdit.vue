@@ -87,7 +87,12 @@ export default {
   components: {
     DeleteConfirmationComponent,
   },
-  props: ["id"],
+  props: {
+    id: {
+      type: [Number, String],
+      default: 0,
+    },
+  },
   data() {
     return {
       showDisableConfirmation: false,

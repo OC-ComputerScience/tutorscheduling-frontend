@@ -89,7 +89,16 @@ export default {
   components: {
     InformationComponent,
   },
-  props: ["id", "userId"],
+  props: {
+    id: {
+      type: [Number, String],
+      default: 0,
+    },
+    userId: {
+      type: [Number, String],
+      default: 0,
+    },
+  },
   data() {
     return {
       valid: false,

@@ -41,7 +41,12 @@ import LocationServices from "@/services/locationServices.js";
 export default {
   name: "App",
   components: {},
-  props: ["id"],
+  props: {
+    id: {
+      type: Number,
+      default: 0,
+    },
+  },
   data() {
     return {
       message:

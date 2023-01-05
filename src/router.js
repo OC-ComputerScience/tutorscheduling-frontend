@@ -82,6 +82,7 @@ const router = new Router({
       path: "/contract/:id",
       name: "contract",
       component: Contract,
+      props: true,
     },
     {
       path: "/help/:id",
