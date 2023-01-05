@@ -157,7 +157,6 @@ export default {
       this.enableUpdate = true;
     },
     async saveChanges() {
-      console.log(this.person);
       await PersonServices.updatePerson(this.person.id, this.person)
         .then(() => {
           this.alert =
