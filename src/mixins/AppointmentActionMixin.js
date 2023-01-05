@@ -302,7 +302,7 @@ export const AppointmentActionMixin = {
           await this.sendCanceledMessage(fromUser, appointment.id);
           let studentPersonAppointment = this.appointment.students.filter(
             (student) => student.personId === fromUser.userID
-          );
+          )[0];
           // delete student's pa
           await PersonAppointmentServices.deletePersonAppointment(
             studentPersonAppointment.id

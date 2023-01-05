@@ -174,22 +174,11 @@
               <v-btn
                 v-if="selectedAppointment.type === 'Private' && saveChanges"
                 color="accent"
-                @click="
-                  editAppointment(user, selectedAppointment);
-                  getAppointments();
-                  apptDialog = false;
-                "
+                @click="directToEdit()"
               >
                 Save Changes
               </v-btn>
-              <v-btn
-                color="red"
-                @click="
-                  showDeleteConfirmation = true;
-                  getAppointments();
-                  apptDialog = false;
-                "
-              >
+              <v-btn color="red" @click="showDeleteConfirmation = true">
                 Cancel Appointment
               </v-btn>
             </v-card-actions>
@@ -362,8 +351,14 @@ export default {
   methods: {
     async directToCancel() {
       await this.cancelAppointment(this.selectedAppointment, this.user);
+      await this.getAppointments();
       this.apptDialog = false;
       this.showDeleteConfirmation = false;
+    },
+    async directToEdit() {
+      await this.editAppointment(this.user, this.selectedAppointment);
+      await this.getAppointments();
+      this.apptDialog = false;
     },
     async getGroupByPersonRoleId() {
       await PersonRoleServices.getGroupForPersonRole(this.id)
