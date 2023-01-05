@@ -35,11 +35,13 @@
         <v-col justify="center">
           <v-row justify="center">
             <v-card
-              :to="{
-                name: 'adminRequests',
-                params: { id: user.selectedRole.personRoleId },
-              }"
               class="mx-auto my-3 justify-center"
+              @click="
+                handleRedundantNavigation(
+                  'adminRequests',
+                  user.selectedRole.personRoleId
+                )
+              "
             >
               <v-card-title>
                 Student Requests
@@ -59,11 +61,13 @@
           </v-row>
           <v-row justify="center">
             <v-card
-              :to="{
-                name: 'adminApprove',
-                params: { id: user.selectedRole.personRoleId },
-              }"
               class="mx-auto my-5 justify-center"
+              @click="
+                handleRedundantNavigation(
+                  'adminApprove',
+                  user.selectedRole.personRoleId
+                )
+              "
             >
               <v-card-title>
                 Tutor Applications
@@ -135,12 +139,13 @@ import TopicServices from "@/services/topicServices.js";
 import PersonServices from "@/services/personServices.js";
 import PersonRoleServices from "@/services/personRoleServices.js";
 import InformationComponent from "@/components/InformationComponent.vue";
+import { RedirectToPageMixin } from "@/mixins/RedirectToPageMixin";
 import { TimeFunctionsMixin } from "@/mixins/TimeFunctionsMixin";
 import "@/plugins/apexcharts";
 
 export default {
   name: "AdminHome",
-  mixins: [TimeFunctionsMixin],
+  mixins: [RedirectToPageMixin, TimeFunctionsMixin],
   components: {
     InformationComponent,
   },

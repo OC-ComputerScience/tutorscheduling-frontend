@@ -12,24 +12,42 @@ export const RedirectToPageMixin = {
   },
   methods: {
     handleRedundantNavigation(name, id) {
-      console.log("inside handle redundant");
-      this.$router
-        .push({
-          name: name,
-          params: { id: id },
-        })
-        .catch((err) => {
-          // Ignore the vuex err regarding  navigating to the page they are already on.
-          if (
-            err.name !== "NavigationDuplicated" &&
-            !err.message.includes(
-              "Avoided redundant navigation to current location"
-            )
-          ) {
-            // But print any other errors to the console
-            console.log(err);
-          }
-        });
+      if (id === null) {
+        this.$router
+          .push({
+            name: name,
+          })
+          .catch((err) => {
+            // Ignore the vuex err regarding  navigating to the page they are already on.
+            if (
+              err.name !== "NavigationDuplicated" &&
+              !err.message.includes(
+                "Avoided redundant navigation to current location"
+              )
+            ) {
+              // But print any other errors to the console
+              console.log(err);
+            }
+          });
+      } else {
+        this.$router
+          .push({
+            name: name,
+            params: { id: id },
+          })
+          .catch((err) => {
+            // Ignore the vuex err regarding  navigating to the page they are already on.
+            if (
+              err.name !== "NavigationDuplicated" &&
+              !err.message.includes(
+                "Avoided redundant navigation to current location"
+              )
+            ) {
+              // But print any other errors to the console
+              console.log(err);
+            }
+          });
+      }
     },
     async getPersonRoles(personId) {
       await GroupServices.getContractsNeededForPerson(personId)
