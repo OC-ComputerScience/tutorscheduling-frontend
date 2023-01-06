@@ -220,8 +220,9 @@
           </v-card-title>
           <v-card-text>
             Tutor Scheduling updates your Google calendar with appointments. You
-            will now be asked to approve that access via Google. You will be
-            presented with a Google login and a Tutor Scheduling access request.
+            will now be asked to approve (or reapprove) that access via Google.
+            You will be presented with a Google login and a Tutor Scheduling
+            access request.
           </v-card-text>
           <v-card-actions>
             <v-spacer></v-spacer>
@@ -427,13 +428,13 @@ export default {
     },
     doAuthorization() {
       // the commented line is for local machine only
-      // this.url =
-      //   (process.env.VUE_APP_SITE_URL
-      //     ? process.env.VUE_APP_SITE_URL
-      //     : "http://localhost") +
-      //   "/tutoring-api/authorize/" +
-      //   this.user.userID;
-      this.url = "/tutoring-api/authorize/" + this.user.userID;
+      if (process.env.VUE_APP_CLIENT_URL.includes("localhost")) {
+        this.url = "http://localhost:3002";
+      } else {
+        this.url = "/tutoring-api";
+      }
+      this.url += "/authorize/" + this.user.userID;
+      console.log(this.url);
 
       const client = global.google.accounts.oauth2.initCodeClient({
         client_id: process.env.VUE_APP_CLIENT_ID,
@@ -447,7 +448,6 @@ export default {
           const xhr = new XMLHttpRequest();
           xhr.onreadystatechange = function () {
             if (this.readyState == 4 && this.status == 200) {
-              console.log("in on ready state change");
               let responseData = JSON.parse(this.responseText);
               let user = Utils.getStore("user");
               user.refresh_token = responseData.refresh_token;

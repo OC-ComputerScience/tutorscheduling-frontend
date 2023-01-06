@@ -42,7 +42,8 @@ export const SendTextsMixin = {
           fromUser.lName +
           " for " +
           groupName +
-          ".\nPlease view this application: http://tutorscheduling.oc.edu/",
+          ".\nPlease view this application: " +
+          process.env.VUE_APP_CLIENT_URL,
       };
       await TwilioServices.sendMessage(text);
     },
@@ -56,7 +57,8 @@ export const SendTextsMixin = {
           fromUser.lName +
           " for " +
           fromUser.selectedGroup +
-          ".\nPlease view this request: http://tutorscheduling.oc.edu/",
+          ".\nPlease view this request: " +
+          process.env.VUE_APP_CLIENT_URL,
       };
       console.log(text);
       await TwilioServices.sendMessage(text);
@@ -79,7 +81,8 @@ export const SendTextsMixin = {
           this.appointment.students[0].person.fName +
           " " +
           this.appointment.students[0].person.lName +
-          "\nPlease view this pending appointment: http://tutorscheduling.oc.edu/",
+          "\nPlease view this pending appointment: " +
+          process.env.VUE_APP_CLIENT_URL,
       };
       await TwilioServices.sendMessage(text);
     },
@@ -100,7 +103,8 @@ export const SendTextsMixin = {
           this.appointment.tutors[0].person.fName +
           " " +
           this.appointment.tutors[0].person.lName +
-          ". \nPlease review this appointment: http://tutorscheduling.oc.edu/",
+          ". \nPlease review this appointment: " +
+          process.env.VUE_APP_CLIENT_URL,
       };
       await TwilioServices.sendMessage(text);
     },
@@ -129,7 +133,8 @@ export const SendTextsMixin = {
           admin.fName +
           " " +
           admin.lName +
-          "\nPlease view this booked appointment: http://tutorscheduling.oc.edu/";
+          "\nPlease view this booked appointment: " +
+          process.env.VUE_APP_CLIENT_URL;
       } else if (this.appointment.type === "Group") {
         text.message =
           "A student has joined your group appointment." +
@@ -149,7 +154,8 @@ export const SendTextsMixin = {
           admin.fName +
           " " +
           admin.lName +
-          "\nPlease view this group appointment: http://tutorscheduling.oc.edu/";
+          "\nPlease view this group appointment: " +
+          process.env.VUE_APP_CLIENT_URL;
       }
       if (text.message !== "") {
         await TwilioServices.sendMessage(text);
@@ -178,7 +184,8 @@ export const SendTextsMixin = {
           fromUser.fName +
           " " +
           fromUser.lName +
-          "\nPlease review the changes: http://tutorscheduling.oc.edu/",
+          "\nPlease review the changes: " +
+          process.env.VUE_APP_CLIENT_URL,
       };
       await TwilioServices.sendMessage(text);
     },
@@ -199,7 +206,8 @@ export const SendTextsMixin = {
           fromUser.fName +
           " " +
           fromUser.lName +
-          ".\nPlease review the changes: http://tutorscheduling.oc.edu/",
+          ".\nPlease review the changes: " +
+          process.env.VUE_APP_CLIENT_URL,
       };
 
       // notify all tutors involved besides themselves
