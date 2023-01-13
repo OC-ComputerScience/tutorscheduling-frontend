@@ -2,26 +2,27 @@
   <div>
     <v-container>
       <v-toolbar>
-        <v-toolbar-title>{{ this.message }}</v-toolbar-title>
+        <v-toolbar-title>{{ message }}</v-toolbar-title>
         <v-spacer></v-spacer>
         <InformationComponent
-          message="Confirm or cancel your appointment."></InformationComponent>
+          message="Confirm or cancel your appointment."
+        ></InformationComponent>
       </v-toolbar>
       <br />
       <br />
-      <v-dialog persistent v-model="showDeleteConfirmation" max-width="750px">
+      <v-dialog v-model="showDeleteConfirmation" persistent max-width="750px">
         <DeleteConfirmationComponent
           type="appointment"
           :item="appointment"
           @handleReturningCancel="showDeleteConfirmation = false"
-          @handleReturningSuccess="
-            directToCancel()
-          "></DeleteConfirmationComponent>
+          @handleReturningSuccess="directToCancel()"
+        ></DeleteConfirmationComponent>
       </v-dialog>
       <v-dialog
-        persistent
         v-model="showSessionExpiredConfirmation"
-        max-width="750px">
+        persistent
+        max-width="750px"
+      >
         <v-card>
           <v-card-title>This link has expired.</v-card-title>
           <v-card-text> </v-card-text>
@@ -41,7 +42,8 @@
           v-if="appointment.date !== undefined"
           flat
           color="grey lighten-4"
-          min-width="500px">
+          min-width="500px"
+        >
           <v-card-title class="justify-center">
             Appointment on {{ formatDate(appointment.date) }} with
             {{ appointment.students[0].person.fName }}
@@ -70,7 +72,8 @@
         <v-btn
           color="error"
           class="mr-4"
-          @click="showDeleteConfirmation = true">
+          @click="showDeleteConfirmation = true"
+        >
           Reject
         </v-btn>
       </v-row>
@@ -87,12 +90,12 @@ import { TimeFunctionsMixin } from "../mixins/TimeFunctionsMixin";
 
 export default {
   name: "ConfirmAppointment",
-  props: ["id", "sessionToken"],
-  mixins: [TimeFunctionsMixin],
   components: {
     DeleteConfirmationComponent,
     InformationComponent,
   },
+  mixins: [TimeFunctionsMixin],
+  props: ["id", "sessionToken"],
   data() {
     return {
       message: "Confirm or Cancel Appointment",
