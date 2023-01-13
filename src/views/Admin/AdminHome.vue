@@ -2,62 +2,79 @@
   <div>
     <v-container>
       <v-toolbar>
-        <v-toolbar-title>Hello, {{ this.user.fName }}!</v-toolbar-title>
+        <v-toolbar-title>Hello, {{ user.fName }}!</v-toolbar-title>
         <InformationComponent :message="headerMessage"></InformationComponent>
         <v-spacer></v-spacer>
         <v-toolbar-title>Admin</v-toolbar-title>
       </v-toolbar>
       <br />
       <v-alert v-model="showAlert" dismissible :type="alertType">{{
-        this.alert
+        alert
       }}</v-alert>
       <br />
       <v-row justify="center">
         <v-col justify="center">
           <v-card>
             <v-card-title>
-              Upcoming Appointment Hours - {{ this.user.selectedGroup }}
+              Upcoming Appointment Hours - {{ user.selectedGroup }}
               <v-spacer></v-spacer>
               <InformationComponent
                 message="View a breakdown of appointment hours for last week, this
-                  week, and next week."></InformationComponent>
+                  week, and next week."
+              ></InformationComponent>
             </v-card-title>
             <apexchart
               ref="chart"
               width="700"
               type="bar"
               :options="chartOptions"
-              :series="series"></apexchart>
+              :series="series"
+            ></apexchart>
           </v-card>
         </v-col>
         <v-col justify="center">
           <v-row justify="center">
             <v-card
-              :to="{ name: 'adminRequests' }"
-              class="mx-auto my-3 justify-center">
+              class="mx-auto my-3 justify-center"
+              @click="
+                handleRedundantNavigation(
+                  'adminRequests',
+                  user.selectedRole.personRoleId
+                )
+              "
+            >
               <v-card-title>
                 Student Requests
                 <v-spacer></v-spacer>
                 <InformationComponent
-                  message="Click here to view requests."></InformationComponent>
+                  message="Click here to view requests."
+                ></InformationComponent>
               </v-card-title>
               <apexchart
                 width="380"
                 type="pie"
                 :options="pieOptions"
-                :series="pieSeries"></apexchart>
+                :series="pieSeries"
+              ></apexchart>
               <br />
             </v-card>
           </v-row>
           <v-row justify="center">
             <v-card
-              :to="{ name: 'adminApprove' }"
-              class="mx-auto my-5 justify-center">
+              class="mx-auto my-5 justify-center"
+              @click="
+                handleRedundantNavigation(
+                  'adminApprove',
+                  user.selectedRole.personRoleId
+                )
+              "
+            >
               <v-card-title>
                 Tutor Applications
                 <v-spacer></v-spacer>
                 <InformationComponent
-                  message="Click here to view applications."></InformationComponent>
+                  message="Click here to view applications."
+                ></InformationComponent>
               </v-card-title>
               <v-card-text class="text-center">
                 <h1>{{ applicationNum }}</h1>
@@ -73,13 +90,15 @@
               Tutors For Week Starting {{ currentWeek }}
               <v-spacer></v-spacer>
               <InformationComponent
-                message="View a breakdown of the appointment hours for each tutor."></InformationComponent>
+                message="View a breakdown of the appointment hours for each tutor."
+              ></InformationComponent>
             </v-card-title>
             <v-data-table
               :headers="tutorTable"
               :search="search"
               :items="tutors"
-              :items-per-page="50"></v-data-table>
+              :items-per-page="50"
+            ></v-data-table>
           </v-card>
           <br />
         </v-col>
@@ -89,13 +108,15 @@
               Topics For Week Starting {{ currentWeek }}
               <v-spacer></v-spacer>
               <InformationComponent
-                message="View a breakdown of the appointment hours for each topic."></InformationComponent>
+                message="View a breakdown of the appointment hours for each topic."
+              ></InformationComponent>
             </v-card-title>
             <v-data-table
               :headers="topicTable"
               :search="search"
               :items="topics"
-              :items-per-page="50"></v-data-table>
+              :items-per-page="50"
+            ></v-data-table>
           </v-card>
         </v-col>
       </v-row>
@@ -118,15 +139,21 @@ import TopicServices from "@/services/topicServices.js";
 import PersonServices from "@/services/personServices.js";
 import PersonRoleServices from "@/services/personRoleServices.js";
 import InformationComponent from "@/components/InformationComponent.vue";
+import { RedirectToPageMixin } from "@/mixins/RedirectToPageMixin";
 import { TimeFunctionsMixin } from "@/mixins/TimeFunctionsMixin";
 import "@/plugins/apexcharts";
 
 export default {
-  props: ["id"],
   name: "AdminHome",
-  mixins: [TimeFunctionsMixin],
+  mixins: [RedirectToPageMixin, TimeFunctionsMixin],
   components: {
     InformationComponent,
+  },
+  props: {
+    id: {
+      type: [Number, String],
+      default: 0,
+    },
   },
   data() {
     return {

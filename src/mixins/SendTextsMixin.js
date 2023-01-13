@@ -14,12 +14,18 @@ export const SendTextsMixin = {
       await AppointmentServices.getInfoForText(appointId)
         .then(async (response) => {
           this.appointment = response.data[0];
-          this.appointment.students = this.appointment.personappointment.filter(
-            (pa) => pa.isTutor === false
-          );
-          this.appointment.tutors = this.appointment.personappointment.filter(
-            (pa) => pa.isTutor === true
-          );
+          if (
+            this.appointment.personappointment !== null &&
+            this.appointment.personappointment !== undefined
+          ) {
+            this.appointment.students =
+              this.appointment.personappointment.filter(
+                (pa) => pa.isTutor === false
+              );
+            this.appointment.tutors = this.appointment.personappointment.filter(
+              (pa) => pa.isTutor === true
+            );
+          }
         })
         .catch((error) => {
           this.message = error;
@@ -36,7 +42,8 @@ export const SendTextsMixin = {
           fromUser.lName +
           " for " +
           groupName +
-          ".\nPlease view this application: http://tutorscheduling.oc.edu/",
+          ".\nPlease view this application: " +
+          process.env.VUE_APP_CLIENT_URL,
       };
       await TwilioServices.sendMessage(text);
     },
@@ -50,7 +57,8 @@ export const SendTextsMixin = {
           fromUser.lName +
           " for " +
           fromUser.selectedGroup +
-          ".\nPlease view this request: http://tutorscheduling.oc.edu/",
+          ".\nPlease view this request: " +
+          process.env.VUE_APP_CLIENT_URL,
       };
       console.log(text);
       await TwilioServices.sendMessage(text);
@@ -61,7 +69,7 @@ export const SendTextsMixin = {
       let text = {
         phoneNum: this.appointment.tutors[0].person.phoneNum,
         message:
-          "You have a new pending private appointment:" +
+          "You have a new pending private appointment." +
           "\n    Date: " +
           this.formatDate(this.appointment.date) +
           "\n    Time: " +
@@ -74,7 +82,9 @@ export const SendTextsMixin = {
           this.appointment.students[0].person.fName +
           " " +
           this.appointment.students[0].person.lName +
-          "\nPlease confirm or reject this pending appointment: http://tutorscheduling.oc.edu/confirmAppointment/" +
+          "\nPlease confirm or reject this pending appointment: " +
+          process.env.VUE_APP_CLIENT_URL +
+          "/confirmAppointment/" +
           this.appointment.id +
           "/session/" +
           this.appointment.tutors[0].person.session[0].token,
@@ -87,7 +97,7 @@ export const SendTextsMixin = {
         phoneNum: this.appointment.students[0].person.phoneNum,
         message:
           "The " +
-          this.appointment.type +
+          this.appointment.type.toLowerCase() +
           " appointment you booked for " +
           this.appointment.topic.name +
           " on " +
@@ -98,7 +108,8 @@ export const SendTextsMixin = {
           this.appointment.tutors[0].person.fName +
           " " +
           this.appointment.tutors[0].person.lName +
-          ". \nPlease review this appointment: http://tutorscheduling.oc.edu/",
+          ". \nPlease review this appointment: " +
+          process.env.VUE_APP_CLIENT_URL,
       };
       await TwilioServices.sendMessage(text);
     },
@@ -110,7 +121,7 @@ export const SendTextsMixin = {
       };
       if (this.appointment.type === "Private") {
         text.message =
-          "You have a new pending private appointment:" +
+          "You have a new booked private appointment." +
           "\n    Date: " +
           this.formatDate(this.appointment.date) +
           "\n    Time: " +
@@ -127,10 +138,11 @@ export const SendTextsMixin = {
           admin.fName +
           " " +
           admin.lName +
-          "\nPlease view this booked appointment: http://tutorscheduling.oc.edu/";
+          "\nPlease view this booked appointment: " +
+          process.env.VUE_APP_CLIENT_URL;
       } else if (this.appointment.type === "Group") {
         text.message =
-          "A student has joined your group appointment:" +
+          "A student has joined your group appointment." +
           "\n    Date: " +
           this.formatDate(this.appointment.date) +
           "\n    Time: " +
@@ -147,7 +159,8 @@ export const SendTextsMixin = {
           admin.fName +
           " " +
           admin.lName +
-          "\nPlease view this group appointment: http://tutorscheduling.oc.edu/";
+          "\nPlease view this group appointment: " +
+          process.env.VUE_APP_CLIENT_URL;
       }
       if (text.message !== "") {
         await TwilioServices.sendMessage(text);
@@ -161,7 +174,7 @@ export const SendTextsMixin = {
         message:
           "A " +
           fromUser.selectedRole.type.toLowerCase() +
-          " has joined your group appointment:" +
+          " has joined your group appointment." +
           "\n    Date: " +
           this.formatDate(this.appointment.date) +
           "\n    Time: " +
@@ -176,7 +189,8 @@ export const SendTextsMixin = {
           fromUser.fName +
           " " +
           fromUser.lName +
-          "\nPlease review the changes: http://tutorscheduling.oc.edu/",
+          "\nPlease review the changes: " +
+          process.env.VUE_APP_CLIENT_URL,
       };
       await TwilioServices.sendMessage(text);
     },
@@ -197,7 +211,8 @@ export const SendTextsMixin = {
           fromUser.fName +
           " " +
           fromUser.lName +
-          ".\nPlease review the changes: http://tutorscheduling.oc.edu/",
+          ".\nPlease review the changes: " +
+          process.env.VUE_APP_CLIENT_URL,
       };
 
       // notify all tutors involved besides themselves
@@ -259,7 +274,8 @@ export const SendTextsMixin = {
         this.appointment.type === "Group" &&
         fromUser.selectedRole.type === "Student"
       ) {
-        "A student has left your group appointment:" +
+        text.message =
+          "A student has left your group appointment." +
           "\n    Date: " +
           this.formatDate(this.appointment.date) +
           "\n    Time: " +
@@ -280,7 +296,10 @@ export const SendTextsMixin = {
         if (this.appointment.tutors[i].personId !== fromUser.userID) {
           text.phoneNum = this.appointment.tutors[i].person.phoneNum;
           if (text.phoneNum !== "") {
-            await TwilioServices.sendMessage(text);
+            await TwilioServices.sendMessage(text).catch((error) => {
+              this.message = error.response.data.message;
+              console.log("There was an error:", error.response);
+            });
           }
         }
       }
@@ -291,7 +310,10 @@ export const SendTextsMixin = {
           if (this.appointment.students[i].personId !== fromUser.userID) {
             text.phoneNum = this.appointment.students[i].person.phoneNum;
             if (text.phoneNum !== "") {
-              await TwilioServices.sendMessage(text);
+              await TwilioServices.sendMessage(text).catch((error) => {
+                this.message = error.response.data.message;
+                console.log("There was an error:", error.response);
+              });
             }
           }
         }

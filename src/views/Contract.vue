@@ -2,27 +2,29 @@
   <div>
     <v-container>
       <v-toolbar>
-        <v-toolbar-title>{{ this.message }}</v-toolbar-title>
+        <v-toolbar-title>{{ message }}</v-toolbar-title>
         <v-spacer></v-spacer>
         <InformationComponent
           message="Before continuing to this service, you must sign contracts for the
             following positions.
             <br />
-            Please click on each title to sign its contract."></InformationComponent>
+            Please click on each title to sign its contract."
+        ></InformationComponent>
       </v-toolbar>
       <br />
       <v-alert v-model="showAlert" dismissible :type="alertType">{{
-        this.alert
+        alert
       }}</v-alert>
       <v-row justify="center">
         <v-col v-for="role in roles" :key="role.id">
           <v-card
-            @click="role.dialog = true"
             class="mx-auto my-12 d-flex justify-center"
             max-width="400"
             height="100"
             elevation="10"
-            :style="{ 'background-color': role.color }">
+            :style="{ 'background-color': role.color }"
+            @click="role.dialog = true"
+          >
             <v-card-title class="justify-center white--text">
               {{ role.type }} - {{ role.groupName }}
             </v-card-title>
@@ -35,21 +37,18 @@
                   >Sign a contract for {{ role.groupName }}:</span
                 >
               </v-card-title>
-              <pdf
-                v-for="i in role.numPages"
-                :key="i"
-                :page="i"
-                :src="role.pdfName"></pdf>
+              <vue-pdf-embed :source="role.pdfName"></vue-pdf-embed>
               <v-container>
                 <v-text-field
                   v-model="signature"
                   label="Digital Signature"
                   :hint="user.fullName"
                   persistent-hint
-                  v-on:keyup.enter="
+                  @keyup.enter="
                     role.dialog = false;
                     save(role);
-                  "></v-text-field>
+                  "
+                ></v-text-field>
               </v-container>
               <v-card-actions>
                 <v-spacer></v-spacer>
@@ -61,7 +60,8 @@
                     role.dialog = false;
                     signature = '';
                     save(role);
-                  ">
+                  "
+                >
                   Agree
                 </v-btn>
               </v-card-actions>
@@ -77,7 +77,7 @@
 </template>
 
 <script>
-import pdf from "vue-pdf";
+import VuePdfEmbed from "vue-pdf-embed/dist/vue2-pdf-embed";
 import GroupServices from "@/services/groupServices.js";
 import PersonRoleServices from "@/services/personRoleServices.js";
 import Utils from "@/config/utils.js";
@@ -87,11 +87,17 @@ import { RedirectToPageMixin } from "../mixins/RedirectToPageMixin";
 
 export default {
   name: "Contract",
-  mixins: [RedirectToPageMixin],
   components: {
-    pdf,
+    VuePdfEmbed,
     GroupViewComponent,
     InformationComponent,
+  },
+  mixins: [RedirectToPageMixin],
+  props: {
+    id: {
+      type: [Number, String],
+      default: 0,
+    },
   },
   data() {
     return {
@@ -151,14 +157,17 @@ export default {
             let group = response.data[i];
             for (let j = 0; j < group.role.length; j++) {
               let role = group.role[j];
+              console.log(role);
               for (let k = 0; k < role.personrole.length; k++) {
                 let personrole = role.personrole[k];
                 let tempFile = this.files.filter(function (file) {
+                  console.log(group.name.replace(/\s/g, ""));
                   return (
                     file.pdf.includes(group.name.replace(/\s/g, "")) &&
                     file.pdf.includes(role.type.toString())
                   );
                 });
+                console.log(tempFile);
                 personrole.pdfName = tempFile[0].pdf;
                 personrole.numPages = tempFile[0].pages;
                 personrole.groupName = group.name;
@@ -172,6 +181,7 @@ export default {
           }
         })
         .catch((error) => {
+          console.log(error);
           this.alertType = "error";
           this.alert = error.response.data.message;
           this.showAlert = true;

@@ -17,6 +17,9 @@ export default {
   getGroupsForPerson(id) {
     return apiClient.get("group/person/" + id);
   },
+  getActiveGroupsForPerson(id) {
+    return apiClient.get("group/active/person/" + id);
+  },
   getContractsNeededForPerson(id) {
     return apiClient.get("group/personNeedContracts/" + id);
   },

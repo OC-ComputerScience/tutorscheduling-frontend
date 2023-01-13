@@ -24,16 +24,18 @@ jobs:
       GOOGLE_AUDIENCE: ${{secrets.GOOGLE_AUDIENCE}}
       CLIENT_SECRET: ${{secrets.CLIENT_SECRET}}
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           ref: dev
-      - uses: actions/setup-node@v1
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 16
       - run: |
           touch .env
           echo VUE_APP_CLIENT_ID="$VUE_APP_CLIENT_ID" >> .env
           echo VUE_APP_API_URL="$VUE_APP_API_URL" >> .env
-          echo VUE_APP_CLIENT_URL=tutorschedulingdev.oc.edu >> .env
-          echo VUE_APP_SITE_URL=tutorschedulingdev.oc.edu >> .env
+          echo VUE_APP_CLIENT_URL=https://tutorschedulingdev.oc.edu >> .env
+          echo VUE_APP_SITE_URL=https://tutorschedulingdev.oc.edu >> .env
 
       - run: npm install
       - run: npm run build

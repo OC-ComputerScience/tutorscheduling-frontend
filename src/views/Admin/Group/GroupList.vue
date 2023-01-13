@@ -2,7 +2,7 @@
   <div>
     <v-container>
       <v-toolbar>
-        <v-toolbar-title>{{ this.message }}</v-toolbar-title>
+        <v-toolbar-title>{{ message }}</v-toolbar-title>
       </v-toolbar>
       <br /><br />
       <v-card>
@@ -37,7 +37,6 @@
 import GroupServices from "@/services/groupServices.js";
 export default {
   name: "App",
-  components: {},
   data() {
     return {
       message:

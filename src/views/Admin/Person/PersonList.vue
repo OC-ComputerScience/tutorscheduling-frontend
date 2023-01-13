@@ -2,7 +2,7 @@
   <div>
     <v-container>
       <v-toolbar>
-        <v-toolbar-title>{{ this.message }}</v-toolbar-title>
+        <v-toolbar-title>{{ message }}</v-toolbar-title>
       </v-toolbar>
       <br /><br />
       <v-card>
@@ -46,8 +46,13 @@ import PersonServices from "@/services/personServices.js";
 
 export default {
   name: "App",
-  props: ["id"],
   components: {},
+  props: {
+    id: {
+      type: Number,
+      default: 0,
+    },
+  },
   data() {
     return {
       user: {},

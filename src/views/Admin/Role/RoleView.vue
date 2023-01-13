@@ -2,7 +2,7 @@
   <div style="">
     <v-container>
       <v-toolbar>
-        <v-toolbar-title>{{ this.message }}</v-toolbar-title>
+        <v-toolbar-title>{{ message }}</v-toolbar-title>
       </v-toolbar>
       <br />
       <v-btn color="accent" elevation="2" class="mr-4" @click="toEdit">
@@ -18,18 +18,20 @@
       <br /><br />
 
       <v-text-field
-        v-model="role.type"
         id="type"
+        v-model="role.type"
         :counter="50"
         label="Type"
-        readonly></v-text-field>
+        readonly
+      ></v-text-field>
 
       <v-text-field
-        v-model="group.name"
         id="name"
+        v-model="group.name"
         :counter="25"
         label="Group Name"
-        readonly></v-text-field>
+        readonly
+      ></v-text-field>
     </v-container>
   </div>
 </template>
@@ -37,11 +39,17 @@
 <script>
 import RoleServices from "@/services/roleServices.js";
 import PersonRoleServices from "@/services/personRoleServices.js";
-
-//import UserDisplay from '@/components/UserDisplay.vue'
 export default {
-  props: ["id", "roleId"],
-
+  props: {
+    id: {
+      type: [Number, String],
+      default: 0,
+    },
+    roleId: {
+      type: [Number, String],
+      default: 0,
+    },
+  },
   data() {
     return {
       role: {},

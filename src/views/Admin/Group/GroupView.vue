@@ -2,7 +2,7 @@
   <div style="">
     <v-container>
       <v-toolbar>
-        <v-toolbar-title>{{ this.message }}</v-toolbar-title>
+        <v-toolbar-title>{{ message }}</v-toolbar-title>
       </v-toolbar>
       <br />
       <v-btn color="accent" elevation="2" class="mr-4" @click="toEdit">
@@ -22,16 +22,16 @@
       <br /><br />
 
       <v-text-field
-        v-model="group.name"
         id="name"
+        v-model="group.name"
         :counter="50"
         label="Group Name"
         readonly
       ></v-text-field>
 
       <v-text-field
-        v-model="group.description"
         id="description"
+        v-model="group.description"
         :counter="500"
         label="Description"
         readonly
@@ -42,10 +42,13 @@
 
 <script>
 import GroupServices from "@/services/groupServices.js";
-//import UserDisplay from '@/components/UserDisplay.vue'
 export default {
-  props: ["id"],
-
+  props: {
+    id: {
+      type: [Number, String],
+      default: 0,
+    },
+  },
   data() {
     return {
       group: {},

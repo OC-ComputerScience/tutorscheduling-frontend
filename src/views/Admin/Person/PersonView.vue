@@ -2,25 +2,29 @@
   <div style="">
     <v-container>
       <v-toolbar>
-        <v-toolbar-title>{{ this.message }}</v-toolbar-title>
+        <v-toolbar-title>{{ message }}</v-toolbar-title>
       </v-toolbar>
       <br />
 
-      <v-dialog persistent v-model="showDisableConfirmation" max-width="750px">
+      <v-dialog v-model="showDisableConfirmation" persistent max-width="750px">
         <DeleteConfirmationComponent
           :type="deleteType"
           :item="deleteItem"
-          @handleReturningCancel="showDisableConfirmation = false"
-          @handleReturningSuccess="
-            confirmedDelete()
-          "></DeleteConfirmationComponent>
+          @handleReturningCancel="
+            showDisableConfirmation = false;
+            deleteItem = {};
+            deleteType = '';
+          "
+          @handleReturningSuccess="confirmedDelete()"
+        ></DeleteConfirmationComponent>
       </v-dialog>
 
       <v-btn
         color="accent"
         elevation="2"
         class="mr-4"
-        @click="dialogEdit = true">
+        @click="dialogEdit = true"
+      >
         Edit
       </v-btn>
 
@@ -37,51 +41,65 @@
       <br /><br />
 
       <v-text-field
-        v-model="person.fName"
         id="fName"
+        v-model="person.fName"
         :counter="25"
         label="First Name"
-        readonly></v-text-field>
+        readonly
+      ></v-text-field>
 
       <v-text-field
-        v-model="person.lName"
         id="lName"
+        v-model="person.lName"
         :counter="25"
         label="Last Name"
-        readonly></v-text-field>
+        readonly
+      ></v-text-field>
 
       <v-text-field
-        v-model="person.email"
         id="email"
+        v-model="person.email"
         :counter="25"
         label="Email"
-        readonly></v-text-field>
+        readonly
+      ></v-text-field>
 
       <v-text-field
-        v-model="person.phoneNum"
         id="phoneNum"
-        :counter="13"
-        label="Mobile Phone"
-        readonly></v-text-field>
+        v-model="person.phoneNum"
+        :counter="25"
+        label="phoneNum"
+        hint="4054255555"
+        persistent-hint
+        required
+      ></v-text-field>
+
+      <v-checkbox
+        v-model="person.textOptIn"
+        label="Text Opt In"
+        readonly
+      ></v-checkbox>
 
       <br />
       <v-card>
         <v-card-title>
-          Roles for {{ this.group.name }}
+          Roles for {{ group.name }}
           <v-spacer></v-spacer>
           <v-btn
             color="accent"
             class="mr-4"
             elevation="2"
-            @click="dialogRoleAdd = true">
+            @click="dialogRoleAdd = true"
+          >
             Add
           </v-btn>
         </v-card-title>
         <v-data-table
           :headers="roleHeaders"
           :items="personroles"
-          :items-per-page="50">
-          <template v-slot:[`item.actions`]="{ item }">
+          :items-per-page="50"
+        >
+          <template #[`item.actions`]="{ item }">
             <v-icon small class="mr-2" @click="editRole(item)">
               mdi-pencil
             </v-icon>
@@ -92,27 +110,30 @@
       <br />
       <v-card>
         <v-card-title>
-          Additional Privileges for {{ this.group.name }}
+          Additional Privileges for {{ group.name }}
           <v-spacer></v-spacer>
           <v-btn
             color="accent"
             class="mr-4"
             elevation="2"
-            @click="dialogPrivilegeAdd = true">
+            @click="dialogPrivilegeAdd = true"
+          >
             Add
           </v-btn>
         </v-card-title>
         <v-data-table
           :headers="privilegeHeaders"
           :items="personroleprivileges"
-          :items-per-page="50">
-          <template v-slot:[`item.actions`]="{ item }">
+          :items-per-page="50"
+        >
+          <template #[`item.actions`]="{ item }">
             <v-icon
               small
               @click="
                 deleteType = 'privilege';
                 directToCancel(item);
-              ">
+              "
+            >
               mdi-delete
             </v-icon>
           </template>
@@ -122,21 +143,23 @@
       <br />
       <v-card v-if="tutor">
         <v-card-title>
-          Topics for {{ this.group.name }}
+          Topics for {{ group.name }}
           <v-spacer></v-spacer>
           <v-btn
             color="accent"
             class="mr-4"
             elevation="2"
-            @click="dialogTopicAdd = true">
+            @click="dialogTopicAdd = true"
+          >
             Add
           </v-btn>
         </v-card-title>
         <v-data-table
           :headers="topicHeaders"
           :items="persontopics"
-          :items-per-page="50">
-          <template v-slot:[`item.actions`]="{ item }">
+          :items-per-page="50"
+        >
+          <template #[`item.actions`]="{ item }">
             <v-icon small class="mr-2" @click="editTopic(item)">
               mdi-pencil
             </v-icon>
@@ -145,7 +168,8 @@
               @click="
                 deleteType = 'persontopic';
                 directToCancel(item);
-              ">
+              "
+            >
               mdi-delete
             </v-icon>
           </template>
@@ -153,47 +177,53 @@
       </v-card>
       <br />
 
-      <v-dialog v-model="dialogEdit" max-width="500px">
+      <v-dialog v-model="dialogEdit" max-width="600px">
         <v-card>
           <v-card-title>{{ person.fName }} {{ person.lName }}</v-card-title>
           <v-card-text>
             <v-form ref="form" v-model="valid" lazy validation>
               <v-text-field
-                v-model="person.fName"
                 id="fname"
+                v-model="person.fName"
                 :counter="25"
                 label="First Name"
-                required></v-text-field>
+                required
+              ></v-text-field>
 
               <v-text-field
-                v-model="person.lName"
                 id="lname"
+                v-model="person.lName"
                 :counter="25"
                 label="Last Name"
-                required></v-text-field>
+                required
+              ></v-text-field>
 
               <v-text-field
-                v-model="person.email"
                 id="email"
+                v-model="person.email"
                 :counter="25"
-                label="email"
+                label="Email"
                 hint="you@email.com"
                 persistent-hint
-                required></v-text-field>
+                required
+              ></v-text-field>
 
-              <v-text-field
-                v-model="person.phoneNum"
-                id="phoneNum"
-                :counter="13"
-                label="phoneNum"
-                hint="111-222-3333"
-                persistent-hint
-                required></v-text-field>
+              <br />
+
+              <PhoneNumberComponent
+                :phone-num="person.phoneNum"
+                @editedPhoneNumber="setPhoneNumber"
+              ></PhoneNumberComponent>
+
+              <v-checkbox
+                v-model="person.textOptIn"
+                label="Text Opt In"
+              ></v-checkbox>
             </v-form>
           </v-card-text>
           <v-card-actions>
             <v-spacer></v-spacer>
-            <v-btn color="accent" @click="updatePerson">Save</v-btn>
+            <v-btn color="accent" @click="updatePerson()">Save</v-btn>
             <v-btn color="error" @click="dialogEdit = false">Cancel</v-btn>
           </v-card-actions>
         </v-card>
@@ -201,11 +231,9 @@
 
       <v-dialog v-model="dialogRole" max-width="500px">
         <v-card>
-          <v-card-title v-if="personroles[editedRoleIndex] !== undefined"
-            >{{ personroles[editedRoleIndex].type }} Role for
-            {{ person.fName }}:</v-card-title
+          <v-card-title v-if="personrole !== undefined"
+            >{{ personrole.type }} Role for {{ person.fName }}:</v-card-title
           >
-          <!-- here -->
           <v-card-text>
             <v-container>
               <br />
@@ -215,16 +243,27 @@
                 item-text="type"
                 item-value="id"
                 label="Status"
-                @change="deleteType = 'personrole'"
-                required>
+                required
+              >
               </v-select>
             </v-container>
           </v-card-text>
 
           <v-card-actions>
             <v-spacer></v-spacer>
-            <v-btn color="error" text @click="closeRole()"> Cancel </v-btn>
-            <v-btn color="accent" text @click="directToCancel()"> Save </v-btn>
+            <v-btn color="error" text @click="dialogRole = false">
+              Cancel
+            </v-btn>
+            <v-btn
+              color="accent"
+              text
+              @click="
+                deleteType = 'personrole';
+                directToCancel(personrole);
+              "
+            >
+              Save
+            </v-btn>
           </v-card-actions>
         </v-card>
       </v-dialog>
@@ -240,20 +279,22 @@
                 item-text="type"
                 item-value="id"
                 label="Role"
-                required>
+                required
+              >
               </v-select>
 
               <v-select
                 v-model="personrole.status"
                 :items="status"
                 label="Status"
-                required>
+                required
+              >
               </v-select>
             </v-form>
           </v-card-text>
           <v-card-actions>
             <v-spacer></v-spacer>
-            <v-btn color="accent" @click="addPersonRole">Save</v-btn>
+            <v-btn color="accent" @click="addPersonRole()">Save</v-btn>
             <v-btn color="error" @click="dialogRoleAdd = false">Cancel</v-btn>
           </v-card-actions>
         </v-card>
@@ -268,7 +309,8 @@
                 v-model="personroleprivilege.privilege"
                 :items="privileges"
                 label="Privilege"
-                required>
+                required
+              >
               </v-select>
 
               <v-select
@@ -277,7 +319,8 @@
                 item-text="type"
                 item-value="personrole[0].id"
                 label="Associated Role"
-                required>
+                required
+              >
               </v-select>
             </v-form>
           </v-card-text>
@@ -289,7 +332,8 @@
                 !personroleprivilege.privilege ||
                 !personroleprivilege.personroleId
               "
-              @click="addPersonRolePrivilege">
+              @click="addPersonRolePrivilege()"
+            >
               Save
             </v-btn>
             <v-btn color="error" @click="dialogPrivilegeAdd = false"
@@ -311,21 +355,25 @@
                 item-text="name"
                 item-value="id"
                 label="Topic"
-                required>
+                required
+              >
               </v-select>
               <v-select
                 v-model="persontopic.skillLevel"
                 :items="skillLevels"
                 label="Skill Level"
-                required>
+                required
+              >
               </v-select>
             </v-container>
           </v-card-text>
 
           <v-card-actions>
             <v-spacer></v-spacer>
-            <v-btn color="error" text @click="closeTopic"> Cancel </v-btn>
-            <v-btn color="accent" text @click="saveTopic"> Save </v-btn>
+            <v-btn color="error" text @click="dialogTopic = false">
+              Cancel
+            </v-btn>
+            <v-btn color="accent" text @click="saveTopic()"> Save </v-btn>
           </v-card-actions>
         </v-card>
       </v-dialog>
@@ -341,19 +389,21 @@
                 item-text="name"
                 item-value="id"
                 label="Topic"
-                required>
+                required
+              >
               </v-select>
               <v-select
                 v-model="persontopic.skillLevel"
                 :items="skillLevels"
                 label="Skill Level"
-                required>
+                required
+              >
               </v-select>
             </v-form>
           </v-card-text>
           <v-card-actions>
             <v-spacer></v-spacer>
-            <v-btn color="accent" @click="addPersonTopic">Save</v-btn>
+            <v-btn color="accent" @click="addPersonTopic()">Save</v-btn>
             <v-btn color="error" @click="dialogTopicAdd = false">Cancel</v-btn>
           </v-card-actions>
         </v-card>
@@ -370,24 +420,42 @@ import PersonRolePrivilegeServices from "@/services/personRolePrivilegeServices.
 import RoleServices from "@/services/roleServices.js";
 import PersonTopicServices from "@/services/personTopicServices.js";
 import TopicServices from "@/services/topicServices.js";
+import AppointmentServices from "@/services/appointmentServices.js";
+import PersonAppointmentServices from "@/services/personAppointmentServices.js";
 import DeleteConfirmationComponent from "../../../components/DeleteConfirmationComponent.vue";
+import PhoneNumberComponent from "../../../components/PhoneNumberComponent.vue";
+
+import { AppointmentActionMixin } from "../../../mixins/AppointmentActionMixin";
+import { TimeFunctionsMixin } from "../../../mixins/TimeFunctionsMixin";
 
 export default {
-  props: ["id", "personId"],
   components: {
     DeleteConfirmationComponent,
+    PhoneNumberComponent,
+  },
+  mixins: [AppointmentActionMixin, TimeFunctionsMixin],
+  props: {
+    id: {
+      type: [Number, String],
+      default: 0,
+    },
+    personId: {
+      type: [Number, String],
+      default: 0,
+    },
   },
   data() {
     return {
       message: "Person - click Edit to update or Delete to remove person",
       showDisableConfirmation: false,
       person: {},
+      appointments: [],
       persontopics: [],
       persontopic: {},
       personroles: [],
       personrole: {},
-      personroleprivilege: {},
       personroleprivileges: [],
+      personroleprivilege: {},
       privileges: [
         "Make flexible slots that allow for shorter appointments",
         "Receive notifications for applications",
@@ -396,25 +464,22 @@ export default {
       ],
       tutor: false,
       skillLevels: ["Freshman", "Sophomore", "Junior", "Senior"],
-      status: ["applied", "approved"],
+      status: ["applied", "approved", "disabled"],
       updateStatus: ["approved", "disabled"],
       roles: [],
       topics: [],
       user: {},
       valid: true,
       group: {},
-      deleteMessage: "",
       deleteItem: {},
       deleteType: "",
-      dialogDelete: false,
+      disabledRole: {},
       dialogEdit: false,
       dialogRole: false,
       dialogRoleAdd: false,
       dialogPrivilegeAdd: false,
       dialogTopic: false,
       dialogTopicAdd: false,
-      editedRoleIndex: -1,
-      editedTopicIndex: -1,
       roleHeaders: [
         { text: "Type", value: "type" },
         { text: "Status", value: "personrole[0].status" },
@@ -432,13 +497,8 @@ export default {
       ],
     };
   },
-  watch: {
-    dialogRole(val) {
-      val || this.closeRole();
-    },
-  },
   async created() {
-    this.getPerson();
+    await this.getPerson();
     this.user = Utils.getStore("user");
     await this.getGroupByPersonRoleId()
       .then(() => {
@@ -462,8 +522,8 @@ export default {
           console.log("There was an error:", error.response);
         });
     },
-    getPerson() {
-      PersonServices.getPerson(this.personId)
+    async getPerson() {
+      await PersonServices.getPerson(this.personId)
         .then((response) => {
           this.person = response.data;
         })
@@ -475,7 +535,7 @@ export default {
     async getPersonRoles() {
       this.personroleprivileges = [];
       await RoleServices.getRoleByGroupForPerson(this.group.id, this.personId)
-        .then((response) => {
+        .then(async (response) => {
           this.personroles = response.data;
           for (let i = 0; i < this.personroles.length; i++) {
             let personRoleArray = this.personroles[i].personrole;
@@ -509,8 +569,8 @@ export default {
           console.log("There was an error:", error.response);
         });
     },
-    getPersonTopics() {
-      TopicServices.getTopicByGroupForPerson(this.group.id, this.personId)
+    async getPersonTopics() {
+      await TopicServices.getTopicByGroupForPerson(this.group.id, this.personId)
         .then((response) => {
           this.persontopics = response.data;
         })
@@ -529,8 +589,11 @@ export default {
           console.log("There was an error:", error.response);
         });
     },
-    updatePerson() {
-      PersonServices.updatePerson(this.personId, this.person)
+    setPhoneNumber(phoneNumber) {
+      this.person.phoneNumber = phoneNumber;
+    },
+    async updatePerson() {
+      await PersonServices.updatePerson(this.personId, this.person)
         .then(() => {
           this.dialogEdit = false;
         })
@@ -539,11 +602,14 @@ export default {
           console.log(error);
         });
     },
-    addPersonRole() {
+    async addPersonRole() {
       this.personrole.personId = this.person.id;
-      PersonRoleServices.addPersonRole(this.personrole)
+      this.personrole.agree = true;
+      this.personrole.dateSigned = new Date();
+      await PersonRoleServices.addPersonRole(this.personrole)
         .then(() => {
           this.dialogRoleAdd = false;
+          this.personrole = {};
           this.getPersonRoles();
         })
         .catch((error) => {
@@ -551,8 +617,8 @@ export default {
           console.log("There was an error:", error.response);
         });
     },
-    addPersonRolePrivilege() {
-      PersonRolePrivilegeServices.addPrivilege(this.personroleprivilege)
+    async addPersonRolePrivilege() {
+      await PersonRolePrivilegeServices.addPrivilege(this.personroleprivilege)
         .then(() => {
           this.dialogPrivilegeAdd = false;
           this.personroleprivilege = {};
@@ -563,11 +629,12 @@ export default {
           console.log("There was an error:", error.response);
         });
     },
-    addPersonTopic() {
+    async addPersonTopic() {
       this.persontopic.personId = this.person.id;
-      PersonTopicServices.addPersonTopic(this.persontopic)
+      await PersonTopicServices.addPersonTopic(this.persontopic)
         .then(() => {
           this.dialogTopicAdd = false;
+          this.persontopic = {};
           this.getPersonTopics();
         })
         .catch((error) => {
@@ -579,93 +646,89 @@ export default {
       this.$router.go(-1);
     },
     editRole(item) {
-      this.editedRoleIndex = this.personroles.findIndex(
-        (role) => role.id === item.id
-      );
-      this.personrole = Object.assign({}, item.personrole[0]);
+      this.personrole = item.personrole[0];
+      this.personrole.type = item.type;
       this.dialogRole = true;
     },
-    closeRole() {
-      this.dialogRole = false;
-      this.$nextTick(() => {
-        this.personrole = Object.assign({}, {});
-        this.editedRoleIndex = -1;
-      });
-    },
-    saveRole() {
-      PersonRoleServices.updatePersonRole(this.personrole.id, this.personrole)
+    async saveRole() {
+      let temp = {
+        id: this.personrole.id,
+        status: this.personrole.status,
+        agree: this.personrole.agree,
+        dateSigned: this.personrole.dateSigned,
+        roleId: this.personrole.roleId,
+        personId: this.personrole.personId,
+      };
+      if (this.personrole.status === "disabled")
+        this.disabledRole = this.personrole;
+      await PersonRoleServices.updatePersonRole(this.personrole.id, temp)
         .then(() => {
-          this.closeRole();
+          this.dialogRole = false;
+          this.personrole = {};
           this.getPersonRoles();
         })
         .catch((error) => {
           this.message = error.response.data.message;
           console.log(error);
         });
-      Object.assign(this.personroles[this.editedRoleIndex], this.personrole);
     },
     editTopic(item) {
-      this.editedTopicIndex = this.persontopics.findIndex(
-        (topic) => topic.id === item.id
-      );
-      this.persontopic = Object.assign({}, item.persontopic[0]);
+      this.persontopic = item.persontopic[0];
       this.dialogTopic = true;
     },
-    closeTopic() {
-      this.dialogTopic = false;
-    },
-    saveTopic() {
-      PersonTopicServices.updatePersonTopic(
-        this.persontopic.id,
-        this.persontopic
-      )
+    async saveTopic() {
+      let temp = {
+        id: this.persontopic.id,
+        skillLevel: this.persontopic.skillLevel,
+        personId: this.persontopic.personId,
+        topicId: this.persontopic.topicId,
+      };
+      await PersonTopicServices.updatePersonTopic(this.persontopic.id, temp)
         .then(() => {
-          this.closeTopic();
+          this.dialogTopic = false;
+          this.persontopic = {};
           this.getPersonTopics();
         })
         .catch((error) => {
           this.message = error.response.data.message;
           console.log(error);
         });
-      Object.assign(this.persontopics[this.editedTopicIndex], this.persontopic);
     },
-    directToCancel(item) {
+    async directToCancel(item) {
       this.deleteItem = item;
       this.deleteItem.person = this.person;
-      this.showDisableConfirmation = true;
-      if (this.deleteType === "personrole") {
+      if (
+        (this.deleteType === "personrole" &&
+          this.deleteItem.status === "disabled") ||
+        this.deleteType !== "personrole"
+      ) {
         this.showDisableConfirmation = true;
       } else {
-        this.saveRole();
+        this.showDisableConfirmation = false;
+        await this.saveRole();
       }
     },
     async confirmedDelete() {
-      if (this.deleteType === "privilege") {
-        this.privilege = {
-          id: this.deleteItem.id,
-          privilege: this.deleteItem.privilege,
-          personroleId: this.personrole.id,
-        };
-        await PersonRolePrivilegeServices.deletePrivilege(
-          this.deleteItem.id
-        ).catch((error) => {
-          this.message = error.response.data.message;
-          console.log("There was an error:", error.response);
-        });
-        this.privilege = {};
+      this.showDisableConfirmation = false;
+      if (this.deleteType === "personrole") {
+        await this.saveRole();
+        await this.disablePersonRole();
+      } else if (this.deleteType === "privilege") {
+        await PersonRolePrivilegeServices.deletePrivilege(this.deleteItem.id)
+          .then(() => {
+            this.getPersonRoles();
+          })
+          .catch((error) => {
+            this.message = error.response.data.message;
+            console.log("There was an error:", error.response);
+          });
         await this.getPersonRoles();
       } else if (this.deleteType === "persontopic") {
-        this.editedTopicIndex = this.persontopics.findIndex(
-          (topic) => topic.id === this.deleteItem.id
-        );
-        this.persontopic = Object.assign({}, this.deleteItem.persontopic[0]);
-        this.persontopics.splice(this.editedTopicIndex, 1);
-        await PersonTopicServices.deletePersonTopic(this.persontopic.id)
+        await PersonTopicServices.deletePersonTopic(
+          this.deleteItem.persontopic[0].id
+        )
           .then(() => {
-            this.$nextTick(() => {
-              this.persontopic = Object.assign({}, {});
-              this.editedTopicIndex = -1;
-            });
+            this.getPersonTopics();
           })
           .catch((error) => {
             this.message = error.response.data.message;
@@ -674,6 +737,75 @@ export default {
       }
 
       this.showDisableConfirmation = false;
+      this.deleteItem = {};
+      this.deleteType = "";
+    },
+    async disablePersonRole() {
+      // delete person role privileges
+      await PersonRolePrivilegeServices.deletePrivilegesForPersonRole(
+        this.disabledRole.id
+      ).catch((error) => {
+        this.message = error.response.data.message;
+        console.log("There was an error:", error.response);
+      });
+      // delete person topics
+      await PersonTopicServices.deletePersonTopicsForPersonForGroup(
+        this.person.id,
+        this.group.id
+      ).catch((error) => {
+        this.message = error.response.data.message;
+        console.log("There was an error:", error.response);
+      });
+      await this.getAppointments();
+      let disableUser = {
+        fName: this.person.fName,
+        lName: this.person.lName,
+        userID: this.person.id,
+        selectedRole: {
+          type: this.disabledRole.type,
+        },
+      };
+      for (let i = 0; i < this.appointments.length; i++) {
+        await this.cancelAppointment(this.appointments[i], disableUser);
+      }
+      await this.getPersonRoles();
+      await this.getPersonTopics();
+    },
+    async getAppointments() {
+      await AppointmentServices.getUpcomingAppointmentForPersonForGroup(
+        this.group.id,
+        this.person.id
+      )
+        .then(async (response) => {
+          this.appointments = response.data;
+          for (let i = 0; i < this.appointments.length; i++) {
+            await PersonAppointmentServices.findStudentDataForTable(
+              this.appointments[i].id
+            )
+              .then((response) => {
+                this.appointments[i].students = response.data;
+              })
+              .catch((error) => {
+                this.message = error.response.data.message;
+                console.log("There was an error:", error.response);
+              });
+
+            await PersonAppointmentServices.findTutorDataForTable(
+              this.appointments[i].id
+            )
+              .then((response) => {
+                this.appointments[i].tutors = response.data;
+              })
+              .catch((error) => {
+                this.message = error.response.data.message;
+                console.log("There was an error:", error.response);
+              });
+          }
+        })
+        .catch((error) => {
+          this.message = error.response.data.message;
+          console.log("There was an error:", error.response);
+        });
     },
   },
 };

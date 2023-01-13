@@ -2,7 +2,7 @@
   <div style="">
     <v-container>
       <v-toolbar>
-        <v-toolbar-title>{{ this.message }}</v-toolbar-title>
+        <v-toolbar-title>{{ message }}</v-toolbar-title>
       </v-toolbar>
       <br />
       <v-btn color="accent" elevation="2" class="mr-4" @click="toEdit">
@@ -21,32 +21,36 @@
       <br /><br />
 
       <v-text-field
-        v-model="topic.name"
         id="name"
+        v-model="topic.name"
         :counter="50"
         label="Name"
-        readonly></v-text-field>
+        readonly
+      ></v-text-field>
 
       <v-text-field
-        v-model="topic.abbr"
         id="abbr"
+        v-model="topic.abbr"
         :counter="25"
         label="Abbreviation"
-        readonly></v-text-field>
+        readonly
+      ></v-text-field>
 
       <v-text-field
-        v-model="group.name"
         id="name"
+        v-model="group.name"
         :counter="25"
         label="Group Name"
-        readonly></v-text-field>
+        readonly
+      ></v-text-field>
 
       <v-text-field
-        v-model="topic.status"
         id="status"
+        v-model="topic.status"
         :counter="25"
         label="Status"
-        readonly></v-text-field>
+        readonly
+      ></v-text-field>
     </v-container>
   </div>
 </template>
@@ -56,8 +60,16 @@ import TopicServices from "@/services/topicServices.js";
 import PersonRoleServices from "@/services/personRoleServices.js";
 
 export default {
-  props: ["id", "topicId"],
-
+  props: {
+    id: {
+      type: [Number, String],
+      default: 0,
+    },
+    topicId: {
+      type: [Number, String],
+      default: 0,
+    },
+  },
   data() {
     return {
       topic: {},

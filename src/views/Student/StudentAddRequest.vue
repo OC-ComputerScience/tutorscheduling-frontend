@@ -2,14 +2,15 @@
   <div>
     <v-container>
       <v-toolbar>
-        <v-toolbar-title>{{ this.message }}</v-toolbar-title>
+        <v-toolbar-title>{{ message }}</v-toolbar-title>
         <v-spacer></v-spacer>
         <InformationComponent
-          message="Enter information about what you are requesting and click Save."></InformationComponent>
+          message="Enter information about what you are requesting and click Save."
+        ></InformationComponent>
       </v-toolbar>
       <br />
       <v-alert v-model="showAlert" dismissible :type="alertType">{{
-        this.alert
+        alert
       }}</v-alert>
 
       <br />
@@ -18,16 +19,18 @@
           v-model="request.problem"
           :items="problems"
           label="Why are you making this request?"
-          required>
+          required
+        >
         </v-select>
         <v-text-field
-          v-model="request.courseNum"
           id="courseNum"
+          v-model="request.courseNum"
           :counter="50"
           label="Course Number"
           hint="Enter n/a if non applicable"
           persistent-hint
-          required></v-text-field>
+          required
+        ></v-text-field>
 
         <v-select
           v-model="request.topicId"
@@ -35,24 +38,27 @@
           item-text="name"
           item-value="id"
           label="Topic"
-          required>
+          required
+        >
         </v-select>
 
         <v-text-field
-          v-model="request.description"
           id="description"
+          v-model="request.description"
           :counter="500"
           label="Description"
           hint="Description..."
           persistent-hint
-          required></v-text-field>
+          required
+        ></v-text-field>
 
         <br /><br />
         <v-btn
           :disabled="!valid"
           color="success"
           class="mr-4"
-          @click="addRequest()">
+          @click="addRequest()"
+        >
           Save
         </v-btn>
 
@@ -74,10 +80,15 @@ import { SendTextsMixin } from "../../mixins/SendTextsMixin";
 
 export default {
   name: "StudentAddRequest",
-  props: ["id"],
-  mixins: [SendTextsMixin],
   components: {
     InformationComponent,
+  },
+  mixins: [SendTextsMixin],
+  props: {
+    id: {
+      type: [Number, String],
+      default: 0,
+    },
   },
   data() {
     return {

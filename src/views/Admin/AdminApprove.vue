@@ -2,15 +2,16 @@
   <div>
     <v-container>
       <v-toolbar>
-        <v-toolbar-title>{{ this.message }}</v-toolbar-title>
+        <v-toolbar-title>{{ message }}</v-toolbar-title>
         <v-spacer></v-spacer>
         <InformationComponent
-          message="View information for potential tutors including the topics they have signed up for and approve or disable their application."></InformationComponent>
+          message="View information for potential tutors including the topics they have signed up for and approve or disable their application."
+        ></InformationComponent>
       </v-toolbar>
       <br />
 
       <v-alert v-model="showAlert" dismissible :type="alertType">{{
-        this.alert
+        alert
       }}</v-alert>
 
       <br />
@@ -21,7 +22,8 @@
             append-icon="mdi-magnify"
             label="Search"
             single-line
-            hide-details></v-text-field>
+            hide-details
+          ></v-text-field>
           <v-spacer></v-spacer>
           <v-btn class="mr-4" @click="cancel()"> Back </v-btn>
         </v-card-title>
@@ -29,8 +31,9 @@
           :headers="headers"
           :search="search"
           :items="personroles"
-          :items-per-page="50">
-          <template v-slot:[`item.actions`]="{ item }">
+          :items-per-page="50"
+        >
+          <template #[`item.actions`]="{ item }">
             <v-icon small class="mr-2" @click="editItem(item)"
               >mdi-pencil</v-icon
             >
@@ -51,25 +54,29 @@
               <v-data-table
                 :headers="topicHeaders"
                 :items="editedPerson.persontopic"
-                :hide-default-footer="true">
+                :hide-default-footer="true"
+              >
               </v-data-table>
 
               <br />
               <v-text-field
                 v-model="editedPerson.email"
                 label="Email Address"
-                readonly></v-text-field>
+                readonly
+              ></v-text-field>
 
               <v-text-field
                 v-model="editedPerson.phoneNum"
                 label="Phone Number"
-                readonly></v-text-field>
+                readonly
+              ></v-text-field>
 
               <v-select
                 v-model="editedItem.status"
                 :items="StatusSelect"
                 label="Status"
-                required>
+                required
+              >
               </v-select>
             </v-form>
           </v-card-text>
@@ -106,9 +113,14 @@ import InformationComponent from "../../components/InformationComponent.vue";
 
 export default {
   name: "AdminApprove",
-  props: ["id"],
   components: {
     InformationComponent,
+  },
+  props: {
+    id: {
+      type: [Number, String],
+      default: 0,
+    },
   },
   data: () => ({
     valid: false,

@@ -2,13 +2,13 @@
   <div>
     <v-container>
       <v-toolbar>
-        <v-toolbar-title>{{ this.message }}</v-toolbar-title>
+        <v-toolbar-title>{{ message }}</v-toolbar-title>
       </v-toolbar>
       <br />
       <v-form ref="form" v-model="valid" lazy validation>
         <v-text-field
-          v-model="role.type"
           id="type"
+          v-model="role.type"
           :counter="50"
           label="Type"
           hint="Type"
@@ -18,8 +18,8 @@
 
         <!-- group should be readonly -->
         <v-text-field
-          v-model="this.user.selectedGroup"
           id="this.group.id"
+          v-model="user.selectedGroup"
           label="Group"
           readonly
         ></v-text-field>
@@ -41,7 +41,12 @@ import PersonRoleServices from "@/services/personRoleServices.js";
 
 export default {
   components: {},
-  props: ["id"],
+  props: {
+    id: {
+      type: Number,
+      default: 0,
+    },
+  },
   data() {
     return {
       valid: true,

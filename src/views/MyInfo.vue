@@ -2,16 +2,17 @@
   <div>
     <v-container>
       <v-toolbar>
-        <v-toolbar-title>{{ this.message }}</v-toolbar-title>
+        <v-toolbar-title>{{ message }}</v-toolbar-title>
         <InformationComponent
-          message="Make changes to your phone number or view your information below."></InformationComponent>
+          message="Make changes to your phone number or text opt in, or view your information below."
+        ></InformationComponent>
         <v-spacer></v-spacer>
-        <v-toolbar-title>{{ this.user.selectedRole.type }}</v-toolbar-title>
+        <v-toolbar-title>{{ user.selectedRole.type }}</v-toolbar-title>
       </v-toolbar>
       <br />
 
       <v-alert v-model="showAlert" dismissible :type="alertType">{{
-        this.alert
+        alert
       }}</v-alert>
 
       <v-text-field v-model="fullName" label="Name" readonly></v-text-field>
@@ -19,38 +20,44 @@
       <v-text-field
         v-model="person.email"
         label="Email"
-        readonly></v-text-field>
+        readonly
+      ></v-text-field>
 
-      <v-text-field
-        v-model="person.phoneNum"
-        id="phoneNum"
-        :counter="13"
-        label="Mobile Phone"
-        hint="111-222-3333"
+      <br />
+
+      <PhoneNumberComponent
+        :phone-num="person.phoneNum"
+        @editedPhoneNumber="setPhoneNumber"
+      ></PhoneNumberComponent>
+
+      <v-checkbox
+        v-model="person.textOptIn"
+        label="Text Opt In"
         @change="enableUpdate = true"
-        persistent-hint
-        required></v-text-field>
+      ></v-checkbox>
 
       <br />
       <v-btn
         :disabled="!enableUpdate"
         color="accent"
-        @click="savePhoneNum()"
-        class="justify-center white--text">
-        Update Phone Number
+        class="justify-center white--text"
+        @click="saveChanges()"
+      >
+        Update
       </v-btn>
 
       <br /><br />
 
       <v-card v-if="user.selectedRole.type === 'Tutor'">
         <v-card-title>
-          Current Topics for {{ this.user.selectedGroup }}
+          Current Topics for {{ user.selectedGroup }}
           <v-spacer></v-spacer>
         </v-card-title>
         <v-data-table
           :headers="topicHeaders"
           :items="topics"
-          :items-per-page="50"></v-data-table>
+          :items-per-page="50"
+        ></v-data-table>
       </v-card>
 
       <br />
@@ -59,15 +66,17 @@
         v-if="
           user.selectedRole.type === 'Tutor' ||
           user.selectedRole.type === 'Admin'
-        ">
+        "
+      >
         <v-card-title>
-          Current Privileges for {{ this.user.selectedGroup }}
+          Current Privileges for {{ user.selectedGroup }}
           <v-spacer></v-spacer>
         </v-card-title>
         <v-data-table
           :headers="privilegeHeaders"
           :items="personroleprivileges"
-          :items-per-page="50"></v-data-table>
+          :items-per-page="50"
+        ></v-data-table>
       </v-card>
     </v-container>
   </div>
@@ -80,11 +89,17 @@ import RoleServices from "@/services/roleServices";
 import TopicServices from "@/services/topicServices";
 import Utils from "@/config/utils.js";
 import InformationComponent from "../components/InformationComponent.vue";
+import PhoneNumberComponent from "../components/PhoneNumberComponent.vue";
 
 export default {
   name: "MyInfo",
-  props: ["id"],
-  components: { InformationComponent },
+  components: { InformationComponent, PhoneNumberComponent },
+  props: {
+    id: {
+      type: [Number, String],
+      default: 0,
+    },
+  },
   data() {
     return {
       user: {},
@@ -130,16 +145,22 @@ export default {
           this.person = response.data;
           this.fullName = this.person.fName + " " + this.person.lName;
           this.message = this.fullName + "'s Information";
+          console.log(this.person);
         })
         .catch((error) => {
           this.message = error.response.data.message;
           console.log("There was an error:", error.response);
         });
     },
-    async savePhoneNum() {
+    setPhoneNumber(phoneNumber) {
+      this.person.phoneNum = phoneNumber;
+      this.enableUpdate = true;
+    },
+    async saveChanges() {
       await PersonServices.updatePerson(this.person.id, this.person)
         .then(() => {
-          this.alert = "Your phone number was successfully updated.";
+          this.alert =
+            "Your phone number or text opt in was successfully updated.";
           this.enableUpdate = false;
           this.showAlert = true;
         })

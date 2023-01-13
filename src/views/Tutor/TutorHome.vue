@@ -2,24 +2,24 @@
   <div>
     <v-container>
       <v-toolbar>
-        <v-toolbar-title>Hello, {{ this.user.fName }}!</v-toolbar-title>
+        <v-toolbar-title>Hello, {{ user.fName }}!</v-toolbar-title>
         <InformationComponent
           v-if="!disabled"
-          message="Click on <b>View Calendar</b> to see all appointments.<br>Click on <b>Manage Availability</b> to make appointments for yourself."></InformationComponent>
+          message="Click on <b>View Calendar</b> to see all appointments.<br>Click on <b>Manage Availability</b> to make appointments for yourself."
+        ></InformationComponent>
         <v-spacer></v-spacer>
-        <v-toolbar-title>{{ this.message }}</v-toolbar-title>
+        <v-toolbar-title>{{ message }}</v-toolbar-title>
       </v-toolbar>
       <v-alert v-model="showAlert" dismissible :type="alertType">{{
-        this.alert
+        alert
       }}</v-alert>
-      <v-dialog persistent v-model="showDeleteConfirmation" max-width="750px">
+      <v-dialog v-model="showDeleteConfirmation" persistent max-width="750px">
         <DeleteConfirmationComponent
           type="appointment"
           :item="selectedAppointment"
           @handleReturningCancel="showDeleteConfirmation = false"
-          @handleReturningSuccess="
-            directToCancel()
-          "></DeleteConfirmationComponent>
+          @handleReturningSuccess="directToCancel()"
+        ></DeleteConfirmationComponent>
       </v-dialog>
       <v-dialog v-model="apptDialog" max-width="800px">
         <v-card>
@@ -93,7 +93,8 @@
                   selectedAppointment.status === 'studentCancel' ||
                   selectedAppointment.status === 'tutorCancel'
                 "
-                @change="saveChanges = true">
+                @change="saveChanges = true"
+              >
               </v-select>
 
               <v-select
@@ -103,7 +104,8 @@
                 item-value="id"
                 label="Topic"
                 disabled
-                dense>
+                dense
+              >
               </v-select>
             </span>
             <!-- slots for location and topic to be unchangable if the session type is group -->
@@ -116,7 +118,8 @@
                 label="Location"
                 required
                 dense
-                @change="saveChanges = true">
+                @change="saveChanges = true"
+              >
               </v-select>
 
               <v-select
@@ -128,7 +131,8 @@
                 required
                 dense
                 :readonly="students.length > 0"
-                @change="saveChanges = true">
+                @change="saveChanges = true"
+              >
               </v-select>
             </span>
             <!-- show time ad an changeable value for private lessons-->
@@ -137,13 +141,15 @@
               v-model="selectedAppointment.startTime"
               label="Booked Start"
               dense
-              readonly>
+              readonly
+            >
             </v-text-field>
             <v-text-field
               v-model="selectedAppointment.endTime"
               label="Booked End"
               dense
-              readonly>
+              readonly
+            >
             </v-text-field>
             <!-- put in presession-info for appointment for private appointments/ add a readonly if private -->
             <v-textarea
@@ -156,22 +162,25 @@
               auto-grow
               rows="1"
               :readonly="selectedAppointment.type === 'Private'"
-              @change="saveChanges = true"></v-textarea>
+              @change="saveChanges = true"
+            ></v-textarea>
           </v-card-text>
           <v-card-actions>
             <v-spacer></v-spacer>
             <v-btn
               v-if="!(selectedAppointment.type === 'Group')"
               color="#12f000"
-              @click="confirmAppointment(true)"
-              :disabled="!checkStatus('pending')">
+              :disabled="!checkStatus('pending')"
+              @click="directToConfirm()"
+            >
               Confirm
             </v-btn>
             <v-btn
               v-if="!(selectedAppointment.type === 'Group')"
               color="error"
+              :disabled="!checkStatus('pending')"
               @click="showDeleteConfirmation = true"
-              :disabled="!checkStatus('pending')">
+            >
               Reject
             </v-btn>
             <v-btn
@@ -179,16 +188,11 @@
               @click="
                 apptDialog = false;
                 getAppointments();
-              ">
+              "
+            >
               Close
             </v-btn>
-            <v-btn
-              v-if="saveChanges"
-              color="accent"
-              @click="
-                editAppointment();
-                apptDialog = false;
-              ">
+            <v-btn v-if="saveChanges" color="accent" @click="directToEdit()">
               Save Changes
             </v-btn>
 
@@ -201,7 +205,8 @@
                 checkStatus('booked')
               "
               color="red"
-              @click="showDeleteConfirmation = true">
+              @click="showDeleteConfirmation = true"
+            >
               Cancel Appointment
             </v-btn>
           </v-card-actions>
@@ -211,12 +216,13 @@
       <v-dialog v-model="dialog" persistent max-width="800">
         <v-card tile>
           <v-card-title>
-            <span class="text-h5">Hello, {{ this.user.fName }}!</span>
+            <span class="text-h5">Hello, {{ user.fName }}!</span>
           </v-card-title>
           <v-card-text>
             Tutor Scheduling updates your Google calendar with appointments. You
-            will now be asked to approve that access via Google. You will be
-            presented with a Google login and a Tutor Scheduling access request.
+            will now be asked to approve (or reapprove) that access via Google.
+            You will be presented with a Google login and a Tutor Scheduling
+            access request.
           </v-card-text>
           <v-card-actions>
             <v-spacer></v-spacer>
@@ -226,7 +232,8 @@
               @click="
                 dialog = false;
                 doAuthorization();
-              ">
+              "
+            >
               Continue
             </v-btn>
           </v-card-actions>
@@ -237,12 +244,18 @@
         <v-row>
           <v-col>
             <v-card
-              :to="{ name: 'calendar' }"
               class="mx-auto my-12 d-flex justify-center"
               max-width="400"
               height="100"
               elevation="10"
-              color="#196CA2">
+              color="#196CA2"
+              @click="
+                handleRedundantNavigation(
+                  'calendar',
+                  user.selectedRole.personRoleId
+                )
+              "
+            >
               <v-card-title class="justify-center white--text">
                 View Calendar
               </v-card-title>
@@ -250,12 +263,18 @@
           </v-col>
           <v-col>
             <v-card
-              :to="{ name: 'tutorAddAvailability' }"
               class="mx-auto my-12 d-flex justify-center"
               max-width="400"
               height="100"
               elevation="10"
-              color="#63BAC0">
+              color="#63BAC0"
+              @click="
+                handleRedundantNavigation(
+                  'tutorAddAvailability',
+                  user.selectedRole.personRoleId
+                )
+              "
+            >
               <v-card-title class="justify-center white--text">
                 Manage Availability
               </v-card-title>
@@ -264,32 +283,36 @@
         </v-row>
         <v-card>
           <v-card-title>
-            Upcoming Appointments for {{ this.user.selectedGroup }} as a tutor
+            Upcoming Appointments for {{ user.selectedGroup }} as a tutor
             <v-spacer></v-spacer>
             <InformationComponent
               message="Click on an appointment to view information, make changes,
-              confirm, or reject."></InformationComponent>
+              confirm, or reject."
+            ></InformationComponent>
           </v-card-title>
           <v-data-table
             :headers="headers"
             :items="appointments"
             :items-per-page="50"
-            @click:row="rowClick">
+            @click:row="rowClick"
+          >
           </v-data-table>
         </v-card>
         <br />
         <v-card>
           <v-card-title>
-            Provide Appointment Feedback for {{ this.user.selectedGroup }}
+            Provide Appointment Feedback for {{ user.selectedGroup }}
             <v-spacer></v-spacer>
             <InformationComponent
-              message="Click on an appointment to provide feedback."></InformationComponent>
+              message="Click on an appointment to provide feedback."
+            ></InformationComponent>
           </v-card-title>
           <v-data-table
             :headers="headerFeedback"
             :items="appointmentsneedingfeedback"
             :items-per-page="50"
-            @click:row="provideFeedback"></v-data-table>
+            @click:row="provideFeedback"
+          ></v-data-table>
         </v-card>
       </v-container>
       <v-container v-else-if="!disabled && !approved">
@@ -312,22 +335,23 @@ import PersonTopicServices from "@/services/personTopicServices.js";
 import AppointmentServices from "@/services/appointmentServices.js";
 import LocationServices from "@/services/locationServices.js";
 import PersonAppointmentServices from "@/services/personAppointmentServices.js";
-import TwilioServices from "@/services/twilioServices.js";
-import InformationComponent from "../../components/InformationComponent.vue";
 import DeleteConfirmationComponent from "../../components/DeleteConfirmationComponent.vue";
+import InformationComponent from "../../components/InformationComponent.vue";
+import { AppointmentActionMixin } from "../../mixins/AppointmentActionMixin";
+import { RedirectToPageMixin } from "../../mixins/RedirectToPageMixin";
 import { TimeFunctionsMixin } from "../../mixins/TimeFunctionsMixin";
 
 export default {
-  props: ["id"],
   name: "TutorHome",
-  mixins: [TimeFunctionsMixin],
   components: {
     DeleteConfirmationComponent,
     InformationComponent,
   },
-  watch: {
-    id: function () {
-      this.getTutorRole();
+  mixins: [AppointmentActionMixin, RedirectToPageMixin, TimeFunctionsMixin],
+  props: {
+    id: {
+      type: [Number, String],
+      default: 0,
     },
   },
   data() {
@@ -371,6 +395,11 @@ export default {
       url: "",
     };
   },
+  watch: {
+    id: function () {
+      this.getTutorRole();
+    },
+  },
   async created() {
     this.user = Utils.getStore("user");
     if (this.id !== 0) {
@@ -399,8 +428,13 @@ export default {
     },
     doAuthorization() {
       // the commented line is for local machine only
-      // this.url = (process.env.VUE_APP_SITE_URL ? process.env.VUE_APP_SITE_URL : "http://localhost") + '/tutoring-api/authorize/' + this.user.userID;
-      this.url = "/tutoring-api/authorize/" + this.user.userID;
+      if (process.env.VUE_APP_CLIENT_URL.includes("localhost")) {
+        this.url = "http://localhost:3002";
+      } else {
+        this.url = "/tutoring-api";
+      }
+      this.url += "/authorize/" + this.user.userID;
+      console.log(this.url);
 
       const client = global.google.accounts.oauth2.initCodeClient({
         client_id: process.env.VUE_APP_CLIENT_ID,
@@ -429,16 +463,16 @@ export default {
           xhr.setRequestHeader("X-Requested-With", "XMLHttpRequest");
           xhr.setRequestHeader("Access-Control-Allow-Origin", "*");
           xhr.send("code=" + response.code);
+          this.alertType = "success";
+          this.alert =
+            "You have successfully authorized Tutor Scheduling to link your Google calendar to ours.";
+          this.showAlert = true;
           // After receipt, the code is exchanged for an access token and
           // refresh token, and the platform then updates this web app
           // running in user's browser with the requested calendar info.
         },
       });
       client.requestCode();
-      this.alertType = "success";
-      this.alert =
-        "You have successfully authorized Tutor Scheduling to link your Google calendar to ours.";
-      this.showAlert = true;
     },
     async getGroupByPersonRoleId() {
       await PersonRoleServices.getGroupForPersonRole(this.id)
@@ -583,226 +617,29 @@ export default {
         params: { id: item.id, userId: this.user.userID },
       });
     },
-    //Update on tutor confirming booking
-    async confirmAppointment(confirm) {
-      if (confirm) {
-        this.selectedAppointment.status = "booked";
-        if (this.selectedAppointment.type.includes("Private")) {
-          let updateAppt = {
-            id: this.selectedAppointment.id,
-            date: this.selectedAppointment.originalDate,
-            startTime: this.selectedAppointment.originalStart,
-            endTime: this.selectedAppointment.originalEnd,
-            type: this.selectedAppointment.type,
-            status: "booked",
-            preSessionInfo: this.selectedAppointment.preSessionInfo,
-            groupId: this.selectedAppointment.groupId,
-            topicId: this.selectedAppointment.topicId,
-            locationId: this.selectedAppointment.locationId,
-          };
-          await AppointmentServices.updateForGoogle(updateAppt.id, updateAppt)
-            .then(async () => {
-              this.tutorConfirmMessage(
-                this.students[0],
-                this.user.fName,
-                this.user.lName,
-                updateAppt.id
-              );
-              this.getAppointments();
-              this.selectedAppointment.color = "blue";
-            })
-            .catch((error) => {
-              this.alertType = "error";
-              this.alert = error.response.data.message;
-              this.showAlert = true;
-              console.log("There was an error:", error.response);
-            });
-          this.alertType = "success";
-          this.alert =
-            "You have successfully confirmed " +
-            this.selectedAppointment.type +
-            " appointment on " +
-            this.selectedAppointment.date +
-            " at " +
-            this.selectedAppointment.startTime +
-            ".";
-          this.showAlert = true;
-        }
-      } else {
-        // don't need to update google cal because it's not even on there yet
-        this.selectedAppointment.status = "tutorCancel";
-        let updateAppt = {
-          id: this.selectedAppointment.id,
-          date: this.selectedAppointment.originalDate,
-          startTime: this.selectedAppointment.originalStart,
-          endTime: this.selectedAppointment.originalEnd,
-          type: this.selectedAppointment.type,
-          status: "tutorCancel",
-          preSessionInfo: this.selectedAppointment.preSessionInfo,
-          groupId: this.selectedAppointment.groupId,
-          topicId: this.selectedAppointment.topicId,
-          locationId: this.selectedAppointment.locationId,
-          googleEventId: this.selectedAppointment.googleEventId,
-        };
-        await AppointmentServices.updateAppointment(updateAppt.id, updateAppt)
-          .then(() => {
-            this.getAppointments();
-            // don't want to keep this open since it's supposed to leave this list
-            this.apptDialog = false;
-          })
-          .catch((error) => {
-            this.alertType = "error";
-            this.alert = error.response.data.message;
-            this.showAlert = true;
-            console.log("There was an error:", error.response);
-          });
-        this.alertType = "warning";
-        this.alert =
-          "You have successfully rejected your " +
-          this.selectedAppointment.type +
-          " appointment on " +
-          this.selectedAppointment.date +
-          " at " +
-          this.selectedAppointment.startTime +
-          ".";
-        this.showAlert = true;
-      }
-    },
-    async editAppointment() {
-      let updateAppt = {
-        id: this.selectedAppointment.id,
-        date: this.selectedAppointment.originalDate,
-        startTime: this.selectedAppointment.originalStart,
-        endTime: this.selectedAppointment.originalEnd,
-        type: this.selectedAppointment.type,
-        status: this.selectedAppointment.status,
-        preSessionInfo: this.selectedAppointment.preSessionInfo,
-        groupId: this.selectedAppointment.groupId,
-        topicId: this.selectedAppointment.topicId,
-        locationId: this.selectedAppointment.locationId,
-        googleEventId: this.selectedAppointment.googleEventId,
-      };
-      await AppointmentServices.updateForGoogle(updateAppt.id, updateAppt)
-        .then(async () => {
-          for (let i = 0; i < this.students.length; i++) {
-            this.tutorEditMessage(
-              this.students[i],
-              this.user.fName,
-              this.user.lName,
-              updateAppt.type
-            );
-            this.alertType = "success";
-            this.alert =
-              "You have successfully updated your " +
-              this.selectedAppointment.type +
-              " appointment on " +
-              this.selectedAppointment.date +
-              " at " +
-              this.selectedAppointment.startTime +
-              ".";
-            this.showAlert = true;
-          }
-          await this.getAppointments();
-        })
-        .catch((error) => {
-          this.alertType = "error";
-          this.alert = error.response.data.message;
-          this.showAlert = true;
-          console.log("There was an error:", error.response);
-        });
-    },
     async directToCancel() {
       if (this.selectedAppointment.status === "pending")
-        await this.confirmAppointment(false);
-      else if (this.selectedAppointment.status === "booked")
-        await this.cancelAppointment();
+        await this.confirmAppointment(
+          false,
+          this.user,
+          this.selectedAppointment
+        );
+      else {
+        await this.cancelAppointment(this.selectedAppointment, this.user);
+      }
+      await this.getAppointments();
       this.apptDialog = false;
       this.showDeleteConfirmation = false;
     },
-    //method for canceling appointments
-    async cancelAppointment() {
-      // if students are NOT signed up for the appointment, delete it and delete the tutor personappointments
-      if (this.students.length === 0) {
-        for (let i = 0; i < this.tutors.length; i++) {
-          await PersonAppointmentServices.deletePersonAppointment(
-            this.tutors[i].id
-          ).catch((error) => {
-            this.alertType = "error";
-            this.alert = error.response.data.message;
-            this.showAlert = true;
-            console.log("There was an error:", error.response);
-          });
-        }
-        await AppointmentServices.deleteAppointment(
-          this.selectedAppointment.id
-        ).catch((error) => {
-          this.alertType = "error";
-          this.alert = error.response.data.message;
-          this.showAlert = true;
-          console.log("There was an error:", error.response);
-        });
-      }
-      // if students are, keep the appointment but delete all the personappointments
-      else {
-        for (let i = 0; i < this.students.length; i++) {
-          this.tutorCancelMessage(
-            this.students[i],
-            this.user.fName,
-            this.user.lName,
-            this.selectedAppointment.id
-          );
-          await PersonAppointmentServices.deletePersonAppointment(
-            this.students[i].id
-          ).catch((error) => {
-            this.alertType = "error";
-            this.alert = error.response.data.message;
-            this.showAlert = true;
-            console.log("There was an error:", error.response);
-          });
-        }
-        for (let i = 0; i < this.tutors.length; i++) {
-          await PersonAppointmentServices.deletePersonAppointment(
-            this.tutors[i].id
-          ).catch((error) => {
-            this.alertType = "error";
-            this.alert = error.response.data.message;
-            this.showAlert = true;
-            console.log("There was an error:", error.response);
-          });
-        }
-        let updateAppt = {
-          id: this.selectedAppointment.id,
-          date: this.selectedAppointment.originalDate,
-          startTime: this.selectedAppointment.originalStart,
-          endTime: this.selectedAppointment.originalEnd,
-          type: this.selectedAppointment.type,
-          status: "tutorCancel",
-          preSessionInfo: this.selectedAppointment.preSessionInfo,
-          groupId: this.selectedAppointment.groupId,
-          topicId: this.selectedAppointment.topicId,
-          locationId: this.selectedAppointment.locationId,
-        };
-        await AppointmentServices.updateForGoogle(
-          updateAppt.id,
-          updateAppt
-        ).catch((error) => {
-          this.alertType = "error";
-          this.alert = error.response.data.message;
-          this.showAlert = true;
-          console.log("There was an error:", error.response);
-        });
-      }
-      this.getAppointments();
-      this.alertType = "warning";
-      this.alert =
-        "You have successfully canceled your " +
-        this.selectedAppointment.type +
-        " appointment on " +
-        this.selectedAppointment.date +
-        " at " +
-        this.selectedAppointment.startTime +
-        ".";
-      this.showAlert = true;
+    async directToConfirm() {
+      await this.confirmAppointment(true, this.user, this.selectedAppointment);
+      await this.getAppointments();
+      this.apptDialog = false;
+    },
+    async directToEdit() {
+      await this.editAppointment(this.user, this.selectedAppointment);
+      await this.getAppointments();
+      this.apptDialog = false;
     },
     async getTutorRole() {
       await PersonRoleServices.getPersonRole(this.id)
@@ -904,57 +741,6 @@ export default {
       this.updatePeople();
       this.saveChanges = false;
       this.apptDialog = true;
-    },
-    tutorConfirmMessage(student, fName, lName) {
-      let temp = student;
-      temp.phoneNum = student.person.phoneNum;
-      temp.message =
-        "The " +
-        this.selectedAppointment.type +
-        " appointment you booked on " +
-        this.selectedAppointment.date +
-        " at " +
-        this.selectedAppointment.startTime +
-        " has been confirmed by " +
-        fName +
-        " " +
-        lName +
-        ".\nPlease review this appointment at http://tutorscheduling.oc.edu/";
-      TwilioServices.sendMessage(temp);
-    },
-    tutorEditMessage(student, fName, lName) {
-      let temp = student;
-      temp.phoneNum = student.person.phoneNum;
-      temp.message =
-        "Your " +
-        this.selectedAppointment.type +
-        " appointment with " +
-        fName +
-        " " +
-        lName +
-        " on " +
-        this.selectedAppointment.date +
-        " at " +
-        this.selectedAppointment.startTime +
-        " has been edited. \nPlease check changes at http://tutorscheduling.oc.edu/";
-      TwilioServices.sendMessage(temp);
-    },
-    tutorCancelMessage(student, fName, lName) {
-      let temp = student;
-      temp.phoneNum = student.person.phoneNum;
-      temp.message =
-        "Your " +
-        this.selectedAppointment.type +
-        " appointment on " +
-        this.selectedAppointment.date +
-        " at " +
-        this.selectedAppointment.startTime +
-        " has been canceled by " +
-        fName +
-        " " +
-        lName +
-        ". We apologize for the inconvenience.";
-      TwilioServices.sendMessage(temp);
     },
   },
 };

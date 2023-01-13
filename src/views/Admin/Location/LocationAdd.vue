@@ -2,42 +2,46 @@
   <div>
     <v-container>
       <v-toolbar>
-        <v-toolbar-title>{{ this.message }}</v-toolbar-title>
+        <v-toolbar-title>{{ message }}</v-toolbar-title>
       </v-toolbar>
       <br />
       <v-form ref="form" v-model="valid" lazy validation>
         <v-text-field
-          v-model="location.name"
           id="name"
+          v-model="location.name"
           :counter="40"
           label="Location Name"
           hint="Location Name"
           persistent-hint
-          required></v-text-field>
+          required
+        ></v-text-field>
 
         <v-text-field
-          v-model="location.building"
           id="building"
+          v-model="location.building"
           :counter="40"
           label="Building"
           hint="Build Name and Number"
           persistent-hint
-          required></v-text-field>
+          required
+        ></v-text-field>
 
         <v-text-field
-          v-model="location.description"
           id="description"
+          v-model="location.description"
           :counter="200"
           label="Description of Location"
           hint="Description of Location"
           persistent-hint
-          required></v-text-field>
+          required
+        ></v-text-field>
 
         <v-select
           v-model="location.status"
           :items="status"
           label="Status"
-          required>
+          required
+        >
         </v-select>
 
         <v-select v-model="location.type" :items="types" label="Type" required>
@@ -45,10 +49,11 @@
 
         <!-- group should be readonly -->
         <v-text-field
-          v-model="this.user.selectedGroup"
           id="this.group.id"
+          v-model="user.selectedGroup"
           label="Group"
-          readonly></v-text-field>
+          readonly
+        ></v-text-field>
 
         <!-- <v-select
         v-model="location.groupId"
@@ -64,7 +69,8 @@
           :disabled="!valid"
           color="success"
           class="mr-4"
-          @click="addLocation">
+          @click="addLocation"
+        >
           Save
         </v-btn>
 
@@ -80,7 +86,12 @@ import LocationServices from "@/services/locationServices.js";
 import PersonRoleServices from "@/services/personRoleServices.js";
 
 export default {
-  props: ["id"],
+  props: {
+    id: {
+      type: Number,
+      default: 0,
+    },
+  },
   data() {
     return {
       message: "Add Location - enter data and click Save",

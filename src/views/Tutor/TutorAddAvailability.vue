@@ -3,10 +3,11 @@
     <v-container>
       <div>
         <v-toolbar>
-          <v-toolbar-title>{{ this.message }}</v-toolbar-title>
+          <v-toolbar-title>{{ message }}</v-toolbar-title>
           <v-spacer></v-spacer>
           <InformationComponent
-            message="Select date(s), times, and type, and click Save to indicate when you can tutor."></InformationComponent>
+            message="Select date(s), times, and type, and click Save to indicate when you can tutor."
+          ></InformationComponent>
         </v-toolbar>
         <br />
         <b v-if="!group.allowSplittingAppointments"
@@ -15,123 +16,126 @@
         >
         <br />
         <v-alert v-model="showAlert" dismissible :type="alertType">{{
-          this.alert
+          alert
         }}</v-alert
         ><br />
-        <template>
-          <v-dialog v-model="doubleBookedDialog" max-width="600px">
-            <v-card>
-              <v-card-title>
-                <span class="text-h5"
-                  >You already have an appointment during this time:</span
-                >
-              </v-card-title>
-              <v-card-text>
-                <br />
+        <v-dialog v-model="doubleBookedDialog" max-width="600px">
+          <v-card>
+            <v-card-title>
+              <span class="text-h5"
+                >You already have an appointment during this time:</span
+              >
+            </v-card-title>
+            <v-card-text>
+              <br />
+              <v-row>
+                <v-col>
+                  <h3>Existing Appointment:</h3>
+                  <br />
+                  <p>Date: {{ conflictAvailability.existing.date }}</p>
+                  <p>
+                    Start Time: {{ conflictAvailability.existing.startTime }}
+                  </p>
+                  <p>End Time: {{ conflictAvailability.existing.endTime }}</p>
+                </v-col>
+                <v-col>
+                  <h3>Conflicting Appointment:</h3>
+                  <br />
+                  <p>Date: {{ conflictAvailability.conflicting.date }}</p>
+                  <p>
+                    Start Time:
+                    {{ conflictAvailability.conflicting.startTime }}
+                  </p>
+                  <p>
+                    End Time: {{ conflictAvailability.conflicting.endTime }}
+                  </p>
+                </v-col>
+              </v-row>
+            </v-card-text>
+            <v-card-actions>
+              <v-spacer></v-spacer>
+              <v-btn
+                color="blue darken-1"
+                text
+                @click="doubleBookedDialog = false"
+              >
+                Close
+              </v-btn>
+            </v-card-actions>
+          </v-card>
+        </v-dialog>
+        <v-dialog v-model="groupDialog" persistent max-width="600px">
+          <v-card>
+            <v-card-title>
+              <span class="text-h5">Information for Session</span>
+            </v-card-title>
+            <v-card-text>
+              <v-container>
                 <v-row>
-                  <v-col>
-                    <h3>Existing Appointment:</h3>
-                    <br />
-                    <p>Date: {{ conflictAvailability.existing.date }}</p>
-                    <p>
-                      Start Time: {{ conflictAvailability.existing.startTime }}
-                    </p>
-                    <p>End Time: {{ conflictAvailability.existing.endTime }}</p>
+                  <v-col cols="12" sm="6" md="4">
+                    <v-select
+                      v-model="location"
+                      :items="locations"
+                      item-text="name"
+                      item-value="id"
+                      label="Location"
+                      required
+                      dense
+                    >
+                    </v-select>
                   </v-col>
-                  <v-col>
-                    <h3>Conflicting Appointment:</h3>
-                    <br />
-                    <p>Date: {{ conflictAvailability.conflicting.date }}</p>
-                    <p>
-                      Start Time:
-                      {{ conflictAvailability.conflicting.startTime }}
-                    </p>
-                    <p>
-                      End Time: {{ conflictAvailability.conflicting.endTime }}
-                    </p>
+                  <v-col cols="12" sm="6" md="4">
+                    <v-select
+                      v-model="topic"
+                      :items="topics"
+                      item-text="name"
+                      item-value="id"
+                      label="Topic"
+                      required
+                      dense
+                    >
+                    </v-select>
                   </v-col>
                 </v-row>
-              </v-card-text>
-              <v-card-actions>
-                <v-spacer></v-spacer>
-                <v-btn
-                  color="blue darken-1"
-                  text
-                  @click="doubleBookedDialog = false">
-                  Close
-                </v-btn>
-              </v-card-actions>
-            </v-card>
-          </v-dialog>
-          <v-dialog v-model="groupDialog" persistent max-width="600px">
-            <v-card>
-              <v-card-title>
-                <span class="text-h5">Information for Session</span>
-              </v-card-title>
-              <v-card-text>
-                <v-container>
-                  <v-row>
-                    <v-col cols="12" sm="6" md="4">
-                      <v-select
-                        v-model="location"
-                        :items="locations"
-                        item-text="name"
-                        item-value="id"
-                        label="Location"
-                        required
-                        dense>
-                      </v-select>
-                    </v-col>
-                    <v-col cols="12" sm="6" md="4">
-                      <v-select
-                        v-model="topic"
-                        :items="topics"
-                        item-text="name"
-                        item-value="id"
-                        label="Topic"
-                        required
-                        dense>
-                      </v-select>
-                    </v-col>
-                  </v-row>
-                  <v-row>
-                    <v-col>
-                      <v-textarea
-                        v-model="preSessionInfo"
-                        label="Pre-session info"
-                        hint="Information for the session"
-                        required
-                        outlined></v-textarea>
-                    </v-col>
-                  </v-row>
-                </v-container>
-              </v-card-text>
-              <v-card-actions>
-                <v-spacer></v-spacer>
-                <v-btn color="blue darken-1" text @click="groupDialog = false">
-                  Close
-                </v-btn>
-                <v-btn
-                  color="blue darken-1"
-                  text
-                  @click="
-                    addAvailability();
-                    groupDialog = false;
-                  "
-                  :disabled="
-                    location === '' ||
-                    location === null ||
-                    location === undefined ||
-                    topic === '' ||
-                    topic === null ||
-                    topic === undefined
-                  ">
-                  Save
-                </v-btn>
-              </v-card-actions>
-            </v-card>
-          </v-dialog>
-        </template>
+                <v-row>
+                  <v-col>
+                    <v-textarea
+                      v-model="preSessionInfo"
+                      label="Pre-session info"
+                      hint="Information for the session"
+                      required
+                      outlined
+                    ></v-textarea>
+                  </v-col>
+                </v-row>
+              </v-container>
+            </v-card-text>
+            <v-card-actions>
+              <v-spacer></v-spacer>
+              <v-btn color="blue darken-1" text @click="groupDialog = false">
+                Close
+              </v-btn>
+              <v-btn
+                color="blue darken-1"
+                text
+                :disabled="
+                  location === '' ||
+                  location === null ||
+                  location === undefined ||
+                  topic === '' ||
+                  topic === null ||
+                  topic === undefined
+                "
+                @click="
+                  addAvailability();
+                  groupDialog = false;
+                "
+              >
+                Save
+              </v-btn>
+            </v-card-actions>
+          </v-card>
+        </v-dialog>
         <v-row>
           <v-col cols="12" sm="6">
             <v-date-picker
@@ -139,7 +143,8 @@
               :min="nowDate"
               show-adjacent-months
               multiple
-              @input="updateTimes()"></v-date-picker>
+              @input="updateTimes()"
+            ></v-date-picker>
           </v-col>
           <v-col cols="12" sm="6">
             <v-menu
@@ -149,8 +154,9 @@
               :return-value.sync="dates"
               transition="scale-transition"
               offset-y
-              min-width="auto">
-              <template v-slot:activator="{ on, attrs }">
+              min-width="auto"
+            >
+              <template #activator="{ on, attrs }">
                 <v-combobox
                   v-model="dates"
                   multiple
@@ -160,7 +166,8 @@
                   prepend-icon="mdi-calendar"
                   readonly
                   v-bind="attrs"
-                  v-on="on"></v-combobox>
+                  v-on="on"
+                ></v-combobox>
               </template>
               <v-date-picker
                 v-model="dates"
@@ -169,7 +176,8 @@
                 multiple
                 no-title
                 scrollable
-                @input="updateTimes()">
+                @input="updateTimes()"
+              >
                 <v-spacer></v-spacer>
                 <v-btn text color="primary" @click="menu = false">
                   Cancel
@@ -188,13 +196,15 @@
               prepend-icon="mdi-clock-time-four-outline"
               item-text="timeText"
               item-value="time"
+              menu-props="auto"
               required
+              dense
               @change="
                 newStart = displayedStart;
                 updateTimes();
                 secondTime = false;
               "
-              dense>
+            >
             </v-select>
           </v-col>
           <v-col cols="11" sm="5">
@@ -206,12 +216,13 @@
               item-text="timeText"
               item-value="time"
               required
+              :disabled="secondTime"
+              dense
               @change="
                 newEnd = displayedEnd;
                 updateTimes();
               "
-              :disabled="secondTime"
-              dense>
+            >
             </v-select>
           </v-col>
           <v-container>
@@ -222,12 +233,12 @@
               item-value="value"
               label="Choose a session type"
               required
-              dense>
+              dense
+            >
             </v-select>
             <v-btn
               color="success"
               class="mr-4"
-              @click="groupHandler()"
               :disabled="
                 displayedEnd === '' ||
                 displayedEnd === null ||
@@ -239,7 +250,9 @@
                 groupSession === null ||
                 groupSession === undefined ||
                 dates.length === 0
-              ">
+              "
+              @click="groupHandler()"
+            >
               Save
             </v-btn>
           </v-container>
@@ -250,53 +263,52 @@
         <v-toolbar>
           <v-toolbar-title>Your Availabilities</v-toolbar-title>
         </v-toolbar>
-        <template>
-          <v-data-table
-            :headers="headers"
-            :items="availabilities"
-            :items-per-page="50">
-            <template v-slot:top>
-              <v-toolbar flat>
-                <!--  popup for deleting an availability  -->
-                <v-dialog v-model="dialogDelete" max-width="800px">
-                  <v-card>
-                    <v-card-title class="text-h5"
-                      >Are you sure you want to delete this
-                      availability?</v-card-title
+        <v-data-table
+          :headers="headers"
+          :items="availabilities"
+          :items-per-page="50"
+        >
+          <template #top>
+            <v-toolbar flat>
+              <!--  popup for deleting an availability  -->
+              <v-dialog v-model="dialogDelete" max-width="800px">
+                <v-card>
+                  <v-card-title class="text-h5"
+                    >Are you sure you want to delete this
+                    availability?</v-card-title
+                  >
+                  <v-card-text>
+                    <br />
+                    <v-row>
+                      <v-col>
+                        <p>Date: {{ editedItem.date }}</p>
+                        <p>Start Time: {{ editedItem.startTime }}</p>
+                        <p>End Time: {{ editedItem.endTime }}</p>
+                      </v-col>
+                    </v-row>
+                  </v-card-text>
+                  <v-card-actions>
+                    <v-spacer></v-spacer>
+                    <v-btn color="blue darken-1" text @click="closeDelete()"
+                      >Cancel</v-btn
                     >
-                    <v-card-text>
-                      <br />
-                      <v-row>
-                        <v-col>
-                          <p>Date: {{ editedItem.date }}</p>
-                          <p>Start Time: {{ editedItem.startTime }}</p>
-                          <p>End Time: {{ editedItem.endTime }}</p>
-                        </v-col>
-                      </v-row>
-                    </v-card-text>
-                    <v-card-actions>
-                      <v-spacer></v-spacer>
-                      <v-btn color="blue darken-1" text @click="closeDelete()"
-                        >Cancel</v-btn
-                      >
-                      <v-btn
-                        color="blue darken-1"
-                        text
-                        @click="deleteItemConfirm()"
-                        >OK</v-btn
-                      >
-                      <v-spacer></v-spacer>
-                    </v-card-actions>
-                  </v-card>
-                </v-dialog>
-              </v-toolbar>
-            </template>
+                    <v-btn
+                      color="blue darken-1"
+                      text
+                      @click="deleteItemConfirm()"
+                      >OK</v-btn
+                    >
+                    <v-spacer></v-spacer>
+                  </v-card-actions>
+                </v-card>
+              </v-dialog>
+            </v-toolbar>
+          </template>
 
-            <template v-slot:[`item.actions`]="{ item }">
-              <v-icon small @click="deleteItem(item)"> mdi-delete </v-icon>
-            </template>
-          </v-data-table>
-        </template>
+          <template #[`item.actions`]="{ item }">
+            <v-icon small @click="deleteItem(item)"> mdi-delete </v-icon>
+          </template>
+        </v-data-table>
       </div>
     </v-container>
   </div>
@@ -316,10 +328,15 @@ import { TimeFunctionsMixin } from "../../mixins/TimeFunctionsMixin";
 
 export default {
   name: "TutorAddAvailability",
-  props: ["id"],
-  mixins: [TimeFunctionsMixin],
   components: {
     InformationComponent,
+  },
+  mixins: [TimeFunctionsMixin],
+  props: {
+    id: {
+      type: [Number, String],
+      default: 0,
+    },
   },
   data: () => ({
     message: "Add Availability",
@@ -429,6 +446,16 @@ export default {
       // adding this to make sure that you can't start an appointment at the end time
       this.startTimes.pop();
       // end times will usually be in group's min appointment time, but could also be time interval if tutor has the right privilege
+
+      // set default displayed start
+      if (this.displayedStart === "") {
+        this.displayedStart = this.startTimes.find(
+          (time) => time.time === "08:00:00"
+        ).time;
+        this.newStart = this.displayedStart;
+        this.secondTime = false;
+      }
+
       if (
         this.checkPrivilege(
           "Make flexible slots that allow for shorter appointments"
@@ -456,12 +483,13 @@ export default {
       for (let i = 0; i < this.upcoming.length && isAvail; i++) {
         let appoint = this.upcoming[i];
         appoint.date = appoint.date.substring(0, 10);
-        appoint.startTime = appoint.startTime.substring(0, 5);
-        appoint.endTime = appoint.endTime.substring(0, 5);
+        appoint.startTime = appoint.startTime.substring(0, 8);
+        appoint.endTime = appoint.endTime.substring(0, 8);
         if (tempAvail.date === appoint.date) {
           if (
             (tempAvail.startTime < appoint.startTime &&
-              tempAvail.endTime > appoint.startTime) || // new availability starts before and ends during existing
+              tempAvail.endTime > appoint.startTime &&
+              tempAvail.endTime < appoint.endTime) || // new availability starts before and ends during existing
             (tempAvail.startTime >= appoint.startTime &&
               tempAvail.endTime <= appoint.endTime) || // new availability is in the middle of an existing
             (tempAvail.startTime < appoint.startTime &&
@@ -471,8 +499,16 @@ export default {
               tempAvail.startTime < appoint.endTime) // new availability starts during and ends after existing
           ) {
             isAvail = false;
-            this.conflictAvailability.conflicting = tempAvail;
-            this.conflictAvailability.existing = appoint;
+            this.conflictAvailability.conflicting = {
+              date: tempAvail.date,
+              startTime: tempAvail.startTime,
+              endTime: tempAvail.endTime,
+            };
+            this.conflictAvailability.existing = {
+              date: appoint.date,
+              startTime: appoint.startTime,
+              endTime: appoint.endTime,
+            };
             // format time of conflict availability
             this.conflictAvailability.conflicting.startTime = this.formatTime(
               this.conflictAvailability.conflicting.startTime

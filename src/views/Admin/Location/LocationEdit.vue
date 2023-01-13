@@ -2,48 +2,51 @@
   <div>
     <v-container>
       <v-toolbar>
-        <v-toolbar-title>{{ this.message }}</v-toolbar-title>
+        <v-toolbar-title>{{ message }}</v-toolbar-title>
       </v-toolbar>
       <br />
 
-      <v-dialog persistent v-model="showDisableConfirmation" max-width="750px">
+      <v-dialog v-model="showDisableConfirmation" persistent max-width="750px">
         <DeleteConfirmationComponent
           type="location"
           :item="location"
           @handleReturningCancel="showDisableConfirmation = false"
-          @handleReturningSuccess="
-            updateLocation()
-          "></DeleteConfirmationComponent>
+          @handleReturningSuccess="updateLocation()"
+        ></DeleteConfirmationComponent>
       </v-dialog>
 
       <v-form ref="form" v-model="valid" lazy validation>
         <v-text-field
-          v-model="location.name"
           id="name"
+          v-model="location.name"
           :counter="40"
           label="Location Name"
-          required></v-text-field>
+          required
+        ></v-text-field>
 
         <v-text-field
-          v-model="location.building"
           id="building"
+          v-model="location.building"
           :counter="40"
           label="Building"
-          required></v-text-field>
+          required
+        ></v-text-field>
 
         <v-text-field
-          v-model="location.description"
           id="description"
+          v-model="location.description"
           :counter="200"
           label="Description of Location"
-          required></v-text-field>
+          required
+        ></v-text-field>
 
         <v-select
           v-model="location.status"
           :items="status"
           label="Status"
+          required
           @change="statusChanged = true"
-          required>
+        >
         </v-select>
 
         <v-select v-model="location.type" :items="types" label="Type" required>
@@ -55,14 +58,16 @@
           item-text="name"
           item-value="id"
           label="Group"
-          required>
+          required
+        >
         </v-select>
 
         <v-btn
           :disabled="!valid"
           color="success"
           class="mr-4"
-          @click="directToCancel()">
+          @click="directToCancel()"
+        >
           Save
         </v-btn>
 
@@ -79,9 +84,14 @@ import DeleteConfirmationComponent from "../../../components/DeleteConfirmationC
 import Utils from "@/config/utils.js";
 
 export default {
-  props: ["id"],
   components: {
     DeleteConfirmationComponent,
+  },
+  props: {
+    id: {
+      type: [Number, String],
+      default: 0,
+    },
   },
   data() {
     return {

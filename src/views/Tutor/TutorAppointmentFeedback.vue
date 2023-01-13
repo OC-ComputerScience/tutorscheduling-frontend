@@ -2,34 +2,35 @@
   <div>
     <v-container>
       <v-toolbar>
-        <v-toolbar-title>{{ this.message }}</v-toolbar-title>
+        <v-toolbar-title>{{ message }}</v-toolbar-title>
         <v-spacer></v-spacer>
         <InformationComponent
-          message="Provide feedback for your recent session."></InformationComponent>
+          message="Provide feedback for your recent session."
+        ></InformationComponent>
       </v-toolbar>
       <br />
       <v-alert v-model="showAlert" dismissible :type="alertType">{{
-        this.alert
+        alert
       }}</v-alert>
       <br />
       <v-row justify="center">
         <v-card flat color="grey lighten-4" min-width="500px">
           <v-card-title class="justify-center">
-            Appointment on {{ this.dateText }} with {{ this.studentText }}
+            Appointment on {{ dateText }} with {{ studentText }}
           </v-card-title>
           <v-card-text>
-            <b>Time: </b>{{ this.appointment.startTime }} -
-            {{ this.appointment.endTime }}
+            <b>Time: </b>{{ appointment.startTime }} -
+            {{ appointment.endTime }}
             <br />
-            <b>Type: </b>{{ this.appointment.type }}
+            <b>Type: </b>{{ appointment.type }}
             <br />
-            <b>Location: </b>{{ this.appointment.location.name }}
+            <b>Location: </b>{{ appointment.location.name }}
             <br />
-            <b>Topic: </b>{{ this.appointment.topic.name }}
+            <b>Topic: </b>{{ appointment.topic.name }}
             <br />
-            <b>Pre-Session Info: </b>{{ this.appointment.preSessionInfo }}
+            <b>Pre-Session Info: </b>{{ appointment.preSessionInfo }}
             <br />
-            <b>Other Tutor(s): </b>{{ this.tutorText }}
+            <b>Other Tutor(s): </b>{{ tutorText }}
           </v-card-text>
         </v-card>
       </v-row>
@@ -43,8 +44,8 @@
             <br />
             <v-layout justify-center>
               <v-rating
-                class="justify-center"
                 v-model="numericalfeedback"
+                class="justify-center"
                 background-color="grey"
                 color="primary"
                 empty-icon="mdi-star-outline"
@@ -52,26 +53,30 @@
                 hover
                 length="5"
                 size="45"
-                value="3"></v-rating>
+                value="3"
+              ></v-rating>
             </v-layout>
           </div>
           <v-text-field
-            v-model="textualfeedback"
             id="description"
+            v-model="textualfeedback"
             :counter="500"
             label="Provide Feedback..."
-            required></v-text-field>
+            required
+          ></v-text-field>
           <v-container fluid>
             <v-checkbox
               v-model="status"
               label="This student was a no-show"
-              value="No-Show"></v-checkbox>
+              value="No-Show"
+            ></v-checkbox>
           </v-container>
           <v-btn
             :disabled="!valid || !textualfeedback"
             color="success"
             class="mr-4"
-            @click="updatePersonAppointment">
+            @click="updatePersonAppointment"
+          >
             Save
           </v-btn>
 
@@ -90,9 +95,18 @@ import InformationComponent from "../../components/InformationComponent.vue";
 
 export default {
   name: "TutorAppointmentFeedback",
-  props: ["id", "userId"],
   components: {
     InformationComponent,
+  },
+  props: {
+    id: {
+      type: [Number, String],
+      default: 0,
+    },
+    userId: {
+      type: [Number, String],
+      default: 0,
+    },
   },
   data() {
     return {

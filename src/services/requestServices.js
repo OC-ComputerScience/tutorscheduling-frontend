@@ -20,6 +20,9 @@ export default {
   updateRequest(requestId, request) {
     return apiClient.put("request/" + requestId, request);
   },
+  deleteRequestsForPersonForGroup(personId, groupId) {
+    return apiClient.delete("request/person/" + personId + "/group/" + groupId);
+  },
   deleteRequest(requestId) {
     return apiClient.delete("request/" + requestId);
   },

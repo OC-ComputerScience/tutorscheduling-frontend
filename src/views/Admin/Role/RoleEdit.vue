@@ -2,13 +2,13 @@
   <div>
     <v-container>
       <v-toolbar>
-        <v-toolbar-title>{{ this.message }}</v-toolbar-title>
+        <v-toolbar-title>{{ message }}</v-toolbar-title>
       </v-toolbar>
       <br />
       <v-form ref="form" v-model="valid" lazy validation>
         <v-text-field
-          v-model="role.type"
           id="type"
+          v-model="role.type"
           :counter="50"
           label="Name"
           required
@@ -44,8 +44,12 @@ import RoleServices from "@/services/roleServices.js";
 import GroupServices from "@/services/groupServices.js";
 
 export default {
-  props: ["id"],
-
+  props: {
+    id: {
+      type: [Number, String],
+      default: 0,
+    },
+  },
   data() {
     return {
       valid: false,

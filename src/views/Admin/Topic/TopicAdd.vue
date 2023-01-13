@@ -7,36 +7,40 @@
       <br />
       <v-form ref="form" v-model="valid" lazy validation>
         <v-text-field
-          v-model="topic.name"
           id="name"
+          v-model="topic.name"
           :counter="50"
           label="Name"
           hint="Name"
           persistent-hint
-          required></v-text-field>
+          required
+        ></v-text-field>
 
         <v-text-field
-          v-model="topic.abbr"
           id="abbr"
+          v-model="topic.abbr"
           :counter="25"
           label="Abbreviation"
           hint="Abbreviation"
           persistent-hint
-          required></v-text-field>
+          required
+        ></v-text-field>
 
         <v-select
           v-model="topic.status"
           :items="status"
           label="Status"
-          required>
+          required
+        >
         </v-select>
 
         <!-- group should be readonly -->
         <v-text-field
-          v-model="this.user.selectedGroup"
           id="this.group.id"
+          v-model="user.selectedGroup"
           label="Group"
-          readonly></v-text-field>
+          readonly
+        ></v-text-field>
 
         <!-- <v-select
         v-model="topic.groupId"
@@ -52,7 +56,8 @@
           :disabled="!valid"
           color="success"
           class="mr-4"
-          @click="addTopic">
+          @click="addTopic"
+        >
           Save
         </v-btn>
 
@@ -69,7 +74,12 @@ import PersonRoleServices from "@/services/personRoleServices.js";
 
 export default {
   components: {},
-  props: ["id"],
+  props: {
+    id: {
+      type: Number,
+      default: 0,
+    },
+  },
   data() {
     return {
       valid: true,

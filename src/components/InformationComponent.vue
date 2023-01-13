@@ -1,7 +1,7 @@
 <template>
   <div>
     <v-tooltip bottom>
-      <template v-slot:activator="{ on, attrs }">
+      <template #activator="{ on, attrs }">
         <v-icon class="mx-2" color="grey darken" dark v-bind="attrs" v-on="on">
           mdi-information
         </v-icon>
@@ -15,7 +15,10 @@
 export default {
   name: "InformationComponent",
   props: {
-    message: String,
+    message: {
+      type: String,
+      default: "",
+    },
   },
 };
 </script>

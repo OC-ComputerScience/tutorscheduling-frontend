@@ -8,11 +8,12 @@
           message="Select various criteria for appointments regarding dates, topics, statuses, tutors, and/or students.
           <br />
           Click <b>Filter</b> and then click <b>Download CSV</b>.
-          <br /> A CSV Report of the selected appointments will be saved to your Downloads file."></InformationComponent>
+          <br /> A CSV Report of the selected appointments will be saved to your Downloads file."
+        ></InformationComponent>
       </v-toolbar>
       <br />
       <v-alert v-model="showAlert" dismissible :type="alertType">{{
-        this.alert
+        alert
       }}</v-alert>
       <v-row>
         <v-col md="4">
@@ -22,15 +23,17 @@
             :nudge-right="40"
             transition="scale-transition"
             offset-y
-            min-width="auto">
-            <template v-slot:activator="{ on, attrs }">
+            min-width="auto"
+          >
+            <template #activator="{ on, attrs }">
               <v-text-field
                 v-model="dateRangeText"
                 label="Date Range"
                 prepend-icon="mdi-calendar"
                 readonly
                 v-bind="attrs"
-                v-on="on"></v-text-field>
+                v-on="on"
+              ></v-text-field>
             </template>
             <v-date-picker v-model="dates" range></v-date-picker>
           </v-menu>
@@ -41,7 +44,8 @@
             :items="topics"
             item-text="name"
             item-value="id"
-            label="Topic">
+            label="Topic"
+          >
           </v-select>
         </v-col>
         <v-col md="4">
@@ -50,7 +54,8 @@
             :items="status"
             item-text="title"
             item-value="id"
-            label="Status">
+            label="Status"
+          >
           </v-select>
         </v-col>
         <!-- <v-col md="4">
@@ -69,7 +74,8 @@
             item-value="fullName"
             chips
             multiple
-            label="Tutors">
+            label="Tutors"
+          >
           </v-select>
         </v-col>
         <v-col md="4">
@@ -80,7 +86,8 @@
             item-value="fullName"
             chips
             multiple
-            label="Students">
+            label="Students"
+          >
           </v-select>
         </v-col>
       </v-row>
@@ -89,7 +96,8 @@
       <vue-json-to-csv
         :json-data="selectedAppointments"
         :labels="labels"
-        :csv-title="fileName">
+        :csv-title="fileName"
+      >
         <v-btn
           color="success"
           class="mr-4"
@@ -105,7 +113,8 @@
             selectedTopic = -1;
             selectedStatus = -1;
             getAllAppointmentsForGroup();
-          ">
+          "
+        >
           Download CSV
         </v-btn>
       </vue-json-to-csv>
@@ -125,11 +134,16 @@ import { TimeFunctionsMixin } from "../../mixins/TimeFunctionsMixin";
 
 export default {
   name: "AdminReports",
-  props: ["id"],
-  mixins: [TimeFunctionsMixin],
   components: {
     VueJsonToCsv,
     InformationComponent,
+  },
+  mixins: [TimeFunctionsMixin],
+  props: {
+    id: {
+      type: [Number, String],
+      default: 0,
+    },
   },
   data() {
     return {
