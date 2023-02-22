@@ -29,10 +29,10 @@ export default {
   addPerson(person) {
     return apiClient.post("person", person);
   },
-  updatePerson(personId, person) {
-    return apiClient.put("person/" + personId, person);
+  updatePerson(id, person) {
+    return apiClient.put("person/" + id, person);
   },
-  deletePerson(personId) {
-    return apiClient.delete("person/" + personId);
+  deletePerson(id) {
+    return apiClient.delete("person/" + id);
   },
 };

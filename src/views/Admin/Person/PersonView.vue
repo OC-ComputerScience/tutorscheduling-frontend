@@ -590,7 +590,7 @@ export default {
         });
     },
     setPhoneNumber(phoneNumber) {
-      this.person.phoneNumber = phoneNumber;
+      this.person.phoneNum = phoneNumber;
     },
     async updatePerson() {
       await PersonServices.updatePerson(this.personId, this.person)

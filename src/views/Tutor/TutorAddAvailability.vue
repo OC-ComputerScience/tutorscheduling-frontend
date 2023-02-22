@@ -417,7 +417,7 @@ export default {
     await this.getGroupByPersonRoleId();
     // below generates the latest time a day can have an appointment based on the group's time interval
     this.newEnd = "23:" + (59 - (this.group.timeInterval - 1)).toString();
-    this.getAvailabilities();
+    await this.getAvailabilities();
     this.updateTimes();
     await this.getPrivilegesForPersonRole();
   },
@@ -545,7 +545,9 @@ export default {
       for (var i = 0; i < this.dates.length; i++) {
         let tempApp = {};
         let element = this.dates[i];
-        this.availability.date = element;
+        let date = new Date(element);
+        date.setHours(date.getHours() + date.getTimezoneOffset() / 60);
+        this.availability.date = date;
         this.availability.startTime = this.newStart;
         this.availability.endTime = this.newEnd;
         this.availability.personId = this.user.userID;
@@ -555,8 +557,6 @@ export default {
         if (checkAvailable) {
           await AvailabilityServices.addAvailability(this.availability)
             .then(async () => {
-              let date = new Date(element);
-              date.setHours(date.getHours() + date.getTimezoneOffset() / 60);
               this.appointment.date = date;
               this.appointment.startTime = this.newStart;
               this.appointment.endTime = this.newEnd;
@@ -632,7 +632,7 @@ export default {
       this.location = "";
       this.preSessionInfo = "";
       this.secondTime = true;
-      this.getAvailabilities();
+      await this.getAvailabilities();
       this.updateTimes();
 
       this.alertType = "success";
@@ -655,29 +655,6 @@ export default {
       await AvailabilityServices.getUpcomingForPerson(this.user.userID)
         .then((response) => {
           this.availabilities = response.data;
-          for (let i = 0; i < this.availabilities.length; i++) {
-            for (let j = 0; j < this.availabilities.length - i - 1; j++) {
-              if (
-                this.availabilities[j + 1].date < this.availabilities[j].date
-              ) {
-                [this.availabilities[j + 1], this.availabilities[j]] = [
-                  this.availabilities[j],
-                  this.availabilities[j + 1],
-                ];
-              } else if (
-                this.availabilities[j + 1].date === this.availabilities[j].date
-              ) {
-                if (
-                  this.availabilities[j + 1].startTime <
-                  this.availabilities[j].startTime
-                )
-                  [this.availabilities[j + 1], this.availabilities[j]] = [
-                    this.availabilities[j],
-                    this.availabilities[j + 1],
-                  ];
-              }
-            }
-          }
 
           for (let index = 0; index < this.availabilities.length; ++index) {
             //format date, start time, and end time
