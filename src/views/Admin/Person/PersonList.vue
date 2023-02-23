@@ -49,7 +49,7 @@ export default {
   components: {},
   props: {
     id: {
-      type: Number,
+      type: [Number, String],
       default: 0,
     },
   },

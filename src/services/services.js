@@ -30,6 +30,7 @@ const apiClient = axios.create({
     return JSON.stringify(data);
   },
   transformResponse: function (data) {
+    console.log(data);
     data = JSON.parse(data);
     if (data.message !== undefined && data.message.includes("Unauthorized")) {
       AuthServices.logoutUser(Utils.getStore("user")).catch((error) => {
