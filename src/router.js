@@ -291,13 +291,12 @@ const router = new Router({
 
 router.beforeEach((to, from, next) => {
   // redirect to login page if not logged in and trying to access a restricted page
-  const publicPages = ["/"];
-  const authRequired = !publicPages.includes(to.path);
-  const loggedIn = localStorage.getItem("user");
-  if (authRequired && !loggedIn) {
+  const user = localStorage.getItem("user");
+  if (user === null && to.path !== "/") {
     return next("/");
+  } else {
+    next();
   }
-  next();
 });
 
 export default router;
