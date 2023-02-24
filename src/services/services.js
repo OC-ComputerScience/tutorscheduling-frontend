@@ -31,11 +31,24 @@ const apiClient = axios.create({
   },
   transformResponse: function (data) {
     data = JSON.parse(data);
-    if (data.message !== undefined && data.message.includes("Unauthorized")) {
-      AuthServices.logoutUser(Utils.getStore("user")).catch((error) => {
-        console.log("error", error);
-      });
+    let user = Utils.getStore("user");
+    if (
+      data.message !== undefined &&
+      data.message.includes("Unauthorized") &&
+      user !== null
+    ) {
+      AuthServices.logoutUser(user)
+        .then((response) => {
+          if (response.status === 401) {
+            console.log("user is unauthorized");
+          }
+          console.log(response);
+        })
+        .catch((error) => {
+          console.log(error);
+        });
       Utils.removeItem("user");
+      Utils.removeItem("token");
       Router.push({ name: "login" }).catch((err) => {
         // Ignore the vuex err regarding  navigating to the page they are already on.
         if (
