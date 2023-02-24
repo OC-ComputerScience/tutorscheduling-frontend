@@ -62,9 +62,7 @@ Vue.use(Router);
 const router = new Router({
   mode: "hash",
   linkExactActiveClass: "active",
-  base:
-    //    process.env.NODE_ENV === 'development'? "/" : "/tutorScheduling/", - for AWS
-    process.env.NODE_ENV === "development" ? "/" : "/",
+  base: process.env.NODE_ENV === "development" ? "/" : "/",
   routes: [
     {
       path: "/apply/:id",

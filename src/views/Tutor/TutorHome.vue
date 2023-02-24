@@ -427,13 +427,13 @@ export default {
       }
     },
     doAuthorization() {
-      // the commented line is for local machine only
       if (process.env.VUE_APP_CLIENT_URL.includes("localhost")) {
-        this.url = "http://localhost:3002";
+        this.url = "http://localhost";
       } else {
         this.url = "/tutoring-api";
       }
       this.url += "/authorize/" + this.user.userID;
+      console.log(process.env.VUE_APP_CLIENT_URL);
       console.log(this.url);
 
       const client = global.google.accounts.oauth2.initCodeClient({
@@ -442,8 +442,6 @@ export default {
         scope: "https://www.googleapis.com/auth/calendar",
         ux_mode: "popup",
         callback: (response) => {
-          var code_receiver_uri = this.url;
-
           // Send auth code to your backend platform
           const xhr = new XMLHttpRequest();
           xhr.onreadystatechange = function () {
@@ -453,9 +451,18 @@ export default {
               user.refresh_token = responseData.refresh_token;
               user.expiration_date = responseData.expiration_date;
               Utils.setStore("user", user);
+              this.alertType = "success";
+              this.alert =
+                "You have successfully authorized Tutor Scheduling to link your Google calendar to ours.";
+              this.showAlert = true;
+            } else {
+              this.alertType = "error";
+              this.alert =
+                "You did not authorize Tutor Scheduling to link your Google calendar to ours. Please refresh and try again.";
+              this.showAlert = true;
             }
           };
-          xhr.open("POST", code_receiver_uri, true);
+          xhr.open("POST", this.url, true);
           xhr.setRequestHeader(
             "Content-Type",
             "application/x-www-form-urlencoded"
@@ -463,10 +470,7 @@ export default {
           xhr.setRequestHeader("X-Requested-With", "XMLHttpRequest");
           xhr.setRequestHeader("Access-Control-Allow-Origin", "*");
           xhr.send("code=" + response.code);
-          this.alertType = "success";
-          this.alert =
-            "You have successfully authorized Tutor Scheduling to link your Google calendar to ours.";
-          this.showAlert = true;
+
           // After receipt, the code is exchanged for an access token and
           // refresh token, and the platform then updates this web app
           // running in user's browser with the requested calendar info.
