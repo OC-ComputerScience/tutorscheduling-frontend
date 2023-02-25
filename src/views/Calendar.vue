@@ -562,7 +562,7 @@
                     color="red"
                     @click="
                       showDeleteConfirmation = true;
-                      intializeData();
+                      initializeData();
                       selectedOpen = false;
                       secondTime = true;
                     "
@@ -1477,7 +1477,7 @@ export default {
       } else {
         await this.cancelAppointment(this.selectedAppointment, this.user);
       }
-      this.initializeData();
+      await this.initializeData();
     },
     async findEmail() {
       let tempStudent = {

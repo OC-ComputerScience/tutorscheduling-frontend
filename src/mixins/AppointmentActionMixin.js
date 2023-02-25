@@ -276,6 +276,10 @@ export const AppointmentActionMixin = {
               updateAppt.id,
               updateAppt
             );
+            await this.cancelFeedbackMessage(
+              this.appointment.personappointment,
+              fromUser
+            );
             // need to make a new appointment for the same time
             let temp = {
               date: appointment.date,
@@ -340,7 +344,26 @@ export const AppointmentActionMixin = {
           await this.sendCanceledMessage(fromUser, appointment.id);
           updateAppt.status = "tutorCancel";
           await AppointmentServices.updateForGoogle(updateAppt.id, updateAppt);
+          await this.cancelFeedbackMessage(
+            this.appointment.personappointment,
+            fromUser
+          );
         }
+      }
+    },
+    async cancelFeedbackMessage(personAppointments, fromUser) {
+      console.log("going to fix feedback message");
+      for (let i = 0; i < personAppointments.length; i++) {
+        let pa = personAppointments[i];
+        let temp = {
+          id: pa.id,
+          isTutor: pa.isTutor,
+          feedbacknumber: pa.feedbacknumber,
+          feedbacktext: `Canceled by ${fromUser.fName} ${fromUser.lName}`,
+          appointmentId: pa.appointmentId,
+          personId: pa.personId,
+        };
+        await PersonAppointmentServices.updatePersonAppointment(temp.id, temp);
       }
     },
   },

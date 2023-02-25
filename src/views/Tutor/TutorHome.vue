@@ -487,7 +487,7 @@ export default {
         });
     },
     async getAppointments() {
-      await AppointmentServices.getUpcomingAppointmentForPersonForGroup(
+      await AppointmentServices.getUpcomingAppointmentsForTutor(
         this.group.id,
         this.user.userID
       )
@@ -578,7 +578,7 @@ export default {
         });
     },
     async getAppointmentsNeedingFeedback() {
-      await AppointmentServices.getPassedAppointmentForPersonForGroupTutor(
+      await AppointmentServices.getPassedAppointmentsForTutor(
         this.group.id,
         this.user.userID
       )

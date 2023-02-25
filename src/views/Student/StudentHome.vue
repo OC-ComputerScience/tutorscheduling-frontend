@@ -373,7 +373,7 @@ export default {
         });
     },
     async getAppointments() {
-      await AppointmentServices.getUpcomingAppointmentForPersonForGroup(
+      await AppointmentServices.getUpcomingAppointmentsForStudent(
         this.group.id,
         this.user.userID
       )
@@ -461,7 +461,7 @@ export default {
         });
     },
     async getAppointmentsNeedingFeedback() {
-      await AppointmentServices.getPassedAppointmentForPersonForGroupStudent(
+      await AppointmentServices.getPassedAppointmentsForStudent(
         this.group.id,
         this.user.userID
       )
