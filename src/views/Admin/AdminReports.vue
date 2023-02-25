@@ -58,14 +58,6 @@
           >
           </v-select>
         </v-col>
-        <!-- <v-col md="4">
-            <v-select
-              v-model="selectedType"
-              :items="types"
-              label="Type"
-            >
-            </v-select>
-          </v-col> -->
         <v-col md="4">
           <v-select
             v-model="selectedTutors"
@@ -271,7 +263,6 @@ export default {
           this.selectedAppointments[i].preSessionInfo = "";
         }
 
-        // need to fix this for all undefined columns
         if (
           appoint.personappointment === undefined ||
           appoint.personappointment === null
