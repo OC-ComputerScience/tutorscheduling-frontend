@@ -451,15 +451,6 @@ export default {
               user.refresh_token = responseData.refresh_token;
               user.expiration_date = responseData.expiration_date;
               Utils.setStore("user", user);
-              this.alertType = "success";
-              this.alert =
-                "You have successfully authorized Tutor Scheduling to link your Google calendar to ours.";
-              this.showAlert = true;
-            } else {
-              this.alertType = "error";
-              this.alert =
-                "You did not authorize Tutor Scheduling to link your Google calendar to ours. Please refresh and try again.";
-              this.showAlert = true;
             }
           };
           xhr.open("POST", this.url, true);
@@ -470,6 +461,11 @@ export default {
           xhr.setRequestHeader("X-Requested-With", "XMLHttpRequest");
           xhr.setRequestHeader("Access-Control-Allow-Origin", "*");
           xhr.send("code=" + response.code);
+
+          this.alertType = "success";
+          this.alert =
+            "You have successfully authorized Tutor Scheduling to link your Google calendar to ours.";
+          this.showAlert = true;
 
           // After receipt, the code is exchanged for an access token and
           // refresh token, and the platform then updates this web app
@@ -491,7 +487,7 @@ export default {
         });
     },
     async getAppointments() {
-      await AppointmentServices.getUpcomingAppointmentForPersonForGroup(
+      await AppointmentServices.getUpcomingAppointmentsForTutor(
         this.group.id,
         this.user.userID
       )
@@ -582,7 +578,7 @@ export default {
         });
     },
     async getAppointmentsNeedingFeedback() {
-      await AppointmentServices.getPassedAppointmentForPersonForGroupTutor(
+      await AppointmentServices.getPassedAppointmentsForTutor(
         this.group.id,
         this.user.userID
       )

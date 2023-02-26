@@ -1,7 +1,6 @@
 import apiClient from "@/services/services.js";
 
 export default {
-  ///Availabilitys CRUD commands
   getAllPersonAppointments() {
     return apiClient.get("personappointment");
   },

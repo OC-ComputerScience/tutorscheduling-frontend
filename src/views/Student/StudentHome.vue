@@ -373,7 +373,7 @@ export default {
         });
     },
     async getAppointments() {
-      await AppointmentServices.getUpcomingAppointmentForPersonForGroup(
+      await AppointmentServices.getUpcomingAppointmentsForStudent(
         this.group.id,
         this.user.userID
       )
@@ -461,7 +461,7 @@ export default {
         });
     },
     async getAppointmentsNeedingFeedback() {
-      await AppointmentServices.getPassedAppointmentForPersonForGroupStudent(
+      await AppointmentServices.getPassedAppointmentsForStudent(
         this.group.id,
         this.user.userID
       )
@@ -555,7 +555,6 @@ export default {
         });
     },
     async getTopicsForTutor() {
-      console.log("in get topics");
       await PersonTopicServices.getTopicForPersonGroup(
         this.group.id,
         this.tutors[0].personId
@@ -584,7 +583,6 @@ export default {
       row.select(true);
       this.selectedAppointment = item;
       await this.updatePeople();
-      console.log(this.tutors);
       this.getTopicsForTutor();
       this.saveChanges = false;
       this.apptDialog = true;

@@ -1,7 +1,6 @@
 import apiClient from "@/services/services.js";
 
 export default {
-  ///Availabilitys CRUD commands
   getAllAppointments() {
     return apiClient.get("appointment");
   },
@@ -43,19 +42,24 @@ export default {
       "appointment/group/" + groupId + "/person/" + personId
     );
   },
-  getUpcomingAppointmentForPersonForGroup(groupId, personId) {
+  getUpcomingAppointmentsForTutor(groupId, personId) {
     return apiClient.get(
-      "appointment/upGroup/" + groupId + "/person/" + personId
+      "appointment/upcoming/tutor/" + groupId + "/person/" + personId
     );
   },
-  getPassedAppointmentForPersonForGroupTutor(groupId, personId) {
+  getUpcomingAppointmentsForStudent(groupId, personId) {
     return apiClient.get(
-      "appointment/passGroupTutor/" + groupId + "/person/" + personId
+      "appointment/upcoming/student/" + groupId + "/person/" + personId
     );
   },
-  getPassedAppointmentForPersonForGroupStudent(groupId, personId) {
+  getPassedAppointmentsForTutor(groupId, personId) {
     return apiClient.get(
-      "appointment/passGroupStudent/" + groupId + "/person/" + personId
+      "appointment/passed/tutor/" + groupId + "/person/" + personId
+    );
+  },
+  getPassedAppointmentsForStudent(groupId, personId) {
+    return apiClient.get(
+      "appointment/passed/student/" + groupId + "/person/" + personId
     );
   },
   getAppointmentForFeedback(appointmentId) {
