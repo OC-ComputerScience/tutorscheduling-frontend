@@ -68,7 +68,13 @@ export default {
       }
     },
     setupForAppointment() {
-      if (this.item.status === "pending") {
+      console.log(this.item);
+      if (this.item.status === "available") {
+        this.cancelTitle =
+          "Are you sure you want to remove this available appointment?";
+        this.agreeButton = "Yes, remove";
+        this.cancelBody = "Removing ";
+      } else if (this.item.status === "pending") {
         this.cancelTitle = "Are you sure you want to reject this appointment?";
         this.agreeButton = "Yes, reject";
         this.cancelBody = "Rejecting ";
