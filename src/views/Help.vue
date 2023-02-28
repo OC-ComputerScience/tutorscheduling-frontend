@@ -52,8 +52,14 @@ export default {
       },
       currentRole: {},
       files: [
-        { pdf: "StudentTutorial.pdf", pages: 24 },
-        { pdf: "TutorTutorial.pdf", pages: 29 },
+        {
+          pdf: process.env.VUE_APP_CLIENT_URL + "/StudentTutorial.pdf",
+          pages: 24,
+        },
+        {
+          pdf: process.env.VUE_APP_CLIENT_URL + "/TutorTutorial.pdf",
+          pages: 29,
+        },
       ],
     };
   },
@@ -65,7 +71,6 @@ export default {
     } else if (this.checkRole("Tutor")) {
       this.tutorial = this.files[1];
     }
-    console.log(this.tutorial);
   },
   methods: {
     async getCurrentRole() {
