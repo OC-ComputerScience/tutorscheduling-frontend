@@ -254,6 +254,7 @@ export default {
 
                 for (let i = 0; i < this.admins.length; i++) {
                   let tempA = this.admins[i];
+                  tempA.personRoleId = response.data.id;
                   if (
                     await this.checkPrivilege(
                       "Receive notifications for applications",

@@ -3,7 +3,6 @@ import Router from "vue-router";
 
 import Apply from "./views/Apply.vue";
 import Calendar from "./views/Calendar.vue";
-import ConfirmAppointment from "./views/ConfirmAppointment.vue";
 import Contract from "./views/Contract.vue";
 import Help from "./views/Help.vue";
 import Login from "./views/Login.vue";
@@ -61,7 +60,7 @@ import TutorHome from "./views/Tutor/TutorHome.vue";
 Vue.use(Router);
 
 const router = new Router({
-  mode: "hash",
+  mode: "history",
   linkExactActiveClass: "active",
   base: process.env.NODE_ENV === "development" ? "/" : "/",
   routes: [
@@ -75,12 +74,6 @@ const router = new Router({
       path: "/calendar/:id",
       name: "calendar",
       component: Calendar,
-      props: true,
-    },
-    {
-      path: "/confirmAppointment/:id/session/:sessionToken",
-      name: "confirmAppointment",
-      component: ConfirmAppointment,
       props: true,
     },
     {
@@ -298,9 +291,14 @@ router.beforeEach((to, from, next) => {
   // redirect to login page if not logged in and trying to access a restricted page
   const user = localStorage.getItem("user");
   if (user === null && to.path !== "/") {
-    return next("/");
+    return next({
+      path: "/",
+      query: { redirect: to.fullPath },
+    });
   } else {
-    next();
+    next({
+      query: { redirect: to.fullPath },
+    });
   }
 });
 

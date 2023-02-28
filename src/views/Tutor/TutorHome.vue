@@ -21,7 +21,7 @@
           @handleReturningSuccess="directToCancel()"
         ></DeleteConfirmationComponent>
       </v-dialog>
-      <v-dialog v-model="apptDialog" max-width="800px">
+      <v-dialog v-model="appointmentDialog" max-width="800px">
         <v-card>
           <v-toolbar :color="selectedAppointment.color" dark>
             <v-card-title>
@@ -186,7 +186,7 @@
             <v-btn
               color="accent"
               @click="
-                apptDialog = false;
+                appointmentDialog = false;
                 getAppointments();
               "
             >
@@ -309,7 +309,7 @@
           </v-card-title>
           <v-data-table
             :headers="headerFeedback"
-            :items="appointmentsneedingfeedback"
+            :items="appointmentsNeedingFeedback"
             :items-per-page="50"
             @click:row="provideFeedback"
           ></v-data-table>
@@ -366,7 +366,7 @@ export default {
       currentId: 0,
       approved: false,
       disabled: false,
-      apptDialog: false,
+      appointmentDialog: false,
       saveChanges: false,
       locations: [],
       topics: [],
@@ -374,7 +374,7 @@ export default {
       tutors: [],
       selectedAppointment: {},
       appointments: [],
-      appointmentsneedingfeedback: [],
+      appointmentsNeedingFeedback: [],
       headers: [
         { text: "Date", value: "date" },
         { text: "Start Time", value: "startTime" },
@@ -403,13 +403,25 @@ export default {
   async created() {
     this.user = Utils.getStore("user");
     if (this.id !== 0) {
-      this.getTutorRole();
+      await this.getTutorRole();
     }
     await this.getGroupByPersonRoleId();
     await this.getAppointments();
     await this.getAppointmentsNeedingFeedback();
     await this.getLocations();
     await this.getTopics();
+
+    if (this.$route.query !== undefined) {
+      for (let i = 0; i < this.appointments.length; i++) {
+        if (
+          this.appointments[i].id === parseInt(this.$route.query.appointmentId)
+        ) {
+          this.selectedAppointment = this.appointments[i];
+          this.appointmentDialog = true;
+          return;
+        }
+      }
+    }
   },
   methods: {
     checkForAuthorization() {
@@ -433,8 +445,6 @@ export default {
         this.url = "/tutoring-api";
       }
       this.url += "/authorize/" + this.user.userID;
-      console.log(process.env.VUE_APP_CLIENT_URL);
-      console.log(this.url);
 
       const client = global.google.accounts.oauth2.initCodeClient({
         client_id: process.env.VUE_APP_CLIENT_ID,
@@ -583,22 +593,22 @@ export default {
         this.user.userID
       )
         .then((response) => {
-          this.appointmentsneedingfeedback = response.data;
+          this.appointmentsNeedingFeedback = response.data;
 
           for (
             let index = 0;
-            index < this.appointmentsneedingfeedback.length;
+            index < this.appointmentsNeedingFeedback.length;
             ++index
           ) {
             //format date, start time, and end time
-            let element = this.appointmentsneedingfeedback[index];
-            this.appointmentsneedingfeedback[index].date = this.formatDate(
+            let element = this.appointmentsNeedingFeedback[index];
+            this.appointmentsNeedingFeedback[index].date = this.formatDate(
               element.date
             );
-            this.appointmentsneedingfeedback[index].startTime = this.formatTime(
+            this.appointmentsNeedingFeedback[index].startTime = this.formatTime(
               element.startTime
             );
-            this.appointmentsneedingfeedback[index].endTime = this.formatTime(
+            this.appointmentsNeedingFeedback[index].endTime = this.formatTime(
               element.endTime
             );
           }
@@ -628,18 +638,18 @@ export default {
         await this.cancelAppointment(this.selectedAppointment, this.user);
       }
       await this.getAppointments();
-      this.apptDialog = false;
+      this.appointmentDialog = false;
       this.showDeleteConfirmation = false;
     },
     async directToConfirm() {
       await this.confirmAppointment(true, this.user, this.selectedAppointment);
       await this.getAppointments();
-      this.apptDialog = false;
+      this.appointmentDialog = false;
     },
     async directToEdit() {
       await this.editAppointment(this.user, this.selectedAppointment);
       await this.getAppointments();
-      this.apptDialog = false;
+      this.appointmentDialog = false;
     },
     async getTutorRole() {
       await PersonRoleServices.getPersonRole(this.id)
@@ -740,7 +750,7 @@ export default {
       this.selectedAppointment = item;
       this.updatePeople();
       this.saveChanges = false;
-      this.apptDialog = true;
+      this.appointmentDialog = true;
     },
   },
 };

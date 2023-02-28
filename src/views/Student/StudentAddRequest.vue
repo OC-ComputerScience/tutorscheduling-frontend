@@ -151,19 +151,19 @@ export default {
       this.request.personId = this.person.id;
       this.request.groupId = this.group.id;
       await RequestServices.addRequest(this.request)
-        .then(async () => {
+        .then(async (response) => {
           await this.getAdmins();
 
           for (let i = 0; i < this.admins.length; i++) {
             let tempA = this.admins[i];
-            console.log(tempA);
+            tempA.requestId = response.data.id;
             if (
               await this.checkPrivilege(
                 "Receive notifications for requests",
                 tempA.personroleprivilege
               )
             )
-              this.sendRequestMessage(this.user, tempA);
+              await this.sendRequestMessage(this.user, tempA);
           }
 
           this.$router.go(-1);

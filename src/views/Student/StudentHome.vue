@@ -19,7 +19,7 @@
         ></DeleteConfirmationComponent>
       </v-dialog>
       <v-container v-if="!disabled">
-        <v-dialog v-model="apptDialog" max-width="800px">
+        <v-dialog v-model="appointmentDialog" max-width="800px">
           <v-card>
             <v-toolbar :color="selectedAppointment.color" dark>
               <v-card-title>
@@ -165,7 +165,7 @@
               <v-btn
                 color="accent"
                 @click="
-                  apptDialog = false;
+                  appointmentDialog = false;
                   getAppointments();
                 "
               >
@@ -254,7 +254,7 @@
           </v-card-title>
           <v-data-table
             :headers="headerFeedback"
-            :items="appointmentsneedingfeedback"
+            :items="appointmentsNeedingFeedback"
             :items-per-page="50"
             @click:row="provideFeedback"
           ></v-data-table>
@@ -305,7 +305,7 @@ export default {
       alert: "",
       alertType: "success",
       disabled: false,
-      apptDialog: false,
+      appointmentDialog: false,
       saveChanges: false,
       selectedAppointment: {},
       locations: [],
@@ -313,7 +313,7 @@ export default {
       students: [],
       tutors: [],
       appointments: [],
-      appointmentsneedingfeedback: [],
+      appointmentsNeedingFeedback: [],
       headers: [
         { text: "Date", value: "date" },
         { text: "Start Time", value: "startTime" },
@@ -347,18 +347,30 @@ export default {
       await this.getAppointmentsNeedingFeedback();
       await this.getLocations();
     }
+
+    if (this.$route.query !== undefined) {
+      for (let i = 0; i < this.appointments.length; i++) {
+        if (
+          this.appointments[i].id === parseInt(this.$route.query.appointmentId)
+        ) {
+          this.selectedAppointment = this.appointments[i];
+          this.appointmentDialog = true;
+          return;
+        }
+      }
+    }
   },
   methods: {
     async directToCancel() {
       await this.cancelAppointment(this.selectedAppointment, this.user);
       await this.getAppointments();
-      this.apptDialog = false;
+      this.appointmentDialog = false;
       this.showDeleteConfirmation = false;
     },
     async directToEdit() {
       await this.editAppointment(this.user, this.selectedAppointment);
       await this.getAppointments();
-      this.apptDialog = false;
+      this.appointmentDialog = false;
     },
     async getGroupByPersonRoleId() {
       await PersonRoleServices.getGroupForPersonRole(this.id)
@@ -466,21 +478,21 @@ export default {
         this.user.userID
       )
         .then((response) => {
-          this.appointmentsneedingfeedback = response.data;
+          this.appointmentsNeedingFeedback = response.data;
           for (
             let index = 0;
-            index < this.appointmentsneedingfeedback.length;
+            index < this.appointmentsNeedingFeedback.length;
             ++index
           ) {
             //format date, start time, and end time
-            let element = this.appointmentsneedingfeedback[index];
-            this.appointmentsneedingfeedback[index].date = this.formatDate(
+            let element = this.appointmentsNeedingFeedback[index];
+            this.appointmentsNeedingFeedback[index].date = this.formatDate(
               element.date
             );
-            this.appointmentsneedingfeedback[index].startTime = this.formatTime(
+            this.appointmentsNeedingFeedback[index].startTime = this.formatTime(
               element.startTime
             );
-            this.appointmentsneedingfeedback[index].endTime = this.formatTime(
+            this.appointmentsNeedingFeedback[index].endTime = this.formatTime(
               element.endTime
             );
           }
@@ -585,7 +597,7 @@ export default {
       await this.updatePeople();
       this.getTopicsForTutor();
       this.saveChanges = false;
-      this.apptDialog = true;
+      this.appointmentDialog = true;
     },
   },
 };

@@ -170,6 +170,21 @@ export default {
     this.user = Utils.getStore("user");
     await this.getGroupByPersonRoleId();
     await this.getPersonRoles();
+    console.log(this.personroles);
+    if (this.$route.query !== undefined) {
+      for (let i = 0; i < this.personroles.length; i++) {
+        if (
+          this.personroles[i].personrole[0].id ===
+          parseInt(this.$route.query.personRoleId)
+        ) {
+          this.editedIndex = this.personroles[i].id;
+          this.editedPerson = this.personroles[i];
+          this.editedItem = this.personroles[i].personrole[0];
+          this.dialog = true;
+          return;
+        }
+      }
+    }
   },
   methods: {
     async getGroupByPersonRoleId() {
