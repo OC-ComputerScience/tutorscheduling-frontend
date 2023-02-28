@@ -13,8 +13,10 @@
         alert
       }}</v-alert>
       <br />
-      <!-- <button @click="$refs.myPdfComponent.print()">print</button> -->
-      <vue-pdf-embed :source="tutorial.pdf"></vue-pdf-embed>
+      <vue-pdf-embed
+        v-model="tutorial.pdf"
+        :source="tutorial.pdf"
+      ></vue-pdf-embed>
     </v-container>
   </div>
 </template>
@@ -44,7 +46,10 @@ export default {
       alert: "",
       alertType: "success",
       user: {},
-      tutorial: {},
+      tutorial: {
+        pdf: "",
+        pages: 0,
+      },
       currentRole: {},
       files: [
         { pdf: "StudentTutorial.pdf", pages: 24 },

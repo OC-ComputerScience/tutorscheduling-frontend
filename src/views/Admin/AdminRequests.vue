@@ -35,7 +35,7 @@
             <v-icon small class="mr-2" @click="editItem(item)"
               >mdi-pencil</v-icon
             >
-            <v-icon small @click="deleteItem(item)"> mdi-delete </v-icon>
+            <!-- <v-icon small @click="deleteItem(item)"> mdi-delete </v-icon> -->
           </template>
         </v-data-table>
       </v-card>
@@ -108,7 +108,7 @@
         </v-card>
       </v-dialog>
 
-      <v-dialog v-model="dialogDelete" max-width="500px">
+      <!-- <v-dialog v-model="dialogDelete" max-width="500px">
         <v-card>
           <v-card-title>Confirming Deletion:</v-card-title>
           <v-card-text>
@@ -120,7 +120,7 @@
             <v-btn color="accent" @click="confirmedDelete()">OK</v-btn>
           </v-card-actions>
         </v-card>
-      </v-dialog>
+      </v-dialog> -->
     </v-container>
   </div>
 </template>
@@ -166,7 +166,6 @@ export default {
         { text: "Actions", value: "actions", sortable: false },
       ],
       requests: [],
-      editedIndex: -1,
       editedItem: {
         status: "",
       },
@@ -176,14 +175,14 @@ export default {
     };
   },
   computed: {},
-  watch: {
-    dialog(val) {
-      val || this.close();
-    },
-    dialogDelete(val) {
-      val || this.closeDelete();
-    },
-  },
+  // watch: {
+  //   dialog(val) {
+  //     val || this.close();
+  //   },
+  //   dialogDelete(val) {
+  //     val || this.closeDelete();
+  //   },
+  // },
   async created() {
     this.user = Utils.getStore("user");
     await this.getGroupByPersonRoleId();
@@ -191,7 +190,6 @@ export default {
     if (this.$route.query !== undefined) {
       for (let i = 0; i < this.requests.length; i++) {
         if (this.requests[i].id === parseInt(this.$route.query.requestId)) {
-          this.editedIndex = this.requests[i].id;
           this.editedItem = this.requests[i];
           this.dialog = true;
           return;
@@ -261,52 +259,61 @@ export default {
       });
     },
     editItem(item) {
-      this.editedIndex = this.requests.findIndex(
-        (element) => element.id === item.id
-      );
-      this.editedItem = Object.assign({}, item);
+      // this.editedIndex = this.requests.findIndex(
+      //   (element) => element.id === item.id
+      // );
+      this.editedItem = item;
       this.dialog = true;
     },
-    deleteItem(item) {
-      this.deleteMessage = `Are you sure you want to delete this request made by ${item.fullName}?`;
-      this.alert =
-        "You have successfully deleted " + item.fullName + "'s request.";
-      this.deleteId = item.id;
-      this.dialogDelete = true;
-    },
-    async confirmedDelete() {
-      await RequestServices.deleteRequest(this.deleteId)
-        .then(() => {
-          this.getRequestsForGroup();
-          this.closeDelete();
-          this.alertType = "success";
-          this.showAlert = true;
-        })
-        .catch((error) => {
-          this.alertType = "error";
-          this.alert = error.response.data.message;
-          this.showAlert = true;
-          console.log("There was an error:", error.response);
-        });
-    },
-    close() {
-      this.dialog = false;
-      this.$nextTick(() => {
-        this.editedItem = Object.assign({}, this.defaultItem);
-        this.editedIndex = -1;
-      });
-    },
-    closeDelete() {
-      this.dialogDelete = false;
-      this.$nextTick(() => {
-        this.editedItem = Object.assign({}, this.defaultItem);
-        this.editedIndex = -1;
-      });
-    },
+    // deleteItem(item) {
+    //   this.deleteMessage = `Are you sure you want to delete this request made by ${item.fullName}?`;
+    //   this.alert =
+    //     "You have successfully deleted " + item.fullName + "'s request.";
+    //   this.deleteId = item.id;
+    //   this.dialogDelete = true;
+    // },
+    // async confirmedDelete() {
+    //   await RequestServices.deleteRequest(this.deleteId)
+    //     .then(() => {
+    //       this.getRequestsForGroup();
+    //       this.closeDelete();
+    //       this.alertType = "success";
+    //       this.showAlert = true;
+    //     })
+    //     .catch((error) => {
+    //       this.alertType = "error";
+    //       this.alert = error.response.data.message;
+    //       this.showAlert = true;
+    //       console.log("There was an error:", error.response);
+    //     });
+    // },
+    // close() {
+    //   this.dialog = false;
+    //   this.$nextTick(() => {
+    //     this.editedItem = Object.assign({}, this.defaultItem);
+    //     this.editedIndex = -1;
+    //   });
+    // },
+    // closeDelete() {
+    //   this.dialogDelete = false;
+    //   this.$nextTick(() => {
+    //     this.editedItem = Object.assign({}, this.defaultItem);
+    //     this.editedIndex = -1;
+    //   });
+    // },
     async save() {
-      await RequestServices.updateRequest(this.editedItem.id, this.editedItem)
+      let tempRequest = {
+        id: this.editedItem.id,
+        courseNum: this.editedItem.courseNum,
+        description: this.editedItem.description,
+        status: this.editedItem.status,
+        problem: this.editedItem.problem,
+        groupId: this.editedItem.groupId,
+        personId: this.editedItem.personId,
+        topicId: this.editedItem.topicId,
+      };
+      await RequestServices.updateRequest(tempRequest.id, tempRequest)
         .then(() => {
-          this.getRequestsForGroup();
           this.alertType = "success";
           this.alert =
             "You have successfully updated " +
@@ -320,8 +327,8 @@ export default {
           this.showAlert = true;
           console.log("There was an error:", error.response);
         });
-      Object.assign(this.requests[this.editedIndex], this.editedItem);
-      this.close();
+      await this.getRequestsForGroup();
+      this.dialog = false;
     },
     calcTime(time) {
       if (time == null) {
