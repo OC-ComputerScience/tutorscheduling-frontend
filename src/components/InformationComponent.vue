@@ -6,7 +6,7 @@
           mdi-information
         </v-icon>
       </template>
-      <span v-html="message"></span>
+      <span>{{ message }}</span>
     </v-tooltip>
   </div>
 </template>

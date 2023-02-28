@@ -282,9 +282,7 @@ export default {
     this.headerMessage =
       "Welcome to your personalized dashboard for " +
       this.user.selectedGroup +
-      ". View information on appointment hours, tutor hours, and topic hours for the week. <br />" +
-      " Click on the <b>Student Requests</b> chart to view requests. <br />" +
-      "Click on <b>Tutor Applications</b> to view applications.";
+      ". View information on appointment hours, tutor hours, and topic hours for the week. Click on the Student Requests chart to view requests. Click on Tutor Applications to view applications.";
 
     await this.getGroupByPersonRoleId();
     await this.setWeeks();

@@ -6,9 +6,8 @@
         <v-spacer></v-spacer>
         <InformationComponent
           message="Select various criteria for appointments regarding dates, topics, statuses, tutors, and/or students.
-          <br />
-          Click <b>Filter</b> and then click <b>Download CSV</b>.
-          <br /> A CSV Report of the selected appointments will be saved to your Downloads file."
+          Click Filter and then click Download CSV.
+          A CSV Report of the selected appointments will be saved to your Downloads file."
         ></InformationComponent>
       </v-toolbar>
       <br />

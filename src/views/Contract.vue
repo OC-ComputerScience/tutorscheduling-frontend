@@ -7,7 +7,7 @@
         <InformationComponent
           message="Before continuing to this service, you must sign contracts for the
             following positions.
-            <br />
+  
             Please click on each title to sign its contract."
         ></InformationComponent>
       </v-toolbar>
