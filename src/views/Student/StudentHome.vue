@@ -5,7 +5,7 @@
         <v-toolbar-title>Hello, {{ user.fName }}!</v-toolbar-title>
         <InformationComponent
           v-if="!disabled"
-          message="Click on <b>View Calendar</b> to see available appointments!"
+          message="Click on View Calendar to see available appointments!"
         ></InformationComponent>
         <v-spacer></v-spacer>
         <v-toolbar-title>{{ message }}</v-toolbar-title>

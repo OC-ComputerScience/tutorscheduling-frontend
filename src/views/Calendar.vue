@@ -6,8 +6,8 @@
         <InformationComponent
           message="Select an appointment to view information, book the appointment,
             make changes, etc.
-            <br />
-            You can filter the appointments by a desired <b>Topic</b> or <b>Tutor</b>."
+      
+            You can filter the appointments by a desired Topic or Tutor."
         ></InformationComponent>
         <v-spacer></v-spacer>
         <v-toolbar-title>{{ role.type }}</v-toolbar-title>
@@ -145,9 +145,7 @@
                   <v-btn icon>
                     <v-icon>mdi-pencil</v-icon>
                   </v-btn>
-                  <v-toolbar-title
-                    v-html="selectedEvent.name"
-                  ></v-toolbar-title>
+                  <v-toolbar-title>{{ selectedEvent.name }}</v-toolbar-title>
                 </v-toolbar>
                 <!-- How to show tutor? -->
                 <v-card-text v-if="selectedAppointment != null">
