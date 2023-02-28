@@ -73,7 +73,7 @@ export const AppointmentActionMixin = {
       ) {
         let temp = {
           date: this.appointment.date,
-          startTime: this.appointment.startTime,
+          startTime: appointment.startTime,
           endTime: appointment.newStart,
           type: this.appointment.type,
           status: this.appointment.status,
@@ -101,7 +101,7 @@ export const AppointmentActionMixin = {
         let temp = {
           date: this.appointment.date,
           startTime: appointment.newEnd,
-          endTime: this.appointment.endTime,
+          endTime: appointment.endTime,
           type: this.appointment.type,
           status: this.appointment.status,
           preSessionInfo: "",
@@ -184,8 +184,8 @@ export const AppointmentActionMixin = {
       let updateAppt = {
         id: appointment.id,
         date: appointment.originalDate,
-        startTime: appointment.originalStart,
-        endTime: appointment.originalEnd,
+        startTime: appointment.startTime,
+        endTime: appointment.endTime,
         type: appointment.type,
         status: appointment.status,
         preSessionInfo: appointment.preSessionInfo,
@@ -271,6 +271,10 @@ export const AppointmentActionMixin = {
               this.appointment.students[0].id
             );
           } else if (this.appointment.status === "booked") {
+            await this.cancelFeedbackMessage(
+              this.appointment.personappointment,
+              fromUser
+            );
             updateAppt.status = "studentCancel";
             await AppointmentServices.updateForGoogle(
               updateAppt.id,
@@ -279,8 +283,8 @@ export const AppointmentActionMixin = {
             // need to make a new appointment for the same time
             let temp = {
               date: appointment.date,
-              startTime: appointment.startTime,
-              endTime: appointment.endTime,
+              startTime: appointment.originalStart,
+              endTime: appointment.originalEnd,
               type: appointment.type,
               status: "available",
               preSessionInfo: "",
@@ -337,10 +341,28 @@ export const AppointmentActionMixin = {
         } else {
           // TODO update person appointments to have something in feedback about it being a cancel
           // just set appointment to canceled if tutor canceled
+          await this.cancelFeedbackMessage(
+            this.appointment.personappointment,
+            fromUser
+          );
           await this.sendCanceledMessage(fromUser, appointment.id);
           updateAppt.status = "tutorCancel";
           await AppointmentServices.updateForGoogle(updateAppt.id, updateAppt);
         }
+      }
+    },
+    async cancelFeedbackMessage(personAppointments, fromUser) {
+      for (let i = 0; i < personAppointments.length; i++) {
+        let pa = personAppointments[i];
+        let temp = {
+          id: pa.id,
+          isTutor: pa.isTutor,
+          feedbacknumber: pa.feedbacknumber,
+          feedbacktext: `Canceled by ${fromUser.fName} ${fromUser.lName}`,
+          appointmentId: pa.appointmentId,
+          personId: pa.personId,
+        };
+        await PersonAppointmentServices.updatePersonAppointment(temp.id, temp);
       }
     },
   },

@@ -6,8 +6,8 @@
         <InformationComponent
           message="Select an appointment to view information, book the appointment,
             make changes, etc.
-            <br />
-            You can filter the appointments by a desired <b>Topic</b> or <b>Tutor</b>."
+      
+            You can filter the appointments by a desired Topic or Tutor."
         ></InformationComponent>
         <v-spacer></v-spacer>
         <v-toolbar-title>{{ role.type }}</v-toolbar-title>
@@ -145,9 +145,7 @@
                   <v-btn icon>
                     <v-icon>mdi-pencil</v-icon>
                   </v-btn>
-                  <v-toolbar-title
-                    v-html="selectedEvent.name"
-                  ></v-toolbar-title>
+                  <v-toolbar-title>{{ selectedEvent.name }}</v-toolbar-title>
                 </v-toolbar>
                 <!-- How to show tutor? -->
                 <v-card-text v-if="selectedAppointment != null">
@@ -184,7 +182,7 @@
                     <span>None</span>
                   </span>
 
-                  <!-- make location and topic changable if the appointment type is private-->
+                  <!-- make location and topic changeable if the appointment type is private-->
                   <span v-if="appointmentType.includes('Private')">
                     <v-container>
                       <v-select
@@ -562,7 +560,7 @@
                     color="red"
                     @click="
                       showDeleteConfirmation = true;
-                      intializeData();
+                      initializeData();
                       selectedOpen = false;
                       secondTime = true;
                     "
@@ -606,7 +604,7 @@
             Grey
           </v-btn>
           <span>
-            - This event marks an open timeslot that is available to be booked
+            - This event marks an open time slot that is available to be booked
             by any student.</span
           >
           <br />
@@ -622,15 +620,15 @@
             Red
           </v-btn>
           <span>
-            - This event marks a requested timeslot that has been canceled by
-            the tutor.</span
+            - This event marks a requested time slot that has been canceled by
+            the tutor or the student.</span
           >
           <br />
           <v-btn elevation="0" color="blue" class="white--text" width="100">
             Blue
           </v-btn>
           <span>
-            - This event marks a timeslot that has been booked and notes an
+            - This event marks a time slot that has been booked and notes an
             upcoming meeting.</span
           >
           <br />
@@ -638,15 +636,16 @@
             Green
           </v-btn>
           <span>
-            - This event marks a timeslot that for a meeting that has been
-            completed, and is used for keeping track of user reviews.</span
+            - This event marks a times lot that for a meeting that has been
+            completed and has associated feedback, and is used for keeping track
+            of user reviews.</span
           >
           <br />
           <v-btn elevation="0" color="purple" class="white--text" width="100">
             Purple
           </v-btn>
           <span>
-            - This event marks a timeslot that for a group session that allows
+            - This event marks a time slot that for a group session that allows
             both students and tutors to sign up for it.</span
           ><br />
           <v-card-title class="text-h5">Event Name Meanings</v-card-title>
@@ -1476,7 +1475,7 @@ export default {
       } else {
         await this.cancelAppointment(this.selectedAppointment, this.user);
       }
-      this.initializeData();
+      await this.initializeData();
     },
     async findEmail() {
       let tempStudent = {

@@ -1,6 +1,8 @@
 import GroupServices from "../services/groupServices";
 import Utils from "../config/utils";
 
+// TODO if response is unauthorized, immediately clear storage
+
 export const RedirectToPageMixin = {
   data() {
     return {

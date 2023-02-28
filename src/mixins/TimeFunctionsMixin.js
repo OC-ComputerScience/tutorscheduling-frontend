@@ -1,6 +1,7 @@
 export const TimeFunctionsMixin = {
   methods: {
     //Formats time to be more user friendly
+    // TODO: make sure this works with midnight times
     calcTime(time) {
       if (time == null) {
         return null;

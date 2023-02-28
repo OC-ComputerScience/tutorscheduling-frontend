@@ -6,9 +6,8 @@
         <v-spacer></v-spacer>
         <InformationComponent
           message="Select various criteria for appointments regarding dates, topics, statuses, tutors, and/or students.
-          <br />
-          Click <b>Filter</b> and then click <b>Download CSV</b>.
-          <br /> A CSV Report of the selected appointments will be saved to your Downloads file."
+          Click Filter and then click Download CSV.
+          A CSV Report of the selected appointments will be saved to your Downloads file."
         ></InformationComponent>
       </v-toolbar>
       <br />
@@ -58,14 +57,6 @@
           >
           </v-select>
         </v-col>
-        <!-- <v-col md="4">
-            <v-select
-              v-model="selectedType"
-              :items="types"
-              label="Type"
-            >
-            </v-select>
-          </v-col> -->
         <v-col md="4">
           <v-select
             v-model="selectedTutors"
@@ -271,7 +262,6 @@ export default {
           this.selectedAppointments[i].preSessionInfo = "";
         }
 
-        // need to fix this for all undefined columns
         if (
           appoint.personappointment === undefined ||
           appoint.personappointment === null

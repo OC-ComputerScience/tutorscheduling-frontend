@@ -179,7 +179,7 @@ export default {
       );
       this.openDialogs();
     },
-    openDialogs() {
+    async openDialogs() {
       // if this person doesn't have any roles, do this
       if (
         this.user.phoneNum === "" ||
@@ -190,7 +190,7 @@ export default {
       } else if (this.user.access.length === 0) {
         this.openRegistration = true;
       } else {
-        this.goToPage(this.user.userID);
+        await this.goToPage(this.user.userID);
       }
     },
   },

@@ -63,9 +63,7 @@ Vue.use(Router);
 const router = new Router({
   mode: "hash",
   linkExactActiveClass: "active",
-  base:
-    //    process.env.NODE_ENV === 'development'? "/" : "/tutorScheduling/", - for AWS
-    process.env.NODE_ENV === "development" ? "/" : "/",
+  base: process.env.NODE_ENV === "development" ? "/" : "/",
   routes: [
     {
       path: "/apply/:id",
@@ -298,13 +296,12 @@ const router = new Router({
 
 router.beforeEach((to, from, next) => {
   // redirect to login page if not logged in and trying to access a restricted page
-  const publicPages = ["/"];
-  const authRequired = !publicPages.includes(to.path);
-  const loggedIn = localStorage.getItem("user");
-  if (authRequired && !loggedIn) {
+  const user = localStorage.getItem("user");
+  if (user === null && to.path !== "/") {
     return next("/");
+  } else {
+    next();
   }
-  next();
 });
 
 export default router;

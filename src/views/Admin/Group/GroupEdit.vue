@@ -12,6 +12,7 @@
       <v-alert v-model="showAlert" dismissible :type="alertType">{{
         alert
       }}</v-alert>
+
       <v-form ref="form" v-model="valid" lazy validation>
         <v-text-field
           v-if="user.selectedRole.type === 'superadmin'"
@@ -31,7 +32,13 @@
           label="Description"
           required
           @change="enableUpdate = true"
-        ></v-textarea>
+        >
+          <template #append>
+            <InformationComponent
+              message="This description is displayed on the landing page of your group's website and when students sign up for your group."
+            ></InformationComponent>
+          </template>
+        </v-textarea>
 
         <v-select
           v-model="group.timeInterval"
@@ -40,6 +47,11 @@
           required
           @change="enableUpdate = true"
         >
+          <template #append>
+            <InformationComponent
+              message="This specifies the interval of time that appointments are generated at. For example, if the time interval is 15 minutes, then appointments will be generated at 15 minute intervals."
+            ></InformationComponent>
+          </template>
         </v-select>
 
         <v-select
@@ -49,6 +61,11 @@
           required
           @change="enableUpdate = true"
         >
+          <template #append>
+            <InformationComponent
+              message="This specifies the minimum length of time that an appointment can be. For example, if the minimum appointment length is 30 minutes, then appointments will be generated at 30 minute intervals."
+            ></InformationComponent>
+          </template>
         </v-select>
 
         <v-select
@@ -58,6 +75,11 @@
           required
           @change="enableUpdate = true"
         >
+          <template #append>
+            <InformationComponent
+              message="This specifies the number of minutes that a student can book an appointment past the start time. For example, if the number of minutes is 15, then a student can book an appointment 15 minutes past the start time."
+            ></InformationComponent>
+          </template>
         </v-select>
 
         <v-select
@@ -67,6 +89,11 @@
           required
           @change="enableUpdate = true"
         >
+          <template #append>
+            <InformationComponent
+              message="This specifies whether or not appointments can be split. For example, if this is set to true, then a tutor can create an appointment for 30 minutes and then it can be split into two 15 minute appointments."
+            ></InformationComponent>
+          </template>
         </v-select>
 
         <v-btn
@@ -82,10 +109,10 @@
       <br /><br />
       <v-card>
         <v-card-title>
-          Available Privileges
+          Available Privileges To Assign
           <v-spacer></v-spacer>
           <InformationComponent
-            message="Listed are privileges available to give to people in your group."
+            message="To assign privileges to people in your group, navigate to the Person View, click on the person you would like to give a privilege to, and click Add on the privilege table."
           ></InformationComponent>
         </v-card-title>
         <v-data-table

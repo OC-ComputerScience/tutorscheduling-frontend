@@ -5,7 +5,7 @@
         <v-toolbar-title>Hello, {{ user.fName }}!</v-toolbar-title>
         <InformationComponent
           v-if="!disabled"
-          message="Click on <b>View Calendar</b> to see all appointments.<br>Click on <b>Manage Availability</b> to make appointments for yourself."
+          message="Click on View Calendar to see all appointments.<br>Click on <b>Manage Availability</b> to make appointments for yourself."
         ></InformationComponent>
         <v-spacer></v-spacer>
         <v-toolbar-title>{{ message }}</v-toolbar-title>
@@ -427,13 +427,13 @@ export default {
       }
     },
     doAuthorization() {
-      // the commented line is for local machine only
       if (process.env.VUE_APP_CLIENT_URL.includes("localhost")) {
-        this.url = "http://localhost:3002";
+        this.url = "http://localhost";
       } else {
         this.url = "/tutoring-api";
       }
       this.url += "/authorize/" + this.user.userID;
+      console.log(process.env.VUE_APP_CLIENT_URL);
       console.log(this.url);
 
       const client = global.google.accounts.oauth2.initCodeClient({
@@ -442,8 +442,6 @@ export default {
         scope: "https://www.googleapis.com/auth/calendar",
         ux_mode: "popup",
         callback: (response) => {
-          var code_receiver_uri = this.url;
-
           // Send auth code to your backend platform
           const xhr = new XMLHttpRequest();
           xhr.onreadystatechange = function () {
@@ -455,7 +453,7 @@ export default {
               Utils.setStore("user", user);
             }
           };
-          xhr.open("POST", code_receiver_uri, true);
+          xhr.open("POST", this.url, true);
           xhr.setRequestHeader(
             "Content-Type",
             "application/x-www-form-urlencoded"
@@ -463,10 +461,12 @@ export default {
           xhr.setRequestHeader("X-Requested-With", "XMLHttpRequest");
           xhr.setRequestHeader("Access-Control-Allow-Origin", "*");
           xhr.send("code=" + response.code);
+
           this.alertType = "success";
           this.alert =
             "You have successfully authorized Tutor Scheduling to link your Google calendar to ours.";
           this.showAlert = true;
+
           // After receipt, the code is exchanged for an access token and
           // refresh token, and the platform then updates this web app
           // running in user's browser with the requested calendar info.
@@ -487,7 +487,7 @@ export default {
         });
     },
     async getAppointments() {
-      await AppointmentServices.getUpcomingAppointmentForPersonForGroup(
+      await AppointmentServices.getUpcomingAppointmentsForTutor(
         this.group.id,
         this.user.userID
       )
@@ -578,7 +578,7 @@ export default {
         });
     },
     async getAppointmentsNeedingFeedback() {
-      await AppointmentServices.getPassedAppointmentForPersonForGroupTutor(
+      await AppointmentServices.getPassedAppointmentsForTutor(
         this.group.id,
         this.user.userID
       )
