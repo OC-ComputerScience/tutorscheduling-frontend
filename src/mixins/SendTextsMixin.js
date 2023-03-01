@@ -43,7 +43,11 @@ export const SendTextsMixin = {
           " for " +
           groupName +
           ".\nPlease view this application: " +
-          process.env.VUE_APP_CLIENT_URL,
+          process.env.VUE_APP_CLIENT_URL +
+          "/adminApprove/" +
+          admin.id +
+          "?personRoleId=" +
+          admin.personRoleId,
       };
       await TwilioServices.sendMessage(text);
     },
@@ -55,16 +59,21 @@ export const SendTextsMixin = {
           fromUser.fName +
           " " +
           fromUser.lName +
-          " for " +
+          " for the " +
           fromUser.selectedGroup +
           ".\nPlease view this request: " +
-          process.env.VUE_APP_CLIENT_URL,
+          process.env.VUE_APP_CLIENT_URL +
+          "/adminRequests/" +
+          admin.id +
+          "?requestId=" +
+          admin.requestId,
       };
       console.log(text);
       await TwilioServices.sendMessage(text);
     },
     async sendPendingMessage(appointId) {
       await this.getAppointmentInfo(appointId);
+      console.log(this.appointment.tutors[0].person);
       let text = {
         phoneNum: this.appointment.tutors[0].person.phoneNum,
         message:
@@ -81,8 +90,12 @@ export const SendTextsMixin = {
           this.appointment.students[0].person.fName +
           " " +
           this.appointment.students[0].person.lName +
-          "\nPlease view this pending appointment: " +
-          process.env.VUE_APP_CLIENT_URL,
+          "\nPlease confirm or reject this pending appointment: " +
+          process.env.VUE_APP_CLIENT_URL +
+          "/tutorHome/" +
+          this.appointment.tutors[0].person.personrole[0].id +
+          "?appointmentId=" +
+          this.appointment.id,
       };
       await TwilioServices.sendMessage(text);
     },
@@ -104,7 +117,11 @@ export const SendTextsMixin = {
           " " +
           this.appointment.tutors[0].person.lName +
           ". \nPlease review this appointment: " +
-          process.env.VUE_APP_CLIENT_URL,
+          process.env.VUE_APP_CLIENT_URL +
+          "/studentHome/" +
+          this.appointment.students[0].person.personrole[0].id +
+          "?appointmentId=" +
+          this.appointment.id,
       };
       await TwilioServices.sendMessage(text);
     },
@@ -134,7 +151,11 @@ export const SendTextsMixin = {
           " " +
           admin.lName +
           "\nPlease view this booked appointment: " +
-          process.env.VUE_APP_CLIENT_URL;
+          process.env.VUE_APP_CLIENT_URL +
+          "/tutorHome/" +
+          this.appointment.tutors[0].person.personrole[0].id +
+          "?appointmentId=" +
+          this.appointment.id;
       } else if (this.appointment.type === "Group") {
         text.message =
           "A student has joined your group appointment." +
@@ -155,7 +176,11 @@ export const SendTextsMixin = {
           " " +
           admin.lName +
           "\nPlease view this group appointment: " +
-          process.env.VUE_APP_CLIENT_URL;
+          process.env.VUE_APP_CLIENT_URL +
+          "/tutorHome/" +
+          this.appointment.tutors[0].person.personrole[0].id +
+          "?appointmentId=" +
+          this.appointment.id;
       }
       if (text.message !== "") {
         await TwilioServices.sendMessage(text);
@@ -184,8 +209,12 @@ export const SendTextsMixin = {
           fromUser.fName +
           " " +
           fromUser.lName +
-          "\nPlease review the changes: " +
-          process.env.VUE_APP_CLIENT_URL,
+          "\nPlease view this group appointment: " +
+          process.env.VUE_APP_CLIENT_URL +
+          "/tutorHome/" +
+          this.appointment.tutors[0].person.personrole[0].id +
+          "?appointmentId=" +
+          this.appointment.id,
       };
       await TwilioServices.sendMessage(text);
     },
@@ -214,6 +243,11 @@ export const SendTextsMixin = {
       for (let i = 0; i < this.appointment.tutors.length; i++) {
         if (this.appointment.tutors[i].personId !== fromUser.userID) {
           text.phoneNum = this.appointment.tutors[i].person.phoneNum;
+          text.message +=
+            "/tutorHome/" +
+            this.appointment.tutors[0].person.personrole[0].id +
+            "?appointmentId=" +
+            this.appointment.id;
           if (text.phoneNum !== "") {
             await TwilioServices.sendMessage(text);
           }
@@ -224,6 +258,11 @@ export const SendTextsMixin = {
       for (let i = 0; i < this.appointment.students.length; i++) {
         if (this.appointment.students[i].personId !== fromUser.userID) {
           text.phoneNum = this.appointment.students[i].person.phoneNum;
+          text.message +=
+            "/studentHome/" +
+            this.appointment.students[0].person.personrole[0].id +
+            "?appointmentId=" +
+            this.appointment.id;
           if (text.phoneNum !== "") {
             await TwilioServices.sendMessage(text);
           }

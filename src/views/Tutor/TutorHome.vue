@@ -21,7 +21,7 @@
           @handleReturningSuccess="directToCancel()"
         ></DeleteConfirmationComponent>
       </v-dialog>
-      <v-dialog v-model="apptDialog" max-width="800px">
+      <v-dialog v-model="appointmentDialog" max-width="800px">
         <v-card>
           <v-toolbar :color="selectedAppointment.color" dark>
             <v-card-title>
@@ -186,7 +186,7 @@
             <v-btn
               color="accent"
               @click="
-                apptDialog = false;
+                appointmentDialog = false;
                 getAppointments();
               "
             >
@@ -220,7 +220,7 @@
           </v-card-title>
           <v-card-text>
             Tutor Scheduling updates your Google calendar with appointments. You
-            will now be asked to approve (or reapprove) that access via Google.
+            will now be asked to approve (or re-approve) that access via Google.
             You will be presented with a Google login and a Tutor Scheduling
             access request.
           </v-card-text>
@@ -309,7 +309,7 @@
           </v-card-title>
           <v-data-table
             :headers="headerFeedback"
-            :items="appointmentsneedingfeedback"
+            :items="appointmentsNeedingFeedback"
             :items-per-page="50"
             @click:row="provideFeedback"
           ></v-data-table>
@@ -366,7 +366,7 @@ export default {
       currentId: 0,
       approved: false,
       disabled: false,
-      apptDialog: false,
+      appointmentDialog: false,
       saveChanges: false,
       locations: [],
       topics: [],
@@ -374,7 +374,7 @@ export default {
       tutors: [],
       selectedAppointment: {},
       appointments: [],
-      appointmentsneedingfeedback: [],
+      appointmentsNeedingFeedback: [],
       headers: [
         { text: "Date", value: "date" },
         { text: "Start Time", value: "startTime" },
@@ -403,13 +403,25 @@ export default {
   async created() {
     this.user = Utils.getStore("user");
     if (this.id !== 0) {
-      this.getTutorRole();
+      await this.getTutorRole();
     }
     await this.getGroupByPersonRoleId();
     await this.getAppointments();
     await this.getAppointmentsNeedingFeedback();
     await this.getLocations();
     await this.getTopics();
+
+    if (this.$route.query !== undefined) {
+      for (let i = 0; i < this.appointments.length; i++) {
+        if (
+          this.appointments[i].id === parseInt(this.$route.query.appointmentId)
+        ) {
+          this.selectedAppointment = this.appointments[i];
+          this.appointmentDialog = true;
+          return;
+        }
+      }
+    }
   },
   methods: {
     checkForAuthorization() {
@@ -428,48 +440,54 @@ export default {
     },
     doAuthorization() {
       if (process.env.VUE_APP_CLIENT_URL.includes("localhost")) {
-        this.url = "http://localhost";
+        this.url = "http://localhost/tutoring-api";
       } else {
         this.url = "/tutoring-api";
       }
       this.url += "/authorize/" + this.user.userID;
-      console.log(process.env.VUE_APP_CLIENT_URL);
-      console.log(this.url);
 
       const client = global.google.accounts.oauth2.initCodeClient({
         client_id: process.env.VUE_APP_CLIENT_ID,
         access_type: "offline",
         scope: "https://www.googleapis.com/auth/calendar",
         ux_mode: "popup",
-        callback: (response) => {
-          // Send auth code to your backend platform
-          const xhr = new XMLHttpRequest();
-          xhr.onreadystatechange = function () {
-            if (this.readyState == 4 && this.status == 200) {
-              let responseData = JSON.parse(this.responseText);
-              let user = Utils.getStore("user");
-              user.refresh_token = responseData.refresh_token;
-              user.expiration_date = responseData.expiration_date;
-              Utils.setStore("user", user);
-            }
-          };
-          xhr.open("POST", this.url, true);
-          xhr.setRequestHeader(
-            "Content-Type",
-            "application/x-www-form-urlencoded"
-          );
-          xhr.setRequestHeader("X-Requested-With", "XMLHttpRequest");
-          xhr.setRequestHeader("Access-Control-Allow-Origin", "*");
-          xhr.send("code=" + response.code);
+        callback: async (response) => {
+          await fetch(this.url, {
+            method: "POST",
+            mode: "cors",
+            cache: "no-cache",
+            credentials: "same-origin",
+            headers: {
+              "Content-Type": "application/x-www-form-urlencoded",
+              "X-Requested-With": "XMLHttpRequest",
+              "Access-Control-Allow-Origin": "*",
+            },
+            body: "code=" + response.code,
+          })
+            .then((response) => response.json())
+            .then((response) => {
+              if (response.userInfo !== undefined) {
+                let user = Utils.getStore("user");
+                user.refresh_token = response.userInfo.refresh_token;
+                user.expiration_date = response.userInfo.expiration_date;
+                Utils.setStore("user", user);
+                this.alert = response.message;
+                this.alertType = "success";
 
-          this.alertType = "success";
-          this.alert =
-            "You have successfully authorized Tutor Scheduling to link your Google calendar to ours.";
-          this.showAlert = true;
-
-          // After receipt, the code is exchanged for an access token and
-          // refresh token, and the platform then updates this web app
-          // running in user's browser with the requested calendar info.
+                this.showAlert = true;
+              } else {
+                this.alert = response.message;
+                this.alertType = "error";
+                this.showAlert = true;
+              }
+            })
+            .catch((error) => {
+              this.alert =
+                "There was an error authorizing your account. Please try again.";
+              this.alertType = "error";
+              this.showAlert = true;
+              console.log(error);
+            });
         },
       });
       client.requestCode();
@@ -583,22 +601,22 @@ export default {
         this.user.userID
       )
         .then((response) => {
-          this.appointmentsneedingfeedback = response.data;
+          this.appointmentsNeedingFeedback = response.data;
 
           for (
             let index = 0;
-            index < this.appointmentsneedingfeedback.length;
+            index < this.appointmentsNeedingFeedback.length;
             ++index
           ) {
             //format date, start time, and end time
-            let element = this.appointmentsneedingfeedback[index];
-            this.appointmentsneedingfeedback[index].date = this.formatDate(
+            let element = this.appointmentsNeedingFeedback[index];
+            this.appointmentsNeedingFeedback[index].date = this.formatDate(
               element.date
             );
-            this.appointmentsneedingfeedback[index].startTime = this.formatTime(
+            this.appointmentsNeedingFeedback[index].startTime = this.formatTime(
               element.startTime
             );
-            this.appointmentsneedingfeedback[index].endTime = this.formatTime(
+            this.appointmentsNeedingFeedback[index].endTime = this.formatTime(
               element.endTime
             );
           }
@@ -628,18 +646,18 @@ export default {
         await this.cancelAppointment(this.selectedAppointment, this.user);
       }
       await this.getAppointments();
-      this.apptDialog = false;
+      this.appointmentDialog = false;
       this.showDeleteConfirmation = false;
     },
     async directToConfirm() {
       await this.confirmAppointment(true, this.user, this.selectedAppointment);
       await this.getAppointments();
-      this.apptDialog = false;
+      this.appointmentDialog = false;
     },
     async directToEdit() {
       await this.editAppointment(this.user, this.selectedAppointment);
       await this.getAppointments();
-      this.apptDialog = false;
+      this.appointmentDialog = false;
     },
     async getTutorRole() {
       await PersonRoleServices.getPersonRole(this.id)
@@ -740,7 +758,7 @@ export default {
       this.selectedAppointment = item;
       this.updatePeople();
       this.saveChanges = false;
-      this.apptDialog = true;
+      this.appointmentDialog = true;
     },
   },
 };

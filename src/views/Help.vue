@@ -13,8 +13,10 @@
         alert
       }}</v-alert>
       <br />
-      <!-- <button @click="$refs.myPdfComponent.print()">print</button> -->
-      <vue-pdf-embed :source="tutorial.pdf"></vue-pdf-embed>
+      <vue-pdf-embed
+        v-model="tutorial.pdf"
+        :source="tutorial.pdf"
+      ></vue-pdf-embed>
     </v-container>
   </div>
 </template>
@@ -44,11 +46,20 @@ export default {
       alert: "",
       alertType: "success",
       user: {},
-      tutorial: {},
+      tutorial: {
+        pdf: "",
+        pages: 0,
+      },
       currentRole: {},
       files: [
-        { pdf: "StudentTutorial.pdf", pages: 24 },
-        { pdf: "TutorTutorial.pdf", pages: 29 },
+        {
+          pdf: process.env.VUE_APP_CLIENT_URL + "/StudentTutorial.pdf",
+          pages: 24,
+        },
+        {
+          pdf: process.env.VUE_APP_CLIENT_URL + "/TutorTutorial.pdf",
+          pages: 29,
+        },
       ],
     };
   },
@@ -60,7 +71,6 @@ export default {
     } else if (this.checkRole("Tutor")) {
       this.tutorial = this.files[1];
     }
-    console.log(this.tutorial);
   },
   methods: {
     async getCurrentRole() {

@@ -60,7 +60,7 @@ import TutorHome from "./views/Tutor/TutorHome.vue";
 Vue.use(Router);
 
 const router = new Router({
-  mode: "hash",
+  mode: "history",
   linkExactActiveClass: "active",
   base: process.env.NODE_ENV === "development" ? "/" : "/",
   routes: [
@@ -291,9 +291,14 @@ router.beforeEach((to, from, next) => {
   // redirect to login page if not logged in and trying to access a restricted page
   const user = localStorage.getItem("user");
   if (user === null && to.path !== "/") {
-    return next("/");
+    return next({
+      path: "/",
+      query: { redirect: to.fullPath },
+    });
   } else {
-    next();
+    next({
+      query: { redirect: to.fullPath },
+    });
   }
 });
 

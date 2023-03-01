@@ -141,7 +141,7 @@ export default {
   methods: {
     async getGroupsWithNoTopics() {
       await this.getPersonRoles(this.user.userID);
-      this.groups = this.topicroles;
+      this.groups = this.topicRoles;
       if (this.groups.length === 0) {
         this.goToPage(this.user.userID);
       } else {

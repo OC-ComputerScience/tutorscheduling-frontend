@@ -37,7 +37,7 @@
             <v-icon small class="mr-2" @click="editItem(item)"
               >mdi-pencil</v-icon
             >
-            <v-icon small @click="deleteItem(item)"> mdi-delete </v-icon>
+            <!-- <v-icon small @click="deleteItem(item)"> mdi-delete </v-icon> -->
           </template>
         </v-data-table>
       </v-card>
@@ -88,7 +88,7 @@
         </v-card>
       </v-dialog>
 
-      <v-dialog v-model="dialogDelete" max-width="800">
+      <!-- <v-dialog v-model="dialogDelete" max-width="800">
         <v-card>
           <v-card-title class="text-h5"
             >Are you sure you want to delete {{ editedPerson.fName }}
@@ -100,7 +100,7 @@
             <v-btn color="accent" text @click="deleteItemConfirm">OK</v-btn>
           </v-card-actions>
         </v-card>
-      </v-dialog>
+      </v-dialog> -->
     </v-container>
   </div>
 </template>
@@ -148,7 +148,6 @@ export default {
       { text: "Skill Level", value: "skillLevel" },
     ],
     persontopics: [],
-    editedIndex: -1,
     editedPerson: {},
     editedItem: {
       status: "",
@@ -158,18 +157,32 @@ export default {
     },
   }),
   computed: {},
-  watch: {
-    dialog(val) {
-      val || this.close();
-    },
-    dialogDelete(val) {
-      val || this.closeDelete();
-    },
-  },
+  // watch: {
+  //   dialog(val) {
+  //     val || this.close();
+  //   },
+  //   dialogDelete(val) {
+  //     val || this.closeDelete();
+  //   },
+  // },
   async created() {
     this.user = Utils.getStore("user");
     await this.getGroupByPersonRoleId();
     await this.getPersonRoles();
+    console.log(this.personroles);
+    if (this.$route.query !== undefined) {
+      for (let i = 0; i < this.personroles.length; i++) {
+        if (
+          this.personroles[i].personrole[0].id ===
+          parseInt(this.$route.query.personRoleId)
+        ) {
+          this.editedPerson = this.personroles[i];
+          this.editedItem = this.personroles[i].personrole[0];
+          this.dialog = true;
+          return;
+        }
+      }
+    }
   },
   methods: {
     async getGroupByPersonRoleId() {
@@ -197,62 +210,59 @@ export default {
         });
     },
     editItem(item) {
-      this.editedIndex = this.personroles.indexOf(item.id);
-      this.editedPerson = Object.assign({}, item);
-      this.editedItem = Object.assign({}, item.personrole[0]);
+      this.editedPerson = item;
+      this.editedItem = item.personrole[0];
       this.dialog = true;
     },
-    deleteItem(item) {
-      this.editedIndex = this.personroles.indexOf(item.id);
-      this.editedPerson = Object.assign({}, item);
-      this.editedItem = Object.assign({}, item.personrole[0]);
-      this.dialogDelete = true;
-    },
-    async deleteItemConfirm() {
-      this.personroles.splice(this.editedIndex, 1);
-      await PersonRoleServices.deletePersonRole(this.editedItem.id)
-        .then(() => {
-          this.getPersonRoles();
-          this.alertType = "success";
-          this.alert =
-            "You have successfully deleted " +
-            this.editedPerson.fName +
-            " " +
-            this.editedPerson.lName +
-            "'s application.";
-          this.showAlert = true;
-        })
-        .catch((error) => {
-          this.alertType = "error";
-          this.alert = error.response.data.message;
-          this.showAlert = true;
-          console.log("There was an error:", error.response);
-        });
+    // deleteItem(item) {
+    //   this.editedIndex = this.personroles.indexOf(item.id);
+    //   this.editedPerson = Object.assign({}, item);
+    //   this.editedItem = Object.assign({}, item.personrole[0]);
+    //   this.dialogDelete = true;
+    // },
+    // async deleteItemConfirm() {
+    //   this.personroles.splice(this.editedIndex, 1);
+    //   await PersonRoleServices.deletePersonRole(this.editedItem.id)
+    //     .then(() => {
+    //       this.getPersonRoles();
+    //       this.alertType = "success";
+    //       this.alert =
+    //         "You have successfully deleted " +
+    //         this.editedPerson.fName +
+    //         " " +
+    //         this.editedPerson.lName +
+    //         "'s application.";
+    //       this.showAlert = true;
+    //     })
+    //     .catch((error) => {
+    //       this.alertType = "error";
+    //       this.alert = error.response.data.message;
+    //       this.showAlert = true;
+    //       console.log("There was an error:", error.response);
+    //     });
 
-      this.closeDelete();
-    },
-    close() {
-      this.dialog = false;
-      this.$nextTick(() => {
-        this.editedItem = Object.assign({}, this.defaultItem);
-        this.editedIndex = -1;
-      });
-    },
-    closeDelete() {
-      this.dialogDelete = false;
-      this.$nextTick(() => {
-        this.editedItem = Object.assign({}, this.defaultItem);
-        this.editedIndex = -1;
-      });
-    },
+    //   this.closeDelete();
+    // },
+    // close() {
+    //   this.dialog = false;
+    //   this.$nextTick(() => {
+    //     this.editedItem = Object.assign({}, this.defaultItem);
+    //     this.editedIndex = -1;
+    //   });
+    // },
+    // closeDelete() {
+    //   this.dialogDelete = false;
+    //   this.$nextTick(() => {
+    //     this.editedItem = Object.assign({}, this.defaultItem);
+    //     this.editedIndex = -1;
+    //   });
+    // },
     async save() {
       await PersonRoleServices.updatePersonRole(
         this.editedItem.id,
         this.editedItem
       )
         .then(() => {
-          this.close();
-          this.getPersonRoles();
           this.alertType = "success";
           this.alert =
             "You have successfully updated " +
@@ -268,7 +278,8 @@ export default {
           this.showAlert = true;
           console.log("There was an error:", error.response);
         });
-      Object.assign(this.personroles[this.editedIndex], this.editedItem);
+      await this.getPersonRoles();
+      this.dialog = false;
     },
     cancel() {
       this.$router.go(-1);

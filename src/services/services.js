@@ -49,8 +49,12 @@ const apiClient = axios.create({
         });
       Utils.removeItem("user");
       Utils.removeItem("token");
-      Router.push({ name: "login" }).catch((err) => {
-        // Ignore the vuex err regarding  navigating to the page they are already on.
+      console.log(this.$route.path);
+      Router.push({
+        path: "/",
+        query: { redirect: this.$route.path },
+      }).catch((err) => {
+        // Ignore the vuex err regarding navigating to the page they are already on.
         if (
           err.name !== "NavigationDuplicated" &&
           !err.message.includes(
