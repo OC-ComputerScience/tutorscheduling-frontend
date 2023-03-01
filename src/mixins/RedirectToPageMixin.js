@@ -133,7 +133,8 @@ export const RedirectToPageMixin = {
               j++
             ) {
               let role = group.role[j];
-              // check if there's a redirect url first
+              // check if there's a redirect url first and if the personRoleId matches the one in the url
+              // also, if the redirect url is for a home page, check if the role type matches the role type in the url
               if (
                 this.$route.query.redirect &&
                 role.personrole[0].id ===
@@ -142,7 +143,10 @@ export const RedirectToPageMixin = {
                       .split("/")
                       .slice(1)[1]
                       .split("?")[0]
-                  )
+                  ) &&
+                (this.$route.query.redirect.includes("Home")
+                  ? this.$route.query.redirect.includes(role.type.toLowerCase())
+                  : true)
               ) {
                 this.user.selectedGroup = group.name;
                 this.user.selectedRole = {
