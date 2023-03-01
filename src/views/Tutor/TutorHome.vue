@@ -220,7 +220,7 @@
           </v-card-title>
           <v-card-text>
             Tutor Scheduling updates your Google calendar with appointments. You
-            will now be asked to approve (or reapprove) that access via Google.
+            will now be asked to approve (or re-approve) that access via Google.
             You will be presented with a Google login and a Tutor Scheduling
             access request.
           </v-card-text>
@@ -440,7 +440,7 @@ export default {
     },
     doAuthorization() {
       if (process.env.VUE_APP_CLIENT_URL.includes("localhost")) {
-        this.url = "http://localhost";
+        this.url = "http://localhost/tutoring-api";
       } else {
         this.url = "/tutoring-api";
       }
@@ -451,35 +451,43 @@ export default {
         access_type: "offline",
         scope: "https://www.googleapis.com/auth/calendar",
         ux_mode: "popup",
-        callback: (response) => {
-          // Send auth code to your backend platform
-          const xhr = new XMLHttpRequest();
-          xhr.onreadystatechange = function () {
-            if (this.readyState == 4 && this.status == 200) {
-              let responseData = JSON.parse(this.responseText);
-              let user = Utils.getStore("user");
-              user.refresh_token = responseData.refresh_token;
-              user.expiration_date = responseData.expiration_date;
-              Utils.setStore("user", user);
-            }
-          };
-          xhr.open("POST", this.url, true);
-          xhr.setRequestHeader(
-            "Content-Type",
-            "application/x-www-form-urlencoded"
-          );
-          xhr.setRequestHeader("X-Requested-With", "XMLHttpRequest");
-          xhr.setRequestHeader("Access-Control-Allow-Origin", "*");
-          xhr.send("code=" + response.code);
+        callback: async (response) => {
+          await fetch(this.url, {
+            method: "POST",
+            mode: "cors",
+            cache: "no-cache",
+            credentials: "same-origin",
+            headers: {
+              "Content-Type": "application/x-www-form-urlencoded",
+              "X-Requested-With": "XMLHttpRequest",
+              "Access-Control-Allow-Origin": "*",
+            },
+            body: "code=" + response.code,
+          })
+            .then((response) => response.json())
+            .then((response) => {
+              if (response.userInfo !== undefined) {
+                let user = Utils.getStore("user");
+                user.refresh_token = response.userInfo.refresh_token;
+                user.expiration_date = response.userInfo.expiration_date;
+                Utils.setStore("user", user);
+                this.alert = response.message;
+                this.alertType = "success";
 
-          this.alertType = "success";
-          this.alert =
-            "You have successfully authorized Tutor Scheduling to link your Google calendar to ours.";
-          this.showAlert = true;
-
-          // After receipt, the code is exchanged for an access token and
-          // refresh token, and the platform then updates this web app
-          // running in user's browser with the requested calendar info.
+                this.showAlert = true;
+              } else {
+                this.alert = response.message;
+                this.alertType = "error";
+                this.showAlert = true;
+              }
+            })
+            .catch((error) => {
+              this.alert =
+                "There was an error authorizing your account. Please try again.";
+              this.alertType = "error";
+              this.showAlert = true;
+              console.log(error);
+            });
         },
       });
       client.requestCode();
