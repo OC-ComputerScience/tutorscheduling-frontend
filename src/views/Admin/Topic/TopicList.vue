@@ -37,7 +37,6 @@
 import Utils from "@/config/utils.js";
 import PersonRoleServices from "@/services/personRoleServices.js";
 import TopicServices from "@/services/topicServices.js";
-import PersonTopicServices from "../../../services/personTopicServices";
 
 export default {
   name: "App",
@@ -68,7 +67,6 @@ export default {
     this.user = Utils.getStore("user");
     await this.getGroupByPersonRoleId();
     await this.getTopicsForGroup();
-    await this.checkForDisabled();
   },
   methods: {
     async getGroupByPersonRoleId() {
@@ -90,19 +88,6 @@ export default {
           this.message = error.response.data.message;
           console.log("There was an error:", error.response);
         });
-    },
-    async checkForDisabled() {
-      for (let i = 0; i < this.topics.length; i++) {
-        let topic = this.topics[i];
-        if (topic.status === "disabled") {
-          await PersonTopicServices.deletePersonTopicByTopicId(topic.id).catch(
-            (error) => {
-              this.message = error.response.data.message;
-              console.log("There was an error:", error.response);
-            }
-          );
-        }
-      }
     },
     deleteTopic(id, name) {
       let confirmed = confirm(`Are you sure you want to delete ${name}`);
