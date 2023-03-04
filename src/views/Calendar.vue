@@ -364,7 +364,7 @@
                       </v-text-field>
                     </span>
                   </v-container>
-                  <!-- put in presession-info for appointment for private appointments/ add a readonly if  group-->
+                  <!-- put in pre-session-info for appointment for private appointments/ add a readonly if  group-->
                   <span v-if="appointmentType.includes('Private')">
                     <v-textarea
                       id="preSession"
