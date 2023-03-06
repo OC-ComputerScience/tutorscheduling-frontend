@@ -151,7 +151,7 @@
               readonly
             >
             </v-text-field>
-            <!-- put in presession-info for appointment for private appointments/ add a readonly if private -->
+            <!-- put in pre-session-info for appointment for private appointments/ add a readonly if private -->
             <v-textarea
               v-model="selectedAppointment.preSessionInfo"
               :counter="130"
