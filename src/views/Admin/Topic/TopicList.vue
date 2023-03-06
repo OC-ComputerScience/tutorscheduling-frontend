@@ -15,12 +15,20 @@
             hide-details
           ></v-text-field>
           <v-spacer></v-spacer>
-          <v-btn color="accent" class="mr-4" elevation="2" @click="addTopic">
+          <v-btn color="primary" class="mr-4" elevation="2" @click="addTopic">
             Add
           </v-btn>
 
           <v-btn class="mr-4" @click="cancel"> Back </v-btn>
         </v-card-title>
+        <v-dialog v-model="topicDialog" max-width="800px">
+          <TopicDialogBody
+            :sent-topic="selectedTopic"
+            :is-edit="true"
+            @closeTopicDialog="topicDialog = false"
+            @saveOrAddTopic="saveOrAddTopic"
+          ></TopicDialogBody>
+        </v-dialog>
         <v-data-table
           :headers="headers"
           :search="search"
@@ -38,10 +46,11 @@ import Utils from "@/config/utils.js";
 import PersonRoleServices from "@/services/personRoleServices.js";
 import TopicServices from "@/services/topicServices.js";
 import PersonTopicServices from "../../../services/personTopicServices";
+import TopicDialogBody from "./TopicDialogBody.vue";
 
 export default {
-  name: "App",
-  components: {},
+  name: "TopicList",
+  components: { TopicDialogBody },
   props: {
     id: {
       type: [Number, String],
@@ -50,6 +59,8 @@ export default {
   },
   data() {
     return {
+      topicDialog: false,
+      selectedTopic: {},
       search: "",
       topics: [],
       user: {},
@@ -119,16 +130,35 @@ export default {
     },
     rowClick: function (item, row) {
       row.select(true);
-      this.$router.push({
-        name: "topicView",
-        params: { id: this.id, topicId: item.id },
-      });
+      this.selectedTopic = item;
+      this.topicDialog = true;
     },
     addTopic() {
       this.$router.push({ name: "topicAdd", params: { id: this.id } });
     },
     cancel() {
       this.$router.go(-1);
+    },
+    async saveOrAddTopic(topic, isEdit) {
+      if (isEdit) {
+        await TopicServices.updateTopic(topic.id, topic)
+          .then(() => {
+            this.topicDialog = false;
+          })
+          .catch((error) => {
+            this.message = error.response.data.message;
+            console.log("There was an error:", error.response);
+          });
+      } else {
+        TopicServices.addTopic(topic)
+          .then(() => {
+            this.topicDialog = false;
+          })
+          .catch((error) => {
+            this.message = error.response.data.message;
+            console.log(error);
+          });
+      }
     },
   },
 };
