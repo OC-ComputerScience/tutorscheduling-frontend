@@ -1016,7 +1016,14 @@ export default {
         this.group.timeInterval
       );
       // adding this to make sure that you can't start an appointment at the end time
-      this.startTimes.pop();
+      // need to make sure that we handle the time interval vs the minimum appointment time correctly
+      for (
+        let i = 0;
+        i < this.group.minApptTime / this.group.timeInterval;
+        i++
+      ) {
+        this.startTimes.pop();
+      }
       this.endTimes = this.generateTimeslots(
         this.newStart,
         this.selectedAppointment.endTime,

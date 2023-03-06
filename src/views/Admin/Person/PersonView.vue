@@ -609,7 +609,6 @@ export default {
       this.personrole.personId = this.person.id;
       this.personrole.agree = true;
       this.personrole.dateSigned = new Date();
-      // TODO if admin, set status to approved
       await PersonRoleServices.addPersonRole(this.personrole)
         .then(() => {
           this.dialogRoleAdd = false;
