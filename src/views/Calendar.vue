@@ -1015,14 +1015,7 @@ export default {
         this.newEnd,
         this.group.timeInterval
       );
-
-      this.endTimes = this.generateTimeslots(
-        this.newStart,
-        this.selectedAppointment.endTime,
-        this.group.minApptTime
-      );
-
-      // adding this to make sure you can't start an appointment at the end time or end an appointment at the start time
+      // adding this to make sure that you can't start an appointment at the end time
       // need to make sure that we handle the time interval vs the minimum appointment time correctly
       for (
         let i = 0;
@@ -1030,8 +1023,14 @@ export default {
         i++
       ) {
         this.startTimes.pop();
-        this.endTimes.shift();
       }
+      this.endTimes = this.generateTimeslots(
+        this.newStart,
+        this.selectedAppointment.endTime,
+        this.group.minApptTime
+      );
+      // adding this to make sure you can't end an appointment at the start time
+      this.endTimes.shift();
     },
     // validate email function
     validateEmail() {
