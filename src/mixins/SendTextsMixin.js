@@ -71,34 +71,34 @@ export const SendTextsMixin = {
     //   console.log(text);
     //   await TwilioServices.sendMessage(text);
     // },
-    async sendPendingMessage(appointId) {
-      await this.getAppointmentInfo(appointId);
-      console.log(this.appointment.tutors[0].person);
-      let text = {
-        phoneNum: this.appointment.tutors[0].person.phoneNum,
-        message:
-          "You have a new pending private appointment." +
-          "\n    Date: " +
-          this.formatDate(this.appointment.date) +
-          "\n    Time: " +
-          this.calcTime(this.appointment.startTime) +
-          "\n    Location: " +
-          this.appointment.location.name +
-          "\n    Topic: " +
-          this.appointment.topic.name +
-          "\n    Student: " +
-          this.appointment.students[0].person.fName +
-          " " +
-          this.appointment.students[0].person.lName +
-          "\nPlease confirm or reject this pending appointment: " +
-          process.env.VUE_APP_CLIENT_URL +
-          "/tutorHome/" +
-          this.appointment.tutors[0].person.personrole[0].id +
-          "?appointmentId=" +
-          this.appointment.id,
-      };
-      await TwilioServices.sendMessage(text);
-    },
+    // async sendPendingMessage(appointId) {
+    //   await this.getAppointmentInfo(appointId);
+    //   console.log(this.appointment.tutors[0].person);
+    //   let text = {
+    //     phoneNum: this.appointment.tutors[0].person.phoneNum,
+    //     message:
+    //       "You have a new pending private appointment." +
+    //       "\n    Date: " +
+    //       this.formatDate(this.appointment.date) +
+    //       "\n    Time: " +
+    //       this.calcTime(this.appointment.startTime) +
+    //       "\n    Location: " +
+    //       this.appointment.location.name +
+    //       "\n    Topic: " +
+    //       this.appointment.topic.name +
+    //       "\n    Student: " +
+    //       this.appointment.students[0].person.fName +
+    //       " " +
+    //       this.appointment.students[0].person.lName +
+    //       "\nPlease confirm or reject this pending appointment: " +
+    //       process.env.VUE_APP_CLIENT_URL +
+    //       "/tutorHome/" +
+    //       this.appointment.tutors[0].person.personrole[0].id +
+    //       "?appointmentId=" +
+    //       this.appointment.id,
+    //   };
+    //   await TwilioServices.sendMessage(text);
+    // },
     async sendConfirmedMessage(appointId) {
       await this.getAppointmentInfo(appointId);
       let text = {

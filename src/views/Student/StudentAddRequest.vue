@@ -170,7 +170,6 @@ export default {
                 adminPhoneNum: tempA.person.phoneNum,
                 groupName: this.user.selectedGroup,
               };
-              console.log(textInfo);
               await TwilioServices.sendRequestMessage(textInfo);
             }
           }

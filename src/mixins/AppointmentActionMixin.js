@@ -1,5 +1,6 @@
 import AppointmentServices from "@/services/appointmentServices.js";
 import PersonAppointmentServices from "@/services/personAppointmentServices.js";
+import TwilioServices from "@/services/twilioServices.js";
 import { SendTextsMixin } from "./SendTextsMixin";
 
 export const AppointmentActionMixin = {
@@ -155,7 +156,8 @@ export const AppointmentActionMixin = {
         await PersonAppointmentServices.addPersonAppointment(pap);
         temp.status = "pending";
         await AppointmentServices.updateAppointment(this.appointment.id, temp);
-        await this.sendPendingMessage(this.appointment.id);
+        await TwilioServices.sendPendingMessage(this.appointment.id);
+        // await this.sendPendingMessage(this.appointment.id);
       }
     },
     async bookGroupSession(isAdminAdd, appointment, fromUser, student) {

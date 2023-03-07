@@ -10,4 +10,7 @@ export default {
   sendRequestMessage(textInfo) {
     return apiClient.post(`twilio/sendRequest`, textInfo);
   },
+  sendPendingMessage(appointmentId) {
+    return apiClient.post(`twilio/sendPending/${appointmentId}`);
+  },
 };
