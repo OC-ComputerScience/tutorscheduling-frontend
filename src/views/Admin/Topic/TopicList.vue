@@ -18,15 +18,14 @@
           <v-btn color="primary" class="mr-4" elevation="2" @click="addTopic">
             Add
           </v-btn>
-
-          <v-btn class="mr-4" @click="cancel"> Back </v-btn>
         </v-card-title>
-        <v-dialog v-model="topicDialog" max-width="800px">
+        <v-dialog v-model="topicDialog" persistent max-width="800px">
           <TopicDialogBody
             :sent-topic="selectedTopic"
-            :is-edit="true"
+            :sent-bool="isTopicDialogEdit"
             @closeTopicDialog="topicDialog = false"
             @saveOrAddTopic="saveOrAddTopic"
+            @deleteTopic="deleteTopic"
           ></TopicDialogBody>
         </v-dialog>
         <v-data-table
@@ -46,7 +45,7 @@ import Utils from "@/config/utils.js";
 import PersonRoleServices from "@/services/personRoleServices.js";
 import TopicServices from "@/services/topicServices.js";
 import PersonTopicServices from "../../../services/personTopicServices";
-import TopicDialogBody from "./TopicDialogBody.vue";
+import TopicDialogBody from "../../../components/Admin/Topic/TopicDialogBody.vue";
 
 export default {
   name: "TopicList",
@@ -60,6 +59,7 @@ export default {
   data() {
     return {
       topicDialog: false,
+      isTopicDialogEdit: true,
       selectedTopic: {},
       search: "",
       topics: [],
@@ -75,7 +75,6 @@ export default {
     };
   },
   async created() {
-    // this.getTopics();
     this.user = Utils.getStore("user");
     await this.getGroupByPersonRoleId();
     await this.getTopicsForGroup();
@@ -115,12 +114,15 @@ export default {
         }
       }
     },
-    deleteTopic(id, name) {
+    async deleteTopic() {
+      let id = this.selectedTopic.id;
+      let name = this.selectedTopic.name;
       let confirmed = confirm(`Are you sure you want to delete ${name}`);
       if (confirmed) {
-        TopicServices.deleteTopic(id)
-          .then(() => {
-            this.getTopics(this.start, this.length);
+        await TopicServices.deleteTopic(id)
+          .then(async () => {
+            this.topicDialog = false;
+            await this.getTopicsForGroup();
           })
           .catch((error) => {
             this.message = error.response.data.message;
@@ -128,18 +130,28 @@ export default {
           });
       }
     },
-    rowClick: function (item, row) {
-      row.select(true);
+    rowClick: function (item) {
+      this.isTopicDialogEdit = true;
       this.selectedTopic = item;
       this.topicDialog = true;
     },
     addTopic() {
-      this.$router.push({ name: "topicAdd", params: { id: this.id } });
+      this.selectedTopic = {
+        name: "",
+        abbr: "",
+        status: "",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        groupId: this.group.id,
+      };
+      this.isTopicDialogEdit = false;
+      this.topicDialog = true;
     },
     cancel() {
       this.$router.go(-1);
     },
     async saveOrAddTopic(topic, isEdit) {
+      topic.groupId = this.group.id;
       if (isEdit) {
         await TopicServices.updateTopic(topic.id, topic)
           .then(() => {
@@ -150,9 +162,10 @@ export default {
             console.log("There was an error:", error.response);
           });
       } else {
-        TopicServices.addTopic(topic)
-          .then(() => {
+        await TopicServices.addTopic(topic)
+          .then(async () => {
             this.topicDialog = false;
+            await this.getTopicsForGroup();
           })
           .catch((error) => {
             this.message = error.response.data.message;

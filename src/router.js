@@ -40,9 +40,6 @@ import RoleView from "./views/Admin/Role/RoleView.vue";
 
 // Topic
 import TopicList from "./views/Admin/Topic/TopicList.vue";
-import TopicEdit from "./views/Admin/Topic/TopicEdit.vue";
-import TopicAdd from "./views/Admin/Topic/TopicAdd.vue";
-import TopicView from "./views/Admin/Topic/TopicView.vue";
 
 // Student Screens
 
@@ -191,27 +188,9 @@ const router = new Router({
       props: true,
     },
     {
-      path: "/topicAdd/:id",
-      name: "topicAdd",
-      component: TopicAdd,
-      props: true,
-    },
-    {
-      path: "/topicEdit/:id",
-      name: "topicEdit",
-      component: TopicEdit,
-      props: true,
-    },
-    {
       path: "/topicList/:id",
       name: "topicList",
       component: TopicList,
-      props: true,
-    },
-    {
-      path: "/topicView/:id/:topicId",
-      name: "topicView",
-      component: TopicView,
       props: true,
     },
     {
