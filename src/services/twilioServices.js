@@ -10,7 +10,13 @@ export default {
   sendRequestMessage(textInfo) {
     return apiClient.post(`twilio/sendRequest`, textInfo);
   },
+  sendMessageFromAdmin(textInfo) {
+    return apiClient.post(`twilio/sendMessageFromAdmin`, textInfo);
+  },
   sendPendingMessage(appointmentId) {
     return apiClient.post(`twilio/sendPending/${appointmentId}`);
+  },
+  sendConfirmedMessage(appointmentId) {
+    return apiClient.post(`twilio/sendConfirmed/${appointmentId}`);
   },
 };

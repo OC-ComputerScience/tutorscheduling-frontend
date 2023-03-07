@@ -99,93 +99,93 @@ export const SendTextsMixin = {
     //   };
     //   await TwilioServices.sendMessage(text);
     // },
-    async sendConfirmedMessage(appointId) {
-      await this.getAppointmentInfo(appointId);
-      let text = {
-        phoneNum: this.appointment.students[0].person.phoneNum,
-        message:
-          "The " +
-          this.appointment.type.toLowerCase() +
-          " appointment you booked for " +
-          this.appointment.topic.name +
-          " on " +
-          this.formatDate(this.appointment.date) +
-          " at " +
-          this.calcTime(this.appointment.startTime) +
-          " has been confirmed by " +
-          this.appointment.tutors[0].person.fName +
-          " " +
-          this.appointment.tutors[0].person.lName +
-          ". \nPlease review this appointment: " +
-          process.env.VUE_APP_CLIENT_URL +
-          "/studentHome/" +
-          this.appointment.students[0].person.personrole[0].id +
-          "?appointmentId=" +
-          this.appointment.id,
-      };
-      await TwilioServices.sendMessage(text);
-    },
-    async sendMessageFromAdmin(admin, student, appointId) {
-      await this.getAppointmentInfo(appointId);
-      let text = {
-        phoneNum: this.appointment.tutors[0].person.phoneNum,
-        message: "",
-      };
-      if (this.appointment.type === "Private") {
-        text.message =
-          "You have a new booked private appointment." +
-          "\n    Date: " +
-          this.formatDate(this.appointment.date) +
-          "\n    Time: " +
-          this.calcTime(this.appointment.startTime) +
-          "\n    Location: " +
-          this.appointment.location.name +
-          "\n    Topic: " +
-          this.appointment.topic.name +
-          "\n    Student: " +
-          student.fName +
-          " " +
-          student.lName +
-          "\n    Booked by: " +
-          admin.fName +
-          " " +
-          admin.lName +
-          "\nPlease view this booked appointment: " +
-          process.env.VUE_APP_CLIENT_URL +
-          "/tutorHome/" +
-          this.appointment.tutors[0].person.personrole[0].id +
-          "?appointmentId=" +
-          this.appointment.id;
-      } else if (this.appointment.type === "Group") {
-        text.message =
-          "A student has joined your group appointment." +
-          "\n    Date: " +
-          this.formatDate(this.appointment.date) +
-          "\n    Time: " +
-          this.calcTime(this.appointment.startTime) +
-          "\n    Location: " +
-          this.appointment.location.name +
-          "\n    Topic: " +
-          this.appointment.topic.name +
-          "\n    Student: " +
-          student.fName +
-          " " +
-          student.lName +
-          "\n    Booked by: " +
-          admin.fName +
-          " " +
-          admin.lName +
-          "\nPlease view this group appointment: " +
-          process.env.VUE_APP_CLIENT_URL +
-          "/tutorHome/" +
-          this.appointment.tutors[0].person.personrole[0].id +
-          "?appointmentId=" +
-          this.appointment.id;
-      }
-      if (text.message !== "") {
-        await TwilioServices.sendMessage(text);
-      }
-    },
+    // async sendConfirmedMessage(appointId) {
+    //   await this.getAppointmentInfo(appointId);
+    //   let text = {
+    //     phoneNum: this.appointment.students[0].person.phoneNum,
+    //     message:
+    //       "The " +
+    //       this.appointment.type.toLowerCase() +
+    //       " appointment you booked for " +
+    //       this.appointment.topic.name +
+    //       " on " +
+    //       this.formatDate(this.appointment.date) +
+    //       " at " +
+    //       this.calcTime(this.appointment.startTime) +
+    //       " has been confirmed by " +
+    //       this.appointment.tutors[0].person.fName +
+    //       " " +
+    //       this.appointment.tutors[0].person.lName +
+    //       ". \nPlease review this appointment: " +
+    //       process.env.VUE_APP_CLIENT_URL +
+    //       "/studentHome/" +
+    //       this.appointment.students[0].person.personrole[0].id +
+    //       "?appointmentId=" +
+    //       this.appointment.id,
+    //   };
+    //   await TwilioServices.sendMessage(text);
+    // },
+    // async sendMessageFromAdmin(admin, student, appointId) {
+    //   await this.getAppointmentInfo(appointId);
+    //   let text = {
+    //     phoneNum: this.appointment.tutors[0].person.phoneNum,
+    //     message: "",
+    //   };
+    //   if (this.appointment.type === "Private") {
+    //     text.message =
+    //       "You have a new booked private appointment." +
+    //       "\n    Date: " +
+    //       this.formatDate(this.appointment.date) +
+    //       "\n    Time: " +
+    //       this.calcTime(this.appointment.startTime) +
+    //       "\n    Location: " +
+    //       this.appointment.location.name +
+    //       "\n    Topic: " +
+    //       this.appointment.topic.name +
+    //       "\n    Student: " +
+    //       student.fName +
+    //       " " +
+    //       student.lName +
+    //       "\n    Booked by: " +
+    //       admin.fName +
+    //       " " +
+    //       admin.lName +
+    //       "\nPlease view this booked appointment: " +
+    //       process.env.VUE_APP_CLIENT_URL +
+    //       "/tutorHome/" +
+    //       this.appointment.tutors[0].person.personrole[0].id +
+    //       "?appointmentId=" +
+    //       this.appointment.id;
+    //   } else if (this.appointment.type === "Group") {
+    //     text.message =
+    //       "A student has joined your group appointment." +
+    //       "\n    Date: " +
+    //       this.formatDate(this.appointment.date) +
+    //       "\n    Time: " +
+    //       this.calcTime(this.appointment.startTime) +
+    //       "\n    Location: " +
+    //       this.appointment.location.name +
+    //       "\n    Topic: " +
+    //       this.appointment.topic.name +
+    //       "\n    Student: " +
+    //       student.fName +
+    //       " " +
+    //       student.lName +
+    //       "\n    Booked by: " +
+    //       admin.fName +
+    //       " " +
+    //       admin.lName +
+    //       "\nPlease view this group appointment: " +
+    //       process.env.VUE_APP_CLIENT_URL +
+    //       "/tutorHome/" +
+    //       this.appointment.tutors[0].person.personrole[0].id +
+    //       "?appointmentId=" +
+    //       this.appointment.id;
+    //   }
+    //   if (text.message !== "") {
+    //     await TwilioServices.sendMessage(text);
+    //   }
+    // },
     // always text the first tutor of a group appointment if someone joins
     async sendGroupMessage(fromUser, appointId) {
       await this.getAppointmentInfo(appointId);

@@ -58,7 +58,7 @@ export const AppointmentActionMixin = {
         await this.bookGroupSession(isAdminAdd, appointment, fromUser, student);
       }
     },
-    // Split appointments into more availablity slots when part of slot is booked
+    // Split appointments into more availability slots when part of slot is booked
     async splitAppointment(isAdminAdd, appointment, fromUser, student) {
       await this.getAppointmentInfo(appointment.id);
 
@@ -149,7 +149,14 @@ export const AppointmentActionMixin = {
         await PersonAppointmentServices.addPersonAppointment(pap);
         temp.status = "booked";
         await AppointmentServices.updateForGoogle(this.appointment.id, temp);
-        await this.sendMessageFromAdmin(fromUser, student, this.appointment.id);
+        let textInfo = {
+          appointmentId: this.appointment.id,
+          adminFirstName: fromUser.fName,
+          adminLastName: fromUser.lName,
+          studentFirstName: student.fName,
+          studentLastName: student.lName,
+        };
+        await TwilioServices.sendMessageFromAdmin(textInfo);
       } // handle if student added appointment
       else {
         pap.personId = fromUser.userID ? fromUser.userID : fromUser.id;
@@ -157,7 +164,6 @@ export const AppointmentActionMixin = {
         temp.status = "pending";
         await AppointmentServices.updateAppointment(this.appointment.id, temp);
         await TwilioServices.sendPendingMessage(this.appointment.id);
-        // await this.sendPendingMessage(this.appointment.id);
       }
     },
     async bookGroupSession(isAdminAdd, appointment, fromUser, student) {
@@ -169,7 +175,15 @@ export const AppointmentActionMixin = {
         // add person appointment
         pap.personId = student.id;
         await PersonAppointmentServices.addPersonAppointment(pap);
-        await this.sendMessageFromAdmin(fromUser, student, appointment.id);
+        let textInfo = {
+          appointmentId: this.appointment.id,
+          adminFirstName: fromUser.fName,
+          adminLastName: fromUser.lName,
+          studentFirstName: student.fName,
+          studentLastName: student.lName,
+        };
+        // TODO make sure texts are sent to every tutor linked to group appointment
+        await TwilioServices.sendMessageFromAdmin(textInfo);
       } else {
         if (fromUser.selectedRole.type === "Tutor") {
           pap.isTutor = true;
@@ -219,9 +233,8 @@ export const AppointmentActionMixin = {
           await AppointmentServices.updateForGoogle(
             confirmAppt.id,
             confirmAppt
-          ).then(async () => {
-            await this.sendConfirmedMessage(appointment.id);
-          });
+          );
+          await TwilioServices.sendConfirmedMessage(appointment.id);
         }
       } else {
         // don't need to update google cal because it's not even on there yet
@@ -341,7 +354,6 @@ export const AppointmentActionMixin = {
           }
           await AppointmentServices.deleteAppointment(this.appointment.id);
         } else {
-          // TODO update person appointments to have something in feedback about it being a cancel
           // just set appointment to canceled if tutor canceled
           await this.cancelFeedbackMessage(
             this.appointment.personappointment,
