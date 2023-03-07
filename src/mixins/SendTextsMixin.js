@@ -32,45 +32,45 @@ export const SendTextsMixin = {
           console.log("There was an error:", error);
         });
     },
-    async sendApplicationMessage(fromUser, admin, groupName) {
-      let text = {
-        phoneNum: admin.person.phoneNum,
-        message:
-          "You have a new tutor application from " +
-          fromUser.fName +
-          " " +
-          fromUser.lName +
-          " for " +
-          groupName +
-          ".\nPlease view this application: " +
-          process.env.VUE_APP_CLIENT_URL +
-          "/adminApprove/" +
-          admin.id +
-          "?personRoleId=" +
-          admin.personRoleId,
-      };
-      await TwilioServices.sendMessage(text);
-    },
-    async sendRequestMessage(fromUser, admin) {
-      let text = {
-        phoneNum: admin.person.phoneNum,
-        message:
-          "You have a new request from " +
-          fromUser.fName +
-          " " +
-          fromUser.lName +
-          " for the " +
-          fromUser.selectedGroup +
-          ".\nPlease view this request: " +
-          process.env.VUE_APP_CLIENT_URL +
-          "/adminRequests/" +
-          admin.id +
-          "?requestId=" +
-          admin.requestId,
-      };
-      console.log(text);
-      await TwilioServices.sendMessage(text);
-    },
+    // async sendApplicationMessage(fromUser, admin, groupName) {
+    //   let text = {
+    //     phoneNum: admin.person.phoneNum,
+    //     message:
+    //       "You have a new tutor application from " +
+    //       fromUser.fName +
+    //       " " +
+    //       fromUser.lName +
+    //       " for " +
+    //       groupName +
+    //       ".\nPlease view this application: " +
+    //       process.env.VUE_APP_CLIENT_URL +
+    //       "/adminApprove/" +
+    //       admin.id +
+    //       "?personRoleId=" +
+    //       admin.personRoleId,
+    //   };
+    //   await TwilioServices.sendMessage(text);
+    // },
+    // async sendRequestMessage(fromUser, admin) {
+    //   let text = {
+    //     phoneNum: admin.person.phoneNum,
+    //     message:
+    //       "You have a new request from " +
+    //       fromUser.fName +
+    //       " " +
+    //       fromUser.lName +
+    //       " for the " +
+    //       fromUser.selectedGroup +
+    //       ".\nPlease view this request: " +
+    //       process.env.VUE_APP_CLIENT_URL +
+    //       "/adminRequests/" +
+    //       admin.id +
+    //       "?requestId=" +
+    //       admin.requestId,
+    //   };
+    //   console.log(text);
+    //   await TwilioServices.sendMessage(text);
+    // },
     async sendPendingMessage(appointId) {
       await this.getAppointmentInfo(appointId);
       console.log(this.appointment.tutors[0].person);
