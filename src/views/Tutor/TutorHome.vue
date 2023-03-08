@@ -383,7 +383,7 @@ export default {
         { text: "Location", value: "location.name" },
         { text: "Status", value: "status" },
         { text: "Type", value: "type" },
-        { text: "Student(s)", value: "student" },
+        { text: "Students", value: "student" },
       ],
       headerFeedback: [
         { text: "Date", value: "date" },
@@ -521,8 +521,7 @@ export default {
               .then((response) => {
                 let studentData = response.data;
                 if (this.appointments[index].type.includes("Group")) {
-                  this.appointments[index].student =
-                    studentData.length + " Student(s)";
+                  this.appointments[index].student = studentData.length;
                 } else if (
                   this.appointments[index].type.includes("Private") &&
                   (this.appointments[index].status.includes("booked") ||

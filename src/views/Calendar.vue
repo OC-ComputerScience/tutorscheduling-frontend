@@ -467,9 +467,10 @@
                       ((studentfName == '' || studentlName == '') &&
                         !emailFound &&
                         (checkRole('Admin') ||
-                          checkPrivilege(
+                          (checkPrivilege(
                             'Sign up students for appointments'
-                          ))) ||
+                          ) &&
+                            selectedAppointment.type.includes('Private')))) ||
                       (checkRole('Admin') &&
                         selectedAppointment.type.includes('Group') &&
                         !adminAddStudent) ||

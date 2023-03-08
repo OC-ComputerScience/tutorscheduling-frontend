@@ -322,7 +322,7 @@ export default {
         { text: "Location", value: "location.name" },
         { text: "Status", value: "status" },
         { text: "Type", value: "type" },
-        { text: "Tutor", value: "tutor" },
+        { text: "Tutors", value: "tutor" },
       ],
       headerFeedback: [
         { text: "Date", value: "date" },
@@ -400,8 +400,7 @@ export default {
               .then((response) => {
                 let tutorData = response.data;
                 if (this.appointments[index].type.includes("Group")) {
-                  this.appointments[index].tutor =
-                    tutorData.length + " Tutor(s)";
+                  this.appointments[index].tutor = tutorData.length;
                 } else if (
                   this.appointments[index].type.includes("Private") &&
                   (this.appointments[index].status.includes("booked") ||
