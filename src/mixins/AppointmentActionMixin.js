@@ -6,6 +6,28 @@ import { SendTextsMixin } from "./SendTextsMixin";
 export const AppointmentActionMixin = {
   mixins: [SendTextsMixin],
   methods: {
+    async getAppointmentInfo(appointId) {
+      await AppointmentServices.getInfoForText(appointId)
+        .then(async (response) => {
+          this.appointment = response.data[0];
+          if (
+            this.appointment.personappointment !== null &&
+            this.appointment.personappointment !== undefined
+          ) {
+            this.appointment.students =
+              this.appointment.personappointment.filter(
+                (pa) => pa.isTutor === false
+              );
+            this.appointment.tutors = this.appointment.personappointment.filter(
+              (pa) => pa.isTutor === true
+            );
+          }
+        })
+        .catch((error) => {
+          this.message = error;
+          console.log("There was an error:", error);
+        });
+    },
     async getAppointmentsForGroup(groupId) {
       let appointments = [];
 
@@ -191,7 +213,13 @@ export const AppointmentActionMixin = {
         pap.personId = fromUser.userID;
         //Update stored data
         await PersonAppointmentServices.addPersonAppointment(pap);
-        await this.sendGroupMessage(fromUser, appointment.id);
+        let textInfo = {
+          appointmentId: this.appointment.id,
+          roleType: fromUser.selectedRole.type,
+          firstName: fromUser.fName,
+          lastName: fromUser.lName,
+        };
+        await TwilioServices.sendGroupMessage(textInfo);
       }
       // need to update group session in google
       await AppointmentServices.updateForGoogle(appointment.id, appointment);
