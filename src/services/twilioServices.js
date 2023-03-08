@@ -23,4 +23,10 @@ export default {
   sendGroupMessage(textInfo) {
     return apiClient.post(`twilio/sendGroup`, textInfo);
   },
+  sendEditedMessage(textInfo) {
+    return apiClient.post(`twilio/sendEdited`, textInfo);
+  },
+  sendCanceledMessage(textInfo) {
+    return apiClient.post(`twilio/sendCanceled`, textInfo);
+  },
 };
