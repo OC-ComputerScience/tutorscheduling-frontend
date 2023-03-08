@@ -346,16 +346,16 @@ export default {
       await this.getAppointments();
       await this.getAppointmentsNeedingFeedback();
       await this.getLocations();
-    }
-
-    if (this.$route.query !== undefined) {
-      for (let i = 0; i < this.appointments.length; i++) {
-        if (
-          this.appointments[i].id === parseInt(this.$route.query.appointmentId)
-        ) {
-          this.selectedAppointment = this.appointments[i];
-          this.appointmentDialog = true;
-          return;
+      if (this.$route.query !== undefined) {
+        for (let i = 0; i < this.appointments.length; i++) {
+          if (
+            this.appointments[i].id ===
+            parseInt(this.$route.query.appointmentId)
+          ) {
+            this.selectedAppointment = this.appointments[i];
+            this.appointmentDialog = true;
+            return;
+          }
         }
       }
     }
