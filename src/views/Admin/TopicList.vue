@@ -1,10 +1,12 @@
 <template>
   <div>
     <v-container>
-      <v-toolbar>
-        <v-toolbar-title>{{ message }}</v-toolbar-title>
-      </v-toolbar>
-      <br /><br />
+      <v-card-title class="text-h4 font-weight-bold pt-4 pb-6 pl-0 accent--text"
+        >{{ title }}
+        <InformationComponent
+          :message="'View, edit and add topics for ' + group.name"
+        ></InformationComponent
+      ></v-card-title>
       <v-card>
         <v-card-title>
           <v-text-field
@@ -15,7 +17,7 @@
             hide-details
           ></v-text-field>
           <v-spacer></v-spacer>
-          <v-btn color="primary" class="mr-4" elevation="2" @click="addTopic">
+          <v-btn color="accent" class="mr-4" elevation="2" @click="addTopic">
             Add
           </v-btn>
         </v-card-title>
@@ -25,7 +27,7 @@
             :sent-bool="isTopicDialogEdit"
             @closeTopicDialog="topicDialog = false"
             @saveOrAddTopic="saveOrAddTopic"
-            @deleteTopic="deleteTopic"
+            @changeTopicStatus="changeTopicStatus"
           ></TopicDialogBody>
         </v-dialog>
         <v-data-table
@@ -44,12 +46,12 @@
 import Utils from "@/config/utils.js";
 import PersonRoleServices from "@/services/personRoleServices.js";
 import TopicServices from "@/services/topicServices.js";
-import PersonTopicServices from "../../../services/personTopicServices";
-import TopicDialogBody from "../../../components/Admin/Topic/TopicDialogBody.vue";
+import TopicDialogBody from "../../components/Admin/TopicDialogBody.vue";
+import InformationComponent from "../../components/InformationComponent.vue";
 
 export default {
   name: "TopicList",
-  components: { TopicDialogBody },
+  components: { TopicDialogBody, InformationComponent },
   props: {
     id: {
       type: [Number, String],
@@ -64,21 +66,20 @@ export default {
       search: "",
       topics: [],
       user: {},
+      group: {},
       headers: [
-        { text: "ID", value: "id" },
         { text: "Name", value: "name" },
         { text: "Abbreviation", value: "abbr" },
         { text: "Status", value: "status" },
       ],
-      message:
-        "Topics - click topic to view or edit topic or click Add to add new topic",
+      title: " Topics",
     };
   },
   async created() {
     this.user = Utils.getStore("user");
     await this.getGroupByPersonRoleId();
     await this.getTopicsForGroup();
-    await this.checkForDisabled();
+    this.title = this.group.name + this.title;
   },
   methods: {
     async getGroupByPersonRoleId() {
@@ -87,7 +88,7 @@ export default {
           this.group = response.data[0].role.group;
         })
         .catch((error) => {
-          this.message = error.response.data.message;
+          this.title = error.response.data.message;
           console.log("There was an error:", error.response);
         });
     },
@@ -97,68 +98,54 @@ export default {
           this.topics = response.data;
         })
         .catch((error) => {
-          this.message = error.response.data.message;
+          this.title = error.response.data.message;
           console.log("There was an error:", error.response);
         });
     },
-    async checkForDisabled() {
-      for (let i = 0; i < this.topics.length; i++) {
-        let topic = this.topics[i];
-        if (topic.status === "disabled") {
-          await PersonTopicServices.deletePersonTopicByTopicId(topic.id).catch(
-            (error) => {
-              this.message = error.response.data.message;
-              console.log("There was an error:", error.response);
-            }
-          );
-        }
-      }
+    async changeTopicStatus(topic) {
+      await TopicServices.updateTopic(topic.id, topic)
+        .then(async () => {
+          this.topicDialog = false;
+          await this.getTopicsForGroup();
+        })
+        .catch((error) => {
+          this.title = error.response.data.message;
+          console.log("There was an error:", error.response);
+        });
     },
-    async deleteTopic() {
-      let id = this.selectedTopic.id;
-      let name = this.selectedTopic.name;
-      let confirmed = confirm(`Are you sure you want to delete ${name}`);
-      if (confirmed) {
-        await TopicServices.deleteTopic(id)
-          .then(async () => {
-            this.topicDialog = false;
-            await this.getTopicsForGroup();
-          })
-          .catch((error) => {
-            this.message = error.response.data.message;
-            console.log("There was an error:", error.response);
-          });
-      }
-    },
+    // Commenting this out for now - we need to create a DB query to check if a topic
+    // is related to any other data. If not, we can let them delete it.
+    // async deleteTopic() {
+    //   let id = this.selectedTopic.id;
+    //   let name = this.selectedTopic.name;
+    //   let confirmed = confirm(`Are you sure you want to delete ${name}`);
+    //   if (confirmed) {
+    //     await TopicServices.deleteTopic(id)
+    //       .then(async () => {
+    //         this.topicDialog = false;
+    //         await this.getTopicsForGroup();
+    //       })
+    //       .catch((error) => {
+    //         this.title = error.response.data.message;
+    //         console.log("There was an error:", error.response);
+    //       });
+    //   }
+    // },
     rowClick: function (item) {
       this.isTopicDialogEdit = true;
       this.selectedTopic = item;
       this.topicDialog = true;
     },
-    addTopic() {
-      this.selectedTopic = {
-        name: "",
-        abbr: "",
-        status: "",
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        groupId: this.group.id,
-      };
-      this.isTopicDialogEdit = false;
-      this.topicDialog = true;
-    },
-    cancel() {
-      this.$router.go(-1);
-    },
     async saveOrAddTopic(topic, isEdit) {
       topic.groupId = this.group.id;
       if (isEdit) {
         await TopicServices.updateTopic(topic.id, topic)
-          .then(() => {
+          .then(async () => {
             this.topicDialog = false;
+            await this.getTopicsForGroup();
           })
           .catch((error) => {
-            this.message = error.response.data.message;
+            this.title = error.response.data.message;
             console.log("There was an error:", error.response);
           });
       } else {
@@ -168,7 +155,7 @@ export default {
             await this.getTopicsForGroup();
           })
           .catch((error) => {
-            this.message = error.response.data.message;
+            this.title = error.response.data.message;
             console.log(error);
           });
       }

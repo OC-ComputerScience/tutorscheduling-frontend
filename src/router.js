@@ -39,7 +39,7 @@ import RoleAdd from "./views/Admin/Role/RoleAdd.vue";
 import RoleView from "./views/Admin/Role/RoleView.vue";
 
 // Topic
-import TopicList from "./views/Admin/Topic/TopicList.vue";
+import TopicList from "./views/Admin/TopicList.vue";
 
 // Student Screens
 
