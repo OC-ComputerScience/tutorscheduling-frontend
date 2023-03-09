@@ -28,14 +28,6 @@
         Edit
       </v-btn>
 
-      <!-- <v-btn
-        color="error"
-        class="mr-4"
-        @click="deletePerson(person.id, person.fName)"
-      >
-        Delete
-      </v-btn> -->
-
       <v-btn class="mr-4" @click="cancel"> Back </v-btn>
 
       <br /><br />
@@ -280,12 +272,23 @@
                 item-value="id"
                 label="Role"
                 required
+                @change="
+                  roles.find((x) => x.id === personrole.roleId).type === 'Admin'
+                    ? (personrole.status = 'approved')
+                    : (personrole.status = '')
+                "
               >
               </v-select>
 
               <v-select
                 v-model="personrole.status"
                 :items="status"
+                :disabled="
+                  personrole.roleId !== undefined
+                    ? roles.find((x) => x.id === personrole.roleId).type ===
+                      'Admin'
+                    : false
+                "
                 label="Status"
                 required
               >
