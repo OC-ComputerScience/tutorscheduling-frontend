@@ -136,6 +136,18 @@ export default {
       this.selectedTopic = item;
       this.topicDialog = true;
     },
+    addTopic() {
+      this.selectedTopic = {
+        name: "",
+        abbr: "",
+        status: "",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        groupId: this.group.id,
+      };
+      this.isTopicDialogEdit = false;
+      this.topicDialog = true;
+    },
     async saveOrAddTopic(topic, isEdit) {
       topic.groupId = this.group.id;
       if (isEdit) {
