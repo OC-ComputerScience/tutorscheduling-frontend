@@ -379,9 +379,6 @@ export const AppointmentActionMixin = {
       }
     },
     async cancelAppointment(appointment, fromUser) {
-      // tutor
-      //   private available or group available with no students
-      //   everything else
       let updatedAppointment = {
         id: appointment.id,
         date: appointment.originalDate,
