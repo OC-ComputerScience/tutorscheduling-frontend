@@ -30,10 +30,7 @@ import PersonAdd from "./views/Admin/Person/PersonAdd.vue";
 import PersonView from "./views/Admin/Person/PersonView.vue";
 
 // Role
-import RoleList from "./views/Admin/Role/RoleList.vue";
-import RoleEdit from "./views/Admin/Role/RoleEdit.vue";
-import RoleAdd from "./views/Admin/Role/RoleAdd.vue";
-import RoleView from "./views/Admin/Role/RoleView.vue";
+import RoleList from "./views/Admin/RoleList.vue";
 
 // Topic
 import TopicList from "./views/Admin/TopicList.vue";
@@ -143,27 +140,9 @@ const router = new Router({
       props: true,
     },
     {
-      path: "/roleAdd/:id",
-      name: "roleAdd",
-      component: RoleAdd,
-      props: true,
-    },
-    {
-      path: "/roleEdit/:id",
-      name: "roleEdit",
-      component: RoleEdit,
-      props: true,
-    },
-    {
       path: "/roleList/:id",
       name: "roleList",
       component: RoleList,
-      props: true,
-    },
-    {
-      path: "/roleView/:id/:roleId",
-      name: "roleView",
-      component: RoleView,
       props: true,
     },
     {

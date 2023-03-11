@@ -1,10 +1,12 @@
 <template>
   <div>
     <v-container>
-      <v-toolbar>
-        <v-toolbar-title>{{ message }}</v-toolbar-title>
-      </v-toolbar>
-      <br /><br />
+      <v-card-title class="text-h4 font-weight-bold pt-4 pb-6 pl-0 accent--text"
+        >{{ title }}
+        <InformationComponent
+          :message="'View, edit and add roles for ' + group.name"
+        ></InformationComponent
+      ></v-card-title>
       <v-card>
         <v-card-title>
           <v-text-field
@@ -18,9 +20,15 @@
           <v-btn color="accent" class="mr-4" elevation="2" @click="addRole">
             Add
           </v-btn>
-
-          <v-btn class="mr-4" @click="cancel"> Back </v-btn>
         </v-card-title>
+        <v-dialog v-model="roleDialog" persistent max-width="800px">
+          <RoleDialogBody
+            :sent-role="selectedRole"
+            :sent-bool="isRoleDialogEdit"
+            @closeRoleDialog="roleDialog = false"
+            @saveOrAddRole="saveOrAddRole"
+          ></RoleDialogBody>
+        </v-dialog>
         <v-data-table
           :headers="headers"
           :search="search"
@@ -37,10 +45,12 @@
 import Utils from "@/config/utils.js";
 import RoleServices from "@/services/roleServices.js";
 import PersonRoleServices from "@/services/personRoleServices.js";
+import RoleDialogBody from "../../components/Admin/RoleDialogBody.vue";
+import InformationComponent from "../../components/InformationComponent.vue";
 
 export default {
   name: "App",
-  components: {},
+  components: { RoleDialogBody, InformationComponent },
   props: {
     id: {
       type: [Number, String],
@@ -49,28 +59,25 @@ export default {
   },
   data() {
     return {
+      title: " Roles",
+      roleDialog: false,
+      isRoleDialogEdit: true,
+      selectedRole: {},
       search: "",
       roles: [],
       group: {},
       user: {},
       headers: [
-        { text: "ID", value: "id" },
         { text: "Type", value: "type" },
         { text: "Group", value: "group.name" },
       ],
-      message:
-        "Roles - click role to view or edit role or click Add to add new role",
     };
   },
   async created() {
     this.user = Utils.getStore("user");
-    await this.getGroupByPersonRoleId()
-      .then(() => {
-        this.getRolesForGroup();
-      })
-      .catch((error) => {
-        this.message = error.response.data.message;
-      });
+    await this.getGroupByPersonRoleId();
+    await this.getRolesForGroup();
+    this.title = this.group.name + this.title;
   },
   methods: {
     async getGroupByPersonRoleId() {
@@ -93,43 +100,44 @@ export default {
           console.log("There was an error:", error.response);
         });
     },
-    deleteRole(id, name) {
-      let confirmed = confirm(`Are you sure you want to delete ${name}`);
-      if (confirmed) {
-        RoleServices.deleteRole(id)
-          .then(() => {
-            this.getRoles(this.start, this.length);
-          })
-          .catch((error) => {
-            this.message = error.response.data.message;
-            console.log("There was an error:", error.response);
-          });
-      }
-    },
-    getPrevious() {
-      if (this.start >= this.length) {
-        this.start -= this.length;
-        this.getRoles(this.start, this.length);
-      }
-    },
-    getNext() {
-      if (this.courses.length === this.length) {
-        this.start += this.length;
-        this.getRoles(this.start, this.length);
-      }
-    },
-    rowClick: function (item, row) {
-      row.select(true);
-      this.$router.push({
-        name: "roleView",
-        params: { id: this.id, roleId: item.id },
-      });
+    rowClick: function (item) {
+      this.isRoleDialogEdit = true;
+      this.selectedRole = item;
+      this.roleDialog = true;
     },
     addRole() {
-      this.$router.push({ name: "roleAdd" });
+      this.selectedRole = {
+        type: "",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        groupId: this.group.id,
+      };
+      this.isRoleDialogEdit = false;
+      this.roleDialog = true;
     },
-    cancel() {
-      this.$router.go(-1);
+    async saveOrAddRole(role, isEdit) {
+      role.groupId = this.group.id;
+      if (isEdit) {
+        await RoleServices.updateRole(role.id, role)
+          .then(async () => {
+            this.roleDialog = false;
+            await this.getRolesForGroup();
+          })
+          .catch((error) => {
+            this.title = error.response.data.message;
+            console.log("There was an error:", error.response);
+          });
+      } else {
+        await RoleServices.addRole(role)
+          .then(async () => {
+            this.roleDialog = false;
+            await this.getRolesForGroup();
+          })
+          .catch((error) => {
+            this.title = error.response.data.message;
+            console.log(error);
+          });
+      }
     },
   },
 };
