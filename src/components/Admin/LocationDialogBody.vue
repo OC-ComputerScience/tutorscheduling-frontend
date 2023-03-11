@@ -124,8 +124,7 @@ export default {
       this.location.name = document.getElementById("name").value;
       this.location.type = this.selectedBuilding.typeName;
       this.location.building = document.getElementById("building").value;
-      this.location.description =
-        document.getElementById("description").typeName;
+      this.location.description = document.getElementById("description").value;
 
       if (this.isEdit) {
         this.location.updatedAt = new Date();
