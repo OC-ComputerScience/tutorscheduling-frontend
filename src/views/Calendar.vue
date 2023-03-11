@@ -9,7 +9,9 @@
             You can filter the appointments by a desired Topic or Tutor."
         ></InformationComponent
         ><v-spacer></v-spacer>
-        <v-card-title>{{ role.type }}</v-card-title>
+        <v-card-title class="pt-0 pb-0 pl-0 pr-0 accent--text">{{
+          role.type
+        }}</v-card-title>
       </v-card-title>
       <v-alert v-model="showAlert" dismissible :type="alertType">{{
         alert
