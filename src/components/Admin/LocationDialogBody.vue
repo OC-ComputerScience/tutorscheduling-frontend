@@ -28,7 +28,6 @@
       <v-select
         id="type"
         v-model="selectedBuilding"
-        :value="location.type"
         :items="types"
         item-text="typeName"
         return-object
@@ -99,19 +98,26 @@ export default {
     return {
       statuses: ["active", "disabled"],
       types: [
-        { value: "1", typeName: "In-Person" },
-        { value: "2", typeName: "Online" },
+        { value: "In-Person", typeName: "In-Person" },
+        { value: "Online", typeName: "Online" },
       ],
       location: this.sentLocation,
       isEdit: this.sentBool,
       isDisabled: this.sentLocation.status === "disabled" ? true : false,
       disableConfirmDialog: false,
-      selectedBuilding: "",
+      selectedBuilding: {
+        value: this.sentLocation.type,
+        typeName: this.sentLocation.type,
+      },
     };
   },
   watch: {
     sentLocation(newLocation) {
       this.location = newLocation;
+      this.selectedBuilding = {
+        value: this.location.type,
+        typeName: this.location.type,
+      };
       this.isDisabled = this.location.status === "disabled" ? true : false;
     },
     sentBool(newVal) {
