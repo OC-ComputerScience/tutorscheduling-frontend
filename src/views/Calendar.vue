@@ -1,18 +1,16 @@
 <template>
   <div>
     <v-container>
-      <v-toolbar>
-        <v-toolbar-title>{{ message }}</v-toolbar-title>
+      <v-card-title class="text-h4 font-weight-bold pt-4 pb-6 pl-0 accent--text"
+        >{{ title }}
         <InformationComponent
           message="Select an appointment to view information, book the appointment,
             make changes, etc.
-      
             You can filter the appointments by a desired Topic or Tutor."
-        ></InformationComponent>
-        <v-spacer></v-spacer>
-        <v-toolbar-title>{{ role.type }}</v-toolbar-title>
-      </v-toolbar>
-      <br />
+        ></InformationComponent
+        ><v-spacer></v-spacer>
+        <v-card-title>{{ role.type }}</v-card-title>
+      </v-card-title>
       <v-alert v-model="showAlert" dismissible :type="alertType">{{
         alert
       }}</v-alert>
@@ -35,7 +33,7 @@
                 color="grey darken-2"
                 @click="viewMonth()"
               >
-                Reset
+                Today
               </v-btn>
               <!-- Navigates calendar forward and back -->
               <v-btn fab text small color="grey darken-2" @click="prev">
@@ -713,7 +711,7 @@ export default {
     alert: "",
     alertType: "success",
     overlay: true,
-    message: "Calendar",
+    title: " Calendar",
     mode: "stack",
     secondTime: true,
     //appointment info
@@ -797,6 +795,7 @@ export default {
     await this.getTutorsForGroup();
     await this.getLocationsForGroup();
     await this.initializeData();
+    this.title = this.group.name + this.title;
   },
   methods: {
     // //Initialize data for calendar
