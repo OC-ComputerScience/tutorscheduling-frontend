@@ -67,10 +67,7 @@ export default {
       roles: [],
       group: {},
       user: {},
-      headers: [
-        { text: "Type", value: "type" },
-        { text: "Group", value: "group.name" },
-      ],
+      headers: [{ text: "Type", value: "type" }],
     };
   },
   async created() {
