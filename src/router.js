@@ -22,10 +22,7 @@ import GroupAdd from "./views/Admin/Group/GroupAdd.vue";
 import GroupView from "./views/Admin/Group/GroupView.vue";
 
 // Location
-import LocationList from "./views/Admin/Location/LocationList.vue";
-import LocationEdit from "./views/Admin/Location/LocationEdit.vue";
-import LocationAdd from "./views/Admin/Location/LocationAdd.vue";
-import LocationView from "./views/Admin/Location/LocationView.vue";
+import LocationList from "./views/Admin/LocationList.vue";
 
 // Person
 import PersonList from "./views/Admin/Person/PersonList.vue";
@@ -33,10 +30,7 @@ import PersonAdd from "./views/Admin/Person/PersonAdd.vue";
 import PersonView from "./views/Admin/Person/PersonView.vue";
 
 // Role
-import RoleList from "./views/Admin/Role/RoleList.vue";
-import RoleEdit from "./views/Admin/Role/RoleEdit.vue";
-import RoleAdd from "./views/Admin/Role/RoleAdd.vue";
-import RoleView from "./views/Admin/Role/RoleView.vue";
+import RoleList from "./views/Admin/RoleList.vue";
 
 // Topic
 import TopicList from "./views/Admin/TopicList.vue";
@@ -122,27 +116,9 @@ const router = new Router({
       props: true,
     },
     {
-      path: "/locationAdd/:id",
-      name: "locationAdd",
-      component: LocationAdd,
-      props: true,
-    },
-    {
-      path: "/locationEdit/:id",
-      name: "locationEdit",
-      component: LocationEdit,
-      props: true,
-    },
-    {
       path: "/locationList/:id",
       name: "locationList",
       component: LocationList,
-      props: true,
-    },
-    {
-      path: "/locationView/:id/:locationId",
-      name: "locationView",
-      component: LocationView,
       props: true,
     },
     {
@@ -164,27 +140,9 @@ const router = new Router({
       props: true,
     },
     {
-      path: "/roleAdd/:id",
-      name: "roleAdd",
-      component: RoleAdd,
-      props: true,
-    },
-    {
-      path: "/roleEdit/:id",
-      name: "roleEdit",
-      component: RoleEdit,
-      props: true,
-    },
-    {
       path: "/roleList/:id",
       name: "roleList",
       component: RoleList,
-      props: true,
-    },
-    {
-      path: "/roleView/:id/:roleId",
-      name: "roleView",
-      component: RoleView,
       props: true,
     },
     {
