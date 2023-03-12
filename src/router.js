@@ -25,7 +25,7 @@ import GroupView from "./views/Admin/Group/GroupView.vue";
 import LocationList from "./views/Admin/LocationList.vue";
 
 // Person
-import PersonList from "./views/Admin/Person/PersonList.vue";
+import PersonList from "./views/Admin/PersonList.vue";
 import PersonAdd from "./views/Admin/Person/PersonAdd.vue";
 import PersonView from "./views/Admin/Person/PersonView.vue";
 
