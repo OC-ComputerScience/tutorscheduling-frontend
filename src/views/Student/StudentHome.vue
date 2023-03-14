@@ -362,7 +362,21 @@ export default {
   },
   methods: {
     async directToCancel() {
-      await this.cancelAppointment(this.selectedAppointment, this.user);
+      let fromUser = {
+        fName: this.user.fName,
+        lName: this.user.lName,
+        userID: this.user.userID,
+        type: this.user.selectedRole.type,
+      };
+      await AppointmentServices.cancelAppointment(
+        this.selectedAppointment.id,
+        fromUser
+      ).catch((error) => {
+        this.alertType = "error";
+        this.alert = error.response.data.message;
+        this.showAlert = true;
+        console.log("There was an error:", error.response);
+      });
       await this.getAppointments();
       this.appointmentDialog = false;
       this.showDeleteConfirmation = false;

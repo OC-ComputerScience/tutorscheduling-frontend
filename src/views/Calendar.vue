@@ -1,7 +1,8 @@
 <template>
   <div>
     <v-container>
-      <v-card-title class="text-h4 font-weight-bold pt-4 pb-6 pl-0 accent--text"
+      <v-card-title
+        class="text-h4 font-weight-bold pt-4 pb-6 pl-0 pr-0 accent--text"
         >{{ title }}
         <InformationComponent
           message="Select an appointment to view information, book the appointment,
@@ -9,7 +10,7 @@
             You can filter the appointments by a desired Topic or Tutor."
         ></InformationComponent
         ><v-spacer></v-spacer>
-        <v-card-title class="pt-0 pb-0 pl-0 pr-0 accent--text">{{
+        <v-card-title class="text-right pt-0 pb-0 pl-0 pr-0 accent--text">{{
           role.type
         }}</v-card-title>
       </v-card-title>
@@ -1482,7 +1483,21 @@ export default {
           this.selectedAppointment
         );
       } else {
-        await this.cancelAppointment(this.selectedAppointment, this.user);
+        let fromUser = {
+          fName: this.user.fName,
+          lName: this.user.lName,
+          userID: this.user.userID,
+          type: this.user.selectedRole.type,
+        };
+        await AppointmentServices.cancelAppointment(
+          this.selectedAppointment.id,
+          fromUser
+        ).catch((error) => {
+          this.alertType = "error";
+          this.alert = error.response.data.message;
+          this.showAlert = true;
+          console.log("There was an error:", error.response);
+        });
       }
       await this.initializeData();
     },

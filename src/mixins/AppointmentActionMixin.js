@@ -170,7 +170,7 @@ export const AppointmentActionMixin = {
         pap.personId = student.id;
         await PersonAppointmentServices.addPersonAppointment(pap);
         temp.status = "booked";
-        await AppointmentServices.updateForGoogle(this.appointment.id, temp);
+        await AppointmentServices.updateAppointment(this.appointment.id, temp);
         // get information for texting
         await this.getAppointmentInfo(appointment.id);
         let textInfo = {
@@ -270,7 +270,7 @@ export const AppointmentActionMixin = {
         }
       }
       // need to update group session in google
-      await AppointmentServices.updateForGoogle(appointment.id, appointment);
+      await AppointmentServices.updateAppointment(appointment.id, appointment);
     },
     async editAppointment(fromUser, appointment) {
       let updatedAppointment = {
@@ -314,7 +314,7 @@ export const AppointmentActionMixin = {
           await TwilioServices.sendEditedMessage(textInfo);
         }
       }
-      await AppointmentServices.updateForGoogle(
+      await AppointmentServices.updateAppointment(
         updatedAppointment.id,
         updatedAppointment
       );
@@ -336,7 +336,7 @@ export const AppointmentActionMixin = {
       if (confirm) {
         if (appointment.type === "Private") {
           updatedAppointment.status = "booked";
-          await AppointmentServices.updateForGoogle(
+          await AppointmentServices.updateAppointment(
             updatedAppointment.id,
             updatedAppointment
           );
@@ -376,210 +376,6 @@ export const AppointmentActionMixin = {
           updatedAppointment.id,
           updatedAppointment
         );
-      }
-    },
-    async cancelAppointment(appointment, fromUser) {
-      let updatedAppointment = {
-        id: appointment.id,
-        date: appointment.originalDate,
-        startTime: appointment.originalStart,
-        endTime: appointment.originalEnd,
-        type: appointment.type,
-        status: appointment.status,
-        preSessionInfo: appointment.preSessionInfo,
-        groupId: appointment.groupId,
-        topicId: appointment.topicId,
-        locationId: appointment.locationId,
-      };
-      await this.getAppointmentInfo(appointment.id);
-      if (fromUser.selectedRole.type === "Student") {
-        if (this.appointment.type === "Private") {
-          let textInfo = {
-            appointmentType: this.appointment.type,
-            toPhoneNum: this.appointment.tutors[0].person.phoneNum,
-            toPersonRoleId: this.appointment.tutors[0].person.personrole[0].id,
-            date: this.formatDate(this.appointment.date),
-            startTime: this.calcTime(this.appointment.startTime),
-            topicName: this.appointment.topic.name,
-            fromFirstName: fromUser.fName,
-            fromLastName: fromUser.lName,
-            fromRoleType: "Student",
-          };
-          console.log(textInfo);
-          await TwilioServices.sendCanceledMessage(textInfo);
-          if (this.appointment.status === "pending") {
-            await this.pendingStudentCancel(updatedAppointment);
-          } else if (this.appointment.status === "booked") {
-            await this.bookedStudentCancel(updatedAppointment, fromUser);
-          }
-        } else if (this.appointment.type === "Group") {
-          await this.groupStudentCancel(updatedAppointment, fromUser);
-        }
-      } else if (fromUser.selectedRole.type === "Tutor") {
-        if (
-          this.appointment.tutors.length === 1 &&
-          this.appointment.students.length === 0
-        ) {
-          await this.emptyTutorCancel();
-        } else if (
-          this.appointment.tutors.length === 1 &&
-          this.appointment.students.length > 0
-        ) {
-          await this.oneTutorCancel(updatedAppointment, fromUser);
-        } else if (this.appointment.tutors.length > 1) {
-          await this.swapTutorCancel(updatedAppointment, fromUser);
-        }
-      }
-    },
-    async cancelFeedbackMessage(personAppointments, fromUser) {
-      for (let i = 0; i < personAppointments.length; i++) {
-        let pa = personAppointments[i];
-        let temp = {
-          id: pa.id,
-          isTutor: pa.isTutor,
-          feedbacknumber: pa.feedbacknumber,
-          feedbacktext: `Canceled by ${fromUser.fName} ${fromUser.lName}`,
-          appointmentId: pa.appointmentId,
-          personId: pa.personId,
-        };
-        await PersonAppointmentServices.updatePersonAppointment(temp.id, temp);
-      }
-    },
-    async pendingStudentCancel(updatedAppointment) {
-      // don't need to notify tutor because appointment hasn't been confirmed yet
-      updatedAppointment.status = "available";
-      updatedAppointment.locationId = null;
-      updatedAppointment.topicId = null;
-      updatedAppointment.preSessionInfo = "";
-      // don't need to update google event because it doesn't exist
-      await AppointmentServices.updateAppointment(
-        updatedAppointment.id,
-        updatedAppointment
-      );
-      // only need to delete the student's personappointment
-      await PersonAppointmentServices.deletePersonAppointment(
-        this.appointment.students[0].id
-      );
-    },
-    async bookedStudentCancel(updatedAppointment, fromUser) {
-      await this.cancelFeedbackMessage(
-        this.appointment.personappointment,
-        fromUser
-      );
-      updatedAppointment.status = "studentCancel";
-      await AppointmentServices.updateForGoogle(
-        updatedAppointment.id,
-        updatedAppointment
-      );
-      // need to make a new appointment for the same time
-      let temp = {
-        date: this.appointment.date,
-        startTime: this.appointment.originalStart,
-        endTime: this.appointment.originalEnd,
-        type: this.appointment.type,
-        status: "available",
-        preSessionInfo: "",
-        groupId: this.appointment.groupId,
-      };
-      await AppointmentServices.addAppointment(temp).then(async (response) => {
-        // private will only have one tutor
-        let pap = {
-          isTutor: true,
-          appointmentId: response.data.id,
-          personId: this.appointment.tutors[0].personId,
-        };
-        await PersonAppointmentServices.addPersonAppointment(pap);
-      });
-    },
-    async groupStudentCancel(updatedAppointment, fromUser) {
-      let textInfo = {
-        appointmentType: this.appointment.type,
-        toPhoneNum: this.appointment.tutors[0].person.phoneNum,
-        toPersonRoleId: this.appointment.tutors[0].person.personrole[0].id,
-        date: this.formatDate(this.appointment.date),
-        startTime: this.calcTime(this.appointment.startTime),
-        topicName: this.appointment.topic.name,
-        fromFirstName: fromUser.fName,
-        fromLastName: fromUser.lName,
-        fromRoleType: "Student",
-      };
-      console.log(textInfo);
-      await TwilioServices.sendCanceledMessage(textInfo);
-      let studentPersonAppointment = this.appointment.students.filter(
-        (student) => student.personId === fromUser.userID
-      )[0];
-      // delete student's pa
-      await PersonAppointmentServices.deletePersonAppointment(
-        studentPersonAppointment.id
-      );
-      await AppointmentServices.updateForGoogle(
-        updatedAppointment.id,
-        updatedAppointment
-      );
-    },
-    async emptyTutorCancel() {
-      await PersonAppointmentServices.deletePersonAppointment(
-        this.appointment.personappointment[0].id
-      );
-      await AppointmentServices.deleteAppointment(this.appointment.id);
-    },
-    async oneTutorCancel(updatedAppointment, fromUser) {
-      await this.cancelFeedbackMessage(
-        this.appointment.personappointment,
-        fromUser
-      );
-      let textInfo = {
-        appointmentType: this.appointment.type,
-        toPhoneNum: "",
-        toPersonRoleId: "",
-        date: this.formatDate(this.appointment.date),
-        startTime: this.calcTime(this.appointment.startTime),
-        topicName: this.appointment.topic.name,
-        fromFirstName: fromUser.fName,
-        fromLastName: fromUser.lName,
-        fromRoleType: "Tutor",
-      };
-      console.log(textInfo);
-      // notify the tutors
-      for (let i = 0; i < this.appointment.students.length; i++) {
-        textInfo.toPhoneNum = this.appointment.students[i].person.phoneNum;
-        textInfo.toPersonRoleId =
-          this.appointment.students[i].person.personrole[0].id;
-        await TwilioServices.sendCanceledMessage(textInfo);
-      }
-      updatedAppointment.status = "tutorCancel";
-      await AppointmentServices.updateForGoogle(
-        updatedAppointment.id,
-        updatedAppointment
-      );
-    },
-    async swapTutorCancel(updatedAppointment, fromUser) {
-      // if the tutor canceling owns the google event, then change the owner of the event to the other tutor
-      // then delete the tutor's personappointment
-      // then notify the other tutors
-      // TODO find the correct tutor person role to delete
-      await PersonAppointmentServices.deletePersonAppointment(
-        this.appointment.personappointment[0].id
-      );
-      let textInfo = {
-        appointmentType: this.appointment.type,
-        toPhoneNum: "",
-        toPersonRoleId: "",
-        date: this.formatDate(this.appointment.date),
-        startTime: this.calcTime(this.appointment.startTime),
-        topicName: this.appointment.topic.name,
-        fromFirstName: fromUser.fName,
-        fromLastName: fromUser.lName,
-        fromRoleType: "Tutor",
-      };
-      console.log(textInfo);
-      for (let i = 0; i < this.appointment.tutors.length; i++) {
-        if (this.appointment.tutors[i].personId !== fromUser.userID) {
-          textInfo.toPhoneNum = this.appointment.tutors[i].person.phoneNum;
-          textInfo.toPersonRoleId =
-            this.appointment.tutors[i].person.personrole[0].id;
-          await TwilioServices.sendCanceledMessage(textInfo);
-        }
       }
     },
   },

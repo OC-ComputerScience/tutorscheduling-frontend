@@ -340,7 +340,7 @@ export default {
     topics: [],
     location: "",
     locations: [],
-    personroleprivileges: [],
+    personRolePrivileges: [],
     sessionValues: [
       { text: "Private", value: "Private" },
       { text: "Group", value: "Group" },
@@ -538,8 +538,9 @@ export default {
                       if (
                         this.appointment.type === "Group" ||
                         this.appointment.type === "group"
-                      )
-                        await AppointmentServices.updateForGoogle(
+                      ) {
+                        // this adds the appointment to google
+                        await AppointmentServices.updateAppointment(
                           tempApp.id,
                           tempApp
                         ).catch((error) => {
@@ -548,6 +549,7 @@ export default {
                           this.showAlert = true;
                           console.log("There was an error:", error.response);
                         });
+                      }
                     })
                     .catch((error) => {
                       this.alertType = "error";
@@ -663,7 +665,7 @@ export default {
     async getPrivilegesForPersonRole() {
       await PersonRolePrivilegeServices.getPrivilegeByPersonRole(this.id)
         .then((response) => {
-          this.personroleprivileges = response.data;
+          this.personRolePrivileges = response.data;
         })
         .catch((error) => {
           this.alertType = "error";
@@ -674,7 +676,7 @@ export default {
     },
     checkPrivilege(privilege) {
       let hasPriv = false;
-      this.personroleprivileges.forEach((priv) => {
+      this.personRolePrivileges.forEach((priv) => {
         if (priv.privilege === privilege) hasPriv = true;
       });
       return hasPriv;

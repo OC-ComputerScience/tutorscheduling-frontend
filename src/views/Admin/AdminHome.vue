@@ -1,11 +1,12 @@
 <template>
   <div>
     <v-container>
-      <v-card-title class="text-h4 font-weight-bold pt-4 pb-6 pl-0 accent--text"
+      <v-card-title
+        class="text-h4 font-weight-bold pt-4 pb-6 pl-0 pr-0 accent--text"
         >Hello, {{ user.fName }}!
         <InformationComponent :message="headerMessage"></InformationComponent>
         <v-spacer></v-spacer>
-        <v-card-title class="pt-0 pb-0 pl-0 pr-0 accent--text"
+        <v-card-title class="text-right pt-0 pb-0 pl-0 pr-0 accent--text"
           >Admin</v-card-title
         >
       </v-card-title>
