@@ -12,6 +12,7 @@
         :value="person.fName"
         :counter="25"
         label="First Name"
+        :rules="[(v) => !!v || 'This field is required']"
       ></v-text-field>
 
       <v-text-field
@@ -20,6 +21,7 @@
         :value="person.lName"
         :counter="25"
         label="Last Name"
+        :rules="[(v) => !!v || 'This field is required']"
       ></v-text-field>
 
       <v-text-field
