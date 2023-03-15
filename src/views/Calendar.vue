@@ -142,12 +142,13 @@
               offset-x
             >
               <v-card color="grey lighten-4" min-width="350px" flat>
-                <v-toolbar :color="selectedEvent.color" dark>
-                  <v-btn icon>
-                    <v-icon>mdi-pencil</v-icon>
-                  </v-btn>
+                <v-card-title
+                  :class="selectedEvent.color + ' white--text mb-2'"
+                  >{{ selectedEvent.name }}</v-card-title
+                >
+                <!-- <v-toolbar :color="selectedEvent.color" dark>
                   <v-toolbar-title>{{ selectedEvent.name }}</v-toolbar-title>
-                </v-toolbar>
+                </v-toolbar> -->
                 <!-- How to show tutor? -->
                 <v-card-text v-if="selectedAppointment != null">
                   <b>Time slot:</b>
@@ -244,7 +245,10 @@
                         dense
                         :disabled="datePast"
                         :readonly="
-                          !isTutorEvent || (isTutorEvent && checkRole('Admin'))
+                          !isTutorEvent ||
+                          (isTutorEvent && checkRole('Admin')) ||
+                          checkStatus('tutorCancel') ||
+                          checkStatus('studentCancel')
                         "
                         @change="saveChanges = true"
                       >
@@ -399,7 +403,11 @@
                       auto-grow
                       rows="1"
                       :readonly="!isTutorEvent"
-                      :disabled="datePast"
+                      :disabled="
+                        datePast ||
+                        checkStatus('tutorCancel') ||
+                        checkStatus('studentCancel')
+                      "
                       @change="saveChanges = true"
                     ></v-textarea>
                   </span>
@@ -552,7 +560,10 @@
                       ((checkStatus('booked') &&
                         !checkRole('Admin') &&
                         (isTutorEvent || isPrivateBook)) ||
-                        (isGroupBook && !adminAddStudent) ||
+                        (isGroupBook &&
+                          !adminAddStudent &&
+                          !checkStatus('tutorCancel') &&
+                          !checkStatus('studentCancel')) ||
                         (isTutorEvent &&
                           (checkStatus('available') ||
                             checkStatus('booked'))) ||
@@ -975,7 +986,7 @@ export default {
           });
       }
     },
-    async isStudentofAppointment() {
+    async isStudentOfAppointment() {
       await PersonAppointmentServices.getPersonAppointmentForPerson(
         this.user.userID
       ).then((response) => {
@@ -1077,20 +1088,20 @@ export default {
       this.keyVisible = false;
     },
     //Animates Event card popping up
-    showEvent({ nativeEvent, event }) {
-      const open = () => {
+    async showEvent({ nativeEvent, event }) {
+      const open = async () => {
         this.selectedEvent = event;
-        AppointmentServices.getAppointment(event.appointmentId)
+        await AppointmentServices.getAppointment(event.appointmentId)
           .then(async (response) => {
             this.selectedAppointment = response.data;
             this.newStart = this.selectedAppointment.startTime;
             this.newEnd = this.selectedAppointment.endTime;
             this.appointmentType = this.selectedAppointment.type;
-            this.isTutorOfSelectedEvent();
-            this.checkGroupBooking();
+            await this.isTutorOfSelectedEvent();
+            await this.checkGroupBooking();
             this.updateTimes();
-            this.updatePeople();
-            this.isStudentofAppointment();
+            await this.updatePeople();
+            await this.isStudentOfAppointment();
             this.checkAppointmentIfPast();
             if (
               this.selectedAppointment.type.includes("Private") &&
