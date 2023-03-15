@@ -22,7 +22,7 @@
             Add
           </v-btn>
         </v-card-title>
-        <v-dialog v-model="personDialog" persistent max-width="1000px">
+        <v-dialog v-model="personDialog" persistent max-width="1200px">
           <PersonDialogBody
             :sent-person="selectedPerson"
             :sent-bool="isPersonDialogEdit"
@@ -62,7 +62,7 @@ export default {
   data() {
     return {
       title: " People",
-      personDialog: true,
+      personDialog: false,
       isPersonDialogEdit: true,
       selectedPerson: {},
       user: {},
