@@ -71,19 +71,18 @@
 <script>
 import RequestServices from "@/services/requestServices.js";
 import TopicServices from "@/services/topicServices.js";
+import TwilioServices from "@/services/twilioServices";
 import PersonServices from "@/services/personServices.js";
 import PersonRoleServices from "@/services/personRoleServices.js";
 import RoleServices from "@/services/roleServices.js";
 import Utils from "@/config/utils.js";
 import InformationComponent from "../../components/InformationComponent.vue";
-import { SendTextsMixin } from "../../mixins/SendTextsMixin";
 
 export default {
   name: "StudentAddRequest",
   components: {
     InformationComponent,
   },
-  mixins: [SendTextsMixin],
   props: {
     id: {
       type: [Number, String],
@@ -162,8 +161,17 @@ export default {
                 "Receive notifications for requests",
                 tempA.personroleprivilege
               )
-            )
-              await this.sendRequestMessage(this.user, tempA);
+            ) {
+              let textInfo = {
+                fromFirstName: this.user.fName,
+                fromLastName: this.user.lName,
+                adminPersonRoleId: tempA.id,
+                requestId: response.data.id,
+                adminPhoneNum: tempA.person.phoneNum,
+                groupName: this.user.selectedGroup,
+              };
+              await TwilioServices.sendRequestMessage(textInfo);
+            }
           }
 
           this.$router.go(-1);

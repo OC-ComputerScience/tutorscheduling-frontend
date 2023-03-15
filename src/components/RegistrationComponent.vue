@@ -144,17 +144,17 @@
 import GroupServices from "@/services/groupServices";
 import RoleServices from "@/services/roleServices";
 import PersonRoleServices from "@/services/personRoleServices";
+import TwilioServices from "@/services/twilioServices";
 import Utils from "@/config/utils.js";
 import GroupViewComponent from "./GroupViewComponent.vue";
 import { RedirectToPageMixin } from "../mixins/RedirectToPageMixin";
-import { SendTextsMixin } from "../mixins/SendTextsMixin";
 
 export default {
   name: "RegistrationComponent",
   components: {
     GroupViewComponent,
   },
-  mixins: [RedirectToPageMixin, SendTextsMixin],
+  mixins: [RedirectToPageMixin],
   data() {
     return {
       roleDialog: true,
@@ -261,10 +261,17 @@ export default {
                       tempA.personroleprivilege
                     )
                   ) {
-                    let group = this.groups.find(
-                      (group) => group.id == role.groupId
-                    ).name;
-                    this.sendApplicationMessage(this.user, tempA, group);
+                    let textInfo = {
+                      fromFirstName: this.user.fName,
+                      fromLastName: this.user.lName,
+                      adminPersonRoleId: tempA.id,
+                      applicationPersonRoleId: response.data.id,
+                      adminPhoneNum: tempA.person.phoneNum,
+                      groupName: this.groups.find(
+                        (group) => group.id == role.groupId
+                      ).name,
+                    };
+                    await TwilioServices.sendApplicationMessage(textInfo);
                   }
                 }
               }

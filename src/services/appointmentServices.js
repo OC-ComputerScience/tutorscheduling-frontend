@@ -68,11 +68,11 @@ export default {
   addAppointment(appointment) {
     return apiClient.post("appointment", appointment);
   },
+  cancelAppointment(appointmentId, appointment) {
+    return apiClient.post("appointment/cancel/" + appointmentId, appointment);
+  },
   updateAppointment(appointmentId, appointment) {
     return apiClient.put("appointment/" + appointmentId, appointment);
-  },
-  updateForGoogle(appointmentId, appointment) {
-    return apiClient.put("appointment/google/" + appointmentId, appointment);
   },
   deleteAppointment(appointmentId) {
     return apiClient.delete("appointment/" + appointmentId);

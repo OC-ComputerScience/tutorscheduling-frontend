@@ -4,7 +4,7 @@
       <v-card-title class="text-h4 font-weight-bold pt-4 pb-6 pl-0 accent--text"
         >{{ title }}
         <InformationComponent
-          :message="'View, edit and add locations for ' + group.name"
+          :message="'View, edit and add locations for ' + group.name + '.'"
         ></InformationComponent
       ></v-card-title>
       <v-card>

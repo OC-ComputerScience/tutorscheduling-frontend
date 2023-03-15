@@ -322,7 +322,7 @@ export default {
         { text: "Location", value: "location.name" },
         { text: "Status", value: "status" },
         { text: "Type", value: "type" },
-        { text: "Tutor", value: "tutor" },
+        { text: "Tutors", value: "tutor" },
       ],
       headerFeedback: [
         { text: "Date", value: "date" },
@@ -346,23 +346,37 @@ export default {
       await this.getAppointments();
       await this.getAppointmentsNeedingFeedback();
       await this.getLocations();
-    }
-
-    if (this.$route.query !== undefined) {
-      for (let i = 0; i < this.appointments.length; i++) {
-        if (
-          this.appointments[i].id === parseInt(this.$route.query.appointmentId)
-        ) {
-          this.selectedAppointment = this.appointments[i];
-          this.appointmentDialog = true;
-          return;
+      if (this.$route.query !== undefined) {
+        for (let i = 0; i < this.appointments.length; i++) {
+          if (
+            this.appointments[i].id ===
+            parseInt(this.$route.query.appointmentId)
+          ) {
+            this.selectedAppointment = this.appointments[i];
+            this.appointmentDialog = true;
+            return;
+          }
         }
       }
     }
   },
   methods: {
     async directToCancel() {
-      await this.cancelAppointment(this.selectedAppointment, this.user);
+      let fromUser = {
+        fName: this.user.fName,
+        lName: this.user.lName,
+        userID: this.user.userID,
+        type: this.user.selectedRole.type,
+      };
+      await AppointmentServices.cancelAppointment(
+        this.selectedAppointment.id,
+        fromUser
+      ).catch((error) => {
+        this.alertType = "error";
+        this.alert = error.response.data.message;
+        this.showAlert = true;
+        console.log("There was an error:", error.response);
+      });
       await this.getAppointments();
       this.appointmentDialog = false;
       this.showDeleteConfirmation = false;
@@ -400,8 +414,7 @@ export default {
               .then((response) => {
                 let tutorData = response.data;
                 if (this.appointments[index].type.includes("Group")) {
-                  this.appointments[index].tutor =
-                    tutorData.length + " Tutor(s)";
+                  this.appointments[index].tutor = tutorData.length;
                 } else if (
                   this.appointments[index].type.includes("Private") &&
                   (this.appointments[index].status.includes("booked") ||

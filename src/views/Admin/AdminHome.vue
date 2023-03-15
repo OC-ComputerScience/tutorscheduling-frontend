@@ -1,13 +1,15 @@
 <template>
   <div>
     <v-container>
-      <v-toolbar>
-        <v-toolbar-title>Hello, {{ user.fName }}!</v-toolbar-title>
+      <v-card-title
+        class="text-h4 font-weight-bold pt-4 pb-6 pl-0 pr-0 accent--text"
+        >Hello, {{ user.fName }}!
         <InformationComponent :message="headerMessage"></InformationComponent>
         <v-spacer></v-spacer>
-        <v-toolbar-title>Admin</v-toolbar-title>
-      </v-toolbar>
-      <br />
+        <v-card-title class="text-right pt-0 pb-0 pl-0 pr-0 accent--text"
+          >Admin</v-card-title
+        >
+      </v-card-title>
       <v-alert v-model="showAlert" dismissible :type="alertType">{{
         alert
       }}</v-alert>

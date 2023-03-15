@@ -383,7 +383,7 @@ export default {
         { text: "Location", value: "location.name" },
         { text: "Status", value: "status" },
         { text: "Type", value: "type" },
-        { text: "Student(s)", value: "student" },
+        { text: "Students", value: "student" },
       ],
       headerFeedback: [
         { text: "Date", value: "date" },
@@ -521,8 +521,7 @@ export default {
               .then((response) => {
                 let studentData = response.data;
                 if (this.appointments[index].type.includes("Group")) {
-                  this.appointments[index].student =
-                    studentData.length + " Student(s)";
+                  this.appointments[index].student = studentData.length;
                 } else if (
                   this.appointments[index].type.includes("Private") &&
                   (this.appointments[index].status.includes("booked") ||
@@ -643,7 +642,21 @@ export default {
           this.selectedAppointment
         );
       else {
-        await this.cancelAppointment(this.selectedAppointment, this.user);
+        let fromUser = {
+          fName: this.user.fName,
+          lName: this.user.lName,
+          userID: this.user.userID,
+          type: this.user.selectedRole.type,
+        };
+        await AppointmentServices.cancelAppointment(
+          this.selectedAppointment.id,
+          fromUser
+        ).catch((error) => {
+          this.alertType = "error";
+          this.alert = error.response.data.message;
+          this.showAlert = true;
+          console.log("There was an error:", error.response);
+        });
       }
       await this.getAppointments();
       this.appointmentDialog = false;
