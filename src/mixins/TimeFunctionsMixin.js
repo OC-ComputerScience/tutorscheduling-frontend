@@ -174,8 +174,8 @@ export const TimeFunctionsMixin = {
       return date;
     },
     checkHours(hours) {
-      if (!hours) {
-        return "00:00";
+      if (!hours || hours == 0) {
+        return "---";
       }
       var total = this.toHoursAndMinutes(hours);
       return total;

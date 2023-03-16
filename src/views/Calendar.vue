@@ -146,10 +146,6 @@
                   :class="selectedEvent.color + ' white--text mb-2'"
                   >{{ selectedEvent.name }}</v-card-title
                 >
-                <!-- <v-toolbar :color="selectedEvent.color" dark>
-                  <v-toolbar-title>{{ selectedEvent.name }}</v-toolbar-title>
-                </v-toolbar> -->
-                <!-- How to show tutor? -->
                 <v-card-text v-if="selectedAppointment != null">
                   <b>Time slot:</b>
                   {{ calcTime(selectedAppointment.startTime) }}-{{
@@ -802,6 +798,7 @@ export default {
   }),
   async created() {
     this.user = Utils.getStore("user");
+    this.title = this.user.selectedGroup + this.title;
     this.role = this.user.selectedRole;
     await this.getPrivilegesForPersonRole();
     await this.getGroupByPersonRoleId();
@@ -809,7 +806,6 @@ export default {
     await this.getTutorsForGroup();
     await this.getLocationsForGroup();
     await this.initializeData();
-    this.title = this.group.name + this.title;
   },
   methods: {
     // //Initialize data for calendar

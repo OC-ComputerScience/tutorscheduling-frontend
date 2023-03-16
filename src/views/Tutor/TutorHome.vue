@@ -23,22 +23,19 @@
       </v-dialog>
       <v-dialog v-model="appointmentDialog" max-width="800px">
         <v-card>
-          <v-toolbar :color="selectedAppointment.color" dark>
-            <v-card-title>
-              <span v-if="selectedAppointment.type === 'Group'" class="text-h5"
-                >Upcoming Group Appointment on
-                {{ selectedAppointment.date }}</span
-              >
-              <span
-                v-else-if="selectedAppointment.type === 'Private'"
-                class="text-h5"
-                >Upcoming Private Appointment on
-                {{ selectedAppointment.date }}</span
-              >
-            </v-card-title>
-          </v-toolbar>
+          <v-card-title :class="selectedAppointment.color + ' white--text mb-2'"
+            ><span v-if="selectedAppointment.type === 'Group'" class="text-h5"
+              >Upcoming Group Appointment on
+              {{ selectedAppointment.date }}</span
+            >
+            <span
+              v-else-if="selectedAppointment.type === 'Private'"
+              class="text-h5"
+              >Upcoming Private Appointment on
+              {{ selectedAppointment.date }}</span
+            >
+          </v-card-title>
           <v-card-text>
-            <br />
             <b>Time slot:</b>
             {{ selectedAppointment.startTime }} -
             {{ selectedAppointment.endTime }}
@@ -417,6 +414,7 @@ export default {
           this.appointments[i].id === parseInt(this.$route.query.appointmentId)
         ) {
           this.selectedAppointment = this.appointments[i];
+          await this.updatePeople();
           this.appointmentDialog = true;
           return;
         }
