@@ -169,6 +169,11 @@ export default {
           name: "tutorHome",
           params: { id: this.selectedRole.personrole[0].id },
         });
+      } else if (this.selectedRole.type === "Admin") {
+        this.$router.push({
+          name: "adminHome",
+          params: { id: this.selectedRole.personrole[0].id },
+        });
       }
     },
   },

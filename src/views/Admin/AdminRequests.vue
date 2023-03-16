@@ -219,7 +219,7 @@ export default {
           this.alertType = "error";
           this.alert = error.response.data.message;
           this.showAlert = true;
-          console.log("There was an error:", error.response);
+          console.log("There was an error: ", error.response.data.message);
         });
 
       for (let i = 0; i < this.requests.length; i++) {

@@ -57,7 +57,7 @@ export const RedirectToPageMixin = {
           this.contractRoles = response.data;
         })
         .catch((error) => {
-          console.log("There was an error:", error.response);
+          console.log("There was an error:", error.response.data.message);
           return;
         });
 
@@ -69,7 +69,8 @@ export const RedirectToPageMixin = {
             this.topicRoles = response.data;
           })
           .catch((error) => {
-            console.log("There was an error:", error.response);
+            console.log(error);
+            console.log("There was an error:", error.response.data.message);
             return;
           });
         await GroupServices.getGroupsForPerson(personId)
@@ -77,7 +78,7 @@ export const RedirectToPageMixin = {
             this.personRoles = response.data;
           })
           .catch((error) => {
-            console.log("There was an error:", error.response);
+            console.log("There was an error:", error.response.data.message);
             return;
           });
       }
