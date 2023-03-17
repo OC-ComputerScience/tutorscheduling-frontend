@@ -1019,43 +1019,43 @@ export default {
       );
       await this.initializeData();
     },
-    updateTimes() {
-      this.startTimes = this.generateTimeslots(
-        this.selectedAppointment.startTime,
-        this.newEnd,
-        this.group.timeInterval
-      );
-      // adding this to make sure that you can't start an appointment at the end time
-      // need to make sure that we handle the time interval vs the minimum appointment time correctly
-      for (
-        let i = 0;
-        i < this.group.minApptTime / this.group.timeInterval;
-        i++
-      ) {
-        this.startTimes.pop();
-      }
-      this.endTimes = this.generateTimeslots(
-        this.newStart,
-        this.selectedAppointment.endTime,
-        this.group.minApptTime
-      );
-      // adding this to make sure you can't end an appointment at the start time
-      this.endTimes.shift();
-    },
+    // updateTimes() {
+    //   this.startTimes = this.generateTimeslots(
+    //     this.selectedAppointment.startTime,
+    //     this.newEnd,
+    //     this.group.timeInterval
+    //   );
+    //   // adding this to make sure that you can't start an appointment at the end time
+    //   // need to make sure that we handle the time interval vs the minimum appointment time correctly
+    //   for (
+    //     let i = 0;
+    //     i < this.group.minApptTime / this.group.timeInterval;
+    //     i++
+    //   ) {
+    //     this.startTimes.pop();
+    //   }
+    //   this.endTimes = this.generateTimeslots(
+    //     this.newStart,
+    //     this.selectedAppointment.endTime,
+    //     this.group.minApptTime
+    //   );
+    //   // adding this to make sure you can't end an appointment at the start time
+    //   this.endTimes.shift();
+    // },
     // validate email function
-    validateEmail() {
-      const pattern =
-        /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
-      let email = pattern.test(this.studentEmail);
-      if (email) {
-        if (
-          this.studentEmail.includes("oc.edu") ||
-          this.studentEmail.includes("eagles.oc.edu")
-        ) {
-          return true;
-        }
-      } else return false;
-    },
+    // validateEmail() {
+    //   const pattern =
+    //     /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+    //   let email = pattern.test(this.studentEmail);
+    //   if (email) {
+    //     if (
+    //       this.studentEmail.includes("oc.edu") ||
+    //       this.studentEmail.includes("eagles.oc.edu")
+    //     ) {
+    //       return true;
+    //     }
+    //   } else return false;
+    // },
     //Functions that run calendar functionality
     viewDay({ date }) {
       this.focus = date;
