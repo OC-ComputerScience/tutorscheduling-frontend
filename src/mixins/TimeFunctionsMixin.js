@@ -122,11 +122,16 @@ export const TimeFunctionsMixin = {
       return date;
     },
     formatDate(date) {
-      let formattedDate =
-        date.toString().substring(5, 10) +
-        "-" +
-        date.toString().substring(0, 4);
-      return formattedDate;
+      return (
+        date.toString().substring(5, 10) + "-" + date.toString().substring(0, 4)
+      );
+    },
+    formatReadableDate(date) {
+      return new Date(date).toLocaleDateString(undefined, {
+        weekday: "long",
+        month: "long",
+        day: "numeric",
+      });
     },
     formatTime(time) {
       let modST = time.toString().substring(0, 2) % 12;
