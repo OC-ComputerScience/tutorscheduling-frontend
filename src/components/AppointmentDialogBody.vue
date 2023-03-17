@@ -1,53 +1,90 @@
 <template>
   <v-card min-width="350px">
-    <v-card-title :class="appointment.color + ' white--text mb-6'">{{
-      appointment.name
-    }}</v-card-title>
+    <v-card-title :class="appointment.color + ' white--text mb-2 headline'"
+      >{{ appointment.name }}
+    </v-card-title>
+    <v-card-subtitle :class="appointment.color + ' white--text pb-2 mb-2'">
+      {{ formatReadableDate(appointment.date) }} •
+      {{ calcTime(appointment.startTime) }} -
+      {{ calcTime(appointment.endTime) }}
+    </v-card-subtitle>
     <v-card-text>
-      <div class="text-subtitle black--text">
-        {{ formatReadableDate(appointment.date) }} °
-        {{ calcTime(appointment.startTime) }}-{{
-          calcTime(appointment.endTime)
-        }}
+      <div class="mt-2">
+        <v-icon class="mr-2">mdi-human-male-board-poll</v-icon>
+        <b>Tutors: </b>
+        {{ tutorString }}
       </div>
-      <br />
-      <b>Tutors: </b>
-      {{ tutorString }}
-      <br />
-      <b>Students: </b>
-      {{ studentString }}
-      <br />
-      <span
-        v-if="
-          appointment.location.type === 'Online' && appointment.URL !== null
-        "
-      >
-        <b>Google Meet Link: </b>
-        <a :href="appointment.URL">{{ appointment.URL }}</a>
-        <br />
-      </span>
-      <span v-if="canEditLocation">
-        <v-select
-          v-model="appointment.locationId"
-          :items="locations"
-          item-text="name"
-          item-value="id"
-          label="Location"
-          prepend-icon="mdi-map-marker"
-          required
-          @change="saveChanges = true"
-        >
-        </v-select>
-      </span>
-      <span v-else>
+
+      <div class="mt-2">
+        <v-icon class="mr-2">mdi-account-multiple-outline</v-icon>
+        <b>Students: </b>
+        {{ studentString }}
+      </div>
+
+      <div v-if="isAdminAddStudent">
         <v-text-field
-          class="black--text"
-          flat
-          prepend-icon="mdi-map-marker"
-          :value="appointment.location.name"
+          v-model="addedStudent.email"
+          label="Student's Email"
+          prepend-icon="mdi-at"
+          :suffix="emailStatus"
+          autofocus
+          required
+          :rules="[rules.required, rules.email]"
+          @keyup.enter="findEmail()"
         >
         </v-text-field>
-      </span>
+      </div>
+      <v-row v-if="needStudentInfo || hasFoundEmail">
+        <v-col>
+          <v-text-field
+            v-model="addedStudent.fName"
+            label="Student's First Name"
+            prepend-icon="mdi-account-circle-outline"
+            :readonly="!needStudentInfo"
+            :autofocus="needStudentInfo"
+            required
+          >
+          </v-text-field>
+        </v-col>
+        <v-col>
+          <v-text-field
+            v-model="addedStudent.lName"
+            label="Student's Last Name"
+            :readonly="!needStudentInfo"
+            required
+          >
+          </v-text-field>
+        </v-col>
+      </v-row>
+
+      <div
+        v-if="
+          appointment.location !== null &&
+          appointment.location.type === 'Online' &&
+          appointment.URL !== null
+        "
+        class="mt-2 mb-2"
+      >
+        <v-icon class="mr-2">mdi-link-variant</v-icon>
+        <b>Google Meet Link: </b>
+        <a :href="appointment.URL">{{ appointment.URL }}</a>
+      </div>
+      <v-select
+        v-model="appointment.locationId"
+        :items="locations"
+        item-text="name"
+        item-value="id"
+        label="Location"
+        :prepend-icon="
+          canEditTopic
+            ? 'mdi-map-marker-outline'
+            : 'mdi-map-marker-check-outline'
+        "
+        :readonly="!canEditLocation"
+        required
+        @change="saveChanges = true"
+      >
+      </v-select>
 
       <v-select
         v-model="appointment.topicId"
@@ -55,174 +92,139 @@
         item-text="name"
         item-value="id"
         label="Topic"
-        prepend-icon="mdi-bookshelf"
-        required
+        :prepend-icon="
+          canEditTopic ? 'mdi-book-edit-outline' : 'mdi-book-outline'
+        "
         :readonly="!canEditTopic"
+        required
         @change="saveChanges = true"
       >
       </v-select>
 
-      <v-select
-        v-model="displayedStart"
-        :items="startTimes"
-        item-text="timeText"
-        item-value="time"
-        label="Booked Start"
-        prepend-icon="mdi-clock-edit-outline"
-        required
-        :readonly="!canEditFirstTime"
-        @change="
-          newStart = displayedStart;
-          updateTimes();
-          canEditSecondTime = true;
-        "
-      >
-      </v-select>
-
-      <v-select
-        v-model="displayedEnd"
-        :items="endTimes"
-        item-text="timeText"
-        item-value="time"
-        label="Booked End"
-        required
-        :readonly="!canEditFirstTime || !canEditSecondTime"
-        @change="
-          newEnd = displayedEnd;
-          updateTimes();
-        "
-      >
-      </v-select>
+      <v-row>
+        <v-col>
+          <v-select
+            v-model="appointment.displayedStart"
+            :items="startTimes"
+            item-text="timeText"
+            item-value="time"
+            label="Start Time"
+            :prepend-icon="
+              canEditFirstTime ? 'mdi-clock-edit-outline' : 'mdi-clock-outline'
+            "
+            :readonly="!canEditFirstTime"
+            required
+            @change="
+              appointment.newStart = appointment.displayedStart;
+              updateTimes();
+              canEditSecondTime = true;
+            "
+          >
+          </v-select>
+        </v-col>
+        <v-col>
+          <v-select
+            v-model="appointment.displayedEnd"
+            :items="endTimes"
+            item-text="timeText"
+            item-value="time"
+            label="End Time"
+            :prepend-icon="
+              canEditFirstTime && canEditSecondTime
+                ? 'mdi-clock-edit-outline'
+                : 'mdi-clock-outline'
+            "
+            :readonly="!canEditFirstTime || !canEditSecondTime"
+            required
+            @change="
+              appointment.newEnd = appointment.displayedEnd;
+              updateTimes();
+            "
+          >
+          </v-select>
+        </v-col>
+      </v-row>
 
       <v-textarea
         id="preSession"
         v-model="appointment.preSessionInfo"
         :counter="130"
         label="What do you need help with?"
-        prepend-icon="mdi-help"
+        :prepend-icon="
+          canEditPreSession
+            ? 'mdi-text-box-edit-outline'
+            : 'mdi-text-box-outline'
+        "
         required
         auto-grow
         rows="2"
         :readonly="!canEditPreSession"
         @change="saveChanges = true"
       ></v-textarea>
-
-      <span v-if="isAdminAddStudent">
-        <v-text-field
-          v-model="addedStudent.email"
-          label="Student's Email"
-          required
-          dense
-          max-width="300px"
-          :rules="[rules.required, rules.email]"
-          @keyup.enter="findEmail()"
-        >
-        </v-text-field>
-        <v-row>
-          <v-btn
-            color="green"
-            text
-            :disabled="!validateEmail()"
-            @click="findEmail()"
-          >
-            Search
-          </v-btn>
-          <v-text-field
-            v-if="emailStatus !== ''"
-            v-model="emailStatus"
-            readonly
-            dense
-          ></v-text-field>
-        </v-row>
-      </span>
-      <span v-if="needStudentInfo">
-        <v-text-field
-          v-model="addedStudent.fName"
-          label="Student's First Name"
-          required
-          dense
-          max-width="300px"
-        >
-        </v-text-field>
-        <v-text-field
-          v-model="addedStudent.lName"
-          label="Student's Last Name"
-          required
-          dense
-          max-width="300px"
-        >
-        </v-text-field>
-      </span>
     </v-card-text>
+
     <v-card-actions>
       <v-spacer></v-spacer>
+
+      <v-btn
+        v-if="isAdminAddStudent"
+        color="darkblue white--text"
+        :disabled="!validateEmail()"
+        @click="findEmail()"
+      >
+        Search Student
+      </v-btn>
+
+      <v-btn
+        v-if="showEnableSignUpButton && !isAdminAddStudent"
+        color="darkblue white--text"
+        @click="isAdminAddStudent = true"
+      >
+        Sign Up Student
+      </v-btn>
+
       <v-btn color="grey white--text" @click="$emit('closeAppointmentDialog')">
         {{ saveChanges ? "Discard Changes" : "Close" }}
       </v-btn>
 
       <v-btn
-        v-if="showEnableSignUpButton"
-        color="darkblue white--text"
-        :disabled="isAdminAddStudent"
-        @click="isAdminAddStudent = true"
-      >
-        Sign Up Student
-      </v-btn>
-      <v-btn
         v-if="showEnableCancelButton"
-        color="red white--text"
-        @click="
-          showDeleteConfirmation = true;
-          initializeData();
-          selectedOpen = false;
-          secondTime = true;
-        "
+        color="error white--text"
+        @click="showDeleteConfirmation = true"
       >
         Cancel Appointment
       </v-btn>
+
       <v-btn
         v-if="showEnableConfirmRejectButtons"
         color="error white--text"
-        @click="
-          showDeleteConfirmation = true;
-          secondTime = true;
-        "
+        @click="showDeleteConfirmation = true"
       >
         Reject
       </v-btn>
+
       <v-btn
         v-if="showEnableConfirmRejectButtons"
-        color="primary"
-        @click="
-          sendAppointmentForConfirmation();
-          secondTime = true;
-          selectedOpen = false;
-        "
+        color="accent"
+        @click="sendAppointmentForConfirmation()"
       >
         Confirm
       </v-btn>
+
       <v-btn
         v-if="showSaveButton"
-        color="primary"
+        color="accent"
         :disabled="!saveChanges"
-        @click="
-          editAppointment(user, selectedAppointment);
-          initializeData();
-          selectedOpen = false;
-          secondTime = true;
-        "
+        @click="editAppointment(user, appointment)"
       >
         Save Changes
       </v-btn>
+
       <v-btn
         v-if="showBookButton"
-        color="primary"
+        color="accent"
         :disabled="!enableBookButton"
-        @click="
-          sendAppointmentForBooking();
-          selectedOpen = false;
-          secondTime = true;
-        "
+        @click="sendAppointmentForBooking()"
       >
         Book
       </v-btn>
@@ -233,20 +235,18 @@
         type="appointment"
         :item="appointment"
         @handleReturningCancel="showDeleteConfirmation = false"
-        @handleReturningSuccess="
-          isDisabled
-            ? changeTopicStatus('active')
-            : changeTopicStatus('disabled')
-        "
+        @handleReturningSuccess="directToCancel()"
       ></DeleteConfirmationComponent>
     </v-dialog>
   </v-card>
 </template>
 
 <script>
+import AppointmentServices from "@/services/appointmentServices.js";
 //For info on people and their associated roles
 import PersonServices from "@/services/personServices.js";
 import PersonRoleServices from "@/services/personRoleServices.js";
+import RoleServices from "@/services/roleServices.js";
 // import PersonRolePrivilegeServices from "@/services/personRolePrivilegeServices.js";
 //For info to be shown with appointments
 import LocationServices from "@/services/locationServices.js";
@@ -254,6 +254,7 @@ import TopicServices from "@/services/topicServices.js";
 //Plugin functions
 import Utils from "@/config/utils.js";
 import DeleteConfirmationComponent from "./DeleteConfirmationComponent.vue";
+import { AppointmentActionMixin } from "../mixins/AppointmentActionMixin";
 import { TimeFunctionsMixin } from "../mixins/TimeFunctionsMixin";
 
 export default {
@@ -261,29 +262,45 @@ export default {
   components: {
     DeleteConfirmationComponent,
   },
-  mixins: [TimeFunctionsMixin],
+  mixins: [AppointmentActionMixin, TimeFunctionsMixin],
   props: {
     sentAppointment: {
       type: [Object],
       default() {
         return {
-          startTime: "",
-          endTime: "",
-          locationId: "",
-          topicId: "",
-          preSessionInfo: "",
-          groupId: "",
-        };
-      },
-    },
-    sentEvent: {
-      type: [Object],
-      default() {
-        return {
-          name: "",
+          URL: "",
           color: "",
+          date: "",
+          displayedEnd: "",
+          displayedStart: "",
+          endTime: "",
+          googleEventId: 0,
+          group: {
+            name: "",
+            bookPastMinutes: 0,
+          },
+          groupId: 0,
+          id: 0,
+          location: {
+            name: "",
+            type: "",
+          },
+          locationId: 0,
+          name: "",
+          newStart: "",
+          newEnd: "",
+          personappointment: [],
+          personRolePrivileges: [],
+          preSessionInfo: "",
+          startTime: "",
+          status: "",
           students: [],
+          topic: {
+            name: "",
+          },
+          topicId: 0,
           tutors: [],
+          type: "",
         };
       },
     },
@@ -310,10 +327,6 @@ export default {
       appointment: this.sentAppointment,
       startTimes: [],
       endTimes: [],
-      newStart: null,
-      newEnd: null,
-      displayedStart: "",
-      displayedEnd: "",
       studentString: "",
       tutorString: "",
       emailStatus: "",
@@ -341,12 +354,10 @@ export default {
   watch: {
     async sentAppointment(newAppointment) {
       this.appointment = newAppointment;
-      console.log("appointment", this.appointment);
       await this.resetEverything();
     },
   },
   async created() {
-    console.log(this.appointment);
     await this.resetEverything();
   },
   methods: {
@@ -356,6 +367,7 @@ export default {
       this.isAdminAddStudent = false;
       this.user = Utils.getStore("user");
       this.checkPersonInAppointment(this.user.userID);
+      this.updateTimes();
       this.setupPersonStrings();
       this.setIsDatePast();
       this.setCanSplitTime();
@@ -373,6 +385,7 @@ export default {
       await this.getTopicsForTutor();
     },
     setupPersonStrings() {
+      console.log(this.appointment.tutors[0].person.fName);
       if (this.appointment.tutors > 1) {
         this.appointment.tutors.forEach((tutor) => {
           this.tutorString += `${tutor.person.fName} ${tutor.person.lName}, `;
@@ -487,12 +500,16 @@ export default {
       // 4. tutor - group available but not already in group appointment
       // 4. not past (applies to all cases)
       this.showBookButton =
-        (this.hasRole("Student") ||
+        (((this.hasRole("Student") ||
           this.hasRole("Admin") ||
           this.hasPrivilege("Sign up students for appointments")) &&
-        this.checkAppointmentStatus("available") &&
-        (this.checkAppointmentStatus("Private") ||
-          !this.isMemberOfAppointment) &&
+          this.checkAppointmentStatus("available") &&
+          (this.checkAppointmentStatus("Private") ||
+            !this.isMemberOfAppointment)) ||
+          (this.hasRole("Tutor") &&
+            !this.isMemberOfAppointment &&
+            this.checkAppointmentType("Group") &&
+            this.checkAppointmentStatus("available"))) &&
         !this.isDatePast;
     },
     setEnableBookButton() {
@@ -636,7 +653,7 @@ export default {
     updateTimes() {
       this.startTimes = this.generateTimeslots(
         this.appointment.startTime,
-        this.newEnd,
+        this.appointment.newEnd,
         this.appointment.group.timeInterval
       );
       // adding this to make sure that you can't start an appointment at the end time
@@ -651,7 +668,7 @@ export default {
         this.startTimes.pop();
       }
       this.endTimes = this.generateTimeslots(
-        this.newStart,
+        this.appointment.newStart,
         this.appointment.endTime,
         this.appointment.group.minApptTime
       );
@@ -663,15 +680,26 @@ export default {
         this.addedStudent.email,
         this.appointment.groupId
       ).then((response) => {
-        this.addedStudent = {
-          id: response.data.id,
-          fName: response.data.fName,
-          lName: response.data.lName,
-          email: response.data.email,
-          personRoleId: response.data.personrole
-            ? response.data.personrole[0].id
-            : null,
-        };
+        if (response.data.length > 0) {
+          this.addedStudent = {
+            id: response.data[0].id,
+            fName: response.data[0].fName,
+            lName: response.data[0].lName,
+            email: response.data[0].email,
+            personRoleId:
+              response.data[0].personrole.length > 0
+                ? response.data[0].personrole[0].id
+                : null,
+          };
+        } else {
+          this.addedStudent = {
+            id: null,
+            fName: null,
+            lName: null,
+            email: this.addedStudent.email,
+            personRoleId: null,
+          };
+        }
       });
       if (this.user.userID === this.addedStudent.id) {
         this.emailStatus = "You cannot sign yourself up for an appointment.";
@@ -691,14 +719,18 @@ export default {
           "This student is already signed up for this appointment.";
         this.hasFoundEmail = true;
         return;
-      } else if (!this.addedStudent.email.includes("not found")) {
+      } else if (this.addedStudent.id !== null) {
         this.needStudentInfo = false;
         if (this.addedStudent.personRoleId === null) {
-          // make a new person role for this group
-          // find the student role for this group
+          let studentRoleId = await RoleServices.getAllForGroupByType(
+            this.appointment.groupId,
+            "Student"
+          ).then((response) => {
+            return response.data[0].id;
+          });
           let personRole = {
             status: "applied",
-            // roleId: roles[i].id,
+            roleId: studentRoleId,
             personId: this.addedStudent.id,
             dateSigned: Date(),
             agree: false,
@@ -709,7 +741,7 @@ export default {
             " " +
             this.addedStudent.lName +
             " has been added as a student!";
-          this.emailFound = true;
+          this.hasFoundEmail = true;
           return;
         } else {
           this.emailStatus =
@@ -718,8 +750,7 @@ export default {
             " " +
             this.addedStudent.lName +
             " found!";
-          this.walkInStudent = this.addedStudent;
-          this.emailFound = true;
+          this.hasFoundEmail = true;
           return;
         }
       } else {
@@ -736,6 +767,76 @@ export default {
         ? this.addedStudent.email.includes("oc.edu") ||
             this.addedStudent.email.includes("eagles.oc.edu")
         : false;
+    },
+    async adminAdd() {
+      let student = {
+        fName: this.addedStudent.fName,
+        lName: this.addedStudent.lName,
+        email: this.addedStudent.email,
+      };
+      await PersonServices.addPerson(student).then((response) => {
+        this.addedStudent = {
+          id: response.data.id,
+          fName: response.data.fName,
+          lName: response.data.lName,
+          email: response.data.email,
+          personRoleId: null,
+        };
+      });
+      let studentRoleId = await RoleServices.getAllForGroupByType(
+        this.appointment.groupId,
+        "Student"
+      ).then((response) => {
+        return response.data[0].id;
+      });
+      let personRole = {
+        status: "applied",
+        roleId: studentRoleId,
+        personId: this.addedStudent.id,
+        dateSigned: Date(),
+        agree: false,
+      };
+      await PersonRoleServices.addPersonRole(personRole);
+    },
+    async directToCancel() {
+      this.showDeleteConfirmation = false;
+      if (this.appointment.status === "pending") {
+        await this.confirmAppointment(false, this.user, this.appointment);
+      } else {
+        let fromUser = {
+          fName: this.user.fName,
+          lName: this.user.lName,
+          userID: this.user.userID,
+          type: this.user.selectedRole.type,
+        };
+        await AppointmentServices.cancelAppointment(
+          this.appointment.id,
+          fromUser
+        ).catch((error) => {
+          this.alertType = "error";
+          this.alert = error.response.data.message;
+          this.showAlert = true;
+          console.log("There was an error:", error.response);
+        });
+      }
+      this.$emit("doneWithAppointment");
+    },
+    async sendAppointmentForConfirmation() {
+      await this.confirmAppointment(true, this.user, this.appointment);
+      await this.initializeData();
+    },
+    async sendAppointmentForBooking() {
+      if (this.isAdminAddStudent && this.needStudentInfo) {
+        await this.adminAdd();
+      }
+      this.appointment.minApptTime = this.appointment.group.minApptTime;
+      await this.bookAppointment(
+        this.isAdminAddStudent,
+        this.appointment,
+        this.user,
+        this.addedStudent
+      );
+      this.$emit("doneWithAppointment");
     },
     async getLocationsForGroup() {
       await LocationServices.getActiveForGroup(this.appointment.groupId)

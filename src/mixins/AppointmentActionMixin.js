@@ -58,20 +58,6 @@ export const AppointmentActionMixin = {
 
       return appointments;
     },
-    async getAllPersonAppointments() {
-      let personAppointments = [];
-      await PersonAppointmentServices.getAllPersonAppointments()
-        .then(async (response) => {
-          personAppointments = response.data;
-        })
-        .catch((error) => {
-          this.alertType = "error";
-          this.alert = error.response.data.message;
-          this.showAlert = true;
-          console.log("There was an error:", error.response);
-        });
-      return personAppointments;
-    },
     async bookAppointment(isAdminAdd, appointment, fromUser, student) {
       await this.getAppointmentInfo(appointment.id);
       if (this.appointment.type === "Private") {
