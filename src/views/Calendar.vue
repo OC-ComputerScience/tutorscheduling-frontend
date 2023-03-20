@@ -570,7 +570,6 @@
                     @click="
                       showDeleteConfirmation = true;
                       initializeData();
-                      selectedOpen = false;
                       secondTime = true;
                     "
                   >
@@ -1484,11 +1483,29 @@ export default {
       this.selectedOpen = false;
       this.showDeleteConfirmation = false;
       if (this.selectedAppointment.status === "pending") {
-        await this.confirmAppointment(
-          false,
-          this.user,
-          this.selectedAppointment
-        );
+        if (this.user.selectedRole.type === "Tutor") {
+          await this.confirmAppointment(
+            false,
+            this.user,
+            this.selectedAppointment
+          );
+        } else if (this.user.selectedRole.type === "Student") {
+          let fromUser = {
+            fName: this.user.fName,
+            lName: this.user.lName,
+            userID: this.user.userID,
+            type: this.user.selectedRole.type,
+          };
+          await AppointmentServices.cancelAppointment(
+            this.selectedAppointment.id,
+            fromUser
+          ).catch((error) => {
+            this.alertType = "error";
+            this.alert = error.response.data.message;
+            this.showAlert = true;
+            console.log("There was an error:", error.response);
+          });
+        }
       } else {
         let fromUser = {
           fName: this.user.fName,
