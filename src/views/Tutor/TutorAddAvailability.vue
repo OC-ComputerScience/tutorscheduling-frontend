@@ -453,27 +453,14 @@ export default {
             isAvail = false;
             this.conflictAvailability.conflicting = {
               date: tempAvail.date,
-              startTime: tempAvail.startTime,
-              endTime: tempAvail.endTime,
+              startTime: this.formatTime(tempAvail.startTime),
+              endTime: this.formatTime(tempAvail.endTime),
             };
             this.conflictAvailability.existing = {
               date: appoint.date,
-              startTime: appoint.startTime,
-              endTime: appoint.endTime,
+              startTime: this.formatTime(appoint.startTime),
+              endTime: this.formatTime(appoint.endTime),
             };
-            // format time of conflict availability
-            this.conflictAvailability.conflicting.startTime = this.formatTime(
-              this.conflictAvailability.conflicting.startTime
-            );
-            this.conflictAvailability.conflicting.endTime = this.formatTime(
-              this.conflictAvailability.conflicting.endTime
-            );
-            this.conflictAvailability.existing.startTime = this.formatTime(
-              this.conflictAvailability.existing.startTime
-            );
-            this.conflictAvailability.existing.endTime = this.formatTime(
-              this.conflictAvailability.existing.endTime
-            );
             return;
           }
         }
