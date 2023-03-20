@@ -35,15 +35,15 @@ export const AppointmentActionMixin = {
         .then(async (response) => {
           appointments = response.data;
           for (let i = 0; i < appointments.length; i++) {
-            let appoint = appointments[i];
+            let appointment = appointments[i];
             if (
-              appoint.personappointment !== null &&
-              appoint.personappointment !== undefined
+              appointment.personappointment !== null &&
+              appointment.personappointment !== undefined
             ) {
-              appoint.students = appoint.personappointment.filter(
+              appointment.students = appointment.personappointment.filter(
                 (pa) => pa.isTutor === false
               );
-              appoint.tutors = appoint.personappointment.filter(
+              appointment.tutors = appointment.personappointment.filter(
                 (pa) => pa.isTutor === true
               );
             }
@@ -57,6 +57,96 @@ export const AppointmentActionMixin = {
         });
 
       return appointments;
+    },
+    setUpCalendarEvent(appointment) {
+      let startTime = new Date(appointment.date);
+      let startTimes = appointment.startTime.split(":");
+      startTime.setHours(startTime.getHours() + parseInt(startTimes[0]));
+      startTime.setMinutes(startTime.getMinutes() + parseInt(startTimes[1]));
+      let endTime = new Date(appointment.date);
+      let endTimes = appointment.endTime.split(":");
+      endTime.setHours(endTime.getHours() + parseInt(endTimes[0]));
+      endTime.setMinutes(endTime.getMinutes() + parseInt(endTimes[1]));
+
+      appointment.eventStart = startTime;
+      appointment.eventEnd = endTime;
+
+      let studentName = this.getStudentNameForAppointment(appointment);
+      let tutorName = this.getTutorNameForAppointment(appointment);
+
+      //Set color for each event
+      switch (appointment.status) {
+        case "pending":
+          appointment.color = "yellow";
+          break;
+        case "studentCancel" || "tutorCancel":
+          appointment.color = "error";
+          break;
+        case "booked":
+          appointment.color = "blue";
+          break;
+        case "complete":
+          appointment.color = "darkblue";
+          break;
+        default:
+          appointment.color = "grey";
+          break;
+      }
+
+      if (
+        appointment.type === "Group" &&
+        !appointment.status.includes("Cancel")
+      ) {
+        if (appointment.isMemberOfAppointment) {
+          appointment.color = "blue";
+        } else {
+          appointment.color = "teal";
+        }
+      }
+
+      let topicName = appointment.topic ? appointment.topic.name : "Open";
+
+      //Note the format of each event, what data is associated with it
+      if (appointment.type === "Group") {
+        if (appointment.status.includes("Cancel")) {
+          appointment.name = `Group - Canceled by ${tutorName}`;
+        } else {
+          if (appointment.isTutor && appointment.students.length === 0) {
+            appointment.color = "grey";
+          }
+          appointment.name = `Group - ${topicName} Tutoring`;
+        }
+      } else if (appointment.type === "Private") {
+        if (appointment.status === "available") {
+          appointment.name = `${tutorName} - ${topicName} Tutoring`;
+        } else if (!appointment.status.includes("Cancel")) {
+          appointment.name = `${studentName} - ${topicName} Tutoring`;
+        } else {
+          if (appointment.status === "tutorCancel") {
+            appointment.name = `Canceled by ${tutorName}`;
+          } else if (appointment.status === "studentCancel") {
+            appointment.name = `Canceled by ${studentName}`;
+          }
+        }
+      }
+    },
+    getStudentNameForAppointment(appointment) {
+      if (appointment.students.length > 0) {
+        return (
+          appointment.students[0].person.fName +
+          " " +
+          appointment.students[0].person.lName
+        );
+      } else return "Open";
+    },
+    getTutorNameForAppointment(appointment) {
+      if (appointment.tutors.length > 0) {
+        return (
+          appointment.tutors[0].person.fName +
+          " " +
+          appointment.tutors[0].person.lName
+        );
+      } else return "Open";
     },
     async bookAppointment(isAdminAdd, appointment, fromUser, student) {
       await this.getAppointmentInfo(appointment.id);

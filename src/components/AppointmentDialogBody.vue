@@ -81,6 +81,7 @@
             : 'mdi-map-marker-check-outline'
         "
         :readonly="!canEditLocation"
+        :disabled="isDatePast"
         required
         @change="saveChanges = true"
       >
@@ -96,6 +97,7 @@
           canEditTopic ? 'mdi-book-edit-outline' : 'mdi-book-outline'
         "
         :readonly="!canEditTopic"
+        :disabled="isDatePast"
         required
         @change="saveChanges = true"
       >
@@ -113,6 +115,7 @@
               canEditFirstTime ? 'mdi-clock-edit-outline' : 'mdi-clock-outline'
             "
             :readonly="!canEditFirstTime"
+            :disabled="isDatePast"
             required
             @change="
               appointment.newStart = appointment.displayedStart;
@@ -135,6 +138,7 @@
                 : 'mdi-clock-outline'
             "
             :readonly="!canEditFirstTime || !canEditSecondTime"
+            :disabled="isDatePast"
             required
             @change="
               appointment.newEnd = appointment.displayedEnd;
@@ -159,6 +163,7 @@
         auto-grow
         rows="2"
         :readonly="!canEditPreSession"
+        :disabled="isDatePast"
         @change="saveChanges = true"
       ></v-textarea>
     </v-card-text>
@@ -215,7 +220,10 @@
         v-if="showSaveButton"
         color="accent"
         :disabled="!saveChanges"
-        @click="editAppointment(user, appointment)"
+        @click="
+          editAppointment(user, appointment);
+          $emit('doneWithAppointment');
+        "
       >
         Save Changes
       </v-btn>
@@ -385,8 +393,7 @@ export default {
       await this.getTopicsForTutor();
     },
     setupPersonStrings() {
-      console.log(this.appointment.tutors[0].person.fName);
-      if (this.appointment.tutors > 1) {
+      if (this.appointment.tutors.length > 1) {
         this.appointment.tutors.forEach((tutor) => {
           this.tutorString += `${tutor.person.fName} ${tutor.person.lName}, `;
         });
@@ -394,7 +401,7 @@ export default {
         this.tutorString += `${this.appointment.tutors[0].person.fName} ${this.appointment.tutors[0].person.lName}`;
       }
 
-      if (this.appointment.students > 1) {
+      if (this.appointment.students.length > 1) {
         this.appointment.students.forEach((student) => {
           this.studentString += `${student.person.fName} ${student.person.lName}, `;
         });
@@ -824,6 +831,7 @@ export default {
     async sendAppointmentForConfirmation() {
       await this.confirmAppointment(true, this.user, this.appointment);
       await this.initializeData();
+      this.$emit("doneWithAppointment");
     },
     async sendAppointmentForBooking() {
       if (this.isAdminAddStudent && this.needStudentInfo) {

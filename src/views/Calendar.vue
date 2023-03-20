@@ -3,7 +3,11 @@
     <v-container>
       <v-card-title
         class="text-h4 font-weight-bold pt-4 pb-6 pl-0 pr-0 accent--text"
-        >{{ title }}
+      >
+        <span v-if="$refs.calendar"
+          >{{ user.selectedGroup }} - {{ $refs.calendar.title }}</span
+        >
+        <span v-else> {{ user.selectedGroup }}'s Calendar </span>
         <InformationComponent
           message="Select an appointment to view information, book the appointment,
             make changes, etc.
@@ -17,199 +21,200 @@
       <v-alert v-model="showAlert" dismissible :type="alertType">{{
         alert
       }}</v-alert>
-      <v-row class="fill-height">
-        <v-col>
-          <v-sheet height="64">
-            <v-toolbar flat>
-              <!-- Sets focus to current date -->
-              <v-btn
-                outlined
-                class="mr-4"
-                color="grey darken-2"
-                @click="viewMonth()"
-              >
-                Today
-              </v-btn>
-              <!-- Navigates calendar forward and back -->
-              <v-btn fab text small color="grey darken-2" @click="prev()">
-                <v-icon small> mdi-chevron-left </v-icon>
-              </v-btn>
-              <v-btn fab text small color="grey darken-2" @click="next()">
-                <v-icon small> mdi-chevron-right </v-icon>
-              </v-btn>
-              <!-- Shows current month and year displayed on calendar -->
-              <v-toolbar-title v-if="$refs.calendar">
-                {{ $refs.calendar.title }}
-              </v-toolbar-title>
-              <v-spacer></v-spacer>
-              <v-col cols="3" align-self="start">
-                <v-select
-                  v-model="selectedTopic"
-                  dense
-                  :items="topics"
-                  item-text="name"
-                  item-value="id"
-                  label="Topic"
-                  outlined
-                  @change="loadAppointments()"
-                ></v-select>
-              </v-col>
-              <v-col cols="3" align-self="start">
-                <v-select
-                  v-model="selectedTutor"
-                  dense
-                  :items="tutorSelect"
-                  item-text="name"
-                  item-value="id"
-                  label="Tutor"
-                  outlined
-                  @change="loadAppointments()"
-                ></v-select>
-              </v-col>
-              <v-btn
-                outlined
-                class="mr-4"
-                color="grey darken-2"
-                right
-                @click="keyVisible = true"
-              >
-                Key
-              </v-btn>
-              <!-- Dropdown menu to select format -->
-              <!-- Will modify to only include relevant formats -->
-              <v-menu bottom right>
-                <template #activator="{ on, attrs }">
-                  <v-btn
-                    outlined
-                    color="grey darken-2"
-                    v-bind="attrs"
-                    v-on="on"
-                  >
-                    <span>{{ typeToLabel[type] }}</span>
-                    <v-icon right>mdi-menu-down</v-icon>
-                  </v-btn>
-                </template>
-                <v-list>
-                  <v-list-item @click="type = 'day'">
-                    <v-list-item-title>Day</v-list-item-title>
-                  </v-list-item>
-                  <v-list-item @click="type = 'week'">
-                    <v-list-item-title>Week</v-list-item-title>
-                  </v-list-item>
-                  <v-list-item @click="type = 'month'">
-                    <v-list-item-title>Month</v-list-item-title>
-                  </v-list-item>
-                  <v-list-item @click="type = '4day'">
-                    <v-list-item-title>4 days</v-list-item-title>
-                  </v-list-item>
-                </v-list>
-              </v-menu>
-            </v-toolbar>
-          </v-sheet>
-          <v-sheet height="600">
-            <!--Calendar element needs a list of events to show -->
-            <!--Type determines calendar format -->
-            <v-calendar
-              ref="calendar"
-              v-model="focus"
-              color="primary"
-              :events="events"
-              :event-color="getEventColor"
-              :event-overlap-mode="mode"
-              :event-overlap-threshold="15"
-              :type="type"
-              @click:event="showEvent"
-              @click:more="viewDay"
-              @click:date="viewDay"
-            ></v-calendar>
+      <v-sheet height="64">
+        <v-toolbar flat>
+          <v-btn icon class="ma-2" @click="$refs.calendar.prev()">
+            <v-icon small> mdi-chevron-left </v-icon>
+          </v-btn>
 
-            <!--Pop-up that appears when an event is selected -->
-
-            <!-- add another v-menu for group session v private-->
-            <v-dialog v-model="appointmentDialog" persistent max-width="800px">
-              <AppointmentDialogBody
-                :sent-appointment="selectedAppointment"
-                @closeAppointmentDialog="appointmentDialog = false"
-                @doneWithAppointment="
-                  appointmentDialog = false;
-                  initializeData();
-                "
-              ></AppointmentDialogBody>
-            </v-dialog>
-            <!-- <v-menu
-              v-model="selectedOpen"
-              :open-on-click="false"
-              :close-on-content-click="false"
-              :activator="selectedElement"
-              offset-x
-            >
-             
-            </v-menu> -->
-          </v-sheet>
-        </v-col>
-      </v-row>
-    </v-container>
-    <v-dialog v-model="keyVisible" max-width="600px">
-      <v-card>
-        <v-card-title class="primary white--text mb-2"
-          >Calendar Key
-        </v-card-title>
-        <v-card-text>
-          <v-simple-table>
-            <thead>
-              <tr>
-                <th class="text-left">Color</th>
-                <th class="text-left">Status</th>
-                <th class="text-left">Private</th>
-                <th class="text-left">Group</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="info in keys" :key="info.color">
-                <td>
-                  <v-icon :color="info.color">mdi-circle</v-icon>
-                </td>
-                <td class="text-body-2">{{ info.text }}</td>
-                <td>
-                  <v-icon v-if="info.private" color="black"
-                    >mdi-check-bold</v-icon
-                  >
-                </td>
-                <td>
-                  <v-icon v-if="info.group" color="black"
-                    >mdi-check-bold</v-icon
-                  >
-                </td>
-              </tr>
-            </tbody>
-          </v-simple-table>
-        </v-card-text>
-        <v-card-actions>
-          <v-spacer></v-spacer>
-          <v-btn color="grey white--text" @click="keyVisible = false"
-            >Close</v-btn
+          <v-btn
+            outlined
+            class="ma-2"
+            color="grey darken-2"
+            right
+            @click="keyVisible = true"
           >
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
+            Key
+          </v-btn>
 
-    <v-overlay :value="overlay">
-      <v-progress-circular indeterminate size="64">
-        Loading...
-      </v-progress-circular>
-    </v-overlay>
+          <v-btn
+            outlined
+            class="ma-2"
+            color="grey darken-2"
+            @click="
+              focus = '';
+              type = 'month';
+            "
+          >
+            Today
+          </v-btn>
+
+          <v-menu bottom right>
+            <template #activator="{ on, attrs }">
+              <v-btn
+                class="ma-2"
+                outlined
+                color="grey darken-2"
+                v-bind="attrs"
+                v-on="on"
+              >
+                <span>{{ typeToLabel[type] }}</span>
+                <v-icon right>mdi-menu-down</v-icon>
+              </v-btn>
+            </template>
+            <v-list>
+              <v-list-item @click="type = 'day'">
+                <v-list-item-title>Day</v-list-item-title>
+              </v-list-item>
+              <v-list-item @click="type = 'week'">
+                <v-list-item-title>Week</v-list-item-title>
+              </v-list-item>
+              <v-list-item @click="type = 'month'">
+                <v-list-item-title>Month</v-list-item-title>
+              </v-list-item>
+              <v-list-item @click="type = '4day'">
+                <v-list-item-title>4 days</v-list-item-title>
+              </v-list-item>
+            </v-list>
+          </v-menu>
+
+          <v-select
+            v-model="selectedTopic"
+            :items="topics"
+            item-text="name"
+            item-value="id"
+            label="Topic"
+            hide-details
+            class="ma-2"
+            dense
+            outlined
+            @change="loadAppointments()"
+          ></v-select>
+
+          <v-select
+            v-model="selectedTutor"
+            :items="tutorSelect"
+            item-text="name"
+            item-value="id"
+            label="Tutor"
+            hide-details
+            class="ma-2"
+            dense
+            outlined
+            @change="loadAppointments()"
+          ></v-select>
+
+          <v-btn icon class="ma-2" @click="$refs.calendar.next()">
+            <v-icon small> mdi-chevron-right </v-icon>
+          </v-btn>
+        </v-toolbar>
+      </v-sheet>
+      <v-sheet height="700">
+        <v-calendar
+          ref="calendar"
+          v-model="focus"
+          color="primary"
+          :events="events"
+          :event-color="getEventColor"
+          :event-overlap-mode="mode"
+          :event-overlap-threshold="15"
+          :type="type"
+          @click:event="showEvent"
+          @click:more="
+            type = 'week';
+            focus = $refs.more;
+          "
+          @click:date="
+            type = 'week';
+            focus = $refs.date;
+          "
+        ></v-calendar>
+
+        <v-dialog v-model="appointmentDialog" persistent max-width="800px">
+          <AppointmentDialogBody
+            :sent-appointment="selectedAppointment"
+            @closeAppointmentDialog="appointmentDialog = false"
+            @doneWithAppointment="
+              appointmentDialog = false;
+              initializeData();
+            "
+          ></AppointmentDialogBody>
+        </v-dialog>
+        <!-- <v-menu
+          v-model="appointmentDialog"
+          :open-on-click="false"
+          :close-on-content-click="false"
+          :activator="selectedElement"
+          offset-x
+        >
+          <AppointmentDialogBody
+            :sent-appointment="selectedAppointment"
+            @closeAppointmentDialog="appointmentDialog = false"
+            @doneWithAppointment="
+              appointmentDialog = false;
+              initializeData();
+            "
+          ></AppointmentDialogBody>
+        </v-menu> -->
+      </v-sheet>
+      <v-dialog v-model="keyVisible" max-width="600px">
+        <v-card>
+          <v-card-title class="primary white--text mb-2"
+            >Calendar Key
+          </v-card-title>
+          <v-card-text>
+            <v-simple-table>
+              <thead>
+                <tr>
+                  <th class="text-left">Color</th>
+                  <th class="text-left">Status</th>
+                  <th class="text-left">Private</th>
+                  <th class="text-left">Group</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="info in keys" :key="info.color">
+                  <td>
+                    <v-icon :color="info.color">mdi-circle</v-icon>
+                  </td>
+                  <td class="text-body-2">{{ info.text }}</td>
+                  <td>
+                    <v-icon v-if="info.private" color="black"
+                      >mdi-check-bold</v-icon
+                    >
+                  </td>
+                  <td>
+                    <v-icon v-if="info.group" color="black"
+                      >mdi-check-bold</v-icon
+                    >
+                  </td>
+                </tr>
+              </tbody>
+            </v-simple-table>
+          </v-card-text>
+          <v-card-actions>
+            <v-spacer></v-spacer>
+            <v-btn color="grey white--text" @click="keyVisible = false"
+              >Close</v-btn
+            >
+          </v-card-actions>
+        </v-card>
+      </v-dialog>
+
+      <v-overlay :value="overlay">
+        <v-progress-circular indeterminate size="64">
+          Loading...
+        </v-progress-circular>
+      </v-overlay>
+    </v-container>
   </div>
 </template>
 
 <script>
-//For info on appointments
-// import AppointmentServices from "@/services/appointmentServices.js";
-// import PersonAppointmentServices from "@/services/personAppointmentServices.js";
 //For info on people and their associated roles
 import PersonServices from "@/services/personServices.js";
 import PersonRoleServices from "@/services/personRoleServices.js";
 import PersonRolePrivilegeServices from "@/services/personRolePrivilegeServices.js";
-// import RoleServices from "@/services/roleServices.js";
 //For info to be shown with appointments
 import TopicServices from "@/services/topicServices.js";
 //Plugin functions
@@ -237,7 +242,7 @@ export default {
     alert: "",
     alertType: "success",
     overlay: true,
-    title: " Calendar",
+    // title: "",
     mode: "stack",
     appointments: [],
     selectedAppointment: {},
@@ -292,7 +297,9 @@ export default {
   }),
   async created() {
     this.user = Utils.getStore("user");
-    this.title = this.user.selectedGroup + this.title;
+    // this.title = `${this.user.selectedGroup} - ${
+    //   this.$refs.calendar ? this.$refs.calendar.title : ""
+    // }`;
     this.role = this.user.selectedRole;
     await this.getPrivilegesForPersonRole();
     await this.getGroupByPersonRoleId();
@@ -370,18 +377,8 @@ export default {
       this.focus = date;
       this.type = "day";
     },
-    viewMonth() {
-      this.focus = "";
-      this.type = "month";
-    },
     getEventColor(event) {
       return event.color;
-    },
-    prev() {
-      this.$refs.calendar.prev();
-    },
-    next() {
-      this.$refs.calendar.next();
     },
     //Animates Event card popping up
     async showEvent({ nativeEvent, event }) {
@@ -459,24 +456,7 @@ export default {
         this.user.selectedRole.type === type
       );
     },
-    getStudentNameForAppointment(appointment) {
-      if (appointment.students.length > 0) {
-        return (
-          appointment.students[0].person.fName +
-          " " +
-          appointment.students[0].person.lName
-        );
-      } else return "Open";
-    },
-    getTutorNameForAppointment(appointment) {
-      if (appointment.tutors.length > 0) {
-        return (
-          appointment.tutors[0].person.fName +
-          " " +
-          appointment.tutors[0].person.lName
-        );
-      } else return "Open";
-    },
+
     async loadAppointments() {
       let today = new Date();
       today.setHours(today.getHours() - today.getTimezoneOffset() / 60);
@@ -538,85 +518,15 @@ export default {
           }
         }
         if (filtered) {
-          //Format times for each event and need to set minutes for events too
-          let startTime = new Date(appointment.date);
-          let startTimes = appointment.startTime.split(":");
-          startTime.setHours(startTime.getHours() + parseInt(startTimes[0]));
-          startTime.setMinutes(
-            startTime.getMinutes() + parseInt(startTimes[1])
-          );
-          let endTime = new Date(appointment.date);
-          let endTimes = appointment.endTime.split(":");
-          endTime.setHours(endTime.getHours() + parseInt(endTimes[0]));
-          endTime.setMinutes(endTime.getMinutes() + parseInt(endTimes[1]));
-
+          this.setUpCalendarEvent(appointment);
           let event = {
-            name: "",
-            start: startTime,
-            end: endTime,
-            color: "",
+            name: appointment.name,
+            start: appointment.eventStart,
+            end: appointment.eventEnd,
+            color: appointment.color,
             timed: true,
             appointmentId: appointment.id,
           };
-
-          let studentName = this.getStudentNameForAppointment(appointment);
-          let tutorName = this.getTutorNameForAppointment(appointment);
-
-          //Set color for each event
-          switch (appointment.status) {
-            case "pending":
-              event.color = "yellow";
-              break;
-            case "studentCancel" || "tutorCancel":
-              event.color = "error";
-              break;
-            case "booked":
-              event.color = "blue";
-              break;
-            case "complete":
-              event.color = "darkblue";
-              break;
-            default:
-              event.color = "grey";
-              break;
-          }
-
-          if (
-            appointment.type === "Group" &&
-            !appointment.status.includes("Cancel")
-          ) {
-            if (appointment.isMemberOfAppointment) {
-              event.color = "blue";
-            } else {
-              event.color = "teal";
-            }
-          }
-
-          let topicName = appointment.topic ? appointment.topic.name : "Open";
-
-          //Note the format of each event, what data is associated with it
-          if (appointment.type === "Group") {
-            if (appointment.status.includes("Cancel")) {
-              event.name = `Group - Canceled by ${tutorName}`;
-            } else {
-              if (appointment.isTutor) {
-                event.color = "grey";
-              }
-              event.name = `Group - ${topicName} Tutoring`;
-            }
-          } else if (appointment.type === "Private") {
-            if (appointment.status === "available") {
-              event.name = `${tutorName} - ${topicName} Tutoring`;
-            } else if (!appointment.status.includes("Cancel")) {
-              event.name = `${studentName} - ${topicName} Tutoring`;
-            } else {
-              if (appointment.status === "tutorCancel") {
-                event.name = `Canceled by ${tutorName}`;
-              } else if (appointment.status === "studentCancel") {
-                event.name = `Canceled by ${studentName}`;
-              }
-            }
-          }
 
           events.push(event);
         }

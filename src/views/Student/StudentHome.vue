@@ -10,175 +10,17 @@
         <v-spacer></v-spacer>
         <v-toolbar-title>{{ message }}</v-toolbar-title>
       </v-toolbar>
-      <v-dialog v-model="showDeleteConfirmation" persistent max-width="750px">
-        <DeleteConfirmationComponent
-          type="appointment"
-          :item="selectedAppointment"
-          @handleReturningCancel="showDeleteConfirmation = false"
-          @handleReturningSuccess="directToCancel()"
-        ></DeleteConfirmationComponent>
-      </v-dialog>
+
       <v-container v-if="!disabled">
-        <v-dialog v-model="appointmentDialog" max-width="800px">
-          <v-card>
-            <v-card-title
-              :class="selectedAppointment.color + ' white--text mb-2'"
-              ><span v-if="selectedAppointment.type === 'Group'" class="text-h5"
-                >Upcoming Group Appointment on
-                {{ selectedAppointment.date }}</span
-              >
-              <span
-                v-else-if="selectedAppointment.type === 'Private'"
-                class="text-h5"
-                >Upcoming Private Appointment on
-                {{ selectedAppointment.date }}</span
-              >
-            </v-card-title>
-            <v-card-text>
-              <b>Time slot:</b>
-              {{ selectedAppointment.startTime }} -
-              {{ selectedAppointment.endTime }}
-              <br />
-              <b>Status:</b>
-              {{ selectedAppointment.status }}
-              <br />
-              <b>Tutors: </b>
-              <span v-if="tutors.length > 0">
-                <span v-for="tutor in tutors" :key="tutor.id">
-                  <span v-if="tutor == tutors[tutors.length - 1]"
-                    >{{ tutor.person.fName }} {{ tutor.person.lName }}</span
-                  >
-                  <span v-else
-                    >{{ tutor.person.fName }} {{ tutor.person.lName }},
-                  </span>
-                </span>
-              </span>
-              <span v-else>
-                <span>None</span>
-              </span>
-              <br />
-              <b>Students: </b>
-              <span v-if="students.length > 0">
-                <span v-for="student in students" :key="student.id">
-                  <span v-if="student == students[students.length - 1]"
-                    >{{ student.person.fName }} {{ student.person.lName }}</span
-                  >
-                  <span v-else
-                    >{{ student.person.fName }} {{ student.person.lName }},
-                  </span>
-                </span>
-              </span>
-              <span v-else>
-                <span>None</span>
-              </span>
-              <br />
-              <br />
-
-              <!-- make location and topic changable if the appointment type is private-->
-              <span v-if="selectedAppointment.type === 'Private'">
-                <v-select
-                  v-model="selectedAppointment.locationId"
-                  :items="locations"
-                  item-text="name"
-                  item-value="id"
-                  label="Location"
-                  :disabled="selectedAppointment.status === 'booked'"
-                  required
-                  dense
-                  @change="saveChanges = true"
-                >
-                </v-select>
-
-                <v-select
-                  v-model="selectedAppointment.topicId"
-                  :items="topics"
-                  item-text="name"
-                  item-value="id"
-                  label="Topic"
-                  :disabled="selectedAppointment.status === 'booked'"
-                  required
-                  dense
-                  @change="saveChanges = true"
-                >
-                </v-select>
-              </span>
-              <!-- slots for location and topic to be unchangable if the session type is group -->
-              <span v-else>
-                <v-select
-                  v-model="selectedAppointment.locationId"
-                  :items="locations"
-                  item-text="name"
-                  item-value="id"
-                  label="Location"
-                  dense
-                  readonly
-                >
-                </v-select>
-
-                <v-select
-                  v-model="selectedAppointment.topicId"
-                  :items="topics"
-                  item-text="name"
-                  item-value="id"
-                  label="Topic"
-                  dense
-                  readonly
-                >
-                </v-select>
-              </span>
-              <!-- show time for private lessons-->
-
-              <v-text-field
-                v-model="selectedAppointment.startTime"
-                label="Booked Start"
-                dense
-                readonly
-              >
-              </v-text-field>
-              <v-text-field
-                v-model="selectedAppointment.endTime"
-                label="Booked End"
-                dense
-                readonly
-              >
-              </v-text-field>
-              <!-- put in pre-session-info for appointment for private appointments/ add a readonly if  group -->
-              <v-textarea
-                v-model="selectedAppointment.preSessionInfo"
-                :counter="130"
-                label="Pre-Session Info"
-                hint="Enter Info About What You Need Help With..."
-                persistent-hint
-                required
-                auto-grow
-                rows="1"
-                :readonly="selectedAppointment.type === 'Group'"
-                @change="saveChanges = true"
-              ></v-textarea>
-            </v-card-text>
-            <v-card-actions>
-              <v-spacer></v-spacer>
-              <v-btn
-                color="accent"
-                @click="
-                  appointmentDialog = false;
-                  getAppointments();
-                "
-              >
-                Close
-              </v-btn>
-              <v-btn
-                v-if="selectedAppointment.type === 'Private' && saveChanges"
-                color="accent"
-                @click="directToEdit()"
-              >
-                Save Changes
-              </v-btn>
-              <v-btn color="red" @click="showDeleteConfirmation = true">
-                Cancel Appointment
-              </v-btn>
-            </v-card-actions>
-          </v-card>
+        <v-dialog v-model="appointmentDialog" persistent max-width="800px">
+          <AppointmentDialogBody
+            :sent-appointment="selectedAppointment"
+            @closeAppointmentDialog="appointmentDialog = false"
+            @doneWithAppointment="
+              appointmentDialog = false;
+              getAppointments();
+            "
+          ></AppointmentDialogBody>
         </v-dialog>
         <v-alert v-model="showAlert" dismissible :type="alertType">{{
           alert
@@ -269,11 +111,8 @@
 <script>
 import Utils from "@/config/utils.js";
 import AppointmentServices from "@/services/appointmentServices.js";
-import LocationServices from "@/services/locationServices.js";
 import PersonRoleServices from "@/services/personRoleServices.js";
-import PersonTopicServices from "@/services/personTopicServices.js";
-import PersonAppointmentServices from "@/services/personAppointmentServices.js";
-import DeleteConfirmationComponent from "../../components/DeleteConfirmationComponent.vue";
+import AppointmentDialogBody from "../../components/AppointmentDialogBody.vue";
 import InformationComponent from "../../components/InformationComponent.vue";
 import { AppointmentActionMixin } from "../../mixins/AppointmentActionMixin";
 import { RedirectToPageMixin } from "../../mixins/RedirectToPageMixin";
@@ -282,7 +121,7 @@ import { TimeFunctionsMixin } from "../../mixins/TimeFunctionsMixin";
 export default {
   name: "StudentHome",
   components: {
-    DeleteConfirmationComponent,
+    AppointmentDialogBody,
     InformationComponent,
   },
   mixins: [AppointmentActionMixin, RedirectToPageMixin, TimeFunctionsMixin],
@@ -294,7 +133,6 @@ export default {
   },
   data() {
     return {
-      showDeleteConfirmation: false,
       user: {},
       group: {},
       showAlert: false,
@@ -302,12 +140,7 @@ export default {
       alertType: "success",
       disabled: false,
       appointmentDialog: false,
-      saveChanges: false,
       selectedAppointment: {},
-      locations: [],
-      topics: [],
-      students: [],
-      tutors: [],
       appointments: [],
       appointmentsNeedingFeedback: [],
       headers: [
@@ -341,7 +174,6 @@ export default {
     if (!this.disabled) {
       await this.getAppointments();
       await this.getAppointmentsNeedingFeedback();
-      await this.getLocations();
       if (this.$route.query !== undefined) {
         for (let i = 0; i < this.appointments.length; i++) {
           if (
@@ -358,31 +190,6 @@ export default {
     }
   },
   methods: {
-    async directToCancel() {
-      let fromUser = {
-        fName: this.user.fName,
-        lName: this.user.lName,
-        userID: this.user.userID,
-        type: this.user.selectedRole.type,
-      };
-      await AppointmentServices.cancelAppointment(
-        this.selectedAppointment.id,
-        fromUser
-      ).catch((error) => {
-        this.alertType = "error";
-        this.alert = error.response.data.message;
-        this.showAlert = true;
-        console.log("There was an error:", error.response);
-      });
-      await this.getAppointments();
-      this.appointmentDialog = false;
-      this.showDeleteConfirmation = false;
-    },
-    async directToEdit() {
-      await this.editAppointment(this.user, this.selectedAppointment);
-      await this.getAppointments();
-      this.appointmentDialog = false;
-    },
     async getGroupByPersonRoleId() {
       await PersonRoleServices.getGroupForPersonRole(this.id)
         .then(async (response) => {
@@ -402,78 +209,6 @@ export default {
       )
         .then(async (response) => {
           this.appointments = response.data;
-          for (let index = 0; index < this.appointments.length; ++index) {
-            this.appointments[index].tutor = "x";
-            //  look up students
-            await PersonAppointmentServices.findTutorDataForTable(
-              this.appointments[index].id
-            )
-              .then((response) => {
-                let tutorData = response.data;
-                if (this.appointments[index].type.includes("Group")) {
-                  this.appointments[index].tutor = tutorData.length;
-                } else if (
-                  this.appointments[index].type.includes("Private") &&
-                  (this.appointments[index].status.includes("booked") ||
-                    this.appointments[index].status.includes("pending"))
-                ) {
-                  this.appointments[index].tutor =
-                    tutorData[0].person.fName + " " + tutorData[0].person.lName;
-                } else {
-                  this.appointments[index].tutor = "Open";
-                }
-              })
-              .catch((error) => {
-                this.alertType = "error";
-                this.alert = error.response.data.message;
-                this.showAlert = true;
-                console.log("There was an error:", error.response);
-              });
-
-            // set null location info
-            if (this.appointments[index].locationId === null) {
-              this.appointments[index].location = {
-                name: "Not Selected",
-              };
-            }
-
-            // set null topic info
-            if (this.appointments[index].topicId === null) {
-              this.appointments[index].topic = {
-                name: "Not Selected",
-              };
-            }
-
-            // set color
-            if (
-              this.appointments[index].status === "available" &&
-              this.appointments[index].type === "Private"
-            )
-              this.appointments[index].color = "grey darken-1";
-            else if (
-              this.appointments[index].status === "available" &&
-              this.appointments[index].type === "Group"
-            )
-              this.appointments[index].color = "purple";
-            else if (this.appointments[index].status === "pending")
-              this.appointments[index].color = "yellow";
-            else if (this.appointments[index].status === "booked")
-              this.appointments[index].color = "blue";
-
-            //format date, start time, and end time but keep the originals
-            let element = this.appointments[index];
-            this.appointments[index].originalDate =
-              this.appointments[index].date;
-            this.appointments[index].date = this.formatDate(element.date);
-            this.appointments[index].originalStart =
-              this.appointments[index].startTime;
-            this.appointments[index].startTime = this.formatTime(
-              element.startTime
-            );
-            this.appointments[index].originalEnd =
-              this.appointments[index].endTime;
-            this.appointments[index].endTime = this.formatTime(element.endTime);
-          }
         })
         .catch((error) => {
           this.alertType = "error";
@@ -481,6 +216,59 @@ export default {
           this.showAlert = true;
           console.log("There was an error:", error.response);
         });
+
+      for (let i = 0; i < this.appointments.length; i++) {
+        let appointment = this.appointments[i];
+        if (
+          appointment.personappointment !== null &&
+          appointment.personappointment !== undefined
+        ) {
+          appointment.students = appointment.personappointment.filter(
+            (pa) => pa.isTutor === false
+          );
+          appointment.tutors = appointment.personappointment.filter(
+            (pa) => pa.isTutor === true
+          );
+        }
+        appointment.isMemberOfAppointment = true;
+        this.setUpCalendarEvent(appointment);
+
+        if (appointment.type.includes("Group")) {
+          appointment.tutor = appointment.tutors.length;
+        } else if (
+          appointment.type === "Private" &&
+          (appointment.status === "booked" || appointment.status === "pending")
+        ) {
+          appointment.tutor =
+            appointment.tutors[0].person.fName +
+            " " +
+            appointment.tutors[0].person.lName;
+        } else {
+          appointment.tutor = "Open";
+        }
+
+        // set null location info
+        if (appointment.locationId === null) {
+          appointment.location = {
+            name: "Not Selected",
+          };
+        }
+
+        // set null topic info
+        if (appointment.topicId === null) {
+          appointment.topic = {
+            name: "Not Selected",
+          };
+        }
+
+        //format date, start time, and end time but keep the originals
+        appointment.originalDate = appointment.date;
+        appointment.date = this.formatDate(appointment.date);
+        appointment.originalStart = appointment.startTime;
+        appointment.startTime = this.formatTime(appointment.startTime);
+        appointment.originalEnd = appointment.endTime;
+        appointment.endTime = this.formatTime(appointment.endTime);
+      }
     },
     async getAppointmentsNeedingFeedback() {
       await AppointmentServices.getPassedAppointmentsForStudent(
@@ -489,20 +277,16 @@ export default {
       )
         .then((response) => {
           this.appointmentsNeedingFeedback = response.data;
-          for (
-            let index = 0;
-            index < this.appointmentsNeedingFeedback.length;
-            ++index
-          ) {
+          for (let i = 0; i < this.appointmentsNeedingFeedback.length; ++i) {
             //format date, start time, and end time
-            let element = this.appointmentsNeedingFeedback[index];
-            this.appointmentsNeedingFeedback[index].date = this.formatDate(
+            let element = this.appointmentsNeedingFeedback[i];
+            this.appointmentsNeedingFeedback[i].date = this.formatDate(
               element.date
             );
-            this.appointmentsNeedingFeedback[index].startTime = this.formatTime(
+            this.appointmentsNeedingFeedback[i].startTime = this.formatTime(
               element.startTime
             );
-            this.appointmentsNeedingFeedback[index].endTime = this.formatTime(
+            this.appointmentsNeedingFeedback[i].endTime = this.formatTime(
               element.endTime
             );
           }
@@ -535,78 +319,31 @@ export default {
           console.log("There was an error:", error.response);
         });
     },
-    //Update the lists of tutors and students
-    async updatePeople() {
-      this.tutors = [];
-      this.students = [];
-      await PersonAppointmentServices.findStudentDataForTable(
-        this.selectedAppointment.id
-      )
-        .then((response) => {
-          this.students = response.data;
-        })
-        .catch((error) => {
-          this.alertType = "error";
-          this.alert = error.response.data.message;
-          this.showAlert = true;
-          console.log("There was an error:", error.response);
-        });
-      await PersonAppointmentServices.findTutorDataForTable(
-        this.selectedAppointment.id
-      )
-        .then((response) => {
-          this.tutors = response.data;
-        })
-        .catch((error) => {
-          this.alertType = "error";
-          this.alert = error.response.data.message;
-          this.showAlert = true;
-          console.log("There was an error:", error.response);
-        });
-    },
-    async getLocations() {
-      await LocationServices.getActiveForGroup(this.group.id)
-        .then((response) => {
-          this.locations = response.data;
-        })
-        .catch((error) => {
-          this.alertType = "error";
-          this.alert = error.response.data.message;
-          this.showAlert = true;
-          console.log("There was an error:", error.response);
-        });
-    },
-    async getTopicsForTutor() {
-      await PersonTopicServices.getTopicForPersonGroup(
-        this.group.id,
-        this.tutors[0].personId
-      )
-        .then((response) => {
-          this.topics = response.data;
-        })
-        .catch((error) => {
-          this.alertType = "error";
-          this.alert = error.response.data.message;
-          this.showAlert = true;
-          console.log("There was an error:", error.response);
-        });
-    },
-    checkStatus(status) {
-      if (
-        this.selectedAppointment != null &&
-        this.selectedAppointment.status == status
-      ) {
-        return true;
-      } else {
-        return false;
-      }
-    },
     rowClick: async function (item, row) {
       row.select(true);
       this.selectedAppointment = item;
-      await this.updatePeople();
-      this.getTopicsForTutor();
-      this.saveChanges = false;
+      this.selectedAppointment.group = this.group;
+      this.selectedAppointment.personRolePrivileges = [];
+      this.selectedAppointment.newStart =
+        this.selectedAppointment.originalStart;
+      this.selectedAppointment.newEnd = this.selectedAppointment.originalEnd;
+      if (
+        this.selectedAppointment.type.includes("Private") &&
+        this.selectedAppointment.status.includes("available") &&
+        this.group.allowSplittingAppointments &&
+        this.subtractTimes(
+          this.selectedAppointment.originalStart,
+          this.selectedAppointment.originalEnd
+        ) >= this.group.minApptTime
+      ) {
+        this.selectedAppointment.displayedStart = "";
+        this.selectedAppointment.displayedEnd = "";
+      } else {
+        this.selectedAppointment.displayedStart =
+          this.selectedAppointment.originalStart;
+        this.selectedAppointment.displayedEnd =
+          this.selectedAppointment.originalEnd;
+      }
       this.appointmentDialog = true;
     },
   },
