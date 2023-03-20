@@ -1,18 +1,19 @@
 <template>
   <div>
     <v-container>
-      <v-toolbar>
-        <v-toolbar-title>{{ message }}</v-toolbar-title>
+      <v-card-title
+        class="text-h4 font-weight-bold pt-4 pb-6 pl-0 pr-0 accent--text"
+        >{{ title }}
         <InformationComponent
           message="Select an appointment to view information, book the appointment,
             make changes, etc.
-      
             You can filter the appointments by a desired Topic or Tutor."
-        ></InformationComponent>
-        <v-spacer></v-spacer>
-        <v-toolbar-title>{{ role.type }}</v-toolbar-title>
-      </v-toolbar>
-      <br />
+        ></InformationComponent
+        ><v-spacer></v-spacer>
+        <v-card-title class="text-right pt-0 pb-0 pl-0 pr-0 accent--text">{{
+          role.type
+        }}</v-card-title>
+      </v-card-title>
       <v-alert v-model="showAlert" dismissible :type="alertType">{{
         alert
       }}</v-alert>
@@ -35,7 +36,7 @@
                 color="grey darken-2"
                 @click="viewMonth()"
               >
-                Reset
+                Today
               </v-btn>
               <!-- Navigates calendar forward and back -->
               <v-btn fab text small color="grey darken-2" @click="prev">
@@ -141,13 +142,10 @@
               offset-x
             >
               <v-card color="grey lighten-4" min-width="350px" flat>
-                <v-toolbar :color="selectedEvent.color" dark>
-                  <v-btn icon>
-                    <v-icon>mdi-pencil</v-icon>
-                  </v-btn>
-                  <v-toolbar-title>{{ selectedEvent.name }}</v-toolbar-title>
-                </v-toolbar>
-                <!-- How to show tutor? -->
+                <v-card-title
+                  :class="selectedEvent.color + ' white--text mb-2'"
+                  >{{ selectedEvent.name }}</v-card-title
+                >
                 <v-card-text v-if="selectedAppointment != null">
                   <b>Time slot:</b>
                   {{ calcTime(selectedAppointment.startTime) }}-{{
@@ -243,7 +241,10 @@
                         dense
                         :disabled="datePast"
                         :readonly="
-                          !isTutorEvent || (isTutorEvent && checkRole('Admin'))
+                          !isTutorEvent ||
+                          (isTutorEvent && checkRole('Admin')) ||
+                          checkStatus('tutorCancel') ||
+                          checkStatus('studentCancel')
                         "
                         @change="saveChanges = true"
                       >
@@ -398,7 +399,11 @@
                       auto-grow
                       rows="1"
                       :readonly="!isTutorEvent"
-                      :disabled="datePast"
+                      :disabled="
+                        datePast ||
+                        checkStatus('tutorCancel') ||
+                        checkStatus('studentCancel')
+                      "
                       @change="saveChanges = true"
                     ></v-textarea>
                   </span>
@@ -467,9 +472,10 @@
                       ((studentfName == '' || studentlName == '') &&
                         !emailFound &&
                         (checkRole('Admin') ||
-                          checkPrivilege(
+                          (checkPrivilege(
                             'Sign up students for appointments'
-                          ))) ||
+                          ) &&
+                            selectedAppointment.type.includes('Private')))) ||
                       (checkRole('Admin') &&
                         selectedAppointment.type.includes('Group') &&
                         !adminAddStudent) ||
@@ -550,7 +556,10 @@
                       ((checkStatus('booked') &&
                         !checkRole('Admin') &&
                         (isTutorEvent || isPrivateBook)) ||
-                        (isGroupBook && !adminAddStudent) ||
+                        (isGroupBook &&
+                          !adminAddStudent &&
+                          !checkStatus('tutorCancel') &&
+                          !checkStatus('studentCancel')) ||
                         (isTutorEvent &&
                           (checkStatus('available') ||
                             checkStatus('booked'))) ||
@@ -561,7 +570,6 @@
                     @click="
                       showDeleteConfirmation = true;
                       initializeData();
-                      selectedOpen = false;
                       secondTime = true;
                     "
                   >
@@ -712,7 +720,7 @@ export default {
     alert: "",
     alertType: "success",
     overlay: true,
-    message: "Calendar",
+    title: " Calendar",
     mode: "stack",
     secondTime: true,
     //appointment info
@@ -789,6 +797,7 @@ export default {
   }),
   async created() {
     this.user = Utils.getStore("user");
+    this.title = this.user.selectedGroup + this.title;
     this.role = this.user.selectedRole;
     await this.getPrivilegesForPersonRole();
     await this.getGroupByPersonRoleId();
@@ -972,7 +981,7 @@ export default {
           });
       }
     },
-    async isStudentofAppointment() {
+    async isStudentOfAppointment() {
       await PersonAppointmentServices.getPersonAppointmentForPerson(
         this.user.userID
       ).then((response) => {
@@ -1074,20 +1083,20 @@ export default {
       this.keyVisible = false;
     },
     //Animates Event card popping up
-    showEvent({ nativeEvent, event }) {
-      const open = () => {
+    async showEvent({ nativeEvent, event }) {
+      const open = async () => {
         this.selectedEvent = event;
-        AppointmentServices.getAppointment(event.appointmentId)
+        await AppointmentServices.getAppointment(event.appointmentId)
           .then(async (response) => {
             this.selectedAppointment = response.data;
             this.newStart = this.selectedAppointment.startTime;
             this.newEnd = this.selectedAppointment.endTime;
             this.appointmentType = this.selectedAppointment.type;
-            this.isTutorOfSelectedEvent();
-            this.checkGroupBooking();
+            await this.isTutorOfSelectedEvent();
+            await this.checkGroupBooking();
             this.updateTimes();
-            this.updatePeople();
-            this.isStudentofAppointment();
+            await this.updatePeople();
+            await this.isStudentOfAppointment();
             this.checkAppointmentIfPast();
             if (
               this.selectedAppointment.type.includes("Private") &&
@@ -1474,13 +1483,45 @@ export default {
       this.selectedOpen = false;
       this.showDeleteConfirmation = false;
       if (this.selectedAppointment.status === "pending") {
-        await this.confirmAppointment(
-          false,
-          this.user,
-          this.selectedAppointment
-        );
+        if (this.user.selectedRole.type === "Tutor") {
+          await this.confirmAppointment(
+            false,
+            this.user,
+            this.selectedAppointment
+          );
+        } else if (this.user.selectedRole.type === "Student") {
+          let fromUser = {
+            fName: this.user.fName,
+            lName: this.user.lName,
+            userID: this.user.userID,
+            type: this.user.selectedRole.type,
+          };
+          await AppointmentServices.cancelAppointment(
+            this.selectedAppointment.id,
+            fromUser
+          ).catch((error) => {
+            this.alertType = "error";
+            this.alert = error.response.data.message;
+            this.showAlert = true;
+            console.log("There was an error:", error.response);
+          });
+        }
       } else {
-        await this.cancelAppointment(this.selectedAppointment, this.user);
+        let fromUser = {
+          fName: this.user.fName,
+          lName: this.user.lName,
+          userID: this.user.userID,
+          type: this.user.selectedRole.type,
+        };
+        await AppointmentServices.cancelAppointment(
+          this.selectedAppointment.id,
+          fromUser
+        ).catch((error) => {
+          this.alertType = "error";
+          this.alert = error.response.data.message;
+          this.showAlert = true;
+          console.log("There was an error:", error.response);
+        });
       }
       await this.initializeData();
     },

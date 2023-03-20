@@ -4,7 +4,7 @@
       <v-card-title class="text-h4 font-weight-bold pt-4 pb-6 pl-0 accent--text"
         >{{ title }}
         <InformationComponent
-          :message="'View, edit and add locations for ' + group.name"
+          :message="'View, edit and add locations for ' + group.name + '.'"
         ></InformationComponent
       ></v-card-title>
       <v-card>
@@ -78,9 +78,9 @@ export default {
   },
   async created() {
     this.user = Utils.getStore("user");
+    this.title = this.user.selectedGroup + this.title;
     await this.getGroupByPersonRoleId();
     await this.getLocationsForGroup();
-    this.title = this.group.name + this.title;
   },
   methods: {
     async getGroupByPersonRoleId() {
@@ -93,8 +93,8 @@ export default {
           console.log("There was an error:", error.response);
         });
     },
-    getLocationsForGroup() {
-      LocationServices.getAllForGroup(this.group.id)
+    async getLocationsForGroup() {
+      await LocationServices.getAllForGroup(this.group.id)
         .then((response) => {
           this.locations = response.data;
         })

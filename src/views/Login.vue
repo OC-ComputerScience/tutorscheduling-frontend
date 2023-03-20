@@ -109,9 +109,10 @@ export default {
       user: {},
     };
   },
-  mounted() {
-    this.loginWithGoogle();
+  async mounted() {
+    await this.loginWithGoogle();
   },
+  created() {},
   methods: {
     async loginWithGoogle() {
       global.handleCredentialResponse = this.handleCredentialResponse;
@@ -138,12 +139,12 @@ export default {
         credential: response.credential,
       };
       await AuthServices.loginUser(token)
-        .then((response) => {
+        .then(async (response) => {
           this.user = response.data;
           Utils.setStore("user", this.user);
           this.fName = this.user.fName;
           this.lName = this.user.lName;
-          this.openDialogs();
+          await this.openDialogs();
         })
         .catch((error) => {
           console.log("error", error);
@@ -177,7 +178,7 @@ export default {
           console.log("There was an error:", error.response);
         }
       );
-      this.openDialogs();
+      await this.openDialogs();
     },
     async openDialogs() {
       // if this person doesn't have any roles, do this

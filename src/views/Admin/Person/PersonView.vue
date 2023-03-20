@@ -717,14 +717,12 @@ export default {
         await this.saveRole();
         await this.disablePersonRole();
       } else if (this.deleteType === "privilege") {
-        await PersonRolePrivilegeServices.deletePrivilege(this.deleteItem.id)
-          .then(() => {
-            this.getPersonRoles();
-          })
-          .catch((error) => {
-            this.message = error.response.data.message;
-            console.log("There was an error:", error.response);
-          });
+        await PersonRolePrivilegeServices.deletePrivilege(
+          this.deleteItem.id
+        ).catch((error) => {
+          this.message = error.response.data.message;
+          console.log("There was an error:", error.response);
+        });
         await this.getPersonRoles();
       } else if (this.deleteType === "persontopic") {
         await PersonTopicServices.deletePersonTopic(

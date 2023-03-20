@@ -340,7 +340,7 @@ export default {
     topics: [],
     location: "",
     locations: [],
-    personroleprivileges: [],
+    personRolePrivileges: [],
     sessionValues: [
       { text: "Private", value: "Private" },
       { text: "Group", value: "Group" },
@@ -453,27 +453,14 @@ export default {
             isAvail = false;
             this.conflictAvailability.conflicting = {
               date: tempAvail.date,
-              startTime: tempAvail.startTime,
-              endTime: tempAvail.endTime,
+              startTime: this.formatTime(tempAvail.startTime),
+              endTime: this.formatTime(tempAvail.endTime),
             };
             this.conflictAvailability.existing = {
               date: appoint.date,
-              startTime: appoint.startTime,
-              endTime: appoint.endTime,
+              startTime: this.formatTime(appoint.startTime),
+              endTime: this.formatTime(appoint.endTime),
             };
-            // format time of conflict availability
-            this.conflictAvailability.conflicting.startTime = this.formatTime(
-              this.conflictAvailability.conflicting.startTime
-            );
-            this.conflictAvailability.conflicting.endTime = this.formatTime(
-              this.conflictAvailability.conflicting.endTime
-            );
-            this.conflictAvailability.existing.startTime = this.formatTime(
-              this.conflictAvailability.existing.startTime
-            );
-            this.conflictAvailability.existing.endTime = this.formatTime(
-              this.conflictAvailability.existing.endTime
-            );
             return;
           }
         }
@@ -538,8 +525,9 @@ export default {
                       if (
                         this.appointment.type === "Group" ||
                         this.appointment.type === "group"
-                      )
-                        await AppointmentServices.updateForGoogle(
+                      ) {
+                        // this adds the appointment to google
+                        await AppointmentServices.updateAppointment(
                           tempApp.id,
                           tempApp
                         ).catch((error) => {
@@ -548,6 +536,7 @@ export default {
                           this.showAlert = true;
                           console.log("There was an error:", error.response);
                         });
+                      }
                     })
                     .catch((error) => {
                       this.alertType = "error";
@@ -663,7 +652,7 @@ export default {
     async getPrivilegesForPersonRole() {
       await PersonRolePrivilegeServices.getPrivilegeByPersonRole(this.id)
         .then((response) => {
-          this.personroleprivileges = response.data;
+          this.personRolePrivileges = response.data;
         })
         .catch((error) => {
           this.alertType = "error";
@@ -674,7 +663,7 @@ export default {
     },
     checkPrivilege(privilege) {
       let hasPriv = false;
-      this.personroleprivileges.forEach((priv) => {
+      this.personRolePrivileges.forEach((priv) => {
         if (priv.privilege === privilege) hasPriv = true;
       });
       return hasPriv;

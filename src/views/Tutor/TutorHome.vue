@@ -23,22 +23,19 @@
       </v-dialog>
       <v-dialog v-model="appointmentDialog" max-width="800px">
         <v-card>
-          <v-toolbar :color="selectedAppointment.color" dark>
-            <v-card-title>
-              <span v-if="selectedAppointment.type === 'Group'" class="text-h5"
-                >Upcoming Group Appointment on
-                {{ selectedAppointment.date }}</span
-              >
-              <span
-                v-else-if="selectedAppointment.type === 'Private'"
-                class="text-h5"
-                >Upcoming Private Appointment on
-                {{ selectedAppointment.date }}</span
-              >
-            </v-card-title>
-          </v-toolbar>
+          <v-card-title :class="selectedAppointment.color + ' white--text mb-2'"
+            ><span v-if="selectedAppointment.type === 'Group'" class="text-h5"
+              >Upcoming Group Appointment on
+              {{ selectedAppointment.date }}</span
+            >
+            <span
+              v-else-if="selectedAppointment.type === 'Private'"
+              class="text-h5"
+              >Upcoming Private Appointment on
+              {{ selectedAppointment.date }}</span
+            >
+          </v-card-title>
           <v-card-text>
-            <br />
             <b>Time slot:</b>
             {{ selectedAppointment.startTime }} -
             {{ selectedAppointment.endTime }}
@@ -78,7 +75,7 @@
             <br />
             <br />
 
-            <!-- make location and topic changable if the appointment type is private-->
+            <!-- make location and topic changeable if the appointment type is private-->
             <span v-if="selectedAppointment.type === 'Private'">
               <v-select
                 v-model="selectedAppointment.locationId"
@@ -108,7 +105,7 @@
               >
               </v-select>
             </span>
-            <!-- slots for location and topic to be unchangable if the session type is group -->
+            <!-- slots for location and topic to be unchangeable if the session type is group -->
             <span v-else>
               <v-select
                 v-model="selectedAppointment.locationId"
@@ -383,7 +380,7 @@ export default {
         { text: "Location", value: "location.name" },
         { text: "Status", value: "status" },
         { text: "Type", value: "type" },
-        { text: "Student(s)", value: "student" },
+        { text: "Students", value: "student" },
       ],
       headerFeedback: [
         { text: "Date", value: "date" },
@@ -417,6 +414,7 @@ export default {
           this.appointments[i].id === parseInt(this.$route.query.appointmentId)
         ) {
           this.selectedAppointment = this.appointments[i];
+          await this.updatePeople();
           this.appointmentDialog = true;
           return;
         }
@@ -521,8 +519,7 @@ export default {
               .then((response) => {
                 let studentData = response.data;
                 if (this.appointments[index].type.includes("Group")) {
-                  this.appointments[index].student =
-                    studentData.length + " Student(s)";
+                  this.appointments[index].student = studentData.length;
                 } else if (
                   this.appointments[index].type.includes("Private") &&
                   (this.appointments[index].status.includes("booked") ||
@@ -643,7 +640,21 @@ export default {
           this.selectedAppointment
         );
       else {
-        await this.cancelAppointment(this.selectedAppointment, this.user);
+        let fromUser = {
+          fName: this.user.fName,
+          lName: this.user.lName,
+          userID: this.user.userID,
+          type: this.user.selectedRole.type,
+        };
+        await AppointmentServices.cancelAppointment(
+          this.selectedAppointment.id,
+          fromUser
+        ).catch((error) => {
+          this.alertType = "error";
+          this.alert = error.response.data.message;
+          this.showAlert = true;
+          console.log("There was an error:", error.response);
+        });
       }
       await this.getAppointments();
       this.appointmentDialog = false;
