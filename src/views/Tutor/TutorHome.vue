@@ -75,7 +75,7 @@
             <br />
             <br />
 
-            <!-- make location and topic changable if the appointment type is private-->
+            <!-- make location and topic changeable if the appointment type is private-->
             <span v-if="selectedAppointment.type === 'Private'">
               <v-select
                 v-model="selectedAppointment.locationId"
@@ -105,7 +105,7 @@
               >
               </v-select>
             </span>
-            <!-- slots for location and topic to be unchangable if the session type is group -->
+            <!-- slots for location and topic to be unchangeable if the session type is group -->
             <span v-else>
               <v-select
                 v-model="selectedAppointment.locationId"

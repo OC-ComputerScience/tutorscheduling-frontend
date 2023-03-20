@@ -2,15 +2,13 @@
   <div>
     <v-card>
       <v-card-title>{{ cancelTitle }} </v-card-title>
-      <v-card-subtitle>{{ cancelSubtitle }}</v-card-subtitle>
       <v-card-text>
         {{ cancelBody }}
       </v-card-text>
       <v-card-actions>
         <v-spacer></v-spacer>
         <v-btn
-          color="grey"
-          class="white--text"
+          color="grey white--text"
           @click="$emit('handleReturningCancel')"
           >{{ cancelButton }}</v-btn
         >
@@ -38,7 +36,6 @@ export default {
   data() {
     return {
       cancelTitle: "",
-      cancelSubtitle: "",
       cancelBody: "",
       cancelButton: "No, keep it",
       agreeButton: "",
@@ -68,25 +65,32 @@ export default {
       }
     },
     setupForAppointment() {
-      console.log(this.item);
       if (this.item.status === "available") {
+        // TODO: add what's commented out when dialog is fixed
+        // if (this.item.tutors.length === 1) {
         this.cancelTitle =
           "Are you sure you want to remove this available appointment?";
         this.agreeButton = "Yes, remove";
-        this.cancelBody = "Removing ";
+        this.cancelBody = "Removing this appointment cannot be undone.";
+        // } else if (this.item.tutors.length > 1) {
+        //   this.cancelTitle =
+        //     "Are you sure you want to leave this available appointment?";
+        //   this.agreeButton = "Yes, leave";
+        //   this.cancelBody =
+        //     "Leaving this appointment will remove you as a tutor and reassign the appointment to another tutor. ";
+        // }
       } else if (this.item.status === "pending") {
         this.cancelTitle = "Are you sure you want to reject this appointment?";
         this.agreeButton = "Yes, reject";
-        this.cancelBody = "Rejecting ";
+        this.cancelBody = "Rejecting this appointment cannot be undone.";
       } else if (
         this.item.status === "booked" ||
         this.item.status === "available"
       ) {
         this.cancelTitle = "Are you sure you want to cancel this appointment?";
         this.agreeButton = "Yes, cancel";
-        this.cancelBody = "Canceling ";
+        this.cancelBody = "Canceling this appointment cannot be undone.";
       }
-      this.cancelBody += "this appointment cannot be undone.";
     },
     setupForLocationTopic() {
       this.cancelTitle =
@@ -119,9 +123,11 @@ export default {
         " " +
         this.item.person.lName +
         "?";
-      this.cancelSubtitle =
-        type.charAt(0).toUpperCase() + type.slice(1) + ": " + name;
       this.cancelBody =
+        type.charAt(0).toUpperCase() +
+        type.slice(1) +
+        ": " +
+        name +
         "\nDeleting this " +
         type +
         " will make it unavailable for " +
