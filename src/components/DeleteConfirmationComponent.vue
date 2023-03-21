@@ -67,18 +67,18 @@ export default {
     setupForAppointment() {
       if (this.item.status === "available") {
         // TODO: add what's commented out when dialog is fixed
-        // if (this.item.tutors.length === 1) {
-        this.cancelTitle =
-          "Are you sure you want to remove this available appointment?";
-        this.agreeButton = "Yes, remove";
-        this.cancelBody = "Removing this appointment cannot be undone.";
-        // } else if (this.item.tutors.length > 1) {
-        //   this.cancelTitle =
-        //     "Are you sure you want to leave this available appointment?";
-        //   this.agreeButton = "Yes, leave";
-        //   this.cancelBody =
-        //     "Leaving this appointment will remove you as a tutor and reassign the appointment to another tutor. ";
-        // }
+        if (this.item.tutors.length === 1) {
+          this.cancelTitle =
+            "Are you sure you want to remove this available appointment?";
+          this.agreeButton = "Yes, remove";
+          this.cancelBody = "Removing this appointment cannot be undone.";
+        } else if (this.item.tutors.length > 1) {
+          this.cancelTitle =
+            "Are you sure you want to leave this available appointment?";
+          this.agreeButton = "Yes, leave";
+          this.cancelBody =
+            "Leaving this appointment will remove you as a tutor and reassign the appointment to another tutor. ";
+        }
       } else if (this.item.status === "pending") {
         this.cancelTitle = "Are you sure you want to reject this appointment?";
         this.agreeButton = "Yes, reject";

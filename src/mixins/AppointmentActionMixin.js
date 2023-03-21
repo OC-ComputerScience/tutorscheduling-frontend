@@ -58,6 +58,21 @@ export const AppointmentActionMixin = {
 
       return appointments;
     },
+    checkStudentInAppointment(appointment) {
+      return appointment.students.find((student) => {
+        return student.personId === this.user.userID;
+      });
+    },
+    checkTutorInAppointment(appointment) {
+      return appointment.tutors.find((tutor) => {
+        return tutor.personId === this.user.userID;
+      });
+    },
+    checkPersonInAppointment(appointment) {
+      return appointment.personappointment.find((person) => {
+        return person.personId === this.user.userID;
+      });
+    },
     setUpCalendarEvent(appointment) {
       let startTime = new Date(appointment.date);
       let startTimes = appointment.startTime.split(":");
@@ -67,6 +82,9 @@ export const AppointmentActionMixin = {
       let endTimes = appointment.endTime.split(":");
       endTime.setHours(endTime.getHours() + parseInt(endTimes[0]));
       endTime.setMinutes(endTime.getMinutes() + parseInt(endTimes[1]));
+
+      appointment.newStart = appointment.startTime;
+      appointment.newEnd = appointment.endTime;
 
       appointment.eventStart = startTime;
       appointment.eventEnd = endTime;
@@ -79,7 +97,7 @@ export const AppointmentActionMixin = {
         case "pending":
           appointment.color = "yellow";
           break;
-        case "studentCancel" || "tutorCancel":
+        case "studentCancel" || "tutorCancel" || "noShow":
           appointment.color = "error";
           break;
         case "booked":
@@ -253,7 +271,7 @@ export const AppointmentActionMixin = {
           appointmentId: this.appointment.id,
           appointmentType: this.appointment.type,
           tutorPhoneNum: this.appointment.tutors[0].person.phoneNum,
-          tutorPersonRoleId: this.appointment.tutors[0].person.personrole[0].id,
+          tutorPersonRoleId: this.appointment.tutors[0].id,
           date: this.formatDate(this.appointment.date),
           startTime: this.calcTime(this.appointment.startTime),
           locationName: this.appointment.location.name,
@@ -275,7 +293,7 @@ export const AppointmentActionMixin = {
         let textInfo = {
           appointmentId: this.appointment.id,
           tutorPhoneNum: this.appointment.tutors[0].person.phoneNum,
-          tutorPersonRoleId: this.appointment.tutors[0].person.personrole[0].id,
+          tutorPersonRoleId: this.appointment.tutors[0].id,
           date: this.formatDate(this.appointment.date),
           startTime: this.calcTime(this.appointment.startTime),
           locationName: this.appointment.location.name,
@@ -351,7 +369,7 @@ export const AppointmentActionMixin = {
     async editAppointment(fromUser, appointment) {
       let updatedAppointment = {
         id: appointment.id,
-        date: appointment.originalDate,
+        date: appointment.date,
         startTime: appointment.startTime,
         endTime: appointment.endTime,
         type: appointment.type,
@@ -398,9 +416,9 @@ export const AppointmentActionMixin = {
     async confirmAppointment(confirm, fromUser, appointment) {
       let updatedAppointment = {
         id: appointment.id,
-        date: appointment.originalDate,
-        startTime: appointment.originalStart,
-        endTime: appointment.originalEnd,
+        date: appointment.date,
+        startTime: appointment.startTime,
+        endTime: appointment.endTime,
         type: appointment.type,
         status: appointment.status,
         preSessionInfo: appointment.preSessionInfo,
@@ -422,8 +440,7 @@ export const AppointmentActionMixin = {
             appointmentId: this.appointment.id,
             appointmentType: this.appointment.type,
             studentPhoneNum: this.appointment.students[0].person.phoneNum,
-            studentPersonRoleId:
-              this.appointment.students[0].person.personrole[0].id,
+            studentPersonRoleId: this.appointment.students[0].id,
             date: this.formatDate(this.appointment.date),
             startTime: this.calcTime(this.appointment.startTime),
             topicName: this.appointment.topic.name,
@@ -433,12 +450,13 @@ export const AppointmentActionMixin = {
           await TwilioServices.sendConfirmedMessage(textInfo);
         }
       } else {
+        console.log(appointment);
         // don't need to update google cal because it's not even on there yet
         updatedAppointment.status = "tutorCancel";
         let textInfo = {
           appointmentType: this.appointment.type,
           toPhoneNum: this.appointment.students[0].person.phoneNum,
-          toPersonRoleId: this.appointment.students[0].person.personrole[0].id,
+          toPersonRoleId: this.appointment.students[0].id,
           date: this.formatDate(this.appointment.date),
           startTime: this.calcTime(this.appointment.startTime),
           topicName: this.appointment.topic.name,

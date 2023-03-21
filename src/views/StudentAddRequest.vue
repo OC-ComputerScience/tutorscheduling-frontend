@@ -76,7 +76,7 @@ import PersonServices from "@/services/personServices.js";
 import PersonRoleServices from "@/services/personRoleServices.js";
 import RoleServices from "@/services/roleServices.js";
 import Utils from "@/config/utils.js";
-import InformationComponent from "../../components/InformationComponent.vue";
+import InformationComponent from "../components/InformationComponent.vue";
 
 export default {
   name: "StudentAddRequest",

@@ -126,6 +126,12 @@ export const TimeFunctionsMixin = {
         date.toString().substring(5, 10) + "-" + date.toString().substring(0, 4)
       );
     },
+    formatReadableMonth(date) {
+      return new Date(date).toLocaleDateString(undefined, {
+        month: "long",
+        day: "numeric",
+      });
+    },
     formatReadableDate(date) {
       return new Date(date).toLocaleDateString(undefined, {
         weekday: "long",

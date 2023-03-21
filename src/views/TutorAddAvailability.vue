@@ -275,9 +275,9 @@ import TopicServices from "@/services/topicServices.js";
 import LocationServices from "@/services/locationServices.js";
 import AppointmentServices from "@/services/appointmentServices.js";
 import PersonAppointmentServices from "@/services/personAppointmentServices.js";
-import InformationComponent from "../../components/InformationComponent.vue";
+import InformationComponent from "../components/InformationComponent.vue";
 import Utils from "@/config/utils.js";
-import { TimeFunctionsMixin } from "../../mixins/TimeFunctionsMixin";
+import { TimeFunctionsMixin } from "../mixins/TimeFunctionsMixin";
 
 export default {
   name: "TutorAddAvailability",

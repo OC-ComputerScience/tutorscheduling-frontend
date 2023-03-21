@@ -242,7 +242,6 @@ export default {
     alert: "",
     alertType: "success",
     overlay: true,
-    // title: "",
     mode: "stack",
     appointments: [],
     selectedAppointment: {},
@@ -297,9 +296,6 @@ export default {
   }),
   async created() {
     this.user = Utils.getStore("user");
-    // this.title = `${this.user.selectedGroup} - ${
-    //   this.$refs.calendar ? this.$refs.calendar.title : ""
-    // }`;
     this.role = this.user.selectedRole;
     await this.getPrivilegesForPersonRole();
     await this.getGroupByPersonRoleId();
@@ -310,9 +306,7 @@ export default {
   methods: {
     async initializeData() {
       this.overlay = true;
-      await this.getAppointmentsForGroup(this.group.id).then((response) => {
-        this.appointments = response;
-      });
+      this.appointments = await this.getAppointmentsForGroup(this.group.id);
       await this.loadAppointments();
       this.overlay = false;
     },
@@ -386,13 +380,10 @@ export default {
         this.selectedAppointment = this.appointments.find(
           (appointment) => appointment.id == event.appointmentId
         );
-        this.selectedAppointment.color = event.color;
-        this.selectedAppointment.name = event.name;
         this.selectedAppointment.group = this.group;
         this.selectedAppointment.personRolePrivileges =
           this.personRolePrivileges;
-        this.selectedAppointment.newStart = this.selectedAppointment.startTime;
-        this.selectedAppointment.newEnd = this.selectedAppointment.endTime;
+
         if (
           this.selectedAppointment.type.includes("Private") &&
           this.selectedAppointment.status.includes("available") &&
@@ -534,21 +525,6 @@ export default {
 
       this.overlay = false;
       this.events = events;
-    },
-    checkStudentInAppointment(appointment) {
-      return appointment.students.find((student) => {
-        return student.personId === this.user.userID;
-      });
-    },
-    checkTutorInAppointment(appointment) {
-      return appointment.tutors.find((tutor) => {
-        return tutor.personId === this.user.userID;
-      });
-    },
-    checkPersonInAppointment(appointment) {
-      return appointment.personappointment.find((person) => {
-        return person.personId === this.user.userID;
-      });
     },
   },
 };

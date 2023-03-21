@@ -8,18 +8,23 @@
       {{ calcTime(appointment.startTime) }} -
       {{ calcTime(appointment.endTime) }}
     </v-card-subtitle>
-    <v-card-text>
-      <div class="mt-2">
-        <v-icon class="mr-2">mdi-human-male-board-poll</v-icon>
-        <b>Tutors: </b>
-        {{ tutorString }}
-      </div>
-
-      <div class="mt-2">
-        <v-icon class="mr-2">mdi-account-multiple-outline</v-icon>
-        <b>Students: </b>
-        {{ studentString }}
-      </div>
+    <v-card-text v-if="!showFeedbackDialog">
+      <v-row>
+        <v-col>
+          <div class="mt-2">
+            <v-icon class="mr-2">mdi-human-male-board-poll</v-icon>
+            <b>Tutors: </b>
+            {{ tutorString }}
+          </div>
+        </v-col>
+        <v-col>
+          <div class="mt-2">
+            <v-icon class="mr-2">mdi-account-multiple-outline</v-icon>
+            <b>Students: </b>
+            {{ studentString }}
+          </div>
+        </v-col>
+      </v-row>
 
       <div v-if="isAdminAddStudent">
         <v-text-field
@@ -61,7 +66,8 @@
         v-if="
           appointment.location !== null &&
           appointment.location.type === 'Online' &&
-          appointment.URL !== null
+          appointment.URL !== null &&
+          !isDatePast
         "
         class="mt-2 mb-2"
       >
@@ -83,7 +89,7 @@
         :readonly="!canEditLocation"
         :disabled="isDatePast"
         required
-        @change="saveChanges = true"
+        @change="checkButtons()"
       >
       </v-select>
 
@@ -99,7 +105,7 @@
         :readonly="!canEditTopic"
         :disabled="isDatePast"
         required
-        @change="saveChanges = true"
+        @change="checkButtons()"
       >
       </v-select>
 
@@ -121,6 +127,7 @@
               appointment.newStart = appointment.displayedStart;
               updateTimes();
               canEditSecondTime = true;
+              checkButtons();
             "
           >
           </v-select>
@@ -143,6 +150,7 @@
             @change="
               appointment.newEnd = appointment.displayedEnd;
               updateTimes();
+              checkButtons();
             "
           >
           </v-select>
@@ -164,11 +172,49 @@
         rows="2"
         :readonly="!canEditPreSession"
         :disabled="isDatePast"
-        @change="saveChanges = true"
+        @change="checkButtons()"
       ></v-textarea>
     </v-card-text>
 
-    <v-card-actions>
+    <v-card-text v-else>
+      <div class="text-h6">
+        What would you rate this appointment experience?
+      </div>
+
+      <v-rating
+        v-model="updatedPersonAppointment.feedbacknumber"
+        class="justify-center"
+        background-color="grey"
+        color="primary"
+        empty-icon="mdi-star-outline"
+        half-icon="mdi-star-half-full"
+        full-icon="mdi-star"
+        hover
+        half-increments
+        :readonly="isNoShow"
+        label="Rating"
+        length="5"
+        x-large
+      ></v-rating>
+
+      <v-textarea
+        v-model="updatedPersonAppointment.feedbacktext"
+        rows="2"
+        :counter="500"
+        :disabled="isNoShow"
+        label="How did your session go?"
+      ></v-textarea>
+
+      <v-checkbox
+        v-if="hasRole('Tutor')"
+        v-model="isNoShow"
+        dense
+        label="Did you experience a no-show?"
+        @change="updateFeedbackText()"
+      ></v-checkbox>
+    </v-card-text>
+
+    <v-card-actions v-if="!showFeedbackDialog">
       <v-spacer></v-spacer>
 
       <v-btn
@@ -188,10 +234,6 @@
         Sign Up Student
       </v-btn>
 
-      <v-btn color="grey white--text" @click="$emit('closeAppointmentDialog')">
-        {{ saveChanges ? "Discard Changes" : "Close" }}
-      </v-btn>
-
       <v-btn
         v-if="showEnableCancelButton"
         color="error white--text"
@@ -205,7 +247,11 @@
         color="error white--text"
         @click="showDeleteConfirmation = true"
       >
-        Reject
+        Reject Appointment
+      </v-btn>
+
+      <v-btn color="grey white--text" @click="$emit('closeAppointmentDialog')">
+        {{ saveChanges ? "Discard Changes" : "Close" }}
       </v-btn>
 
       <v-btn
@@ -213,7 +259,7 @@
         color="accent"
         @click="sendAppointmentForConfirmation()"
       >
-        Confirm
+        Confirm Appointment
       </v-btn>
 
       <v-btn
@@ -236,6 +282,50 @@
       >
         Book
       </v-btn>
+
+      <v-btn
+        v-if="showEnableFeedbackButton"
+        color="darkblue white--text"
+        @click="showFeedbackDialog = true"
+      >
+        Provide Feedback
+      </v-btn>
+    </v-card-actions>
+    <v-card-actions v-else>
+      <v-spacer></v-spacer>
+
+      <v-btn
+        color="grey white--text"
+        @click="
+          showFeedbackDialog = false;
+          $emit('closeAppointmentDialog');
+        "
+      >
+        Close
+      </v-btn>
+
+      <v-btn
+        v-if="showEnableFeedbackButton"
+        color="darkblue white--text"
+        @click="showFeedbackDialog = false"
+      >
+        See Appointment Details
+      </v-btn>
+
+      <v-btn
+        v-if="showEnableFeedbackButton"
+        :disabled="
+          !(
+            (updatedPersonAppointment.feedbacknumber > 0 &&
+              updatedPersonAppointment.feedbacktext !== '') ||
+            isNoShow
+          )
+        "
+        color="accent"
+        @click="saveFeedback()"
+      >
+        Save Feedback
+      </v-btn>
     </v-card-actions>
 
     <v-dialog v-model="showDeleteConfirmation" persistent max-width="750px">
@@ -253,6 +343,7 @@
 import AppointmentServices from "@/services/appointmentServices.js";
 //For info on people and their associated roles
 import PersonServices from "@/services/personServices.js";
+import PersonAppointmentServices from "@/services/personAppointmentServices.js";
 import PersonRoleServices from "@/services/personRoleServices.js";
 import RoleServices from "@/services/roleServices.js";
 // import PersonRolePrivilegeServices from "@/services/personRolePrivilegeServices.js";
@@ -316,11 +407,20 @@ export default {
   data() {
     return {
       user: {},
+      numericalfeedback: 0,
       addedStudent: {
         id: "",
         email: "",
         fName: "",
         lName: "",
+      },
+      updatedPersonAppointment: {
+        id: "",
+        personId: "",
+        appointmentId: "",
+        isTutor: 0,
+        feedbacktext: "",
+        feedbacknumber: 0,
       },
       rules: {
         required: (value) => !!value || "Required.",
@@ -344,24 +444,28 @@ export default {
       canEditSecondTime: false,
       canEditPreSession: false,
       canSplitTime: false,
-      showDeleteConfirmation: false,
       enableBookButton: false,
       hasFoundEmail: false,
       isAdminAddStudent: false,
       isDatePast: false,
       isMemberOfAppointment: false,
+      isNoShow: false,
       needStudentInfo: false,
       saveChanges: false,
       showBookButton: false,
+      showDeleteConfirmation: false,
+      showFeedbackDialog: false,
       showSaveButton: false,
       showEnableCancelButton: false,
       showEnableConfirmRejectButtons: false,
+      showEnableFeedbackButton: false,
       showEnableSignUpButton: false,
     };
   },
   watch: {
     async sentAppointment(newAppointment) {
       this.appointment = newAppointment;
+      console.log(this.appointment);
       await this.resetEverything();
     },
   },
@@ -369,6 +473,16 @@ export default {
     await this.resetEverything();
   },
   methods: {
+    checkButtons() {
+      this.saveChanges = true;
+      this.setShowBookButton();
+      this.setEnableBookButton();
+      this.setShowEnableConfirmRejectButtons();
+      this.setShowEnableSignUpButton();
+      this.setShowSaveButton();
+      this.setShowEnableCancelButton();
+      this.setShowEnableFeedbackButton();
+    },
     async resetEverything() {
       this.tutorString = "";
       this.studentString = "";
@@ -389,16 +503,17 @@ export default {
       this.setShowEnableSignUpButton();
       this.setShowSaveButton();
       this.setShowEnableCancelButton();
+      this.setShowEnableFeedbackButton();
       await this.getLocationsForGroup();
       await this.getTopicsForTutor();
     },
     setupPersonStrings() {
+      this.tutorString += `${this.appointment.tutors[0].person.fName} ${this.appointment.tutors[0].person.lName}`;
+
       if (this.appointment.tutors.length > 1) {
-        this.appointment.tutors.forEach((tutor) => {
-          this.tutorString += `${tutor.person.fName} ${tutor.person.lName}, `;
-        });
-      } else if (this.appointment.tutors.length === 1) {
-        this.tutorString += `${this.appointment.tutors[0].person.fName} ${this.appointment.tutors[0].person.lName}`;
+        for (let i = 1; i < this.appointment.tutors.length; i++) {
+          this.tutorString += `, ${this.appointment.tutors[i].person.fName} ${this.appointment.tutors[i].person.lName}`;
+        }
       }
 
       if (this.appointment.students.length > 1) {
@@ -408,7 +523,7 @@ export default {
       } else if (this.appointment.students.length === 1) {
         this.studentString += `${this.appointment.students[0].person.fName} ${this.appointment.students[0].person.lName}`;
       } else {
-        this.studentString = "None";
+        this.studentString = "---";
       }
     },
     setCanEditLocation() {
@@ -549,7 +664,7 @@ export default {
       this.showEnableConfirmRejectButtons =
         this.hasRole("Tutor") &&
         this.checkAppointmentStatus("pending") &&
-        this.checkAppointmentStatus("Private") &&
+        this.checkAppointmentType("Private") &&
         !this.isDatePast;
     },
     setShowSaveButton() {
@@ -579,6 +694,20 @@ export default {
           !this.checkAppointmentStatus("available")) ||
           (this.hasRole("Tutor") && !this.checkAppointmentStatus("pending"))) &&
         !this.isDatePast;
+    },
+    setShowEnableFeedbackButton() {
+      // 1. student - owned complete and feedbacktext null
+      // 2. tutor - owned booked, group and feedbacktext null
+
+      this.showEnableFeedbackButton =
+        this.isMemberOfAppointment &&
+        ((this.hasRole("Student") &&
+          this.checkAppointmentStatus("complete") &&
+          this.appointment.isMemberOfAppointment.feedbacktext === null) ||
+          (this.hasRole("Tutor") &&
+            (this.checkAppointmentStatus("booked") ||
+              this.checkAppointmentType("Group")) &&
+            this.appointment.isMemberOfAppointment.feedbacktext === null));
     },
     hasRole(type) {
       return (
@@ -872,6 +1001,65 @@ export default {
           this.showAlert = true;
           console.log("There was an error:", error.response);
         });
+    },
+    updateFeedbackText() {
+      if (this.isNoShow) {
+        this.updatedPersonAppointment.feedbacknumber = 0;
+        if (this.appointment.students.length === 1) {
+          this.updatedPersonAppointment.feedbacktext = `${this.appointment.students[0].person.fName} ${this.appointment.students[0].person.lName} did not show up to our appointment.`;
+        } else {
+          this.updatedPersonAppointment.feedbacktext =
+            "No students showed up to our appointment.";
+        }
+      } else {
+        this.updatedPersonAppointment.feedbacktext = "";
+      }
+    },
+    async saveFeedback() {
+      if (this.hasRole("Tutor")) {
+        let updatedAppointment = {
+          id: this.appointment.id,
+          date: this.appointment.date,
+          startTime: this.appointment.startTime,
+          endTime: this.appointment.endTime,
+          status: this.isNoShow ? "noShow" : "complete",
+          type: this.appointment.type,
+          preSessionInfo: this.appointment.preSessionInfo,
+          groupId: this.appointment.groupId,
+          locationId: this.appointment.locationId,
+          topicId: this.appointment.topicId,
+          googleEventId: this.appointment.googleEventId,
+        };
+        await AppointmentServices.updateAppointment(
+          updatedAppointment.id,
+          updatedAppointment
+        ).catch((error) => {
+          this.alertType = "error";
+          this.alert = error.response.data.message;
+          this.showAlert = true;
+          console.log("There was an error:", error.response);
+        });
+      }
+
+      this.updatedPersonAppointment.id =
+        this.appointment.isMemberOfAppointment.id;
+      this.updatedPersonAppointment.personId =
+        this.appointment.isMemberOfAppointment.personId;
+      this.updatedPersonAppointment.appointmentId = this.appointment.id;
+      this.updatedPersonAppointment.isTutor =
+        this.appointment.isMemberOfAppointment.isTutor;
+
+      await PersonAppointmentServices.updatePersonAppointment(
+        this.updatedPersonAppointment.id,
+        this.updatedPersonAppointment
+      ).catch((error) => {
+        this.alertType = "error";
+        this.alert = error.response.data.message;
+        this.showAlert = true;
+        console.log("There was an error:", error.response);
+      });
+      this.showFeedbackDialog = false;
+      this.$emit("doneWithAppointment");
     },
   },
 };
