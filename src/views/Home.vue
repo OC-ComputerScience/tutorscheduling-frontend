@@ -114,7 +114,7 @@
             :headers="upcomingHeaders"
             :items="upcomingAppointments"
             hide-default-footer
-            @click:row="rowClick"
+            @click:row="openUpcoming"
             ><template #[`item.status`]="{ item }"
               ><v-tooltip right>
                 <template #activator="{ on, attrs }">
@@ -140,7 +140,7 @@
             :headers="upcomingHeaders"
             :items="feedbackAppointments"
             hide-default-footer
-            @click:row="rowClick"
+            @click:row="openFeedback"
             ><template #[`item.status`]="{ item }"
               ><v-tooltip right>
                 <template #activator="{ on, attrs }">
@@ -254,6 +254,10 @@ export default {
     }
   },
   methods: {
+    async initialize() {
+      this.appointmentDialog = false;
+      await this.getAppointments();
+    },
     async getPrivilegesForPersonRole() {
       await PersonRolePrivilegeServices.getPrivilegeByPersonRole(this.id)
         .then((response) => {
@@ -286,19 +290,13 @@ export default {
     },
     async getAppointments() {
       this.appointments = await this.getAppointmentsForGroup(this.group.id);
-      let today = new Date();
-      today.setHours(today.getHours() - today.getTimezoneOffset() / 60);
-      today.setHours(0, 0, 0, 0);
-      let checkTime = new Date();
-      checkTime =
-        checkTime.getHours() +
-        ":" +
-        checkTime.getMinutes() +
-        ":" +
-        checkTime.getSeconds();
-      let owned, upcoming;
+      this.upcomingAppointments = [];
+      this.feedbackAppointments = [];
+      let owned;
       for (let i = 0; i < this.appointments.length; i++) {
         let appointment = this.appointments[i];
+        appointment.group = this.group;
+        this.setIsDatePast(appointment);
         appointment.isMemberOfAppointment = appointment.personappointment.find(
           (person) => {
             return person.personId === this.user.userID;
@@ -312,7 +310,6 @@ export default {
         });
 
         owned = true;
-        upcoming = true;
 
         if (appointment.groupId != this.group.id) {
           owned = false;
@@ -328,15 +325,6 @@ export default {
           }
         }
 
-        if (appointment.date < today.toISOString()) {
-          upcoming = false;
-        } else if (
-          appointment.date === today.toISOString() &&
-          appointment.startTime >= checkTime
-        ) {
-          upcoming = false;
-        }
-
         if (owned) {
           this.setUpCalendarEvent(appointment);
           appointment.displayedDate = this.formatReadableMonth(
@@ -344,7 +332,6 @@ export default {
           );
           appointment.displayedStart = this.formatTime(appointment.startTime);
           appointment.displayedEnd = this.formatTime(appointment.endTime);
-          appointment.group = this.group;
           appointment.personRolePrivileges = [];
           appointment.newStart = appointment.startTime;
           appointment.newEnd = appointment.endTime;
@@ -374,7 +361,7 @@ export default {
               name: "---",
             };
           }
-          if (upcoming) {
+          if (!appointment.isDatePast) {
             this.upcomingAppointments.push(appointment);
           } else {
             if (
@@ -484,9 +471,15 @@ export default {
         this.checkForAuthorization();
       }
     },
-    rowClick: async function (item, row) {
+    openUpcoming: async function (item, row) {
       row.select(true);
       this.selectedAppointment = item;
+      this.appointmentDialog = true;
+    },
+    openFeedback: async function (item, row) {
+      row.select(true);
+      this.selectedAppointment = item;
+      this.selectedAppointment.showFeedbackDialog = true;
       this.appointmentDialog = true;
     },
   },

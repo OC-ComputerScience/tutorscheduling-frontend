@@ -6,6 +6,28 @@ import { TimeFunctionsMixin } from "./TimeFunctionsMixin";
 export const CalendarMixin = {
   mixins: [TimeFunctionsMixin],
   methods: {
+    async getUpdatedAppointment(appointmentId) {
+      let appointment = {};
+      await AppointmentServices.getAppointmentInfo(appointmentId).then(
+        async (response) => {
+          appointment = response.data[0];
+
+          if (
+            appointment.personappointment !== null &&
+            appointment.personappointment !== undefined
+          ) {
+            appointment.students = appointment.personappointment.filter(
+              (pa) => pa.isTutor === false
+            );
+            appointment.tutors = appointment.personappointment.filter(
+              (pa) => pa.isTutor === true
+            );
+          }
+        }
+      );
+
+      return appointment;
+    },
     async getAppointmentsForGroup(groupId) {
       let appointments = [];
 
@@ -47,8 +69,16 @@ export const CalendarMixin = {
       appointment.eventStart = startTime;
       appointment.eventEnd = endTime;
 
-      let studentName = this.getStudentNameForAppointment(appointment);
-      let tutorName = this.getTutorNameForAppointment(appointment);
+      let studentName =
+        appointment.students.length > 0
+          ? `${appointment.students[0].person.fName} 
+            ${appointment.students[0].person.lName}`
+          : "Open";
+      let tutorName =
+        appointment.tutors.length > 0
+          ? `${appointment.tutors[0].person.fName} 
+            ${appointment.tutors[0].person.lName}`
+          : "Open";
 
       //Set color for each event
       switch (appointment.status) {
@@ -105,24 +135,6 @@ export const CalendarMixin = {
           }
         }
       }
-    },
-    getStudentNameForAppointment(appointment) {
-      if (appointment.students.length > 0) {
-        return (
-          appointment.students[0].person.fName +
-          " " +
-          appointment.students[0].person.lName
-        );
-      } else return "Open";
-    },
-    getTutorNameForAppointment(appointment) {
-      if (appointment.tutors.length > 0) {
-        return (
-          appointment.tutors[0].person.fName +
-          " " +
-          appointment.tutors[0].person.lName
-        );
-      } else return "Open";
     },
     async bookAppointment(isAdminAdd, appointment, fromUser, student) {
       if (appointment.type === "Private") {
@@ -220,12 +232,14 @@ export const CalendarMixin = {
         await PersonAppointmentServices.addPersonAppointment(pap);
         temp.status = "booked";
         await AppointmentServices.updateAppointment(appointment.id, temp);
+        // get updated appointment information
+        appointment = await this.getUpdatedAppointment(appointment.id);
 
         let textInfo = {
           appointmentId: appointment.id,
           appointmentType: appointment.type,
           tutorPhoneNum: appointment.tutors[0].person.phoneNum,
-          tutorPersonRoleId: appointment.tutors[0].id,
+          tutorPersonRoleId: appointment.tutors[0].person.personrole[0].id,
           date: this.formatDate(appointment.date),
           startTime: this.calcTime(appointment.startTime),
           locationName: appointment.location.name,
@@ -242,11 +256,13 @@ export const CalendarMixin = {
         await PersonAppointmentServices.addPersonAppointment(pap);
         temp.status = "pending";
         await AppointmentServices.updateAppointment(appointment.id, temp);
+        // get updated appointment information
+        appointment = await this.getUpdatedAppointment(appointment.id);
 
         let textInfo = {
           appointmentId: appointment.id,
           tutorPhoneNum: appointment.tutors[0].person.phoneNum,
-          tutorPersonRoleId: appointment.tutors[0].id,
+          tutorPersonRoleId: appointment.tutors[0].person.personrole[0].id,
           date: this.formatDate(appointment.date),
           startTime: this.calcTime(appointment.startTime),
           locationName: appointment.location.name,
@@ -344,6 +360,10 @@ export const CalendarMixin = {
         fromFirstName: fromUser.fName,
         fromLastName: fromUser.lName,
       };
+      await AppointmentServices.updateAppointment(
+        updatedAppointment.id,
+        updatedAppointment
+      );
       // send message to all tutors of group appointment
       for (let i = 0; i < appointment.personappointment.length; i++) {
         if (appointment.personappointment[i].personId !== fromUser.userID) {
@@ -357,10 +377,6 @@ export const CalendarMixin = {
           await TwilioServices.sendEditedMessage(textInfo);
         }
       }
-      await AppointmentServices.updateAppointment(
-        updatedAppointment.id,
-        updatedAppointment
-      );
     },
     async confirmAppointment(confirm, fromUser, appointment) {
       let updatedAppointment = {
@@ -388,7 +404,8 @@ export const CalendarMixin = {
             appointmentId: appointment.id,
             appointmentType: appointment.type,
             studentPhoneNum: appointment.students[0].person.phoneNum,
-            studentPersonRoleId: appointment.students[0].id,
+            studentPersonRoleId:
+              appointment.students[0].person.personrole[0].id,
             date: this.formatDate(appointment.date),
             startTime: this.calcTime(appointment.startTime),
             topicName: appointment.topic.name,
@@ -404,7 +421,7 @@ export const CalendarMixin = {
         let textInfo = {
           appointmentType: appointment.type,
           toPhoneNum: appointment.students[0].person.phoneNum,
-          toPersonRoleId: appointment.students[0].id,
+          toPersonRoleId: appointment.students[0].person.personrole[0].id,
           date: this.formatDate(appointment.date),
           startTime: this.calcTime(appointment.startTime),
           topicName: appointment.topic.name,

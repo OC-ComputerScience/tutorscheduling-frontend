@@ -36,10 +36,11 @@
           required
           :rules="[rules.required, rules.email]"
           @keyup.enter="findEmail()"
+          @change="allowAdminAddStudent = false"
         >
         </v-text-field>
       </div>
-      <v-row v-if="needStudentInfo || hasFoundEmail">
+      <v-row v-if="validateEmail() && allowAdminAddStudent">
         <v-col>
           <v-text-field
             v-model="addedStudent.fName"
@@ -47,7 +48,7 @@
             prepend-icon="mdi-account-circle-outline"
             :readonly="!needStudentInfo"
             :autofocus="needStudentInfo"
-            required
+            @change="checkButtons()"
           >
           </v-text-field>
         </v-col>
@@ -56,7 +57,7 @@
             v-model="addedStudent.lName"
             label="Student's Last Name"
             :readonly="!needStudentInfo"
-            required
+            @change="checkButtons()"
           >
           </v-text-field>
         </v-col>
@@ -67,7 +68,7 @@
           appointment.location !== null &&
           appointment.location.type === 'Online' &&
           appointment.URL !== null &&
-          !isDatePast
+          !appointment.isDatePast
         "
         class="mt-2 mb-2"
       >
@@ -87,8 +88,7 @@
             : 'mdi-map-marker-check-outline'
         "
         :readonly="!canEditLocation"
-        :disabled="isDatePast"
-        required
+        :disabled="appointment.isDatePast"
         @change="checkButtons()"
       >
       </v-select>
@@ -103,8 +103,7 @@
           canEditTopic ? 'mdi-book-edit-outline' : 'mdi-book-outline'
         "
         :readonly="!canEditTopic"
-        :disabled="isDatePast"
-        required
+        :disabled="appointment.isDatePast"
         @change="checkButtons()"
       >
       </v-select>
@@ -121,8 +120,7 @@
               canEditFirstTime ? 'mdi-clock-edit-outline' : 'mdi-clock-outline'
             "
             :readonly="!canEditFirstTime"
-            :disabled="isDatePast"
-            required
+            :disabled="appointment.isDatePast"
             @change="
               appointment.newStart = appointment.displayedStart;
               updateTimes();
@@ -145,8 +143,7 @@
                 : 'mdi-clock-outline'
             "
             :readonly="!canEditFirstTime || !canEditSecondTime"
-            :disabled="isDatePast"
-            required
+            :disabled="appointment.isDatePast"
             @change="
               appointment.newEnd = appointment.displayedEnd;
               updateTimes();
@@ -158,7 +155,6 @@
       </v-row>
 
       <v-textarea
-        id="preSession"
         v-model="appointment.preSessionInfo"
         :counter="130"
         label="What do you need help with?"
@@ -167,11 +163,10 @@
             ? 'mdi-text-box-edit-outline'
             : 'mdi-text-box-outline'
         "
-        required
         auto-grow
         rows="2"
         :readonly="!canEditPreSession"
-        :disabled="isDatePast"
+        :disabled="appointment.isDatePast"
         @change="checkButtons()"
       ></v-textarea>
     </v-card-text>
@@ -199,10 +194,14 @@
 
       <v-textarea
         v-model="updatedPersonAppointment.feedbacktext"
-        rows="2"
         :counter="500"
-        :disabled="isNoShow"
         label="How did your session go?"
+        :prepend-icon="
+          isNoShow ? 'mdi-text-box-outline' : 'mdi-text-box-edit-outline'
+        "
+        auto-grow
+        rows="2"
+        :readonly="isNoShow"
       ></v-textarea>
 
       <v-checkbox
@@ -280,7 +279,7 @@
         :disabled="!enableBookButton"
         @click="sendAppointmentForBooking()"
       >
-        Book
+        Book Appointment
       </v-btn>
 
       <v-btn
@@ -407,12 +406,12 @@ export default {
   data() {
     return {
       user: {},
-      numericalfeedback: 0,
       addedStudent: {
         id: "",
         email: "",
         fName: "",
         lName: "",
+        personRoleId: "",
       },
       updatedPersonAppointment: {
         id: "",
@@ -438,6 +437,7 @@ export default {
       studentString: "",
       tutorString: "",
       emailStatus: "",
+      allowAdminAddStudent: false,
       canEditLocation: false,
       canEditTopic: false,
       canEditFirstTime: false,
@@ -445,9 +445,7 @@ export default {
       canEditPreSession: false,
       canSplitTime: false,
       enableBookButton: false,
-      hasFoundEmail: false,
       isAdminAddStudent: false,
-      isDatePast: false,
       isMemberOfAppointment: false,
       isNoShow: false,
       needStudentInfo: false,
@@ -480,7 +478,6 @@ export default {
         this.appointment.displayedStart = this.appointment.startTime;
         this.appointment.displayedEnd = this.appointment.endTime;
       }
-      console.log(this.appointment);
       await this.resetEverything();
     },
   },
@@ -500,7 +497,6 @@ export default {
     },
     async resetEverything() {
       this.user = Utils.getStore("user");
-
       if (
         this.checkAppointmentType("Private") &&
         this.checkAppointmentStatus("available") &&
@@ -516,12 +512,27 @@ export default {
         this.appointment.displayedStart = this.appointment.startTime;
         this.appointment.displayedEnd = this.appointment.endTime;
       }
+      this.addedStudent = {
+        id: "",
+        fName: "",
+        lName: "",
+        email: this.addedStudent.email,
+        personRoleId: "",
+      };
       this.tutorString = "";
       this.studentString = "";
+      this.emailStatus = "";
+      this.allowAdminAddStudent = false;
       this.isAdminAddStudent = false;
+      this.isNoShow = false;
+      this.needStudentInfo = false;
+      this.saveChanges = false;
+      this.showFeedbackDialog =
+        this.appointment.showFeedbackDialog !== undefined
+          ? this.appointment.showFeedbackDialog
+          : false;
       this.updateTimes();
       this.setupPersonStrings();
-      this.setIsDatePast();
       this.setCanSplitTime();
       this.setCanEditLocation();
       this.setCanEditTopic();
@@ -564,21 +575,21 @@ export default {
       // 5. not cancelled or past (applies to all cases)
       this.canEditLocation =
         ((this.hasRole("Tutor") &&
-          this.isMemberOfAppointment &&
+          this.appointment.isMemberOfAppointment &&
           ((this.checkAppointmentType("Private") &&
             this.checkAppointmentStatus("booked")) ||
             this.checkAppointmentType("Group"))) ||
           (this.hasRole("Student") &&
             this.checkAppointmentType("Private") &&
             (this.checkAppointmentStatus("available") ||
-              (this.isMemberOfAppointment &&
+              (this.appointment.isMemberOfAppointment &&
                 this.checkAppointmentStatus("pending")))) ||
           (this.hasPrivilege("Sign up students for appointments") &&
             this.checkAppointmentType("Private") &&
             !this.checkAppointmentStatus("booked")) ||
           this.hasRole("Admin")) &&
         !this.checkAppointmentStatus("Cancel") &&
-        !this.isDatePast;
+        !this.appointment.isDatePast;
     },
     setCanEditTopic() {
       // 1. tutor - owned group with no students
@@ -588,13 +599,13 @@ export default {
       // 5. not cancelled or past (applies to all cases)
       this.canEditTopic =
         ((this.hasRole("Tutor") &&
-          this.isMemberOfAppointment &&
+          this.appointment.isMemberOfAppointment &&
           this.checkAppointmentType("Group") &&
           this.appointment.students.length === 0) ||
           (this.hasRole("Student") &&
             this.checkAppointmentType("Private") &&
             (this.checkAppointmentStatus("available") ||
-              (this.isMemberOfAppointment &&
+              (this.appointment.isMemberOfAppointment &&
                 this.checkAppointmentStatus("pending")))) ||
           (this.hasRole("Admin") &&
             this.checkAppointmentType("Group") &&
@@ -604,7 +615,7 @@ export default {
             this.checkAppointmentType("Private") &&
             !this.checkAppointmentStatus("booked"))) &&
         !this.checkAppointmentStatus("Cancel") &&
-        !this.isDatePast;
+        !this.appointment.isDatePast;
     },
     setCanEditFirstTime() {
       // 1. student - available private
@@ -621,7 +632,7 @@ export default {
         this.checkAppointmentStatus("available") &&
         this.appointment.group.allowSplittingAppointments &&
         this.canSplitTime &&
-        !this.isDatePast;
+        !this.appointment.isDatePast;
     },
     setCanEditPreSession() {
       // 1. tutor - owned group
@@ -631,19 +642,19 @@ export default {
       // 5. not cancelled or past (applies to all cases)
       this.canEditPreSession =
         ((this.hasRole("Tutor") &&
-          this.isMemberOfAppointment &&
+          this.appointment.isMemberOfAppointment &&
           this.checkAppointmentType("Group")) ||
           (this.hasRole("Student") &&
             this.checkAppointmentType("Private") &&
             (this.checkAppointmentStatus("available") ||
-              (this.isMemberOfAppointment &&
+              (this.appointment.isMemberOfAppointment &&
                 this.checkAppointmentStatus("pending")))) ||
           (this.hasPrivilege("Sign up students for appointments") &&
             this.checkAppointmentType("Private") &&
             !this.checkAppointmentStatus("booked")) ||
           this.hasRole("Admin")) &&
         !this.checkAppointmentStatus("Cancel") &&
-        !this.isDatePast;
+        !this.appointment.isDatePast;
     },
     setShowBookButton() {
       // 1. student - available but not already in group appointment
@@ -657,12 +668,12 @@ export default {
           this.hasPrivilege("Sign up students for appointments")) &&
           this.checkAppointmentStatus("available") &&
           (this.checkAppointmentStatus("Private") ||
-            !this.isMemberOfAppointment)) ||
+            !this.appointment.isMemberOfAppointment)) ||
           (this.hasRole("Tutor") &&
-            !this.isMemberOfAppointment &&
+            !this.appointment.isMemberOfAppointment &&
             this.checkAppointmentType("Group") &&
             this.checkAppointmentStatus("available"))) &&
-        !this.isDatePast;
+        !this.appointment.isDatePast;
     },
     setEnableBookButton() {
       // 1. student - group available, private available with topic, location, start, and end time filled out
@@ -678,7 +689,7 @@ export default {
             this.isAdminAddStudent &&
             this.addedStudent.fName !== "" &&
             this.addedStudent.lName !== "" &&
-            this.hasFoundEmail)) &&
+            this.allowAdminAddStudent)) &&
         this.checkAppointmentStatus("available") &&
         (this.checkAppointmentType("Group") ||
           (this.checkAppointmentType("Private") &&
@@ -686,7 +697,7 @@ export default {
             this.appointment.locationId !== null &&
             this.displayedStart !== "" &&
             this.displayedEnd !== "")) &&
-        !this.isDatePast;
+        !this.appointment.isDatePast;
     },
     setShowEnableConfirmRejectButtons() {
       // 1. tutor and pending private
@@ -695,7 +706,7 @@ export default {
         this.hasRole("Tutor") &&
         this.checkAppointmentStatus("pending") &&
         this.checkAppointmentType("Private") &&
-        !this.isDatePast;
+        !this.appointment.isDatePast;
     },
     setShowSaveButton() {
       // 1. if user can edit anything
@@ -710,7 +721,7 @@ export default {
         (this.hasRole("Admin") ||
           this.hasPrivilege("Sign up students for appointments")) &&
         this.checkAppointmentStatus("available") &&
-        !this.isDatePast;
+        !this.appointment.isDatePast;
     },
     setShowEnableCancelButton() {
       // 1. student - owned pending, booked, and group
@@ -719,25 +730,27 @@ export default {
       // 4. privilege tutor?
       // 5. not past (applies to all cases)
       this.showEnableCancelButton =
-        this.isMemberOfAppointment &&
+        this.appointment.isMemberOfAppointment &&
         ((this.hasRole("Student") &&
-          !this.checkAppointmentStatus("available")) ||
+          (this.checkAppointmentType("Group") ||
+            !this.checkAppointmentStatus("available"))) ||
           (this.hasRole("Tutor") && !this.checkAppointmentStatus("pending"))) &&
-        !this.isDatePast;
+        !this.appointment.isDatePast;
     },
     setShowEnableFeedbackButton() {
       // 1. student - owned complete and feedbacktext null
       // 2. tutor - owned booked, group and feedbacktext null
 
       this.showEnableFeedbackButton =
-        this.isMemberOfAppointment &&
+        this.appointment.isMemberOfAppointment &&
         ((this.hasRole("Student") &&
           this.checkAppointmentStatus("complete") &&
           this.appointment.isMemberOfAppointment.feedbacktext === null) ||
           (this.hasRole("Tutor") &&
             (this.checkAppointmentStatus("booked") ||
               this.checkAppointmentType("Group")) &&
-            this.appointment.isMemberOfAppointment.feedbacktext === null));
+            this.appointment.isMemberOfAppointment.feedbacktext === null)) &&
+        this.appointment.isDatePast;
     },
     setCanSplitTime() {
       this.canSplitTime =
@@ -746,56 +759,10 @@ export default {
           this.appointment.endTime
         ) >= this.appointment.group.minApptTime;
     },
-    setIsDatePast() {
-      let checkDate = new Date();
-      checkDate.setHours(
-        checkDate.getHours() - checkDate.getTimezoneOffset() / 60
-      );
-      checkDate.setHours(0, 0, 0, 0);
-      let checkTime = new Date();
-      let tempHours = checkTime.getHours();
-      // check minutes for group's booking buffer
-      let tempMins = checkTime.getMinutes();
-      if (this.appointment.group.bookPastMinutes > 0) {
-        tempMins -= this.appointment.group.bookPastMinutes;
-        while (tempMins < 0) {
-          tempMins += 60;
-          tempHours--;
-        }
-      } else if (this.appointment.group.bookPastMinutes < 0) {
-        tempMins -= this.appointment.group.bookPastMinutes;
-        while (tempMins > 59) {
-          tempMins -= 60;
-          tempHours++;
-        }
-      }
-      let tempSecs = checkTime.getSeconds();
-      if (tempHours < 10) {
-        tempHours = "0" + tempHours;
-      }
-      if (tempMins < 10) {
-        tempMins = "0" + tempMins;
-      }
-      if (tempSecs < 10) {
-        tempSecs = "0" + tempSecs;
-      }
-      checkTime = tempHours + ":" + tempMins + ":" + tempSecs;
-      if (this.appointment.date < checkDate.toISOString()) {
-        this.isDatePast = true;
-      } else if (checkDate.toISOString() === this.appointment.date) {
-        if (checkTime > this.appointment.startTime) {
-          this.isDatePast = true;
-        } else this.isDatePast = false;
-      } else {
-        this.isDatePast = false;
-      }
-    },
     adminCheckPersonInAppointment(personId) {
-      this.isMemberOfAppointment = this.appointment.personappointment.find(
-        (person) => {
-          return person.personId === personId;
-        }
-      );
+      return this.appointment.personappointment.find((person) => {
+        return person.personId === personId;
+      });
     },
     hasRole(type) {
       return (
@@ -855,22 +822,20 @@ export default {
             personRoleId:
               response.data[0].personrole.length > 0
                 ? response.data[0].personrole[0].id
-                : null,
+                : "",
           };
         } else {
           this.addedStudent = {
-            id: null,
-            fName: null,
-            lName: null,
+            id: "",
+            fName: "",
+            lName: "",
             email: this.addedStudent.email,
-            personRoleId: null,
+            personRoleId: "",
           };
         }
       });
       if (this.user.userID === this.addedStudent.id) {
         this.emailStatus = "You cannot sign yourself up for an appointment.";
-        this.hasFoundEmail = true;
-        return;
       } else if (
         this.appointment.tutors.find((tutor) => {
           return tutor.personId === this.addedStudent.id;
@@ -878,14 +843,11 @@ export default {
       ) {
         this.emailStatus =
           "You cannot sign up a tutor for their own appointment.";
-        this.hasFoundEmail = true;
-        return;
       } else if (this.adminCheckPersonInAppointment(this.addedStudent.id)) {
-        this.emailStatus =
-          "This student is already signed up for this appointment.";
-        this.hasFoundEmail = true;
-        return;
-      } else if (this.addedStudent.id !== null) {
+        this.emailStatus = `${this.addedStudent.fName} 
+            ${this.addedStudent.lName} is already signed up for this appointment.`;
+      } else if (this.addedStudent.id !== "") {
+        this.allowAdminAddStudent = true;
         this.needStudentInfo = false;
         if (this.addedStudent.personRoleId === null) {
           let studentRoleId = await RoleServices.getAllForGroupByType(
@@ -902,28 +864,18 @@ export default {
             agree: false,
           };
           await PersonRoleServices.addPersonRole(personRole);
-          this.emailStatus =
-            this.addedStudent.fName +
-            " " +
-            this.addedStudent.lName +
-            " has been added as a student!";
-          this.hasFoundEmail = true;
-          return;
+          this.emailStatus = `${this.addedStudent.fName} 
+            ${this.addedStudent.lName} has been added as a student!`;
         } else {
-          this.emailStatus =
-            "Student " +
-            this.addedStudent.fName +
-            " " +
-            this.addedStudent.lName +
-            " found!";
-          this.hasFoundEmail = true;
-          return;
+          this.emailStatus = `${this.addedStudent.fName} 
+            ${this.addedStudent.lName} is a student in ${this.appointment.group.name}!`;
         }
       } else {
         this.needStudentInfo = true;
-        this.emailStatus = "No Student Found";
-        this.hasFoundEmail = false;
+        this.allowAdminAddStudent = true;
+        this.emailStatus = `Not found in ${this.appointment.group.name}.`;
       }
+      this.checkButtons();
     },
     validateEmail() {
       const pattern =
@@ -966,7 +918,7 @@ export default {
     },
     async directToCancel() {
       this.showDeleteConfirmation = false;
-      if (this.appointment.status === "pending") {
+      if (this.appointment.status === "pending" && this.hasRole("Tutor")) {
         await this.confirmAppointment(false, this.user, this.appointment);
       } else {
         let fromUser = {
@@ -989,7 +941,6 @@ export default {
     },
     async sendAppointmentForConfirmation() {
       await this.confirmAppointment(true, this.user, this.appointment);
-      await this.initializeData();
       this.$emit("doneWithAppointment");
     },
     async sendAppointmentForBooking() {

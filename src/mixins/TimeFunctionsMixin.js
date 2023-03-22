@@ -210,5 +210,49 @@ export const TimeFunctionsMixin = {
 
       return hours + ":" + minutes;
     },
+    setIsDatePast(appointment) {
+      let checkDate = new Date();
+      checkDate.setHours(
+        checkDate.getHours() - checkDate.getTimezoneOffset() / 60
+      );
+      checkDate.setHours(0, 0, 0, 0);
+      let checkTime = new Date();
+      let tempHours = checkTime.getHours();
+      // check minutes for group's booking buffer
+      let tempMins = checkTime.getMinutes();
+      if (appointment.group.bookPastMinutes > 0) {
+        tempMins -= appointment.group.bookPastMinutes;
+        while (tempMins < 0) {
+          tempMins += 60;
+          tempHours--;
+        }
+      } else if (appointment.group.bookPastMinutes < 0) {
+        tempMins -= appointment.group.bookPastMinutes;
+        while (tempMins > 59) {
+          tempMins -= 60;
+          tempHours++;
+        }
+      }
+      let tempSecs = checkTime.getSeconds();
+      if (tempHours < 10) {
+        tempHours = "0" + tempHours;
+      }
+      if (tempMins < 10) {
+        tempMins = "0" + tempMins;
+      }
+      if (tempSecs < 10) {
+        tempSecs = "0" + tempSecs;
+      }
+      checkTime = tempHours + ":" + tempMins + ":" + tempSecs;
+      if (appointment.date < checkDate.toISOString()) {
+        appointment.isDatePast = true;
+      } else if (checkDate.toISOString() === appointment.date) {
+        if (checkTime > appointment.startTime) {
+          appointment.isDatePast = true;
+        } else appointment.isDatePast = false;
+      } else {
+        appointment.isDatePast = false;
+      }
+    },
   },
 };

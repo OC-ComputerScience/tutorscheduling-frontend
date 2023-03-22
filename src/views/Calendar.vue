@@ -134,10 +134,7 @@
           <AppointmentDialogBody
             :sent-appointment="selectedAppointment"
             @closeAppointmentDialog="appointmentDialog = false"
-            @doneWithAppointment="
-              appointmentDialog = false;
-              getAppointments();
-            "
+            @doneWithAppointment="initialize()"
           ></AppointmentDialogBody>
         </v-dialog>
         <!-- <v-menu
@@ -301,11 +298,15 @@ export default {
     await this.getGroupByPersonRoleId();
     await this.getTopicsForGroup();
     await this.getTutorsForGroup();
-    this.overlay = true;
-    await this.getAppointments();
-    this.overlay = false;
+    await this.initialize();
   },
   methods: {
+    async initialize() {
+      this.appointmentDialog = false;
+      this.overlay = true;
+      await this.getAppointments();
+      this.overlay = false;
+    },
     async getPrivilegesForPersonRole() {
       await PersonRolePrivilegeServices.getPrivilegeByPersonRole(this.id)
         .then((response) => {
@@ -429,6 +430,8 @@ export default {
       let filtered;
       for (let i = 0; i < this.appointments.length; i++) {
         let appointment = this.appointments[i];
+        appointment.group = this.group;
+        this.setIsDatePast(appointment);
 
         appointment.isMemberOfAppointment = appointment.personappointment.find(
           (person) => {
@@ -470,7 +473,7 @@ export default {
           else if (
             appointment.type === "Group" &&
             !appointment.isStudent &&
-            appointment.date < today.toISOString()
+            appointment.isDatePast
           ) {
             filtered = false;
           }
@@ -488,7 +491,6 @@ export default {
         }
         if (filtered) {
           this.setUpCalendarEvent(appointment);
-          appointment.group = this.group;
           appointment.personRolePrivileges = this.personRolePrivileges;
           let event = {
             name: appointment.name,
