@@ -17,7 +17,7 @@ export const TimeFunctionsMixin = {
       return "" + hours + ":" + minutes + " " + dayTime;
     },
     //Create time slots for users to select from
-    generateTimeslots(startTime, endTime, minLength) {
+    generateTimeSlots(startTime, endTime, minLength) {
       let timeInterval = minLength;
       // get the total minutes between the start and end times.
       var totalMins = this.subtractTimes(startTime, endTime);

@@ -353,7 +353,7 @@ import TopicServices from "@/services/topicServices.js";
 //Plugin functions
 import Utils from "@/config/utils.js";
 import DeleteConfirmationComponent from "./DeleteConfirmationComponent.vue";
-import { AppointmentActionMixin } from "../mixins/AppointmentActionMixin";
+import { CalendarMixin } from "../mixins/CalendarMixin";
 import { TimeFunctionsMixin } from "../mixins/TimeFunctionsMixin";
 
 export default {
@@ -361,7 +361,7 @@ export default {
   components: {
     DeleteConfirmationComponent,
   },
-  mixins: [AppointmentActionMixin, TimeFunctionsMixin],
+  mixins: [CalendarMixin, TimeFunctionsMixin],
   props: {
     sentAppointment: {
       type: [Object],
@@ -465,6 +465,21 @@ export default {
   watch: {
     async sentAppointment(newAppointment) {
       this.appointment = newAppointment;
+      if (
+        this.checkAppointmentType("Private") &&
+        this.checkAppointmentStatus("available") &&
+        this.appointment.group.allowSplittingAppointments &&
+        this.subtractTimes(
+          this.appointment.startTime,
+          this.appointment.endTime
+        ) >= this.appointment.group.minApptTime
+      ) {
+        this.appointment.displayedStart = "";
+        this.appointment.displayedEnd = "";
+      } else {
+        this.appointment.displayedStart = this.appointment.startTime;
+        this.appointment.displayedEnd = this.appointment.endTime;
+      }
       console.log(this.appointment);
       await this.resetEverything();
     },
@@ -484,11 +499,26 @@ export default {
       this.setShowEnableFeedbackButton();
     },
     async resetEverything() {
+      this.user = Utils.getStore("user");
+
+      if (
+        this.checkAppointmentType("Private") &&
+        this.checkAppointmentStatus("available") &&
+        this.appointment.group.allowSplittingAppointments &&
+        this.subtractTimes(
+          this.appointment.startTime,
+          this.appointment.endTime
+        ) >= this.appointment.group.minApptTime
+      ) {
+        this.appointment.displayedStart = "";
+        this.appointment.displayedEnd = "";
+      } else {
+        this.appointment.displayedStart = this.appointment.startTime;
+        this.appointment.displayedEnd = this.appointment.endTime;
+      }
       this.tutorString = "";
       this.studentString = "";
       this.isAdminAddStudent = false;
-      this.user = Utils.getStore("user");
-      this.checkPersonInAppointment(this.user.userID);
       this.updateTimes();
       this.setupPersonStrings();
       this.setIsDatePast();
@@ -709,32 +739,6 @@ export default {
               this.checkAppointmentType("Group")) &&
             this.appointment.isMemberOfAppointment.feedbacktext === null));
     },
-    hasRole(type) {
-      return (
-        this.user.selectedRole.type !== null &&
-        this.user.selectedRole.type === type
-      );
-    },
-    hasPrivilege(privilege) {
-      return this.appointment.personRolePrivileges.find((priv) => {
-        return priv.privilege === privilege;
-      });
-    },
-    checkAppointmentStatus(status) {
-      return (
-        this.appointment !== null && this.appointment.status.includes(status)
-      );
-    },
-    checkAppointmentType(type) {
-      return this.appointment !== null && this.appointment.type === type;
-    },
-    checkPersonInAppointment(personId) {
-      this.isMemberOfAppointment = this.appointment.personappointment.find(
-        (person) => {
-          return person.personId === personId;
-        }
-      );
-    },
     setCanSplitTime() {
       this.canSplitTime =
         this.subtractTimes(
@@ -786,8 +790,34 @@ export default {
         this.isDatePast = false;
       }
     },
+    adminCheckPersonInAppointment(personId) {
+      this.isMemberOfAppointment = this.appointment.personappointment.find(
+        (person) => {
+          return person.personId === personId;
+        }
+      );
+    },
+    hasRole(type) {
+      return (
+        this.user.selectedRole.type !== null &&
+        this.user.selectedRole.type === type
+      );
+    },
+    hasPrivilege(privilege) {
+      return this.appointment.personRolePrivileges.find((priv) => {
+        return priv.privilege === privilege;
+      });
+    },
+    checkAppointmentStatus(status) {
+      return (
+        this.appointment !== null && this.appointment.status.includes(status)
+      );
+    },
+    checkAppointmentType(type) {
+      return this.appointment !== null && this.appointment.type === type;
+    },
     updateTimes() {
-      this.startTimes = this.generateTimeslots(
+      this.startTimes = this.generateTimeSlots(
         this.appointment.startTime,
         this.appointment.newEnd,
         this.appointment.group.timeInterval
@@ -803,7 +833,7 @@ export default {
       ) {
         this.startTimes.pop();
       }
-      this.endTimes = this.generateTimeslots(
+      this.endTimes = this.generateTimeSlots(
         this.appointment.newStart,
         this.appointment.endTime,
         this.appointment.group.minApptTime
@@ -850,7 +880,7 @@ export default {
           "You cannot sign up a tutor for their own appointment.";
         this.hasFoundEmail = true;
         return;
-      } else if (this.checkPersonInAppointment(this.addedStudent.id)) {
+      } else if (this.adminCheckPersonInAppointment(this.addedStudent.id)) {
         this.emailStatus =
           "This student is already signed up for this appointment.";
         this.hasFoundEmail = true;

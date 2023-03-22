@@ -3,36 +3,14 @@ import PersonAppointmentServices from "@/services/personAppointmentServices.js";
 import TwilioServices from "@/services/twilioServices.js";
 import { TimeFunctionsMixin } from "./TimeFunctionsMixin";
 
-export const AppointmentActionMixin = {
+export const CalendarMixin = {
   mixins: [TimeFunctionsMixin],
   methods: {
-    async getAppointmentInfo(appointId) {
-      await AppointmentServices.getInfoForText(appointId)
-        .then(async (response) => {
-          this.appointment = response.data[0];
-          if (
-            this.appointment.personappointment !== null &&
-            this.appointment.personappointment !== undefined
-          ) {
-            this.appointment.students =
-              this.appointment.personappointment.filter(
-                (pa) => pa.isTutor === false
-              );
-            this.appointment.tutors = this.appointment.personappointment.filter(
-              (pa) => pa.isTutor === true
-            );
-          }
-        })
-        .catch((error) => {
-          this.message = error;
-          console.log("There was an error:", error);
-        });
-    },
     async getAppointmentsForGroup(groupId) {
       let appointments = [];
 
-      await AppointmentServices.findAppointmentsForGroup(groupId)
-        .then(async (response) => {
+      await AppointmentServices.findAppointmentsForGroup(groupId).then(
+        async (response) => {
           appointments = response.data;
           for (let i = 0; i < appointments.length; i++) {
             let appointment = appointments[i];
@@ -48,30 +26,10 @@ export const AppointmentActionMixin = {
               );
             }
           }
-        })
-        .catch((error) => {
-          this.alertType = "error";
-          this.alert = error.response.data.message;
-          this.showAlert = true;
-          console.log("There was an error:", error.response);
-        });
+        }
+      );
 
       return appointments;
-    },
-    checkStudentInAppointment(appointment) {
-      return appointment.students.find((student) => {
-        return student.personId === this.user.userID;
-      });
-    },
-    checkTutorInAppointment(appointment) {
-      return appointment.tutors.find((tutor) => {
-        return tutor.personId === this.user.userID;
-      });
-    },
-    checkPersonInAppointment(appointment) {
-      return appointment.personappointment.find((person) => {
-        return person.personId === this.user.userID;
-      });
     },
     setUpCalendarEvent(appointment) {
       let startTime = new Date(appointment.date);
@@ -167,35 +125,32 @@ export const AppointmentActionMixin = {
       } else return "Open";
     },
     async bookAppointment(isAdminAdd, appointment, fromUser, student) {
-      await this.getAppointmentInfo(appointment.id);
-      if (this.appointment.type === "Private") {
+      if (appointment.type === "Private") {
         await this.splitAppointment(isAdminAdd, appointment, fromUser, student);
-      } else if (this.appointment.type === "Group") {
+      } else if (appointment.type === "Group") {
         await this.bookGroupSession(isAdminAdd, appointment, fromUser, student);
       }
     },
     // Split appointments into more availability slots when part of slot is booked
     async splitAppointment(isAdminAdd, appointment, fromUser, student) {
-      await this.getAppointmentInfo(appointment.id);
-
-      if (this.appointment.status !== "available") {
+      if (appointment.status !== "available") {
         return;
       }
 
       //If the start of the booked slot isn't the start of the slot, generate an open slot
       if (
-        this.appointment.startTime < appointment.newStart &&
-        this.subtractTimes(this.appointment.startTime, appointment.newStart) >=
+        appointment.startTime < appointment.newStart &&
+        this.subtractTimes(appointment.startTime, appointment.newStart) >=
           appointment.minApptTime
       ) {
         let temp = {
-          date: this.appointment.date,
+          date: appointment.date,
           startTime: appointment.startTime,
           endTime: appointment.newStart,
-          type: this.appointment.type,
-          status: this.appointment.status,
+          type: appointment.type,
+          status: appointment.status,
           preSessionInfo: "",
-          groupId: this.appointment.groupId,
+          groupId: appointment.groupId,
         };
         await AppointmentServices.addAppointment(temp).then(
           async (response) => {
@@ -203,7 +158,7 @@ export const AppointmentActionMixin = {
             let pap = {
               isTutor: true,
               appointmentId: response.data.id,
-              personId: this.appointment.tutors[0].personId,
+              personId: appointment.tutors[0].personId,
             };
             await PersonAppointmentServices.addPersonAppointment(pap);
           }
@@ -211,20 +166,20 @@ export const AppointmentActionMixin = {
       }
       //If the end of the booked slot isn't the end of the slot, generate an open slot
       if (
-        this.appointment.endTime > appointment.newEnd &&
-        this.subtractTimes(appointment.newEnd, this.appointment.endTime) >=
+        appointment.endTime > appointment.newEnd &&
+        this.subtractTimes(appointment.newEnd, appointment.endTime) >=
           appointment.minApptTime
       ) {
         let temp = {
-          date: this.appointment.date,
+          date: appointment.date,
           startTime: appointment.newEnd,
           endTime: appointment.endTime,
-          type: this.appointment.type,
-          status: this.appointment.status,
+          type: appointment.type,
+          status: appointment.status,
           preSessionInfo: "",
-          groupId: this.appointment.groupId,
-          //locationId: this.appointment.locationId,
-          //topicId: this.appointment.topicId,
+          groupId: appointment.groupId,
+          //locationId: appointment.locationId,
+          //topicId: appointment.topicId,
         };
         await AppointmentServices.addAppointment(temp).then(
           async (response) => {
@@ -232,7 +187,7 @@ export const AppointmentActionMixin = {
             let pap = {
               isTutor: true,
               appointmentId: response.data.id,
-              personId: this.appointment.tutors[0].personId,
+              personId: appointment.tutors[0].personId,
             };
             await PersonAppointmentServices.addPersonAppointment(pap);
           }
@@ -242,18 +197,18 @@ export const AppointmentActionMixin = {
       // add person appointment
       let pap = {
         isTutor: false,
-        appointmentId: this.appointment.id,
+        appointmentId: appointment.id,
       };
 
       // make temp appointment
       let temp = {
-        id: this.appointment.id,
-        date: this.appointment.date,
+        id: appointment.id,
+        date: appointment.date,
         startTime: appointment.newStart,
         endTime: appointment.newEnd,
-        type: this.appointment.type,
+        type: appointment.type,
         preSessionInfo: appointment.preSessionInfo,
-        groupId: this.appointment.groupId,
+        groupId: appointment.groupId,
         locationId: appointment.locationId,
         topicId: appointment.topicId,
         googleEventId: appointment.googleEventId,
@@ -264,18 +219,17 @@ export const AppointmentActionMixin = {
         pap.personId = student.id;
         await PersonAppointmentServices.addPersonAppointment(pap);
         temp.status = "booked";
-        await AppointmentServices.updateAppointment(this.appointment.id, temp);
-        // get information for texting
-        await this.getAppointmentInfo(appointment.id);
+        await AppointmentServices.updateAppointment(appointment.id, temp);
+
         let textInfo = {
-          appointmentId: this.appointment.id,
-          appointmentType: this.appointment.type,
-          tutorPhoneNum: this.appointment.tutors[0].person.phoneNum,
-          tutorPersonRoleId: this.appointment.tutors[0].id,
-          date: this.formatDate(this.appointment.date),
-          startTime: this.calcTime(this.appointment.startTime),
-          locationName: this.appointment.location.name,
-          topicName: this.appointment.topic.name,
+          appointmentId: appointment.id,
+          appointmentType: appointment.type,
+          tutorPhoneNum: appointment.tutors[0].person.phoneNum,
+          tutorPersonRoleId: appointment.tutors[0].id,
+          date: this.formatDate(appointment.date),
+          startTime: this.calcTime(appointment.startTime),
+          locationName: appointment.location.name,
+          topicName: appointment.topic.name,
           adminFirstName: fromUser.fName,
           adminLastName: fromUser.lName,
           studentFirstName: student.fName,
@@ -287,17 +241,16 @@ export const AppointmentActionMixin = {
         pap.personId = fromUser.userID ? fromUser.userID : fromUser.id;
         await PersonAppointmentServices.addPersonAppointment(pap);
         temp.status = "pending";
-        await AppointmentServices.updateAppointment(this.appointment.id, temp);
-        // get information for texting
-        await this.getAppointmentInfo(appointment.id);
+        await AppointmentServices.updateAppointment(appointment.id, temp);
+
         let textInfo = {
-          appointmentId: this.appointment.id,
-          tutorPhoneNum: this.appointment.tutors[0].person.phoneNum,
-          tutorPersonRoleId: this.appointment.tutors[0].id,
-          date: this.formatDate(this.appointment.date),
-          startTime: this.calcTime(this.appointment.startTime),
-          locationName: this.appointment.location.name,
-          topicName: this.appointment.topic.name,
+          appointmentId: appointment.id,
+          tutorPhoneNum: appointment.tutors[0].person.phoneNum,
+          tutorPersonRoleId: appointment.tutors[0].id,
+          date: this.formatDate(appointment.date),
+          startTime: this.calcTime(appointment.startTime),
+          locationName: appointment.location.name,
+          topicName: appointment.topic.name,
           studentFirstName: fromUser.fName,
           studentLastName: fromUser.lName,
         };
@@ -313,27 +266,26 @@ export const AppointmentActionMixin = {
         // add person appointment
         pap.personId = student.id;
         await PersonAppointmentServices.addPersonAppointment(pap);
-        // get information for texting
-        await this.getAppointmentInfo(appointment.id);
+
         let textInfo = {
-          appointmentId: this.appointment.id,
-          appointmentType: this.appointment.type,
+          appointmentId: appointment.id,
+          appointmentType: appointment.type,
           tutorPhoneNum: "",
           tutorPersonRoleId: "",
-          date: this.formatDate(this.appointment.date),
-          startTime: this.calcTime(this.appointment.startTime),
-          locationName: this.appointment.location.name,
-          topicName: this.appointment.topic.name,
+          date: this.formatDate(appointment.date),
+          startTime: this.calcTime(appointment.startTime),
+          locationName: appointment.location.name,
+          topicName: appointment.topic.name,
           adminFirstName: fromUser.fName,
           adminLastName: fromUser.lName,
           studentFirstName: student.fName,
           studentLastName: student.lName,
         };
         // send message to all tutors of group appointment
-        for (let i = 0; i < this.appointment.tutors.length; i++) {
-          textInfo.tutorPhoneNum = this.appointment.tutors[i].person.phoneNum;
+        for (let i = 0; i < appointment.tutors.length; i++) {
+          textInfo.tutorPhoneNum = appointment.tutors[i].person.phoneNum;
           textInfo.tutorPersonRoleId =
-            this.appointment.tutors[i].person.personrole[0].id;
+            appointment.tutors[i].person.personrole[0].id;
           await TwilioServices.sendMessageFromAdmin(textInfo);
         }
       } else {
@@ -344,22 +296,22 @@ export const AppointmentActionMixin = {
         //Update stored data
         await PersonAppointmentServices.addPersonAppointment(pap);
         let textInfo = {
-          appointmentId: this.appointment.id,
+          appointmentId: appointment.id,
           roleType: fromUser.selectedRole.type,
           tutorPhoneNum: "",
           tutorPersonRoleId: "",
-          date: this.formatDate(this.appointment.date),
-          startTime: this.calcTime(this.appointment.startTime),
-          locationName: this.appointment.location.name,
-          topicName: this.appointment.topic.name,
+          date: this.formatDate(appointment.date),
+          startTime: this.calcTime(appointment.startTime),
+          locationName: appointment.location.name,
+          topicName: appointment.topic.name,
           fromFirstName: fromUser.fName,
           fromLastName: fromUser.lName,
         };
         // send message to all tutors of group appointment
-        for (let i = 0; i < this.appointment.tutors.length; i++) {
-          textInfo.tutorPhoneNum = this.appointment.tutors[i].person.phoneNum;
+        for (let i = 0; i < appointment.tutors.length; i++) {
+          textInfo.tutorPhoneNum = appointment.tutors[i].person.phoneNum;
           textInfo.tutorPersonRoleId =
-            this.appointment.tutors[i].person.personrole[0].id;
+            appointment.tutors[i].person.personrole[0].id;
           await TwilioServices.sendGroupMessage(textInfo);
         }
       }
@@ -380,31 +332,28 @@ export const AppointmentActionMixin = {
         locationId: appointment.locationId,
         googleEventId: appointment.googleEventId,
       };
-      await this.getAppointmentInfo(appointment.id);
       let textInfo = {
-        appointmentId: this.appointment.id,
-        appointmentType: this.appointment.type,
+        appointmentId: appointment.id,
+        appointmentType: appointment.type,
         roleType: "",
         toPhoneNum: "",
         toPersonRoleId: "",
-        date: this.formatDate(this.appointment.date),
-        startTime: this.calcTime(this.appointment.startTime),
-        topicName: this.appointment.topic.name,
+        date: this.formatDate(appointment.date),
+        startTime: this.calcTime(appointment.startTime),
+        topicName: appointment.topic.name,
         fromFirstName: fromUser.fName,
         fromLastName: fromUser.lName,
       };
       // send message to all tutors of group appointment
-      for (let i = 0; i < this.appointment.personappointment.length; i++) {
-        if (
-          this.appointment.personappointment[i].personId !== fromUser.userID
-        ) {
-          textInfo.roleType = this.appointment.personappointment[i].isTutor
+      for (let i = 0; i < appointment.personappointment.length; i++) {
+        if (appointment.personappointment[i].personId !== fromUser.userID) {
+          textInfo.roleType = appointment.personappointment[i].isTutor
             ? "Tutor"
             : "Student";
           textInfo.toPhoneNum =
-            this.appointment.personappointment[i].person.phoneNum;
+            appointment.personappointment[i].person.phoneNum;
           textInfo.toPersonRoleId =
-            this.appointment.personappointment[i].person.personrole[0].id;
+            appointment.personappointment[i].person.personrole[0].id;
           await TwilioServices.sendEditedMessage(textInfo);
         }
       }
@@ -434,16 +383,15 @@ export const AppointmentActionMixin = {
             updatedAppointment.id,
             updatedAppointment
           );
-          // get information for texting
-          await this.getAppointmentInfo(appointment.id);
+
           let textInfo = {
-            appointmentId: this.appointment.id,
-            appointmentType: this.appointment.type,
-            studentPhoneNum: this.appointment.students[0].person.phoneNum,
-            studentPersonRoleId: this.appointment.students[0].id,
-            date: this.formatDate(this.appointment.date),
-            startTime: this.calcTime(this.appointment.startTime),
-            topicName: this.appointment.topic.name,
+            appointmentId: appointment.id,
+            appointmentType: appointment.type,
+            studentPhoneNum: appointment.students[0].person.phoneNum,
+            studentPersonRoleId: appointment.students[0].id,
+            date: this.formatDate(appointment.date),
+            startTime: this.calcTime(appointment.startTime),
+            topicName: appointment.topic.name,
             tutorFirstName: fromUser.fName,
             tutorLastName: fromUser.lName,
           };
@@ -454,12 +402,12 @@ export const AppointmentActionMixin = {
         // don't need to update google cal because it's not even on there yet
         updatedAppointment.status = "tutorCancel";
         let textInfo = {
-          appointmentType: this.appointment.type,
-          toPhoneNum: this.appointment.students[0].person.phoneNum,
-          toPersonRoleId: this.appointment.students[0].id,
-          date: this.formatDate(this.appointment.date),
-          startTime: this.calcTime(this.appointment.startTime),
-          topicName: this.appointment.topic.name,
+          appointmentType: appointment.type,
+          toPhoneNum: appointment.students[0].person.phoneNum,
+          toPersonRoleId: appointment.students[0].id,
+          date: this.formatDate(appointment.date),
+          startTime: this.calcTime(appointment.startTime),
+          topicName: appointment.topic.name,
           fromFirstName: fromUser.fName,
           fromLastName: fromUser.lName,
           fromRoleType: "Tutor",

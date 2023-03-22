@@ -173,7 +173,7 @@ import PersonRoleServices from "@/services/personRoleServices.js";
 import PersonRolePrivilegeServices from "@/services/personRolePrivilegeServices.js";
 import AppointmentDialogBody from "../components/AppointmentDialogBody.vue";
 import InformationComponent from "../components/InformationComponent.vue";
-import { AppointmentActionMixin } from "../mixins/AppointmentActionMixin";
+import { CalendarMixin } from "../mixins/CalendarMixin";
 import { RedirectToPageMixin } from "../mixins/RedirectToPageMixin";
 import { TimeFunctionsMixin } from "../mixins/TimeFunctionsMixin";
 
@@ -183,7 +183,7 @@ export default {
     AppointmentDialogBody,
     InformationComponent,
   },
-  mixins: [AppointmentActionMixin, RedirectToPageMixin, TimeFunctionsMixin],
+  mixins: [CalendarMixin, RedirectToPageMixin, TimeFunctionsMixin],
   props: {
     id: {
       type: [Number, String],
@@ -254,12 +254,6 @@ export default {
     }
   },
   methods: {
-    hasRole(type) {
-      return (
-        this.user.selectedRole.type !== null &&
-        this.user.selectedRole.type === type
-      );
-    },
     async getPrivilegesForPersonRole() {
       await PersonRolePrivilegeServices.getPrivilegeByPersonRole(this.id)
         .then((response) => {
@@ -284,6 +278,12 @@ export default {
           console.log("There was an error:", error.response);
         });
     },
+    hasRole(type) {
+      return (
+        this.user.selectedRole.type !== null &&
+        this.user.selectedRole.type === type
+      );
+    },
     async getAppointments() {
       this.appointments = await this.getAppointmentsForGroup(this.group.id);
       let today = new Date();
@@ -299,10 +299,17 @@ export default {
       let owned, upcoming;
       for (let i = 0; i < this.appointments.length; i++) {
         let appointment = this.appointments[i];
-        appointment.isMemberOfAppointment =
-          this.checkPersonInAppointment(appointment);
-        appointment.isStudent = this.checkStudentInAppointment(appointment);
-        appointment.isTutor = this.checkTutorInAppointment(appointment);
+        appointment.isMemberOfAppointment = appointment.personappointment.find(
+          (person) => {
+            return person.personId === this.user.userID;
+          }
+        );
+        appointment.isStudent = appointment.students.find((student) => {
+          return student.personId === this.user.userID;
+        });
+        appointment.isTutor = appointment.tutors.find((tutor) => {
+          return tutor.personId === this.user.userID;
+        });
 
         owned = true;
         upcoming = true;
@@ -341,7 +348,7 @@ export default {
           appointment.personRolePrivileges = [];
           appointment.newStart = appointment.startTime;
           appointment.newEnd = appointment.endTime;
-          if (appointment.type.includes("Group")) {
+          if (appointment.type === "Group") {
             appointment.people = this.hasRole("Student")
               ? appointment.tutors.length
               : appointment.students.length;
@@ -458,17 +465,11 @@ export default {
     async setApprovedDisabled() {
       await PersonRoleServices.getPersonRole(this.id)
         .then((response) => {
-          if (
-            response.data.status.includes("approved") ||
-            response.data.status.includes("Approved")
-          ) {
+          if (response.data.status.toLowerCase() === "approved") {
             this.approved = true;
-          } else if (
-            response.data.status.includes("applied") ||
-            response.data.status.includes("Applied")
-          )
+          } else if (response.data.status.toLowerCase() === "applied")
             this.approved = false;
-          if (response.data.status.includes("disabled")) {
+          if (response.data.status.toLowerCase() === "disabled") {
             this.disabled = true;
           } else this.disabled = false;
         })
@@ -486,24 +487,6 @@ export default {
     rowClick: async function (item, row) {
       row.select(true);
       this.selectedAppointment = item;
-
-      if (
-        this.selectedAppointment.type.includes("Private") &&
-        this.selectedAppointment.status.includes("available") &&
-        this.group.allowSplittingAppointments &&
-        this.subtractTimes(
-          this.selectedAppointment.startTime,
-          this.selectedAppointment.endTime
-        ) >= this.group.minApptTime
-      ) {
-        this.selectedAppointment.displayedStart = "";
-        this.selectedAppointment.displayedEnd = "";
-      } else {
-        this.selectedAppointment.displayedStart =
-          this.selectedAppointment.startTime;
-        this.selectedAppointment.displayedEnd =
-          this.selectedAppointment.endTime;
-      }
       this.appointmentDialog = true;
     },
   },

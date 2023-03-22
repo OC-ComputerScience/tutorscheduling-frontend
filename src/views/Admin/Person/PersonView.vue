@@ -428,7 +428,7 @@ import PersonAppointmentServices from "@/services/personAppointmentServices.js";
 import DeleteConfirmationComponent from "../../../components/DeleteConfirmationComponent.vue";
 import PhoneNumberComponent from "../../../components/PhoneNumberComponent.vue";
 
-import { AppointmentActionMixin } from "../../../mixins/AppointmentActionMixin";
+import { CalendarMixin } from "../../../mixins/CalendarMixin";
 import { TimeFunctionsMixin } from "../../../mixins/TimeFunctionsMixin";
 
 export default {
@@ -436,7 +436,7 @@ export default {
     DeleteConfirmationComponent,
     PhoneNumberComponent,
   },
-  mixins: [AppointmentActionMixin, TimeFunctionsMixin],
+  mixins: [CalendarMixin, TimeFunctionsMixin],
   props: {
     id: {
       type: [Number, String],

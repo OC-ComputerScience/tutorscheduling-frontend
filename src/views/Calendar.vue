@@ -88,7 +88,7 @@
             class="ma-2"
             dense
             outlined
-            @change="loadAppointments()"
+            @change="getAppointments()"
           ></v-select>
 
           <v-select
@@ -101,7 +101,7 @@
             class="ma-2"
             dense
             outlined
-            @change="loadAppointments()"
+            @change="getAppointments()"
           ></v-select>
 
           <v-btn icon class="ma-2" @click="$refs.calendar.next()">
@@ -136,7 +136,7 @@
             @closeAppointmentDialog="appointmentDialog = false"
             @doneWithAppointment="
               appointmentDialog = false;
-              initializeData();
+              getAppointments();
             "
           ></AppointmentDialogBody>
         </v-dialog>
@@ -221,7 +221,7 @@ import TopicServices from "@/services/topicServices.js";
 import Utils from "@/config/utils.js";
 import AppointmentDialogBody from "../components/AppointmentDialogBody.vue";
 import InformationComponent from "../components/InformationComponent.vue";
-import { AppointmentActionMixin } from "../mixins/AppointmentActionMixin";
+import { CalendarMixin } from "../mixins/CalendarMixin";
 import { TimeFunctionsMixin } from "../mixins/TimeFunctionsMixin";
 
 export default {
@@ -230,7 +230,7 @@ export default {
     AppointmentDialogBody,
     InformationComponent,
   },
-  mixins: [AppointmentActionMixin, TimeFunctionsMixin],
+  mixins: [CalendarMixin, TimeFunctionsMixin],
   props: {
     id: {
       type: [Number, String],
@@ -301,15 +301,11 @@ export default {
     await this.getGroupByPersonRoleId();
     await this.getTopicsForGroup();
     await this.getTutorsForGroup();
-    await this.initializeData();
+    this.overlay = true;
+    await this.getAppointments();
+    this.overlay = false;
   },
   methods: {
-    async initializeData() {
-      this.overlay = true;
-      this.appointments = await this.getAppointmentsForGroup(this.group.id);
-      await this.loadAppointments();
-      this.overlay = false;
-    },
     async getPrivilegesForPersonRole() {
       await PersonRolePrivilegeServices.getPrivilegeByPersonRole(this.id)
         .then((response) => {
@@ -338,7 +334,7 @@ export default {
       await TopicServices.getActiveForGroup(this.group.id)
         .then((response) => {
           let temp = response.data;
-          this.topics.push({ name: "Any", id: -1 });
+          this.topics.push({ name: "All", id: -1 });
           for (let i = 0; i < temp.length; i++) {
             this.topics.push(temp[i]);
           }
@@ -354,7 +350,7 @@ export default {
       await PersonServices.getApprovedTutorsForGroup(this.group.id)
         .then((response) => {
           let temp = response.data;
-          this.tutorSelect.push({ name: "Any", id: -1 });
+          this.tutorSelect.push({ name: "All", id: -1 });
           for (var i = 0; i < temp.length; i++) {
             temp[i].name = temp[i].fName + " " + temp[i].lName;
             this.tutorSelect.push(temp[i]);
@@ -367,52 +363,11 @@ export default {
           console.log("There was an error:", error.response);
         });
     },
-    viewDay({ date }) {
-      this.focus = date;
-      this.type = "day";
-    },
-    getEventColor(event) {
-      return event.color;
-    },
-    //Animates Event card popping up
-    async showEvent({ nativeEvent, event }) {
-      const open = async () => {
-        this.selectedAppointment = this.appointments.find(
-          (appointment) => appointment.id == event.appointmentId
-        );
-        this.selectedAppointment.group = this.group;
-        this.selectedAppointment.personRolePrivileges =
-          this.personRolePrivileges;
-
-        if (
-          this.selectedAppointment.type.includes("Private") &&
-          this.selectedAppointment.status.includes("available") &&
-          this.group.allowSplittingAppointments &&
-          this.subtractTimes(
-            this.selectedAppointment.startTime,
-            this.selectedAppointment.endTime
-          ) >= this.group.minApptTime
-        ) {
-          this.selectedAppointment.displayedStart = "";
-          this.selectedAppointment.displayedEnd = "";
-        } else {
-          this.selectedAppointment.displayedStart =
-            this.selectedAppointment.startTime;
-          this.selectedAppointment.displayedEnd =
-            this.selectedAppointment.endTime;
-        }
-        this.selectedElement = nativeEvent.target;
-        requestAnimationFrame(() =>
-          requestAnimationFrame(() => (this.appointmentDialog = true))
-        );
-      };
-      if (this.appointmentDialog) {
-        this.appointmentDialog = false;
-        requestAnimationFrame(() => requestAnimationFrame(() => open()));
-      } else {
-        open();
-      }
-      nativeEvent.stopPropagation();
+    hasRole(type) {
+      return (
+        this.user.selectedRole.type !== null &&
+        this.user.selectedRole.type === type
+      );
     },
     checkTopic(appointment) {
       let check = false;
@@ -441,30 +396,53 @@ export default {
         ) !== undefined
       );
     },
-    hasRole(type) {
-      return (
-        this.user.selectedRole.type !== null &&
-        this.user.selectedRole.type === type
-      );
+    viewDay({ date }) {
+      this.focus = date;
+      this.type = "day";
     },
-
-    async loadAppointments() {
+    getEventColor(event) {
+      return event.color;
+    },
+    //Animates Event card popping up
+    async showEvent({ nativeEvent, event }) {
+      const open = async () => {
+        this.selectedAppointment = event.appointment;
+        this.selectedElement = nativeEvent.target;
+        requestAnimationFrame(() =>
+          requestAnimationFrame(() => (this.appointmentDialog = true))
+        );
+      };
+      if (this.appointmentDialog) {
+        this.appointmentDialog = false;
+        requestAnimationFrame(() => requestAnimationFrame(() => open()));
+      } else {
+        open();
+      }
+      nativeEvent.stopPropagation();
+    },
+    async getAppointments() {
+      this.appointments = await this.getAppointmentsForGroup(this.group.id);
       let today = new Date();
       today.setHours(today.getHours() - today.getTimezoneOffset() / 60);
       today.setHours(0, 0, 0, 0);
-      this.overlay = true;
       const events = [];
       let filtered;
       for (let i = 0; i < this.appointments.length; i++) {
         let appointment = this.appointments[i];
 
-        appointment.isMemberOfAppointment =
-          this.checkPersonInAppointment(appointment);
-        appointment.isStudent = this.checkStudentInAppointment(appointment);
-        appointment.isTutor = this.checkTutorInAppointment(appointment);
-        // await this.groupBookColor(this.appointments[i].personappointment);
-        // await this.isStudentInGroupAppoint(this.appointments[i].students);
-        // //filter events to only add appropriate events
+        appointment.isMemberOfAppointment = appointment.personappointment.find(
+          (person) => {
+            return person.personId === this.user.userID;
+          }
+        );
+        appointment.isStudent = appointment.students.find((student) => {
+          return student.personId === this.user.userID;
+        });
+        appointment.isTutor = appointment.tutors.find((tutor) => {
+          return tutor.personId === this.user.userID;
+        });
+
+        //filter events to only add appropriate events
         filtered = true;
         //only add appointments from the current group
         if (appointment.groupId != this.group.id) {
@@ -482,7 +460,7 @@ export default {
         if (this.hasRole("Student")) {
           //filter away private appointments that aren't a student's
           if (
-            appointment.type.includes("Private") &&
+            appointment.type === "Private" &&
             !appointment.isStudent &&
             !(appointment.status === "available")
           ) {
@@ -490,7 +468,7 @@ export default {
           }
           //filter away group appointments that have passed that aren't a student's
           else if (
-            appointment.type.includes("Group") &&
+            appointment.type === "Group" &&
             !appointment.isStudent &&
             appointment.date < today.toISOString()
           ) {
@@ -510,20 +488,21 @@ export default {
         }
         if (filtered) {
           this.setUpCalendarEvent(appointment);
+          appointment.group = this.group;
+          appointment.personRolePrivileges = this.personRolePrivileges;
           let event = {
             name: appointment.name,
             start: appointment.eventStart,
             end: appointment.eventEnd,
             color: appointment.color,
             timed: true,
-            appointmentId: appointment.id,
+            appointment: appointment,
           };
 
           events.push(event);
         }
       }
 
-      this.overlay = false;
       this.events = events;
     },
   },
