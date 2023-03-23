@@ -145,7 +145,7 @@ export const RedirectToPageMixin = {
                       .slice(1)[1]
                       .split("?")[0]
                   ) &&
-                (this.$route.query.redirect.includes("Home")
+                (this.$route.query.redirect.includes("home")
                   ? this.$route.query.redirect.includes(role.type.toLowerCase())
                   : true)
               ) {

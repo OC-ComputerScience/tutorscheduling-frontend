@@ -159,14 +159,12 @@ export default {
         personRoleId: this.selectedRole.personrole[0].id,
       };
       Utils.setStore("user", this.user);
-      if (this.selectedRole.type === "Student") {
+      if (
+        this.selectedRole.type === "Student" ||
+        this.selectedRole.type === "Tutor"
+      ) {
         this.$router.push({
-          name: "studentHome",
-          params: { id: this.selectedRole.personrole[0].id },
-        });
-      } else if (this.selectedRole.type === "Tutor") {
-        this.$router.push({
-          name: "tutorHome",
+          name: "home",
           params: { id: this.selectedRole.personrole[0].id },
         });
       } else if (this.selectedRole.type === "Admin") {
