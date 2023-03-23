@@ -120,14 +120,8 @@
           :event-overlap-threshold="15"
           :type="type"
           @click:event="showEvent"
-          @click:more="
-            type = 'week';
-            focus = $refs.more;
-          "
-          @click:date="
-            type = 'week';
-            focus = $refs.date;
-          "
+          @click:more="viewDay"
+          @click:date="viewDay"
         ></v-calendar>
 
         <v-dialog v-model="appointmentDialog" persistent max-width="800px">
@@ -277,7 +271,7 @@ export default {
       },
       {
         color: "error",
-        text: "Canceled",
+        text: "Canceled/No Show",
         private: true,
         group: true,
       },
@@ -399,7 +393,7 @@ export default {
     },
     viewDay({ date }) {
       this.focus = date;
-      this.type = "day";
+      this.type = "week";
     },
     getEventColor(event) {
       return event.color;

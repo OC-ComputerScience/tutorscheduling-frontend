@@ -113,7 +113,6 @@
           <v-data-table
             :headers="upcomingHeaders"
             :items="upcomingAppointments"
-            hide-default-footer
             @click:row="openUpcoming"
             ><template #[`item.status`]="{ item }"
               ><v-tooltip right>
@@ -139,7 +138,6 @@
           <v-data-table
             :headers="upcomingHeaders"
             :items="feedbackAppointments"
-            hide-default-footer
             @click:row="openFeedback"
             ><template #[`item.status`]="{ item }"
               ><v-tooltip right>
@@ -240,12 +238,12 @@ export default {
     if (this.approved) {
       await this.getAppointments();
       if (this.$route.query !== undefined) {
-        for (let i = 0; i < this.appointments.length; i++) {
+        for (let i = 0; i < this.upcomingAppointments.length; i++) {
           if (
-            this.appointments[i].id ===
+            this.upcomingAppointments[i].id ===
             parseInt(this.$route.query.appointmentId)
           ) {
-            this.selectedAppointment = this.appointments[i];
+            this.selectedAppointment = this.upcomingAppointments[i];
             this.appointmentDialog = true;
             return;
           }
@@ -361,18 +359,19 @@ export default {
               name: "---",
             };
           }
+
           if (!appointment.isDatePast) {
             this.upcomingAppointments.push(appointment);
           } else {
             if (
               this.hasRole("Student") &&
-              appointment.isMemberOfAppointment.feedbacktext === null &&
+              appointment.isStudent.feedbacktext === null &&
               appointment.status === "complete"
             ) {
               this.feedbackAppointments.push(appointment);
             } else if (
               this.hasRole("Tutor") &&
-              appointment.isMemberOfAppointment.feedbacktext === null &&
+              appointment.isTutor.feedbacktext === null &&
               (appointment.status === "booked" || appointment.type === "Group")
             ) {
               this.feedbackAppointments.push(appointment);

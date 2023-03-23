@@ -390,7 +390,7 @@ export default {
         this.nowTime = "00:00";
       }
       // start times will always be in segments of group time interval
-      this.startTimes = this.generateTimeslots(
+      this.startTimes = this.generateTimeSlots(
         this.nowTime,
         this.newEnd,
         this.group.timeInterval
@@ -413,13 +413,13 @@ export default {
           "Make flexible slots that allow for shorter appointments"
         )
       ) {
-        this.endTimes = this.generateTimeslots(
+        this.endTimes = this.generateTimeSlots(
           this.newStart,
           maxEndTime,
           this.group.timeInterval
         );
       } else {
-        this.endTimes = this.generateTimeslots(
+        this.endTimes = this.generateTimeSlots(
           this.newStart,
           maxEndTime,
           this.group.minApptTime

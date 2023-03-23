@@ -85,7 +85,9 @@ export const CalendarMixin = {
         case "pending":
           appointment.color = "yellow";
           break;
-        case "studentCancel" || "tutorCancel" || "noShow":
+        case "studentCancel":
+        case "tutorCancel":
+        case "noShow":
           appointment.color = "error";
           break;
         case "booked":
@@ -101,7 +103,11 @@ export const CalendarMixin = {
 
       if (
         appointment.type === "Group" &&
-        !appointment.status.includes("Cancel")
+        !(
+          appointment.status.includes("Cancel") ||
+          appointment.status === "complete" ||
+          appointment.status === "noShow"
+        )
       ) {
         if (appointment.isMemberOfAppointment) {
           appointment.color = "blue";
@@ -116,6 +122,8 @@ export const CalendarMixin = {
       if (appointment.type === "Group") {
         if (appointment.status.includes("Cancel")) {
           appointment.name = `Group - Canceled by ${tutorName}`;
+        } else if (appointment.status === "noShow") {
+          appointment.name = `Group - No Show`;
         } else {
           if (appointment.isTutor && appointment.students.length === 0) {
             appointment.color = "grey";
@@ -125,13 +133,20 @@ export const CalendarMixin = {
       } else if (appointment.type === "Private") {
         if (appointment.status === "available") {
           appointment.name = `${tutorName} - ${topicName} Tutoring`;
-        } else if (!appointment.status.includes("Cancel")) {
+        } else if (
+          !(
+            appointment.status.includes("Cancel") ||
+            appointment.status === "noShow"
+          )
+        ) {
           appointment.name = `${studentName} - ${topicName} Tutoring`;
         } else {
           if (appointment.status === "tutorCancel") {
             appointment.name = `Canceled by ${tutorName}`;
           } else if (appointment.status === "studentCancel") {
             appointment.name = `Canceled by ${studentName}`;
+          } else if (appointment.status === "noShow") {
+            appointment.name = `No Show by ${studentName}`;
           }
         }
       }
@@ -242,7 +257,11 @@ export const CalendarMixin = {
           tutorPersonRoleId: appointment.tutors[0].person.personrole[0].id,
           date: this.formatDate(appointment.date),
           startTime: this.calcTime(appointment.startTime),
-          locationName: appointment.location.name,
+          locationName:
+            appointment.location.type.includes("Online") &&
+            appointment.URL !== null
+              ? appointment.URL
+              : appointment.location.name,
           topicName: appointment.topic.name,
           adminFirstName: fromUser.fName,
           adminLastName: fromUser.lName,
@@ -265,7 +284,11 @@ export const CalendarMixin = {
           tutorPersonRoleId: appointment.tutors[0].person.personrole[0].id,
           date: this.formatDate(appointment.date),
           startTime: this.calcTime(appointment.startTime),
-          locationName: appointment.location.name,
+          locationName:
+            appointment.location.type.includes("Online") &&
+            appointment.URL !== null
+              ? appointment.URL
+              : appointment.location.name,
           topicName: appointment.topic.name,
           studentFirstName: fromUser.fName,
           studentLastName: fromUser.lName,
@@ -290,7 +313,11 @@ export const CalendarMixin = {
           tutorPersonRoleId: "",
           date: this.formatDate(appointment.date),
           startTime: this.calcTime(appointment.startTime),
-          locationName: appointment.location.name,
+          locationName:
+            appointment.location.type.includes("Online") &&
+            appointment.URL !== null
+              ? appointment.URL
+              : appointment.location.name,
           topicName: appointment.topic.name,
           adminFirstName: fromUser.fName,
           adminLastName: fromUser.lName,
@@ -318,7 +345,11 @@ export const CalendarMixin = {
           tutorPersonRoleId: "",
           date: this.formatDate(appointment.date),
           startTime: this.calcTime(appointment.startTime),
-          locationName: appointment.location.name,
+          locationName:
+            appointment.location.type.includes("Online") &&
+            appointment.URL !== null
+              ? appointment.URL
+              : appointment.location.name,
           topicName: appointment.topic.name,
           fromFirstName: fromUser.fName,
           fromLastName: fromUser.lName,

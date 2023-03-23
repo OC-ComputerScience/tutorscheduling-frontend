@@ -456,7 +456,7 @@ export default {
       this.series.push(
         JSON.parse(
           "{" +
-            '"name": "No-Show",' +
+            '"name": "No Show",' +
             '"data": [' +
             this.numifyHours(totalNoShowList[0]) +
             ", " +
