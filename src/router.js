@@ -5,6 +5,7 @@ import Apply from "./views/Apply.vue";
 import Calendar from "./views/Calendar.vue";
 import Contract from "./views/Contract.vue";
 import Help from "./views/Help.vue";
+import Home from "./views/Home.vue";
 import Login from "./views/Login.vue";
 import MyInfo from "./views/MyInfo.vue";
 import PageNotFound from "./views/PageNotFound.vue";
@@ -37,16 +38,12 @@ import TopicList from "./views/Admin/TopicList.vue";
 
 // Student Screens
 
-import StudentAddRequest from "./views/Student/StudentAddRequest.vue";
-import StudentAppointmentFeedback from "./views/Student/StudentAppointmentFeedback.vue";
-import StudentHome from "./views/Student/StudentHome.vue";
+import StudentAddRequest from "./views/StudentAddRequest.vue";
 
 // Tutor Screens
 
-import TutorAddAvailability from "./views/Tutor/TutorAddAvailability.vue";
-import TutorAddTopics from "./views/Tutor/TutorAddTopics.vue";
-import TutorAppointmentFeedback from "./views/Tutor/TutorAppointmentFeedback.vue";
-import TutorHome from "./views/Tutor/TutorHome.vue";
+import TutorAddAvailability from "./views/TutorAddAvailability.vue";
+import TutorAddTopics from "./views/TutorAddTopics.vue";
 
 Vue.use(Router);
 
@@ -77,6 +74,12 @@ const router = new Router({
       path: "/help/:id",
       name: "help",
       component: Help,
+      props: true,
+    },
+    {
+      path: "/home/:id",
+      name: "home",
+      component: Home,
       props: true,
     },
     {
@@ -182,39 +185,15 @@ const router = new Router({
       props: true,
     },
     {
-      path: "/studentAppointmentFeedback/:id/:userId",
-      name: "studentAppointmentFeedback",
-      component: StudentAppointmentFeedback,
-      props: true,
-    },
-    {
-      path: "/studentHome/:id",
-      name: "studentHome",
-      component: StudentHome,
-      props: true,
-    },
-    {
       path: "/tutorAddAvailability/:id",
       name: "tutorAddAvailability",
       component: TutorAddAvailability,
       props: true,
     },
     {
-      path: "/tutorAppointmentFeedback/:id/:userId",
-      name: "tutorAppointmentFeedback",
-      component: TutorAppointmentFeedback,
-      props: true,
-    },
-    {
       path: "/tutorAddTopics/:id",
       name: "tutorAddTopics",
       component: TutorAddTopics,
-      props: true,
-    },
-    {
-      path: "/tutorHome/:id",
-      name: "tutorHome",
-      component: TutorHome,
       props: true,
     },
     {

@@ -103,7 +103,7 @@
 import Utils from "@/config/utils.js";
 import TopicServices from "@/services/topicServices";
 import PersonTopicServices from "@/services/personTopicServices";
-import InformationComponent from "../../components/InformationComponent.vue";
+import InformationComponent from "../components/InformationComponent.vue";
 import GroupViewComponent from "@/components/GroupViewComponent.vue";
 import { RedirectToPageMixin } from "@/mixins/RedirectToPageMixin";
 

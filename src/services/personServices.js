@@ -23,6 +23,9 @@ export default {
   getHoursPerTutor(groupId, currWeek) {
     return apiClient.get("person/group/" + groupId + "/hours/week/" + currWeek);
   },
+  getStudentForPersonForGroup(email, groupId) {
+    return apiClient.get("person/student/" + email + "/group/" + groupId);
+  },
   getPersonForEmail(email) {
     return apiClient.get("person/email/" + email);
   },

@@ -234,14 +234,7 @@ export default {
             },
           },
         ],
-        colors: [
-          "#757575",
-          "#9C27B0",
-          "#F8C545",
-          "#196CA2",
-          "#4CAF50",
-          "#EE5044",
-        ],
+        colors: ["grey", "#F8C545", "#EE5044", "#63BAC0", "#196CA2", "#032F45"],
         plotOptions: {
           bar: {
             horizontal: false,
@@ -260,7 +253,7 @@ export default {
           width: 380,
           type: "pie",
         },
-        colors: ["#EE5044", "#F8C545", "#4CAF50"],
+        colors: ["#EE5044", "#F8C545", "#032F45"],
         labels: ["Received", "In-Progress", "Complete"],
         dataLabels: {
           enabled: true,
@@ -448,13 +441,13 @@ export default {
       this.series.push(
         JSON.parse(
           "{" +
-            '"name": "Group Available",' +
+            '"name": "Pending",' +
             '"data": [' +
-            this.numifyHours(totalGroupList[0]) +
+            this.numifyHours(totalPendingList[0]) +
             ", " +
-            this.numifyHours(totalGroupList[1]) +
+            this.numifyHours(totalPendingList[1]) +
             ", " +
-            this.numifyHours(totalGroupList[2]) +
+            this.numifyHours(totalPendingList[2]) +
             "]" +
             "}"
         )
@@ -463,13 +456,28 @@ export default {
       this.series.push(
         JSON.parse(
           "{" +
-            '"name": "Pending",' +
+            '"name": "No Show",' +
             '"data": [' +
-            this.numifyHours(totalPendingList[0]) +
+            this.numifyHours(totalNoShowList[0]) +
             ", " +
-            this.numifyHours(totalPendingList[1]) +
+            this.numifyHours(totalNoShowList[1]) +
             ", " +
-            this.numifyHours(totalPendingList[2]) +
+            this.numifyHours(totalNoShowList[2]) +
+            "]" +
+            "}"
+        )
+      );
+
+      this.series.push(
+        JSON.parse(
+          "{" +
+            '"name": "Group Available",' +
+            '"data": [' +
+            this.numifyHours(totalGroupList[0]) +
+            ", " +
+            this.numifyHours(totalGroupList[1]) +
+            ", " +
+            this.numifyHours(totalGroupList[2]) +
             "]" +
             "}"
         )
@@ -500,21 +508,6 @@ export default {
             this.numifyHours(totalCompleteList[1]) +
             ", " +
             this.numifyHours(totalCompleteList[2]) +
-            "]" +
-            "}"
-        )
-      );
-
-      this.series.push(
-        JSON.parse(
-          "{" +
-            '"name": "No-Show",' +
-            '"data": [' +
-            this.numifyHours(totalNoShowList[0]) +
-            ", " +
-            this.numifyHours(totalNoShowList[1]) +
-            ", " +
-            this.numifyHours(totalNoShowList[2]) +
             "]" +
             "}"
         )
