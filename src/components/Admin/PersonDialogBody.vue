@@ -66,18 +66,17 @@
               <v-card-title>
                 Roles
                 <v-spacer></v-spacer>
-                <v-btn color="accent" elevation="2"> Add </v-btn>
+                <v-btn color="accent" elevation="2" @click="addPersonRole">
+                  Add
+                </v-btn>
               </v-card-title>
               <v-data-table
                 :headers="roleHeaders"
                 :items="personroles"
                 :items-per-page="50"
+                hide-default-footer
+                @click:row="openPersonRoleDialog"
               >
-                <template #[`item.actions`]="{ item }">
-                  <v-icon small class="mr-2" @click="editRole(item)">
-                    mdi-pencil
-                  </v-icon>
-                </template>
               </v-data-table>
             </v-card>
           </v-col>
@@ -91,7 +90,7 @@
                 <v-btn
                   color="accent"
                   elevation="2"
-                  @click="dialogPrivilegeAdd = true"
+                  @click="personPrivilegeDialog = true"
                 >
                   Add
                 </v-btn>
@@ -100,6 +99,7 @@
                 :headers="privilegeHeaders"
                 :items="personroleprivileges"
                 :items-per-page="50"
+                hide-default-footer
               >
                 <template #[`item.actions`]="{ item }">
                   <v-icon
@@ -120,11 +120,7 @@
               <v-card-title>
                 Topics
                 <v-spacer></v-spacer>
-                <v-btn
-                  color="accent"
-                  elevation="2"
-                  @click="dialogTopicAdd = true"
-                >
+                <v-btn color="accent" elevation="2" @click="addPersonTopic">
                   Add
                 </v-btn>
               </v-card-title>
@@ -132,27 +128,47 @@
                 :headers="topicHeaders"
                 :items="persontopics"
                 :items-per-page="50"
+                hide-default-footer
+                @click:row="openPersonTopicDialog"
               >
-                <template #[`item.actions`]="{ item }">
-                  <v-icon small class="mr-2" @click="editTopic(item)">
-                    mdi-pencil
-                  </v-icon>
-                  <v-icon
-                    small
-                    @click="
-                      deleteType = 'persontopic';
-                      directToCancel(item);
-                    "
-                  >
-                    mdi-delete
-                  </v-icon>
-                </template>
               </v-data-table>
             </v-card>
           </v-col>
         </v-row>
       </v-col>
     </v-row>
+
+    <v-dialog v-model="personRoleDialog" persistent max-width="600px">
+      <PersonRoleDialogBody
+        :sent-person-name="person.fName + ' ' + person.lName"
+        :sent-person-role="selectedPersonRole"
+        :sent-bool="isPersonRoleDialogEdit"
+        :sent-group-roles="groupRoles"
+        @closePersonRoleDialog="personRoleDialog = false"
+        @saveOrAddPersonRole="saveOrAddPersonRole"
+        @changePersonRoleStatus="changePersonRoleStatus"
+      ></PersonRoleDialogBody>
+    </v-dialog>
+
+    <v-dialog v-model="personPrivilegeDialog" persistent max-width="600px">
+      <PersonPrivilegeDialogBody
+        :sent-person-name="person.fName"
+        :sent-person-roles="personroles"
+        @closePersonPrivilegeDialog="personPrivilegeDialog = false"
+        @addPersonRolePrivilege="addPersonRolePrivilege"
+      ></PersonPrivilegeDialogBody>
+    </v-dialog>
+
+    <v-dialog v-model="personTopicDialog" persistent max-width="600px">
+      <PersonTopicDialogBody
+        :sent-person-name="person.fName"
+        :sent-person-topic="selectedPersonTopic"
+        :sent-bool="isPersonTopicDialogEdit"
+        :sent-group-topics="groupTopics"
+        @closePersonTopicDialog="personTopicDialog = false"
+        @saveOrAddPersonTopic="saveOrAddPersonTopic"
+      ></PersonTopicDialogBody>
+    </v-dialog>
 
     <v-card-actions class="pb-4">
       <v-spacer></v-spacer>
@@ -169,10 +185,22 @@
 <script>
 import RoleServices from "@/services/roleServices.js";
 import TopicServices from "@/services/topicServices.js";
+import PersonRoleDialogBody from "./PersonRoleDialogBody.vue";
+import PersonPrivilegeDialogBody from "./PersonPrivilegeDialogBody.vue";
+import PersonTopicDialogBody from "./PersonTopicDialogBody.vue";
+import PersonRoleServices from "@/services/personRoleServices.js";
+import AppointmentServices from "@/services/appointmentServices.js";
+import PersonAppointmentServices from "@/services/personAppointmentServices.js";
+import PersonRolePrivilegeServices from "@/services/personRolePrivilegeServices.js";
+import PersonTopicServices from "@/services/personTopicServices.js";
 
 export default {
   name: "PersonDialogBody",
-  components: {},
+  components: {
+    PersonRoleDialogBody,
+    PersonPrivilegeDialogBody,
+    PersonTopicDialogBody,
+  },
   props: {
     sentBool: { type: [Boolean], default: false },
     sentPerson: {
@@ -185,8 +213,6 @@ export default {
           email: "",
           phoneNum: "",
           textOptIn: 1,
-          createdAt: new Date(),
-          updatedAt: new Date(),
         };
       },
     },
@@ -203,27 +229,35 @@ export default {
   },
   data() {
     return {
+      personRoleDialog: false,
+      personPrivilegeDialog: false,
+      personTopicDialog: false,
+      selectedPersonRole: [],
+      isPersonRoleDialogEdit: false,
+      selectedPersonTopic: [],
+      isPersonTopicDialogEdit: false,
       person: this.sentPerson,
-      tutor: false,
+      tutor: true,
       group: this.sentGroup,
+      groupRoles: [],
+      groupTopics: [],
+      filteredGroupTopics: [],
       isEdit: this.sentBool,
       roleHeaders: [
         { text: "Type", value: "type" },
         { text: "Status", value: "personrole[0].status" },
-        { text: "Actions", value: "actions", sortable: false },
       ],
       topicHeaders: [
         { text: "Name", value: "name" },
         { text: "Skill Level", value: "persontopic[0].skillLevel" },
-        { text: "Actions", value: "actions", sortable: false },
       ],
       privilegeHeaders: [
         { text: "Privilege", value: "privilege" },
         { text: "Associated Role", value: "associatedRole" },
-        { text: "Actions", value: "actions", sortable: false },
       ],
       personroles: [],
       personrole: {},
+      appointments: [],
       personroleprivileges: [],
       personroleprivilege: {},
       persontopics: [],
@@ -236,13 +270,17 @@ export default {
       await this.getPersonRoles();
       if (this.tutor) {
         await this.getPersonTopics();
+        // this.filterGroupTopics();
       }
     },
     sentBool(newVal) {
       this.isEdit = newVal;
     },
-    sentGroup(newGroup) {
+    async sentGroup(newGroup) {
       this.group = newGroup;
+      await this.getRolesForGroup();
+      await this.getTopicsForGroup();
+      // this.filterGroupTopics();
     },
   },
   async created() {
@@ -252,18 +290,55 @@ export default {
         await this.getPersonTopics();
       }
     }
+    await this.getRolesForGroup();
+    await this.getTopicsForGroup();
+    // this.filterGroupTopics();
   },
   methods: {
+    openPersonRoleDialog(item) {
+      this.selectedPersonRole = item.personrole[0];
+      this.selectedPersonRole.type = item.type;
+      this.isPersonRoleDialogEdit = true;
+      this.personRoleDialog = true;
+    },
+    addPersonRole() {
+      this.selectedPersonRole = {
+        agree: true,
+        personId: 0,
+        personRolePrivilege: [],
+        roleId: 0,
+        status: "",
+        type: "",
+      };
+      this.isPersonRoleDialogEdit = false;
+      this.personRoleDialog = true;
+    },
+    openPersonTopicDialog(item) {
+      this.selectedPersonTopic = item.persontopic[0];
+      this.selectedPersonTopic.name = item.name;
+      this.isPersonTopicDialogEdit = true;
+      this.personTopicDialog = true;
+    },
+    addPersonTopic() {
+      this.selectedPersonTopic = {
+        skillLevel: "",
+        topicId: 0,
+        personId: 0,
+      };
+      this.isPersonTopicDialogEdit = false;
+      this.personTopicDialog = true;
+    },
+    // filterGroupTopics() {
+    //   this.filteredGroupTopics = this.groupTopics.filter(function (topic) {
+    //     return !this.persontopics.includes(topic);
+    //   });
+    // },
     saveOrAddPerson() {
       this.person.fName = document.getElementById("fName").value;
       this.person.lName = document.getElementById("lName").value;
       this.person.email = document.getElementById("email").value;
       this.person.phoneNum = document.getElementById("phoneNum").value;
       this.person.textOptIn = document.getElementById("textOptIn").value;
-
-      if (this.isEdit) {
-        this.person.updatedAt = new Date();
-      }
 
       this.$emit("saveOrAddPerson", this.person, this.isEdit);
     },
@@ -274,7 +349,6 @@ export default {
         this.sentPerson.id
       )
         .then(async (response) => {
-          console.log(response);
           this.personroles = response.data;
           for (let i = 0; i < this.personroles.length; i++) {
             let personRoleArray = this.personroles[i].personrole;
@@ -298,10 +372,30 @@ export default {
           console.log("There was an error:", error.response);
         });
     },
+    async getRolesForGroup() {
+      await RoleServices.getAllForGroup(this.group.id)
+        .then((response) => {
+          this.groupRoles = response.data;
+        })
+        .catch((error) => {
+          this.message = error.response.data.message;
+          console.log("There was an error:", error.response);
+        });
+    },
+    async getTopicsForGroup() {
+      await TopicServices.getAllForGroup(this.group.id)
+        .then((response) => {
+          this.groupTopics = response.data;
+        })
+        .catch((error) => {
+          this.message = error.response.data.message;
+          console.log("There was an error:", error.response);
+        });
+    },
     async getPersonTopics() {
       await TopicServices.getTopicByGroupForPerson(
         this.group.id,
-        this.sentPerson.id
+        this.person.id
       )
         .then((response) => {
           this.persontopics = response.data;
@@ -310,6 +404,168 @@ export default {
           this.message = error.response.data.message;
           console.log("There was an error:", error.response);
         });
+    },
+    rowClick: function (item, type) {
+      if (type === "role") {
+        this.openPersonRoleDialog(item, true);
+      } else if (type === "topic") {
+        this.openPersonTopicDialog(item, true);
+      }
+    },
+    async saveOrAddPersonRole(personRole, isEdit) {
+      delete personRole.updatedAt;
+
+      if (isEdit) {
+        await PersonRoleServices.updatePersonRole(personRole.id, personRole)
+          .then(() => {
+            this.personRoleDialog = false;
+            this.getPersonRoles();
+          })
+          .catch((error) => {
+            this.message = error.response.data.message;
+            console.log("There was an error:", error.response);
+          });
+      } else {
+        personRole.personId = this.person.id;
+        personRole.agree = true;
+        personRole.dateSigned = new Date();
+        await PersonRoleServices.addPersonRole(personRole)
+          .then(() => {
+            this.personRoleDialog = false;
+            this.getPersonRoles();
+          })
+          .catch((error) => {
+            this.message = error.response.data.message;
+            console.log("There was an error:", error.response);
+          });
+      }
+    },
+    async changePersonRoleStatus(role) {
+      console.log(role);
+      delete role.updatedAt;
+      delete role.createdAt;
+      if (role.status === "disabled") {
+        console.log("TEST?");
+        // delete person role privileges
+        await PersonRolePrivilegeServices.deletePrivilegesForPersonRole(
+          role.id
+        ).catch((error) => {
+          this.message = error.response.data.message;
+          console.log("There was an error:", error.response);
+        });
+        console.log("TEST2");
+        // delete person topics
+        //Not resolving???
+        PersonTopicServices.deletePersonTopicsForPersonForGroup(
+          this.person.id,
+          this.group.id
+        )
+          .then((response) => {
+            console.log(response);
+          })
+          .catch((error) => {
+            this.message = error.response.data.message;
+            console.log("There was an error:", error.response);
+          });
+        console.log("YEP");
+        await this.getAppointments();
+        let disableUser = {
+          fName: this.person.fName,
+          lName: this.person.lName,
+          userID: this.person.id,
+          selectedRole: {
+            type: role.type,
+          },
+        };
+        for (let i = 0; i < this.appointments.length; i++) {
+          await this.cancelAppointment(this.appointments[i], disableUser);
+        }
+      }
+      await PersonRoleServices.updatePersonRole(role.id, role)
+        .then((response) => {
+          console.log(response);
+          console.log("RAN");
+          this.personRoleDialog = false;
+        })
+        .catch((error) => {
+          this.message = error.response.data.message;
+          console.log(error);
+        });
+      await this.getPersonRoles();
+      await this.getPersonTopics();
+    },
+    async getAppointments() {
+      await AppointmentServices.getUpcomingAppointmentForPersonForGroup(
+        this.group.id,
+        this.person.id
+      )
+        .then(async (response) => {
+          this.appointments = response.data;
+          for (let i = 0; i < this.appointments.length; i++) {
+            await PersonAppointmentServices.findStudentDataForTable(
+              this.appointments[i].id
+            )
+              .then((response) => {
+                this.appointments[i].students = response.data;
+              })
+              .catch((error) => {
+                this.message = error.response.data.message;
+                console.log("There was an error:", error.response);
+              });
+
+            await PersonAppointmentServices.findTutorDataForTable(
+              this.appointments[i].id
+            )
+              .then((response) => {
+                this.appointments[i].tutors = response.data;
+              })
+              .catch((error) => {
+                this.message = error.response.data.message;
+                console.log("There was an error:", error.response);
+              });
+          }
+        })
+        .catch((error) => {
+          this.message = error.response.data.message;
+          console.log("There was an error:", error.response);
+        });
+      console.log("RAN FINE");
+    },
+    async addPersonRolePrivilege(privilege) {
+      await PersonRolePrivilegeServices.addPrivilege(privilege)
+        .then(() => {
+          this.personPrivilegeDialog = false;
+          this.getPersonRoles();
+        })
+        .catch((error) => {
+          this.message = error.response.data.message;
+          console.log("There was an error:", error.response);
+        });
+    },
+    async saveOrAddPersonTopic(personTopic, isEdit) {
+      delete personTopic.updatedAt;
+      if (isEdit) {
+        await PersonTopicServices.updatePersonTopic(personTopic.id, personTopic)
+          .then(() => {
+            this.personTopicDialog = false;
+            this.getPersonTopics();
+          })
+          .catch((error) => {
+            this.message = error.response.data.message;
+            console.log(error);
+          });
+      } else {
+        personTopic.personId = this.person.id;
+        await PersonTopicServices.addPersonTopic(personTopic)
+          .then(() => {
+            this.personTopicDialog = false;
+            this.getPersonTopics();
+          })
+          .catch((error) => {
+            this.message = error.response.data.message;
+            console.log("There was an error:", error.response);
+          });
+      }
     },
   },
 };
