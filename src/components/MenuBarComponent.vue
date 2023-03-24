@@ -60,7 +60,9 @@
                 selectedRole = role;
                 selectedGroup = group.name;
                 saveGroupRole();
-                menuAction(`${selectedRole.type.toLowerCase()}Home`);
+                menuAction(
+                  selectedRole.type === 'Admin' ? 'adminHome' : 'home'
+                );
               "
             >
               <v-list-item-content>
@@ -224,20 +226,12 @@ export default {
         roles: "HeadAdmin,Admin,Supervisor",
       },
       {
-        link: "tutorHome",
-        name: "tutorHome",
+        link: "home",
+        name: "home",
         color: "white",
         text: "Home",
         icon: "mdi-home",
-        roles: "Tutor",
-      },
-      {
-        link: "studentHome",
-        name: "studentHome",
-        color: "white",
-        text: "Home",
-        icon: "mdi-home",
-        roles: "Student",
+        roles: "Tutor,Student",
       },
       {
         link: "calendar",
@@ -344,7 +338,7 @@ export default {
     createLink() {
       if (this.isSelectedRoleValid()) {
         this.handleRedundantNavigation(
-          `${this.selectedRole.type.toLowerCase()}Home`,
+          this.selectedRole.type === "Admin" ? "adminHome" : "home",
           this.selectedRole.personRoleId
         );
       } else {
@@ -426,7 +420,7 @@ export default {
         if (!approved) {
           // makes only tutor home page show up on menu bar
           this.activeMenus = this.activeMenus.filter((menu) =>
-            menu.name.includes("tutorHome")
+            menu.name.includes("home")
           );
         }
       }
@@ -450,7 +444,7 @@ export default {
         if (!approved) {
           // makes only student home page show up on menu bar
           this.activeMenus = this.activeMenus.filter((menu) =>
-            menu.name.includes("studentHome")
+            menu.name.includes("home")
           );
         }
       }
@@ -474,7 +468,7 @@ export default {
         if (!approved) {
           // makes only admin home page show up on menu bar
           this.activeMenus = this.activeMenus.filter((menu) =>
-            menu.name.includes("adminDashboard")
+            menu.name.includes("adminHome")
           );
         }
       }
