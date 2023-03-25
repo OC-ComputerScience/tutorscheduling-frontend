@@ -217,6 +217,22 @@
       <v-spacer></v-spacer>
 
       <v-btn
+        v-if="showEnableCancelButton"
+        color="error white--text"
+        @click="showDeleteConfirmation = true"
+      >
+        Cancel Appointment
+      </v-btn>
+
+      <v-btn
+        v-if="showEnableConfirmRejectButtons"
+        color="error white--text"
+        @click="showDeleteConfirmation = true"
+      >
+        Reject Appointment
+      </v-btn>
+
+      <v-btn
         v-if="isAdminAddStudent && !allowAdminAddStudent"
         color="darkblue white--text"
         :disabled="!validateEmail()"
@@ -233,32 +249,8 @@
         Sign Up Student
       </v-btn>
 
-      <v-btn
-        v-if="showEnableCancelButton"
-        color="error white--text"
-        @click="showDeleteConfirmation = true"
-      >
-        Cancel Appointment
-      </v-btn>
-
-      <v-btn
-        v-if="showEnableConfirmRejectButtons"
-        color="error white--text"
-        @click="showDeleteConfirmation = true"
-      >
-        Reject Appointment
-      </v-btn>
-
       <v-btn color="grey white--text" @click="$emit('closeAppointmentDialog')">
         {{ saveChanges ? "Discard Changes" : "Close" }}
-      </v-btn>
-
-      <v-btn
-        v-if="showEnableConfirmRejectButtons"
-        color="accent"
-        @click="sendAppointmentForConfirmation()"
-      >
-        Confirm Appointment
       </v-btn>
 
       <v-btn
@@ -271,6 +263,14 @@
         "
       >
         Save Changes
+      </v-btn>
+
+      <v-btn
+        v-if="showEnableConfirmRejectButtons"
+        color="accent"
+        @click="sendAppointmentForConfirmation()"
+      >
+        Confirm Appointment
       </v-btn>
 
       <v-btn
@@ -672,12 +672,11 @@ export default {
       // 4. tutor - group available but not already in group appointment
       // 4. not past (applies to all cases)
       this.showBookButton =
-        (((this.hasRole("Student") ||
+        ((((this.hasRole("Student") &&
+          !this.appointment.isMemberOfAppointment) ||
           this.hasRole("Admin") ||
           this.hasPrivilege("Sign up students for appointments")) &&
-          this.checkAppointmentStatus("available") &&
-          (this.checkAppointmentStatus("Private") ||
-            !this.appointment.isMemberOfAppointment)) ||
+          this.checkAppointmentStatus("available")) ||
           (this.hasRole("Tutor") &&
             !this.appointment.isMemberOfAppointment &&
             this.checkAppointmentType("Group") &&
@@ -712,7 +711,7 @@ export default {
       // 1. tutor and pending private
       // 2. not past (applies to all cases)
       this.showEnableConfirmRejectButtons =
-        this.hasRole("Tutor") &&
+        this.appointment.isTutor &&
         this.checkAppointmentStatus("pending") &&
         this.checkAppointmentType("Private") &&
         !this.appointment.isDatePast;
@@ -722,7 +721,8 @@ export default {
       this.showSaveButton =
         ((this.appointment.isTutor && this.checkAppointmentType("Group")) ||
           !this.checkAppointmentStatus("available")) &&
-        (this.canEditLocation || this.canEditTopic || this.canEditPreSession);
+        (this.canEditLocation || this.canEditTopic || this.canEditPreSession) &&
+        !this.isAdminAddStudent;
     },
     setShowEnableSignUpButton() {
       // 1. privilege tutor or admin and available appointment
