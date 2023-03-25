@@ -250,7 +250,7 @@
       </v-btn>
 
       <v-btn color="grey white--text" @click="$emit('closeAppointmentDialog')">
-        {{ saveChanges ? "Discard Changes" : "Close" }}
+        {{ saveChanges && !isAdminAddStudent ? "Discard Changes" : "Close" }}
       </v-btn>
 
       <v-btn
@@ -516,7 +516,7 @@ export default {
         id: "",
         fName: "",
         lName: "",
-        email: this.addedStudent.email,
+        email: "",
         personRoleId: "",
       };
       this.updatedPersonAppointment = {
@@ -564,6 +564,8 @@ export default {
           this.tutorString += `, ${this.appointment.tutors[i].person.fName} ${this.appointment.tutors[i].person.lName}`;
         }
       }
+
+      console.log(this.appointment.students);
 
       if (this.appointment.students.length > 1) {
         this.appointment.students.forEach((student) => {
@@ -689,9 +691,13 @@ export default {
       // 3. admin - group available and student signed up, private available with student signed up and topic, location, start, and end time filled out
       // 4. tutor - group available
       // 4. not past (applies to all cases)
+      console.log(this.addedStudent);
+      console.log(this.appointment);
       this.enableBookButton =
         (this.hasRole("Student") ||
-          (this.hasRole("Tutor") && this.checkAppointmentType("Group")) ||
+          (this.hasRole("Tutor") &&
+            this.checkAppointmentType("Group") &&
+            !this.appointment.isTutor) ||
           ((this.hasRole("Admin") ||
             this.hasPrivilege("Sign up students for appointments")) &&
             this.isAdminAddStudent &&
@@ -862,7 +868,10 @@ export default {
       } else if (this.addedStudent.id !== "") {
         this.allowAdminAddStudent = true;
         this.needStudentInfo = false;
-        if (this.addedStudent.personRoleId === null) {
+        if (
+          this.addedStudent.personRoleId === "" ||
+          this.addedStudent.personRoleId === null
+        ) {
           let studentRoleId = await RoleServices.getAllForGroupByType(
             this.appointment.groupId,
             "Student"
@@ -988,6 +997,14 @@ export default {
       )
         .then((response) => {
           this.currentTopics = response.data;
+          // there are cases where the change in tutors may have created an appointment that the main tutor is not assigned to
+          if (
+            this.currentTopics.find(
+              (topic) => topic.id === this.appointment.topicId
+            ) === undefined
+          ) {
+            this.currentTopics.push(this.appointment.topic);
+          }
         })
         .catch((error) => {
           this.alertType = "error";
