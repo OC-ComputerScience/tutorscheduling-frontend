@@ -207,9 +207,9 @@ export default {
       personRolePrivileges: [],
       feedbackAppointments: [],
       upcomingHeaders: [
-        { text: "Date", value: "displayedDate" },
-        { text: "Start Time", value: "displayedStart" },
-        { text: "End Time", value: "displayedEnd" },
+        { text: "Date", value: "tableDate" },
+        { text: "Start Time", value: "tableStart" },
+        { text: "End Time", value: "tableEnd" },
         { text: "Topic", value: "topic.name" },
         { text: "Status", value: "status" },
         { text: "Type", value: "type" },
@@ -325,11 +325,9 @@ export default {
 
         if (owned) {
           this.setUpCalendarEvent(appointment);
-          appointment.displayedDate = this.formatReadableMonth(
-            appointment.date
-          );
-          appointment.displayedStart = this.formatTime(appointment.startTime);
-          appointment.displayedEnd = this.formatTime(appointment.endTime);
+          appointment.tableDate = this.formatReadableMonth(appointment.date);
+          appointment.tableStart = this.formatTime(appointment.startTime);
+          appointment.tableEnd = this.formatTime(appointment.endTime);
           appointment.personRolePrivileges = [];
           appointment.newStart = appointment.startTime;
           appointment.newEnd = appointment.endTime;
