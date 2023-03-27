@@ -1,6 +1,7 @@
 export const TimeFunctionsMixin = {
   methods: {
     //Formats time to be more user friendly
+    // TODO: make sure this works with midnight times
     calcTime(time) {
       if (time == null) {
         return null;
@@ -16,7 +17,7 @@ export const TimeFunctionsMixin = {
       return "" + hours + ":" + minutes + " " + dayTime;
     },
     //Create time slots for users to select from
-    generateTimeslots(startTime, endTime, minLength) {
+    generateTimeSlots(startTime, endTime, minLength) {
       let timeInterval = minLength;
       // get the total minutes between the start and end times.
       var totalMins = this.subtractTimes(startTime, endTime);
@@ -121,11 +122,22 @@ export const TimeFunctionsMixin = {
       return date;
     },
     formatDate(date) {
-      let formattedDate =
-        date.toString().substring(5, 10) +
-        "-" +
-        date.toString().substring(0, 4);
-      return formattedDate;
+      return (
+        date.toString().substring(5, 10) + "-" + date.toString().substring(0, 4)
+      );
+    },
+    formatReadableMonth(date) {
+      return new Date(date).toLocaleDateString(undefined, {
+        month: "long",
+        day: "numeric",
+      });
+    },
+    formatReadableDate(date) {
+      return new Date(date).toLocaleDateString(undefined, {
+        weekday: "long",
+        month: "long",
+        day: "numeric",
+      });
     },
     formatTime(time) {
       let modST = time.toString().substring(0, 2) % 12;
@@ -173,8 +185,8 @@ export const TimeFunctionsMixin = {
       return date;
     },
     checkHours(hours) {
-      if (!hours) {
-        return "00:00";
+      if (!hours || hours == 0) {
+        return "---";
       }
       var total = this.toHoursAndMinutes(hours);
       return total;
@@ -197,6 +209,50 @@ export const TimeFunctionsMixin = {
       hours = (hours < 10 ? "0" : "") + hours;
 
       return hours + ":" + minutes;
+    },
+    setIsDatePast(appointment) {
+      let checkDate = new Date();
+      checkDate.setHours(
+        checkDate.getHours() - checkDate.getTimezoneOffset() / 60
+      );
+      checkDate.setHours(0, 0, 0, 0);
+      let checkTime = new Date();
+      let tempHours = checkTime.getHours();
+      // check minutes for group's booking buffer
+      let tempMins = checkTime.getMinutes();
+      if (appointment.group.bookPastMinutes > 0) {
+        tempMins -= appointment.group.bookPastMinutes;
+        while (tempMins < 0) {
+          tempMins += 60;
+          tempHours--;
+        }
+      } else if (appointment.group.bookPastMinutes < 0) {
+        tempMins -= appointment.group.bookPastMinutes;
+        while (tempMins > 59) {
+          tempMins -= 60;
+          tempHours++;
+        }
+      }
+      let tempSecs = checkTime.getSeconds();
+      if (tempHours < 10) {
+        tempHours = "0" + tempHours;
+      }
+      if (tempMins < 10) {
+        tempMins = "0" + tempMins;
+      }
+      if (tempSecs < 10) {
+        tempSecs = "0" + tempSecs;
+      }
+      checkTime = tempHours + ":" + tempMins + ":" + tempSecs;
+      if (appointment.date < checkDate.toISOString()) {
+        appointment.isDatePast = true;
+      } else if (checkDate.toISOString() === appointment.date) {
+        if (checkTime > appointment.startTime) {
+          appointment.isDatePast = true;
+        } else appointment.isDatePast = false;
+      } else {
+        appointment.isDatePast = false;
+      }
     },
   },
 };

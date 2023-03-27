@@ -71,20 +71,24 @@
 <script>
 import RequestServices from "@/services/requestServices.js";
 import TopicServices from "@/services/topicServices.js";
+import TwilioServices from "@/services/twilioServices";
 import PersonServices from "@/services/personServices.js";
 import PersonRoleServices from "@/services/personRoleServices.js";
 import RoleServices from "@/services/roleServices.js";
 import Utils from "@/config/utils.js";
-import InformationComponent from "../../components/InformationComponent.vue";
-import { SendTextsMixin } from "../../mixins/SendTextsMixin";
+import InformationComponent from "../components/InformationComponent.vue";
 
 export default {
   name: "StudentAddRequest",
   components: {
     InformationComponent,
   },
-  mixins: [SendTextsMixin],
-  props: ["id"],
+  props: {
+    id: {
+      type: [Number, String],
+      default: 0,
+    },
+  },
   data() {
     return {
       showAlert: false,
@@ -146,19 +150,28 @@ export default {
       this.request.personId = this.person.id;
       this.request.groupId = this.group.id;
       await RequestServices.addRequest(this.request)
-        .then(async () => {
+        .then(async (response) => {
           await this.getAdmins();
 
           for (let i = 0; i < this.admins.length; i++) {
             let tempA = this.admins[i];
-            console.log(tempA);
+            tempA.requestId = response.data.id;
             if (
               await this.checkPrivilege(
                 "Receive notifications for requests",
                 tempA.personroleprivilege
               )
-            )
-              this.sendRequestMessage(this.user, tempA);
+            ) {
+              let textInfo = {
+                fromFirstName: this.user.fName,
+                fromLastName: this.user.lName,
+                adminPersonRoleId: tempA.id,
+                requestId: response.data.id,
+                adminPhoneNum: tempA.person.phoneNum,
+                groupName: this.user.selectedGroup,
+              };
+              await TwilioServices.sendRequestMessage(textInfo);
+            }
           }
 
           this.$router.go(-1);

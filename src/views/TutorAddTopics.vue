@@ -103,7 +103,7 @@
 import Utils from "@/config/utils.js";
 import TopicServices from "@/services/topicServices";
 import PersonTopicServices from "@/services/personTopicServices";
-import InformationComponent from "../../components/InformationComponent.vue";
+import InformationComponent from "../components/InformationComponent.vue";
 import GroupViewComponent from "@/components/GroupViewComponent.vue";
 import { RedirectToPageMixin } from "@/mixins/RedirectToPageMixin";
 
@@ -114,7 +114,12 @@ export default {
     InformationComponent,
   },
   mixins: [RedirectToPageMixin],
-  props: ["id"],
+  props: {
+    id: {
+      type: [Number, String],
+      default: 0,
+    },
+  },
   data: () => ({
     showAlert: false,
     alert: "",
@@ -136,7 +141,7 @@ export default {
   methods: {
     async getGroupsWithNoTopics() {
       await this.getPersonRoles(this.user.userID);
-      this.groups = this.topicroles;
+      this.groups = this.topicRoles;
       if (this.groups.length === 0) {
         this.goToPage(this.user.userID);
       } else {

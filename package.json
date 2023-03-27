@@ -1,12 +1,11 @@
 {
-  "name": "sevtutoring-vue",
+  "name": "tutorscheduling-vue",
   "version": "0.1.0",
   "private": true,
   "scripts": {
     "serve": "vue-cli-service serve --host localhost",
     "build": "vue-cli-service build",
-    "lint": "vue-cli-service lint",
-    "bundle": "mv .env dist"
+    "lint": "vue-cli-service lint"
   },
   "dependencies": {
     "apexcharts": "^3.35.3",
@@ -64,8 +63,7 @@
     },
     "rules": {
       "vue/multi-word-component-names": "off",
-      "vue/no-v-text-v-html-on-component": "off",
-      "vue/attribute-hyphenation": "off"
+      "vue/no-v-text-v-html-on-component": "off"
     }
   },
   "browserslist": [

@@ -1,115 +1,138 @@
 <template>
   <div>
     <v-container>
-      <v-toolbar>
-        <v-toolbar-title>Hello, {{ user.fName }}!</v-toolbar-title>
+      <v-card-title
+        class="text-h4 font-weight-bold pt-4 pb-6 pl-0 pr-0 accent--text"
+        >Hello, {{ user.fName }}!
         <InformationComponent :message="headerMessage"></InformationComponent>
         <v-spacer></v-spacer>
-        <v-toolbar-title>Admin</v-toolbar-title>
-      </v-toolbar>
-      <br />
+        <v-card-title class="text-right pt-0 pb-0 pl-0 pr-0 accent--text"
+          >Admin</v-card-title
+        >
+      </v-card-title>
       <v-alert v-model="showAlert" dismissible :type="alertType">{{
         alert
       }}</v-alert>
       <br />
-      <v-row justify="center">
-        <v-col justify="center">
-          <v-card>
-            <v-card-title>
-              Upcoming Appointment Hours - {{ user.selectedGroup }}
-              <v-spacer></v-spacer>
-              <InformationComponent
-                message="View a breakdown of appointment hours for last week, this
-                  week, and next week."
-              ></InformationComponent>
-            </v-card-title>
-            <apexchart
-              ref="chart"
-              width="700"
-              type="bar"
-              :options="chartOptions"
-              :series="series"
-            ></apexchart>
-          </v-card>
-        </v-col>
-        <v-col justify="center">
-          <v-row justify="center">
-            <v-card
-              :to="{ name: 'adminRequests' }"
-              class="mx-auto my-3 justify-center"
-            >
+      <div v-if="approved">
+        <v-row justify="center">
+          <v-col justify="center">
+            <v-card>
               <v-card-title>
-                Student Requests
+                Upcoming Appointment Hours - {{ user.selectedGroup }}
                 <v-spacer></v-spacer>
                 <InformationComponent
-                  message="Click here to view requests."
+                  message="View a breakdown of appointment hours for last week, this
+                  week, and next week."
                 ></InformationComponent>
               </v-card-title>
               <apexchart
-                width="380"
-                type="pie"
-                :options="pieOptions"
-                :series="pieSeries"
+                ref="chart"
+                width="700"
+                type="bar"
+                :options="chartOptions"
+                :series="series"
               ></apexchart>
-              <br />
             </v-card>
-          </v-row>
-          <v-row justify="center">
-            <v-card
-              :to="{ name: 'adminApprove' }"
-              class="mx-auto my-5 justify-center"
-            >
+          </v-col>
+          <v-col justify="center">
+            <v-row justify="center">
+              <v-card
+                class="mx-auto my-3 justify-center"
+                @click="
+                  handleRedundantNavigation(
+                    'adminRequests',
+                    user.selectedRole.personRoleId
+                  )
+                "
+              >
+                <v-card-title>
+                  Student Requests
+                  <v-spacer></v-spacer>
+                  <InformationComponent
+                    message="Click here to view requests."
+                  ></InformationComponent>
+                </v-card-title>
+                <apexchart
+                  width="380"
+                  type="pie"
+                  :options="pieOptions"
+                  :series="pieSeries"
+                ></apexchart>
+                <br />
+              </v-card>
+            </v-row>
+            <v-row justify="center">
+              <v-card
+                class="mx-auto my-5 justify-center"
+                @click="
+                  handleRedundantNavigation(
+                    'adminApprove',
+                    user.selectedRole.personRoleId
+                  )
+                "
+              >
+                <v-card-title>
+                  Tutor Applications
+                  <v-spacer></v-spacer>
+                  <InformationComponent
+                    message="Click here to view applications."
+                  ></InformationComponent>
+                </v-card-title>
+                <v-card-text class="text-center">
+                  <h1>{{ applicationNum }}</h1>
+                </v-card-text>
+              </v-card>
+            </v-row>
+          </v-col>
+        </v-row>
+        <v-row justify="center">
+          <v-col>
+            <v-card class="tutor">
               <v-card-title>
-                Tutor Applications
+                Tutors For Week Starting {{ currentWeek }}
                 <v-spacer></v-spacer>
                 <InformationComponent
-                  message="Click here to view applications."
+                  message="View a breakdown of the appointment hours for each tutor."
                 ></InformationComponent>
               </v-card-title>
-              <v-card-text class="text-center">
-                <h1>{{ applicationNum }}</h1>
-              </v-card-text>
+              <v-data-table
+                :headers="tutorTable"
+                :search="search"
+                :items="tutors"
+                :items-per-page="50"
+              ></v-data-table>
             </v-card>
-          </v-row>
-        </v-col>
-      </v-row>
-      <v-row justify="center">
-        <v-col>
-          <v-card class="tutor">
-            <v-card-title>
-              Tutors For Week Starting {{ currentWeek }}
-              <v-spacer></v-spacer>
-              <InformationComponent
-                message="View a breakdown of the appointment hours for each tutor."
-              ></InformationComponent>
-            </v-card-title>
-            <v-data-table
-              :headers="tutorTable"
-              :search="search"
-              :items="tutors"
-              :items-per-page="50"
-            ></v-data-table>
-          </v-card>
-          <br />
-        </v-col>
-        <v-col>
-          <v-card class="tutor">
-            <v-card-title>
-              Topics For Week Starting {{ currentWeek }}
-              <v-spacer></v-spacer>
-              <InformationComponent
-                message="View a breakdown of the appointment hours for each topic."
-              ></InformationComponent>
-            </v-card-title>
-            <v-data-table
-              :headers="topicTable"
-              :search="search"
-              :items="topics"
-              :items-per-page="50"
-            ></v-data-table>
-          </v-card>
-        </v-col>
-      </v-row>
+            <br />
+          </v-col>
+          <v-col>
+            <v-card class="tutor">
+              <v-card-title>
+                Topics For Week Starting {{ currentWeek }}
+                <v-spacer></v-spacer>
+                <InformationComponent
+                  message="View a breakdown of the appointment hours for each topic."
+                ></InformationComponent>
+              </v-card-title>
+              <v-data-table
+                :headers="topicTable"
+                :search="search"
+                :items="topics"
+                :items-per-page="50"
+              ></v-data-table>
+            </v-card>
+          </v-col>
+        </v-row>
+      </div>
+      <div v-else-if="!disabled && !approved">
+        <h4>Pending supervisor's approval...</h4>
+      </div>
+      <div v-else>
+        <h4>
+          This role for {{ group.name }} has been disabled. Please contact a
+          group admin for further questions.
+        </h4>
+      </div>
 
       <br /><br />
     </v-container>
@@ -129,15 +152,21 @@ import TopicServices from "@/services/topicServices.js";
 import PersonServices from "@/services/personServices.js";
 import PersonRoleServices from "@/services/personRoleServices.js";
 import InformationComponent from "@/components/InformationComponent.vue";
+import { RedirectToPageMixin } from "@/mixins/RedirectToPageMixin";
 import { TimeFunctionsMixin } from "@/mixins/TimeFunctionsMixin";
 import "@/plugins/apexcharts";
 
 export default {
-  props: ["id"],
   name: "AdminHome",
-  mixins: [TimeFunctionsMixin],
+  mixins: [RedirectToPageMixin, TimeFunctionsMixin],
   components: {
     InformationComponent,
+  },
+  props: {
+    id: {
+      type: [Number, String],
+      default: 0,
+    },
   },
   data() {
     return {
@@ -150,6 +179,8 @@ export default {
       search: "",
       user: {},
       group: {},
+      approved: false,
+      disabled: false,
       requests: {},
       receivedRequests: 0,
       completedRequests: 0,
@@ -203,14 +234,7 @@ export default {
             },
           },
         ],
-        colors: [
-          "#757575",
-          "#9C27B0",
-          "#F8C545",
-          "#196CA2",
-          "#4CAF50",
-          "#EE5044",
-        ],
+        colors: ["grey", "#F8C545", "#EE5044", "#63BAC0", "#196CA2", "#032F45"],
         plotOptions: {
           bar: {
             horizontal: false,
@@ -229,7 +253,7 @@ export default {
           width: 380,
           type: "pie",
         },
-        colors: ["#EE5044", "#F8C545", "#4CAF50"],
+        colors: ["#EE5044", "#F8C545", "#032F45"],
         labels: ["Received", "In-Progress", "Complete"],
         dataLabels: {
           enabled: true,
@@ -261,23 +285,55 @@ export default {
       },
     };
   },
+  watch: {
+    id: function () {
+      this.getAdminRole();
+    },
+  },
   async created() {
     this.user = Utils.getStore("user");
+    if (this.id !== 0) {
+      await this.getAdminRole();
+    }
     this.headerMessage =
       "Welcome to your personalized dashboard for " +
       this.user.selectedGroup +
-      ". View information on appointment hours, tutor hours, and topic hours for the week. <br />" +
-      " Click on the <b>Student Requests</b> chart to view requests. <br />" +
-      "Click on <b>Tutor Applications</b> to view applications.";
+      ". View information on appointment hours, tutor hours, and topic hours for the week. Click on the Student Requests chart to view requests. Click on Tutor Applications to view applications.";
 
     await this.getGroupByPersonRoleId();
-    await this.setWeeks();
-    await this.setTutorHours();
-    await this.getTopics();
-    await this.getRequests();
-    await this.getTutorApplications();
+    if (this.approved) {
+      await this.setWeeks();
+      await this.setTutorHours();
+      await this.getTopics();
+      await this.getRequests();
+      await this.getTutorApplications();
+    }
   },
   methods: {
+    async getAdminRole() {
+      await PersonRoleServices.getPersonRole(this.id)
+        .then((response) => {
+          if (
+            response.data.status.includes("approved") ||
+            response.data.status.includes("Approved")
+          ) {
+            this.approved = true;
+          } else if (
+            response.data.status.includes("applied") ||
+            response.data.status.includes("Applied")
+          )
+            this.approved = false;
+          if (response.data.status.includes("disabled")) {
+            this.disabled = true;
+          } else this.disabled = false;
+        })
+        .catch((error) => {
+          this.alertType = "error";
+          this.alert = error.response.data.message;
+          this.showAlert = true;
+          console.log("There was an error:", error.response);
+        });
+    },
     async getGroupByPersonRoleId() {
       await PersonRoleServices.getGroupForPersonRole(this.id)
         .then(async (response) => {
@@ -291,7 +347,7 @@ export default {
         });
     },
     async setWeeks() {
-      this.setweekList();
+      this.setWeekList();
       var totalHourList = [];
       var totalAvailableList = [];
       var totalGroupList = [];
@@ -385,13 +441,13 @@ export default {
       this.series.push(
         JSON.parse(
           "{" +
-            '"name": "Group Available",' +
+            '"name": "Pending",' +
             '"data": [' +
-            this.numifyHours(totalGroupList[0]) +
+            this.numifyHours(totalPendingList[0]) +
             ", " +
-            this.numifyHours(totalGroupList[1]) +
+            this.numifyHours(totalPendingList[1]) +
             ", " +
-            this.numifyHours(totalGroupList[2]) +
+            this.numifyHours(totalPendingList[2]) +
             "]" +
             "}"
         )
@@ -400,13 +456,28 @@ export default {
       this.series.push(
         JSON.parse(
           "{" +
-            '"name": "Pending",' +
+            '"name": "No Show",' +
             '"data": [' +
-            this.numifyHours(totalPendingList[0]) +
+            this.numifyHours(totalNoShowList[0]) +
             ", " +
-            this.numifyHours(totalPendingList[1]) +
+            this.numifyHours(totalNoShowList[1]) +
             ", " +
-            this.numifyHours(totalPendingList[2]) +
+            this.numifyHours(totalNoShowList[2]) +
+            "]" +
+            "}"
+        )
+      );
+
+      this.series.push(
+        JSON.parse(
+          "{" +
+            '"name": "Group Available",' +
+            '"data": [' +
+            this.numifyHours(totalGroupList[0]) +
+            ", " +
+            this.numifyHours(totalGroupList[1]) +
+            ", " +
+            this.numifyHours(totalGroupList[2]) +
             "]" +
             "}"
         )
@@ -442,21 +513,6 @@ export default {
         )
       );
 
-      this.series.push(
-        JSON.parse(
-          "{" +
-            '"name": "No-Show",' +
-            '"data": [' +
-            this.numifyHours(totalNoShowList[0]) +
-            ", " +
-            this.numifyHours(totalNoShowList[1]) +
-            ", " +
-            this.numifyHours(totalNoShowList[2]) +
-            "]" +
-            "}"
-        )
-      );
-
       this.$refs.chart.updateOptions({
         xaxis: {
           categories: [this.weekList[0], this.weekList[1], this.weekList[2]],
@@ -465,7 +521,7 @@ export default {
       });
     },
     async setTutorHours() {
-      this.setweekList();
+      this.setWeekList();
       var currWeek = this.currentWeek.slice(0, 10);
       await PersonServices.getHoursPerTutor(this.group.id, currWeek)
         .then((responseHour) => {
@@ -487,7 +543,7 @@ export default {
       }
     },
     async getTopics() {
-      this.setweekList();
+      this.setWeekList();
       var currWeek = this.currentWeek.slice(0, 10);
       await TopicServices.getHoursPerTopic(this.group.id, currWeek)
         .then((responseHour) => {
@@ -507,7 +563,7 @@ export default {
         );
       }
     },
-    setweekList() {
+    setWeekList() {
       let prev = this.getStartOfPreviousWeek();
       let current = this.getStartOfCurrentWeek();
       let next = this.getStartOfNextWeek();

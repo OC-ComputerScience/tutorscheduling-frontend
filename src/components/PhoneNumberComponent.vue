@@ -78,7 +78,6 @@ export default {
         this.phoneNum !== null &&
         this.phoneNum !== ""
       ) {
-        console.log(this.phoneNum);
         this.phoneNum1 = this.phoneNum.substring(0, 3);
         this.phoneNum2 = this.phoneNum.substring(3, 6);
         this.phoneNum3 = this.phoneNum.substring(6, 10);

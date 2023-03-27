@@ -7,7 +7,7 @@
         <InformationComponent
           message="Before continuing to this service, you must sign contracts for the
             following positions.
-            <br />
+  
             Please click on each title to sign its contract."
         ></InformationComponent>
       </v-toolbar>
@@ -93,6 +93,12 @@ export default {
     InformationComponent,
   },
   mixins: [RedirectToPageMixin],
+  props: {
+    id: {
+      type: [Number, String],
+      default: 0,
+    },
+  },
   data() {
     return {
       showAlert: false,
@@ -113,12 +119,33 @@ export default {
       ],
       user: {},
       files: [
-        { pdf: "NewCollege-Student.pdf", pages: 1 },
-        { pdf: "StudentSuccessCenter-Student.pdf", pages: 1 },
-        { pdf: "WritingCenter-Student.pdf", pages: 1 },
-        { pdf: "NewCollege-Tutor.pdf", pages: 1 },
-        { pdf: "StudentSuccessCenter-Tutor.pdf", pages: 1 },
-        { pdf: "WritingCenter-Tutor.pdf", pages: 2 },
+        {
+          pdf: process.env.VUE_APP_CLIENT_URL + "/NewCollege-Student.pdf",
+          pages: 1,
+        },
+        {
+          pdf:
+            process.env.VUE_APP_CLIENT_URL +
+            "/StudentSuccessCenter-Student.pdf",
+          pages: 1,
+        },
+        {
+          pdf: process.env.VUE_APP_CLIENT_URL + "/WritingCenter-Student.pdf",
+          pages: 1,
+        },
+        {
+          pdf: process.env.VUE_APP_CLIENT_URL + "/NewCollege-Tutor.pdf",
+          pages: 1,
+        },
+        {
+          pdf:
+            process.env.VUE_APP_CLIENT_URL + "/StudentSuccessCenter-Tutor.pdf",
+          pages: 1,
+        },
+        {
+          pdf: process.env.VUE_APP_CLIENT_URL + "/WritingCenter-Tutor.pdf",
+          pages: 2,
+        },
       ],
       studentContracts: [
         "NewCollege-Student.pdf",

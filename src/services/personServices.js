@@ -23,16 +23,19 @@ export default {
   getHoursPerTutor(groupId, currWeek) {
     return apiClient.get("person/group/" + groupId + "/hours/week/" + currWeek);
   },
+  getStudentForPersonForGroup(email, groupId) {
+    return apiClient.get("person/student/" + email + "/group/" + groupId);
+  },
   getPersonForEmail(email) {
     return apiClient.get("person/email/" + email);
   },
   addPerson(person) {
     return apiClient.post("person", person);
   },
-  updatePerson(personId, person) {
-    return apiClient.put("person/" + personId, person);
+  updatePerson(id, person) {
+    return apiClient.put("person/" + id, person);
   },
-  deletePerson(personId) {
-    return apiClient.delete("person/" + personId);
+  deletePerson(id) {
+    return apiClient.delete("person/" + id);
   },
 };

@@ -1,7 +1,7 @@
 <template>
   <div>
     <v-app-bar app color="primary" dark>
-      <router-link :to="link">
+      <div @click="createLink()">
         <v-img
           class="mr-4"
           src="../assets/oc_logo_social.png"
@@ -9,7 +9,7 @@
           max-width="50"
           contain
         ></v-img>
-      </router-link>
+      </div>
       <v-toolbar-title class="title">
         <div>{{ title }}</div>
       </v-toolbar-title>
@@ -23,9 +23,11 @@
           :ref="item.link"
           exact
           link
-          :to="{ name: item.name, params: { id: selectedRole.personRoleId } }"
           :color="item.color"
           text
+          @click="
+            handleRedundantNavigation(item.name, selectedRole.personRoleId)
+          "
         >
           {{ item.text }}
         </v-btn>
@@ -58,7 +60,9 @@
                 selectedRole = role;
                 selectedGroup = group.name;
                 saveGroupRole();
-                menuAction(`${selectedRole.type.toLowerCase()}Home`);
+                menuAction(
+                  selectedRole.type === 'Admin' ? 'adminHome' : 'home'
+                );
               "
             >
               <v-list-item-content>
@@ -168,8 +172,10 @@
           v-for="item in activeMenus"
           :key="item.text"
           exact
-          :to="{ name: item.name, params: { id: selectedRole.personRoleId } }"
           :color="item.color"
+          @click="
+            handleRedundantNavigation(item.name, selectedRole.personRoleId)
+          "
         >
           <v-list-item-action>
             <v-icon v-if="item.icon" color="white">{{ item.icon }}</v-icon>
@@ -196,7 +202,6 @@ export default {
   mixins: [RedirectToPageMixin],
   data: () => ({
     user: {},
-    link: "",
     drawer: false,
     title: "OC Tutoring",
     initials: "",
@@ -221,20 +226,12 @@ export default {
         roles: "HeadAdmin,Admin,Supervisor",
       },
       {
-        link: "tutorHome",
-        name: "tutorHome",
+        link: "home",
+        name: "home",
         color: "white",
         text: "Home",
         icon: "mdi-home",
-        roles: "Tutor",
-      },
-      {
-        link: "studentHome",
-        name: "studentHome",
-        color: "white",
-        text: "Home",
-        icon: "mdi-home",
-        roles: "Student",
+        roles: "Tutor,Student",
       },
       {
         link: "calendar",
@@ -334,21 +331,18 @@ export default {
       this.name = this.user.fName + " " + this.user.lName;
       this.selectedRole = this.user.selectedRole;
       this.selectedGroup = this.user.selectedGroup;
-      this.link = this.createLink();
       await this.resetMenu();
     }
   },
   methods: {
     createLink() {
       if (this.isSelectedRoleValid()) {
-        return (
-          "/" +
-          this.selectedRole.type.toLowerCase() +
-          "Home/" +
+        this.handleRedundantNavigation(
+          this.selectedRole.type === "Admin" ? "adminHome" : "home",
           this.selectedRole.personRoleId
         );
       } else {
-        return "/";
+        this.handleRedundantNavigation("login", null);
       }
     },
     saveGroupRole() {
@@ -371,12 +365,9 @@ export default {
     },
     menuAction(route) {
       if (!this.isSelectedRoleValid()) {
-        this.$router.push({ name: "login" });
+        this.handleRedundantNavigation("login", null);
       } else {
-        this.$router.push({
-          name: route,
-          params: { id: this.selectedRole.personRoleId },
-        });
+        this.handleRedundantNavigation(route, this.selectedRole.personRoleId);
       }
     },
     async resetMenu() {
@@ -408,7 +399,7 @@ export default {
         console.log("error", error);
       });
       Utils.removeItem("user");
-      this.$router.push({ name: "login" });
+      this.handleRedundantNavigation("login", null);
     },
     async limitTutorMenu() {
       if (this.selectedRole.type.includes("Tutor")) {
@@ -429,7 +420,7 @@ export default {
         if (!approved) {
           // makes only tutor home page show up on menu bar
           this.activeMenus = this.activeMenus.filter((menu) =>
-            menu.name.includes("tutorHome")
+            menu.name.includes("home")
           );
         }
       }
@@ -453,7 +444,7 @@ export default {
         if (!approved) {
           // makes only student home page show up on menu bar
           this.activeMenus = this.activeMenus.filter((menu) =>
-            menu.name.includes("studentHome")
+            menu.name.includes("home")
           );
         }
       }
@@ -477,7 +468,7 @@ export default {
         if (!approved) {
           // makes only admin home page show up on menu bar
           this.activeMenus = this.activeMenus.filter((menu) =>
-            menu.name.includes("adminDashboard")
+            menu.name.includes("adminHome")
           );
         }
       }

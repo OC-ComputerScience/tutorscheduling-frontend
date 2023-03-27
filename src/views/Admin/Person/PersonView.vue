@@ -28,14 +28,6 @@
         Edit
       </v-btn>
 
-      <!-- <v-btn
-        color="error"
-        class="mr-4"
-        @click="deletePerson(person.id, person.fName)"
-      >
-        Delete
-      </v-btn> -->
-
       <v-btn class="mr-4" @click="cancel"> Back </v-btn>
 
       <br /><br />
@@ -211,7 +203,7 @@
               <br />
 
               <PhoneNumberComponent
-                :phoneNum="person.phoneNum"
+                :phone-num="person.phoneNum"
                 @editedPhoneNumber="setPhoneNumber"
               ></PhoneNumberComponent>
 
@@ -280,12 +272,23 @@
                 item-value="id"
                 label="Role"
                 required
+                @change="
+                  roles.find((x) => x.id === personrole.roleId).type === 'Admin'
+                    ? (personrole.status = 'approved')
+                    : (personrole.status = '')
+                "
               >
               </v-select>
 
               <v-select
                 v-model="personrole.status"
                 :items="status"
+                :disabled="
+                  personrole.roleId !== undefined
+                    ? roles.find((x) => x.id === personrole.roleId).type ===
+                      'Admin'
+                    : false
+                "
                 label="Status"
                 required
               >
@@ -425,7 +428,7 @@ import PersonAppointmentServices from "@/services/personAppointmentServices.js";
 import DeleteConfirmationComponent from "../../../components/DeleteConfirmationComponent.vue";
 import PhoneNumberComponent from "../../../components/PhoneNumberComponent.vue";
 
-import { AppointmentActionMixin } from "../../../mixins/AppointmentActionMixin";
+import { CalendarMixin } from "../../../mixins/CalendarMixin";
 import { TimeFunctionsMixin } from "../../../mixins/TimeFunctionsMixin";
 
 export default {
@@ -433,8 +436,17 @@ export default {
     DeleteConfirmationComponent,
     PhoneNumberComponent,
   },
-  mixins: [AppointmentActionMixin, TimeFunctionsMixin],
-  props: ["id", "personId"],
+  mixins: [CalendarMixin, TimeFunctionsMixin],
+  props: {
+    id: {
+      type: [Number, String],
+      default: 0,
+    },
+    personId: {
+      type: [Number, String],
+      default: 0,
+    },
+  },
   data() {
     return {
       message: "Person - click Edit to update or Delete to remove person",
@@ -581,7 +593,7 @@ export default {
         });
     },
     setPhoneNumber(phoneNumber) {
-      this.person.phoneNumber = phoneNumber;
+      this.person.phoneNum = phoneNumber;
     },
     async updatePerson() {
       await PersonServices.updatePerson(this.personId, this.person)
@@ -705,14 +717,12 @@ export default {
         await this.saveRole();
         await this.disablePersonRole();
       } else if (this.deleteType === "privilege") {
-        await PersonRolePrivilegeServices.deletePrivilege(this.deleteItem.id)
-          .then(() => {
-            this.getPersonRoles();
-          })
-          .catch((error) => {
-            this.message = error.response.data.message;
-            console.log("There was an error:", error.response);
-          });
+        await PersonRolePrivilegeServices.deletePrivilege(
+          this.deleteItem.id
+        ).catch((error) => {
+          this.message = error.response.data.message;
+          console.log("There was an error:", error.response);
+        });
         await this.getPersonRoles();
       } else if (this.deleteType === "persontopic") {
         await PersonTopicServices.deletePersonTopic(
@@ -768,7 +778,6 @@ export default {
         this.person.id
       )
         .then(async (response) => {
-          console.log(response);
           this.appointments = response.data;
           for (let i = 0; i < this.appointments.length; i++) {
             await PersonAppointmentServices.findStudentDataForTable(

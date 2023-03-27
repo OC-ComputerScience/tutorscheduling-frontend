@@ -37,7 +37,6 @@
 import GroupServices from "@/services/groupServices.js";
 export default {
   name: "App",
-  components: {},
   data() {
     return {
       message:

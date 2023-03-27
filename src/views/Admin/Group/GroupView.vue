@@ -42,10 +42,13 @@
 
 <script>
 import GroupServices from "@/services/groupServices.js";
-//import UserDisplay from '@/components/UserDisplay.vue'
 export default {
-  props: ["id"],
-
+  props: {
+    id: {
+      type: [Number, String],
+      default: 0,
+    },
+  },
   data() {
     return {
       group: {},
