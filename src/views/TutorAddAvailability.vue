@@ -1,23 +1,31 @@
 <template>
   <div>
     <v-container>
-      <v-toolbar>
-        <v-toolbar-title>{{ message }}</v-toolbar-title>
-        <v-spacer></v-spacer>
+      <v-card-title
+        class="text-h4 font-weight-bold pt-4 pb-6 pl-0 pr-0 accent--text"
+        >Add Availabilities for {{ group.name }}
         <InformationComponent
-          message="Select date(s), times, and type, and click Save to indicate when you can tutor."
+          :message="
+            'Add the times you will be available to tutor students for ' +
+            group.name +
+            '.'
+          "
         ></InformationComponent>
-      </v-toolbar>
-      <br />
+      </v-card-title>
       <b v-if="!group.allowSplittingAppointments"
         >Please create availabilities with specific appointments times, not big
         blocks of time.</b
       >
-      <br />
-      <v-alert v-model="showAlert" dismissible :type="alertType">{{
-        alert
-      }}</v-alert
-      ><br />
+      <v-snackbar v-model="showAlert">
+        {{ alertType }}
+        {{ alert }}
+
+        <template #action="{ attrs }">
+          <v-btn color="error" text v-bind="attrs" @click="showAlert = false">
+            Close
+          </v-btn>
+        </template>
+      </v-snackbar>
       <v-dialog v-model="doubleBookedDialog" max-width="600px">
         <v-card>
           <v-card-title>
@@ -59,179 +67,134 @@
           </v-card-actions>
         </v-card>
       </v-dialog>
-      <v-dialog v-model="groupDialog" persistent max-width="600px">
-        <v-card>
-          <v-card-title>
-            <span class="text-h5">Information for Session</span>
-          </v-card-title>
-          <v-card-text>
-            <v-container>
-              <v-row>
-                <v-col cols="12" sm="6" md="4">
-                  <v-select
-                    v-model="location"
-                    :items="locations"
-                    item-text="name"
-                    item-value="id"
-                    label="Location"
-                    required
-                    dense
-                  >
-                  </v-select>
-                </v-col>
-                <v-col cols="12" sm="6" md="4">
-                  <v-select
-                    v-model="topic"
-                    :items="topics"
-                    item-text="name"
-                    item-value="id"
-                    label="Topic"
-                    required
-                    dense
-                  >
-                  </v-select>
-                </v-col>
-              </v-row>
-              <v-row>
-                <v-col>
-                  <v-textarea
-                    v-model="preSessionInfo"
-                    label="Pre-session info"
-                    hint="Information for the session"
-                    required
-                    outlined
-                  ></v-textarea>
-                </v-col>
-              </v-row>
-            </v-container>
-          </v-card-text>
-          <v-card-actions>
-            <v-spacer></v-spacer>
-            <v-btn color="blue darken-1" text @click="groupDialog = false">
-              Close
-            </v-btn>
-            <v-btn
-              color="blue darken-1"
-              text
-              :disabled="
-                location === '' ||
-                location === null ||
-                location === undefined ||
-                topic === '' ||
-                topic === null ||
-                topic === undefined
-              "
-              @click="
-                addAvailability();
-                groupDialog = false;
-              "
-            >
-              Save
-            </v-btn>
-          </v-card-actions>
-        </v-card>
-      </v-dialog>
+
       <v-row>
-        <v-col cols="12" sm="6">
-          <v-date-picker
-            v-model="dates"
-            :min="nowDate"
-            show-adjacent-months
-            multiple
-            @input="updateTimes()"
-          ></v-date-picker>
-        </v-col>
-        <v-col cols="12" sm="6">
-          <v-menu
-            ref="menu"
-            v-model="menu"
-            :close-on-content-click="false"
-            :return-value.sync="dates"
-            transition="scale-transition"
-            offset-y
-            min-width="auto"
-          >
-            <template #activator="{ on, attrs }">
-              <v-combobox
-                v-model="dates"
-                multiple
-                chips
-                small-chips
-                label="Dates you are available to tutor"
-                prepend-icon="mdi-calendar"
-                readonly
-                v-bind="attrs"
-                v-on="on"
-              ></v-combobox>
-            </template>
+        <v-col>
+          <v-card>
+            <v-card-title class="accent white--text mb-2"
+              >Select Dates for Tutoring
+              <v-spacer></v-spacer>
+              <InformationComponent
+                :message="'Click dates here.'"
+              ></InformationComponent>
+            </v-card-title>
             <v-date-picker
               v-model="dates"
               :min="nowDate"
+              :events="upcoming"
+              show-current
+              no-title
+              reactive
+              full-width
               show-adjacent-months
               multiple
-              no-title
-              scrollable
-              @input="updateTimes()"
-            >
-              <v-spacer></v-spacer>
-              <v-btn text color="primary" @click="menu = false"> Cancel </v-btn>
-              <v-btn text color="primary" @click="$refs.menu.save(dates)">
-                OK
-              </v-btn>
-            </v-date-picker>
-          </v-menu>
+              @input="
+                updateTimes();
+                updateDisplayedDates();
+              "
+            ></v-date-picker>
+          </v-card>
         </v-col>
-        <v-col cols="11" sm="5">
+        <v-col>
+          <v-row>
+            <v-col class="d-flex justify-center ml-6 mr-4 mb-2">
+              <v-btn
+                :color="type === 'Private' ? 'accent' : 'grey white--text'"
+                @click="type = 'Private'"
+                >Private</v-btn
+              >
+            </v-col>
+            <v-col class="d-flex justify-center ml-4 mr-4 mb-2">
+              <v-btn
+                :color="type === 'Group' ? 'accent' : 'grey white--text'"
+                @click="type = 'Group'"
+                >Group</v-btn
+              >
+            </v-col>
+          </v-row>
+          <v-textarea
+            :value="displayedDates"
+            label="Selected Dates"
+            prepend-icon="mdi-calendar"
+            clearable
+            readonly
+            auto-grow
+            rows="1"
+            @click:clear="dates = []"
+          >
+          </v-textarea>
+
+          <v-row>
+            <v-col>
+              <v-select
+                v-model="displayedStart"
+                :items="startTimes"
+                label="Start Time"
+                item-text="timeText"
+                item-value="time"
+                menu-props="auto"
+                prepend-icon="mdi-clock-edit-outline"
+                @change="
+                  newStart = displayedStart;
+                  updateTimes();
+                  secondTime = false;
+                "
+              >
+              </v-select>
+            </v-col>
+            <v-col>
+              <v-select
+                v-model="displayedEnd"
+                :items="endTimes"
+                label="End Time"
+                item-text="timeText"
+                item-value="time"
+                prepend-icon="mdi-clock-edit-outline"
+                :disabled="secondTime"
+                @change="
+                  newEnd = displayedEnd;
+                  updateTimes();
+                "
+              >
+              </v-select>
+            </v-col>
+          </v-row>
           <v-select
-            v-model="displayedStart"
-            :items="startTimes"
-            label="Start Time"
-            prepend-icon="mdi-clock-time-four-outline"
-            item-text="timeText"
-            item-value="time"
-            menu-props="auto"
-            required
-            dense
-            @change="
-              newStart = displayedStart;
-              updateTimes();
-              secondTime = false;
+            v-if="type === 'Group'"
+            v-model="location"
+            :items="locations"
+            item-text="name"
+            item-value="id"
+            label="Location"
+            prepend-icon="mdi-map-marker-outline"
+          >
+          </v-select>
+
+          <v-select
+            v-if="type === 'Group'"
+            v-model="topic"
+            :items="topics"
+            item-text="name"
+            item-value="id"
+            label="Topic"
+            prepend-icon="mdi-book-edit-outline"
+          >
+          </v-select>
+
+          <v-textarea
+            v-if="type === 'Group'"
+            v-model="preSessionInfo"
+            :counter="130"
+            label="What will you be helping with?"
+            prepend-icon="mdi-text-box-edit-outline
             "
-          >
-          </v-select>
-        </v-col>
-        <v-col cols="11" sm="5">
-          <v-select
-            v-model="displayedEnd"
-            :items="endTimes"
-            label="End Time"
-            prepend-icon="mdi-clock-time-four-outline"
-            item-text="timeText"
-            item-value="time"
-            required
-            :disabled="secondTime"
-            dense
-            @change="
-              newEnd = displayedEnd;
-              updateTimes();
-            "
-          >
-          </v-select>
-        </v-col>
-        <v-container>
-          <v-select
-            v-model="groupSession"
-            :items="sessionValues"
-            item-text="text"
-            item-value="value"
-            label="Choose a session type"
-            required
-            dense
-          >
-          </v-select>
+            auto-grow
+            rows="2"
+          ></v-textarea>
+
           <v-btn
+            class="justify-center"
             color="success"
-            class="mr-4"
             :disabled="
               displayedEnd === '' ||
               displayedEnd === null ||
@@ -239,17 +202,25 @@
               displayedStart === '' ||
               displayedStart === null ||
               displayedStart === undefined ||
-              groupSession === '' ||
-              groupSession === null ||
-              groupSession === undefined ||
-              dates.length === 0
+              type === '' ||
+              type === null ||
+              type === undefined ||
+              dates.length === 0 ||
+              (type === 'Group' &&
+                (location === '' ||
+                  location === null ||
+                  location === undefined ||
+                  topic === '' ||
+                  topic === null ||
+                  topic === undefined))
             "
-            @click="groupHandler()"
+            @click="addAvailability()"
           >
-            Save
+            Add Availability
           </v-btn>
-        </v-container>
+        </v-col>
       </v-row>
+
       <br />
       <v-card>
         <v-card-title>
@@ -292,12 +263,12 @@ export default {
     },
   },
   data: () => ({
-    message: "Add Availability",
     showAlert: false,
     alert: "",
     alertType: "success",
     nowDate: null,
     nowTime: null,
+    type: "",
     availability: {},
     conflictAvailability: {
       conflicting: {
@@ -316,9 +287,7 @@ export default {
     availabilities: [],
     upcoming: [],
     dates: [],
-    dialog: false,
-    dialogDelete: false,
-    groupDialog: false,
+    displayedDates: "",
     doubleBookedDialog: false,
     secondTime: true,
     //used for generating time slots
@@ -331,7 +300,6 @@ export default {
     startTime: null,
     endTime: null,
     menu: false,
-    groupSession: "",
     editedItem: {},
     person: {},
     user: {},
@@ -351,19 +319,7 @@ export default {
       { text: "Start Time", value: "startTime" },
       { text: "End Time", value: "endTime" },
     ],
-    defaultItem: {
-      status: "",
-    },
   }),
-  computed: {},
-  watch: {
-    dialog(val) {
-      val || this.close();
-    },
-    dialogDelete(val) {
-      val || this.closeDelete();
-    },
-  },
   async created() {
     this.user = Utils.getStore("user");
     await this.getGroupByPersonRoleId();
@@ -371,9 +327,27 @@ export default {
     this.newEnd = "23:" + (59 - (this.group.timeInterval - 1)).toString();
     await this.getAvailabilities();
     this.updateTimes();
+    await this.getUpcoming();
     await this.getPrivilegesForPersonRole();
   },
   methods: {
+    updateDisplayedDates() {
+      this.displayedDates = "";
+      for (let i = 0; i < this.dates.length; i++) {
+        if (i > 0) {
+          if (i % 2 === 0) {
+            this.displayedDates += "\n";
+          } else {
+            this.displayedDates += "\t\t\t";
+          }
+        }
+        let tempDate = new Date(this.dates[i]);
+        tempDate.setHours(
+          tempDate.getHours() + tempDate.getTimezoneOffset() / 60
+        );
+        this.displayedDates += this.formatReadableDate(tempDate);
+      }
+    },
     updateTimes() {
       let maxEndTime = "23:" + (59 - (this.group.timeInterval - 1)).toString();
       // setting the minimum date and time for the picker components
@@ -430,7 +404,6 @@ export default {
       this.endTimes.shift();
     },
     async checkIfAvailable(tempAvail) {
-      await this.getUpcoming();
       let isAvail = true;
       for (let i = 0; i < this.upcoming.length && isAvail; i++) {
         let appoint = this.upcoming[i];
@@ -499,7 +472,7 @@ export default {
               this.appointment.date = date;
               this.appointment.startTime = this.newStart;
               this.appointment.endTime = this.newEnd;
-              if (this.groupSession.includes("Private")) {
+              if (this.type.includes("Private")) {
                 this.appointment.type = "Private";
                 this.appointment.locationId = null;
                 this.appointment.topicId = null;
@@ -568,7 +541,7 @@ export default {
       this.displayedEnd = "";
       this.newStart = "00:00";
       this.newEnd = "23:" + (59 - (this.group.timeInterval - 1)).toString();
-      this.groupSession = "";
+      this.type = "";
       this.topic = "";
       this.location = "";
       this.preSessionInfo = "";
@@ -667,12 +640,6 @@ export default {
         if (priv.privilege === privilege) hasPriv = true;
       });
       return hasPriv;
-    },
-    // popup functions
-    groupHandler() {
-      if (this.groupSession.includes("Group")) {
-        this.groupDialog = true;
-      } else this.addAvailability();
     },
   },
 };
