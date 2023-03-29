@@ -261,6 +261,9 @@
         <v-card-title>
           Your Availabilities for All Groups
           <v-spacer></v-spacer>
+          <InformationComponent
+            message="If you want to remove an availability, go to the Calendar page and cancel the appointment there."
+          ></InformationComponent>
         </v-card-title>
         <v-data-table
           :headers="headers"
