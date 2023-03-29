@@ -156,7 +156,7 @@
 
       <v-textarea
         v-model="appointment.preSessionInfo"
-        :counter="130"
+        :counter="500"
         :label="
           appointment.type === 'Private'
             ? 'What do you need help with?'

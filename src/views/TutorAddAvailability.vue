@@ -12,56 +12,98 @@
           "
         ></InformationComponent>
       </v-card-title>
-      <b v-if="!group.allowSplittingAppointments"
-        >Please create availabilities with specific appointments times, not big
-        blocks of time.</b
-      >
-      <v-snackbar v-model="showAlert">
-        {{ alertType }}
+      <div v-if="!group.allowSplittingAppointments">
+        <b
+          >Please create availabilities with specific appointments times, not
+          big blocks of time.</b
+        >
+        <br />
+        <br />
+      </div>
+      <v-snackbar v-model="showAlert" rounded="pill">
         {{ alert }}
-
         <template #action="{ attrs }">
-          <v-btn color="error" text v-bind="attrs" @click="showAlert = false">
+          <v-btn
+            :color="
+              alertType === 'success'
+                ? 'green'
+                : alertType === 'warning'
+                ? 'yellow'
+                : 'error'
+            "
+            text
+            v-bind="attrs"
+            @click="showAlert = false"
+          >
             Close
           </v-btn>
         </template>
       </v-snackbar>
       <v-dialog v-model="doubleBookedDialog" max-width="600px">
-        <v-card>
-          <v-card-title>
-            <span class="text-h5"
-              >You already have an appointment during this time:</span
-            >
+        <v-card min-width="350px">
+          <v-card-title class="error white--text mb-2">
+            Cannot Add Conflicting Availability
           </v-card-title>
+          <v-card-subtitle class="error white--text pb-2 mb-2">
+            You already have an appointment during this time.
+          </v-card-subtitle>
           <v-card-text>
-            <br />
             <v-row>
               <v-col>
-                <h3>Existing Appointment:</h3>
-                <br />
-                <p>Date: {{ conflictAvailability.existing.date }}</p>
-                <p>Start Time: {{ conflictAvailability.existing.startTime }}</p>
-                <p>End Time: {{ conflictAvailability.existing.endTime }}</p>
+                <div
+                  class="justify-center d-flex text-subtitle-1 font-weight-bold black--text"
+                >
+                  Existing Appointment
+                </div>
+                <div class="mt-2 align-center d-flex">
+                  <v-icon class="mr-2">mdi-calendar</v-icon>
+                  <b class="mr-2">Date: </b>
+                  {{ formatReadableDate(conflictAvailability.existing.date) }}
+                </div>
+                <div class="mt-2 align-center d-flex">
+                  <v-icon class="mr-2">mdi-clock-outline</v-icon>
+                  <b class="mr-2">Start Time: </b>
+                  {{ conflictAvailability.existing.startTime }}
+                </div>
+                <div class="mt-2 align-center d-flex">
+                  <v-icon class="mr-2">mdi-clock-outline</v-icon>
+                  <b class="mr-2">End Time: </b>
+                  {{ conflictAvailability.existing.endTime }}
+                </div>
               </v-col>
               <v-col>
-                <h3>Conflicting Appointment:</h3>
-                <br />
-                <p>Date: {{ conflictAvailability.conflicting.date }}</p>
-                <p>
-                  Start Time:
+                <div
+                  class="justify-center d-flex text-subtitle-1 font-weight-bold black--text"
+                >
+                  Conflicting Appointment
+                </div>
+                <div class="mt-2 align-center d-flex">
+                  <v-icon class="mr-2">mdi-calendar</v-icon>
+                  <b class="mr-2">Date: </b>
+                  {{
+                    formatReadableDate(conflictAvailability.conflicting.date)
+                  }}
+                </div>
+                <div class="mt-2 align-center d-flex">
+                  <v-icon class="mr-2">mdi-clock-outline</v-icon>
+                  <b class="mr-2">Start Time: </b>
                   {{ conflictAvailability.conflicting.startTime }}
-                </p>
-                <p>End Time: {{ conflictAvailability.conflicting.endTime }}</p>
+                </div>
+                <div class="mt-2 align-center d-flex">
+                  <v-icon class="mr-2">mdi-clock-outline</v-icon>
+                  <b class="mr-2"> End Time: </b>
+                  {{ conflictAvailability.conflicting.endTime }}
+                </div>
               </v-col>
             </v-row>
+            <div class="mt-4">
+              If you selected multiple dates, appointments that don't conflict
+              have already been made.
+            </div>
           </v-card-text>
           <v-card-actions>
             <v-spacer></v-spacer>
-            <v-btn
-              color="blue darken-1"
-              text
-              @click="doubleBookedDialog = false"
-            >
+            <v-btn color="grey white--text" @click="doubleBookedDialog = false">
               Close
             </v-btn>
           </v-card-actions>
@@ -96,128 +138,121 @@
           </v-card>
         </v-col>
         <v-col>
-          <v-row>
-            <v-col class="d-flex justify-center ml-6 mr-4 mb-2">
-              <v-btn
-                :color="type === 'Private' ? 'accent' : 'grey white--text'"
-                @click="type = 'Private'"
-                >Private</v-btn
-              >
-            </v-col>
-            <v-col class="d-flex justify-center ml-4 mr-4 mb-2">
-              <v-btn
-                :color="type === 'Group' ? 'accent' : 'grey white--text'"
-                @click="type = 'Group'"
-                >Group</v-btn
-              >
-            </v-col>
-          </v-row>
-          <v-textarea
-            :value="displayedDates"
-            label="Selected Dates"
-            prepend-icon="mdi-calendar"
-            clearable
-            readonly
-            auto-grow
-            rows="1"
-            @click:clear="dates = []"
-          >
-          </v-textarea>
-
-          <v-row>
-            <v-col>
+          <v-card elevation="0">
+            <v-textarea
+              :value="displayedDates"
+              label="Selected Dates"
+              prepend-icon="mdi-calendar"
+              clearable
+              readonly
+              auto-grow
+              rows="1"
+              @click:clear="dates = []"
+            >
+            </v-textarea>
+            <v-row>
+              <v-col>
+                <v-select
+                  v-model="displayedStart"
+                  :items="startTimes"
+                  label="Start Time"
+                  item-text="timeText"
+                  item-value="time"
+                  menu-props="auto"
+                  prepend-icon="mdi-clock-edit-outline"
+                  @change="
+                    newStart = displayedStart;
+                    updateTimes();
+                    secondTime = false;
+                  "
+                >
+                </v-select>
+              </v-col>
+              <v-col>
+                <v-select
+                  v-model="displayedEnd"
+                  :items="endTimes"
+                  label="End Time"
+                  item-text="timeText"
+                  item-value="time"
+                  prepend-icon="mdi-clock-edit-outline"
+                  :disabled="secondTime"
+                  @change="
+                    newEnd = displayedEnd;
+                    updateTimes();
+                  "
+                >
+                </v-select>
+              </v-col>
+            </v-row>
+            <v-select
+              v-model="type"
+              :items="appointmentTypes"
+              label="Appointment Type"
+              prepend-icon="mdi-account-multiple-outline"
+            >
+            </v-select>
+            <div v-if="type === 'Group'">
               <v-select
-                v-model="displayedStart"
-                :items="startTimes"
-                label="Start Time"
-                item-text="timeText"
-                item-value="time"
-                menu-props="auto"
-                prepend-icon="mdi-clock-edit-outline"
-                @change="
-                  newStart = displayedStart;
-                  updateTimes();
-                  secondTime = false;
-                "
+                v-model="location"
+                :items="locations"
+                item-text="name"
+                item-value="id"
+                label="Location"
+                prepend-icon="mdi-map-marker-outline"
               >
               </v-select>
-            </v-col>
-            <v-col>
+
               <v-select
-                v-model="displayedEnd"
-                :items="endTimes"
-                label="End Time"
-                item-text="timeText"
-                item-value="time"
-                prepend-icon="mdi-clock-edit-outline"
-                :disabled="secondTime"
-                @change="
-                  newEnd = displayedEnd;
-                  updateTimes();
-                "
+                v-model="topic"
+                :items="topics"
+                item-text="name"
+                item-value="id"
+                label="Topic"
+                prepend-icon="mdi-book-edit-outline"
               >
               </v-select>
-            </v-col>
-          </v-row>
-          <v-select
-            v-if="type === 'Group'"
-            v-model="location"
-            :items="locations"
-            item-text="name"
-            item-value="id"
-            label="Location"
-            prepend-icon="mdi-map-marker-outline"
-          >
-          </v-select>
 
-          <v-select
-            v-if="type === 'Group'"
-            v-model="topic"
-            :items="topics"
-            item-text="name"
-            item-value="id"
-            label="Topic"
-            prepend-icon="mdi-book-edit-outline"
-          >
-          </v-select>
+              <v-textarea
+                v-model="preSessionInfo"
+                :counter="500"
+                label="What will you be helping with?"
+                prepend-icon="mdi-text-box-edit-outline"
+                auto-grow
+                rows="2"
+              ></v-textarea>
+            </div>
 
-          <v-textarea
-            v-if="type === 'Group'"
-            v-model="preSessionInfo"
-            :counter="130"
-            label="What will you be helping with?"
-            prepend-icon="mdi-text-box-edit-outline
-            "
-            auto-grow
-            rows="2"
-          ></v-textarea>
-
-          <v-btn
-            class="justify-center"
-            color="success"
-            :disabled="
-              displayedEnd === '' ||
-              displayedEnd === null ||
-              displayedEnd === undefined ||
-              displayedStart === '' ||
-              displayedStart === null ||
-              displayedStart === undefined ||
-              type === '' ||
-              type === null ||
-              type === undefined ||
-              dates.length === 0 ||
-              (type === 'Group' &&
-                (location === '' ||
-                  location === null ||
-                  location === undefined ||
-                  topic === '' ||
-                  topic === null ||
-                  topic === undefined))
-            "
-            @click="addAvailability()"
-          >
-            Add Availability
-          </v-btn>
+            <v-card-actions>
+              <v-spacer></v-spacer>
+              <v-btn
+                color="success"
+                :disabled="
+                  displayedEnd === '' ||
+                  displayedEnd === null ||
+                  displayedEnd === undefined ||
+                  displayedStart === '' ||
+                  displayedStart === null ||
+                  displayedStart === undefined ||
+                  type === '' ||
+                  type === null ||
+                  type === undefined ||
+                  dates.length === 0 ||
+                  (type === 'Group' &&
+                    (location === '' ||
+                      location === null ||
+                      location === undefined ||
+                      topic === '' ||
+                      topic === null ||
+                      topic === undefined))
+                "
+                @click="addAvailability()"
+              >
+                Add Availability
+              </v-btn>
+              <v-spacer></v-spacer>
+            </v-card-actions>
+          </v-card>
         </v-col>
       </v-row>
 
@@ -287,6 +322,7 @@ export default {
     availabilities: [],
     upcoming: [],
     dates: [],
+    appointmentTypes: ["Private", "Group"],
     displayedDates: "",
     doubleBookedDialog: false,
     secondTime: true,
@@ -299,9 +335,6 @@ export default {
     newEnd: "",
     startTime: null,
     endTime: null,
-    menu: false,
-    editedItem: {},
-    person: {},
     user: {},
     group: {},
     topic: "",
@@ -403,36 +436,37 @@ export default {
       // adding this to make sure you can't end an appointment at the start time
       this.endTimes.shift();
     },
-    async checkIfAvailable(tempAvail) {
+    async checkIfAvailable(tempAvailability) {
       let isAvail = true;
       for (let i = 0; i < this.upcoming.length && isAvail; i++) {
-        let appoint = this.upcoming[i];
-        appoint.date = appoint.date.substring(0, 10);
-        appoint.startTime = appoint.startTime.substring(0, 8);
-        appoint.endTime = appoint.endTime.substring(0, 8);
-        if (tempAvail.date === appoint.date) {
+        let appointment = this.upcoming[i];
+        let tempDate = tempAvailability.date.substring(0, 10);
+        appointment.date = appointment.date.substring(0, 10);
+        appointment.startTime = appointment.startTime.substring(0, 8);
+        appointment.endTime = appointment.endTime.substring(0, 8);
+        if (tempDate === appointment.date) {
           if (
-            (tempAvail.startTime < appoint.startTime &&
-              tempAvail.endTime > appoint.startTime &&
-              tempAvail.endTime < appoint.endTime) || // new availability starts before and ends during existing
-            (tempAvail.startTime >= appoint.startTime &&
-              tempAvail.endTime <= appoint.endTime) || // new availability is in the middle of an existing
-            (tempAvail.startTime < appoint.startTime &&
-              tempAvail.endTime > appoint.endTime) || // new availability starts before and ends after existing
-            (tempAvail.startTime > appoint.startTime &&
-              tempAvail.endTime > appoint.endTime &&
-              tempAvail.startTime < appoint.endTime) // new availability starts during and ends after existing
+            (tempAvailability.startTime < appointment.startTime &&
+              tempAvailability.endTime > appointment.startTime &&
+              tempAvailability.endTime < appointment.endTime) || // new availability starts before and ends during existing
+            (tempAvailability.startTime >= appointment.startTime &&
+              tempAvailability.endTime <= appointment.endTime) || // new availability is in the middle of an existing
+            (tempAvailability.startTime < appointment.startTime &&
+              tempAvailability.endTime > appointment.endTime) || // new availability starts before and ends after existing
+            (tempAvailability.startTime > appointment.startTime &&
+              tempAvailability.endTime > appointment.endTime &&
+              tempAvailability.startTime < appointment.endTime) // new availability starts during and ends after existing
           ) {
             isAvail = false;
             this.conflictAvailability.conflicting = {
-              date: tempAvail.date,
-              startTime: this.formatTime(tempAvail.startTime),
-              endTime: this.formatTime(tempAvail.endTime),
+              date: tempDate,
+              startTime: this.formatTime(tempAvailability.startTime),
+              endTime: this.formatTime(tempAvailability.endTime),
             };
             this.conflictAvailability.existing = {
-              date: appoint.date,
-              startTime: this.formatTime(appoint.startTime),
-              endTime: this.formatTime(appoint.endTime),
+              date: appointment.date,
+              startTime: this.formatTime(appointment.startTime),
+              endTime: this.formatTime(appointment.endTime),
             };
             return;
           }
@@ -459,7 +493,7 @@ export default {
         let element = this.dates[i];
         let date = new Date(element);
         date.setHours(date.getHours() + date.getTimezoneOffset() / 60);
-        this.availability.date = date;
+        this.availability.date = date.toISOString();
         this.availability.startTime = this.newStart;
         this.availability.endTime = this.newEnd;
         this.availability.personId = this.user.userID;
@@ -531,12 +565,16 @@ export default {
               this.showAlert = true;
               console.log("There was an error:", error.response);
             });
+          this.alertType = "success";
+          this.alert = "You have successfully added availabilities.";
+          this.showAlert = true;
         } else {
           this.doubleBookedDialog = true;
         }
       }
 
       this.dates = [];
+      this.displayedDates = "";
       this.displayedStart = "";
       this.displayedEnd = "";
       this.newStart = "00:00";
@@ -548,10 +586,6 @@ export default {
       this.secondTime = true;
       await this.getAvailabilities();
       this.updateTimes();
-
-      this.alertType = "success";
-      this.alert = "You have successfully added availabilities.";
-      this.showAlert = true;
     },
     async getUpcoming() {
       await AppointmentServices.getUpcomingForPerson(this.user.userID)
@@ -573,7 +607,9 @@ export default {
           for (let index = 0; index < this.availabilities.length; ++index) {
             //format date, start time, and end time
             let element = this.availabilities[index];
-            this.availabilities[index].date = this.formatDate(element.date);
+            this.availabilities[index].date = this.formatReadableDate(
+              element.date
+            );
             this.availabilities[index].startTime = this.formatTime(
               element.startTime
             );
