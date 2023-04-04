@@ -504,6 +504,7 @@ export default {
       console.log("RAN FINE");
     },
     async addPersonRolePrivilege(privilege) {
+      console.log(privilege);
       await PersonRolePrivilegeServices.addPrivilege(privilege)
         .then(() => {
           this.personPrivilegeDialog = false;

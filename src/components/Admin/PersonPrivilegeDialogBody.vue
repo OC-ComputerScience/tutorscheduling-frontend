@@ -15,7 +15,7 @@
         v-model="selectedPrivilege.personroleId"
         :items="personRoles"
         item-text="type"
-        item-value="id"
+        item-value="personrole[0].id"
         label="Associated Role"
       ></v-select>
     </v-card-text>
@@ -75,6 +75,7 @@ export default {
   },
   methods: {
     addPersonRolePrivilege() {
+      console.log(this.sentPersonRoles);
       this.$emit("addPersonRolePrivilege", this.selectedPrivilege);
     },
   },
