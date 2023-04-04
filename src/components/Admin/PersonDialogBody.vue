@@ -501,10 +501,8 @@ export default {
           this.message = error.response.data.message;
           console.log("There was an error:", error.response);
         });
-      console.log("RAN FINE");
     },
     async addPersonRolePrivilege(privilege) {
-      console.log(privilege);
       await PersonRolePrivilegeServices.addPrivilege(privilege)
         .then(() => {
           this.personPrivilegeDialog = false;

@@ -75,7 +75,6 @@ export default {
   },
   methods: {
     addPersonRolePrivilege() {
-      console.log(this.sentPersonRoles);
       this.$emit("addPersonRolePrivilege", this.selectedPrivilege);
     },
   },
