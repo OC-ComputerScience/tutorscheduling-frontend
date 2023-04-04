@@ -19,7 +19,12 @@
       <v-select
         id="status"
         v-model="selectedStatus"
-        :items="statuses"
+        :disabled="isDisabled"
+        :items="
+          isDisabled
+            ? [{ value: 'disabled', statusName: 'disabled' }]
+            : statuses
+        "
         item-text="statusName"
         return-object
         label="Status"
@@ -33,7 +38,7 @@
         color="error"
         @click="
           isDisabled
-            ? changePersonRoleStatus('active')
+            ? changePersonRoleStatus('approved')
             : (disableConfirmDialog = true)
         "
         >{{ isDisabled ? "Enable Role" : "Disable Role" }}</v-btn
@@ -52,7 +57,7 @@
         @handleReturningCancel="disableConfirmDialog = false"
         @handleReturningSuccess="
           isDisabled
-            ? changePersonRoleStatus('active')
+            ? changePersonRoleStatus('approved')
             : changePersonRoleStatus('disabled')
         "
       ></DeleteConfirmationComponent>
@@ -129,7 +134,8 @@ export default {
         value: this.sentPersonRole.status,
         statusName: this.sentPersonRole.status,
       };
-      this.isDisabled = this.selectedStatus === "disabled" ? true : false;
+      this.isDisabled =
+        this.sentPersonRole.status === "disabled" ? true : false;
     },
     sentBool(newVal) {
       this.isEdit = newVal;
@@ -137,6 +143,17 @@ export default {
     sentGroupRoles(newGroupRoles) {
       this.groupRoles = newGroupRoles;
     },
+  },
+  mounted() {
+    this.selectedRole = {
+      id: this.sentPersonRole.roleId,
+      type: this.sentPersonRole.type,
+    };
+    this.selectedStatus = {
+      value: this.sentPersonRole.status,
+      statusName: this.sentPersonRole.status,
+    };
+    this.isDisabled = this.sentPersonRole.status === "disabled" ? true : false;
   },
   methods: {
     saveOrAddPersonRole() {

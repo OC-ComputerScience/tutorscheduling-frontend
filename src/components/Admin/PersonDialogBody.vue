@@ -441,56 +441,28 @@ export default {
       }
     },
     async changePersonRoleStatus(role) {
-      console.log(role);
-      delete role.updatedAt;
-      delete role.createdAt;
       if (role.status === "disabled") {
-        console.log("TEST?");
-        // delete person role privileges
-        await PersonRolePrivilegeServices.deletePrivilegesForPersonRole(
-          role.id
-        ).catch((error) => {
-          this.message = error.response.data.message;
-          console.log("There was an error:", error.response);
-        });
-        console.log("TEST2");
-        // delete person topics
-        //Not resolving???
-        PersonTopicServices.deletePersonTopicsForPersonForGroup(
-          this.person.id,
-          this.group.id
-        )
+        role.groupId = this.group.id;
+        await PersonRoleServices.disablePersonRole(role)
           .then((response) => {
             console.log(response);
+            this.personRoleDialog = false;
           })
           .catch((error) => {
             this.message = error.response.data.message;
             console.log("There was an error:", error.response);
           });
-        console.log("YEP");
-        await this.getAppointments();
-        let disableUser = {
-          fName: this.person.fName,
-          lName: this.person.lName,
-          userID: this.person.id,
-          selectedRole: {
-            type: role.type,
-          },
-        };
-        for (let i = 0; i < this.appointments.length; i++) {
-          await this.cancelAppointment(this.appointments[i], disableUser);
-        }
+      } else if (role.status === "approved") {
+        role.groupId = this.group.id;
+        await PersonRoleServices.updatePersonRole(role.id, role)
+          .then(() => {
+            this.personRoleDialog = false;
+          })
+          .catch((error) => {
+            this.message = error.response.data.message;
+            console.log("There was an error:", error.response);
+          });
       }
-      await PersonRoleServices.updatePersonRole(role.id, role)
-        .then((response) => {
-          console.log(response);
-          console.log("RAN");
-          this.personRoleDialog = false;
-        })
-        .catch((error) => {
-          this.message = error.response.data.message;
-          console.log(error);
-        });
       await this.getPersonRoles();
       await this.getPersonTopics();
     },
