@@ -76,6 +76,34 @@
         <b>Google Meet Link: </b>
         <a :href="appointment.URL">{{ appointment.URL }}</a>
       </div>
+
+      <v-select
+        v-if="isAdminAddStudent && checkAppointmentType('Private')"
+        v-model="newStatus"
+        :items="statuses"
+        label="Status"
+        @change="checkButtons()"
+      >
+        <template #prepend>
+          <v-icon
+            :color="
+              newStatus === 'Booked'
+                ? 'blue'
+                : newStatus === 'Pending'
+                ? 'yellow'
+                : 'grey'
+            "
+            >{{
+              newStatus === "Booked"
+                ? "mdi-radiobox-marked"
+                : newStatus === "Pending"
+                ? "mdi-radiobox-marked"
+                : "mdi-radiobox-blank"
+            }}</v-icon
+          >
+        </template>
+      </v-select>
+
       <v-select
         v-model="appointment.locationId"
         :items="locations"
@@ -163,9 +191,7 @@
             : 'What this appointment hopes to provide:'
         "
         :prepend-icon="
-          canEditPreSession
-            ? 'mdi-text-box-edit-outline'
-            : 'mdi-text-box-outline'
+          canEditPreSession ? 'mdi-comment-edit-outline' : 'mdi-comment-outline'
         "
         auto-grow
         rows="2"
@@ -434,6 +460,8 @@ export default {
         },
       },
       locations: [],
+      statuses: ["Booked", "Pending"],
+      newStatus: "Available",
       currentTopics: [],
       appointment: this.sentAppointment,
       startTimes: [],
@@ -534,6 +562,7 @@ export default {
       this.tutorString = "";
       this.studentString = "";
       this.emailStatus = "";
+      this.newStatus = "Available";
       this.allowAdminAddStudent = false;
       this.isAdminAddStudent = false;
       this.isNoShow = false;
@@ -568,8 +597,6 @@ export default {
           this.tutorString += `, ${this.appointment.tutors[i].person.fName} ${this.appointment.tutors[i].person.lName}`;
         }
       }
-
-      console.log(this.appointment.students);
 
       if (this.appointment.students.length > 1) {
         this.appointment.students.forEach((student) => {
@@ -695,8 +722,6 @@ export default {
       // 3. admin - group available and student signed up, private available with student signed up and topic, location, start, and end time filled out
       // 4. tutor - group available
       // 4. not past (applies to all cases)
-      console.log(this.addedStudent);
-      console.log(this.appointment);
       this.enableBookButton =
         (this.hasRole("Student") ||
           (this.hasRole("Tutor") &&
@@ -707,7 +732,10 @@ export default {
             this.isAdminAddStudent &&
             this.addedStudent.fName !== "" &&
             this.addedStudent.lName !== "" &&
-            this.allowAdminAddStudent)) &&
+            this.allowAdminAddStudent &&
+            (this.checkAppointmentType("Group") ||
+              (this.checkAppointmentType("Private") &&
+                this.newStatus !== "available")))) &&
         this.checkAppointmentStatus("available") &&
         (this.checkAppointmentType("Group") ||
           (this.checkAppointmentType("Private") &&
@@ -867,7 +895,7 @@ export default {
         this.emailStatus =
           "You cannot sign up a tutor for their own appointment.";
       } else if (this.adminCheckPersonInAppointment(this.addedStudent.id)) {
-        this.emailStatus = `${this.addedStudent.fName} 
+        this.emailStatus = `${this.addedStudent.fName}
             ${this.addedStudent.lName} is already signed up for this appointment.`;
       } else if (this.addedStudent.id !== "") {
         this.allowAdminAddStudent = true;
@@ -890,10 +918,10 @@ export default {
             agree: false,
           };
           await PersonRoleServices.addPersonRole(personRole);
-          this.emailStatus = `${this.addedStudent.fName} 
+          this.emailStatus = `${this.addedStudent.fName}
             ${this.addedStudent.lName} has been added as a student!`;
         } else {
-          this.emailStatus = `${this.addedStudent.fName} 
+          this.emailStatus = `${this.addedStudent.fName}
             ${this.addedStudent.lName} is a student in ${this.appointment.group.name}!`;
         }
       } else {
@@ -944,9 +972,6 @@ export default {
     },
     async directToCancel() {
       this.showDeleteConfirmation = false;
-      // if (this.appointment.status === "pending" && this.hasRole("Tutor")) {
-      //   await this.confirmAppointment(false, this.user, this.appointment);
-      // } else {
       let fromUser = {
         fName: this.user.fName,
         lName: this.user.lName,
@@ -962,7 +987,6 @@ export default {
         this.showAlert = true;
         console.log("There was an error:", error.response);
       });
-      // }
       this.$emit("doneWithAppointment");
     },
     async sendAppointmentForConfirmation() {
@@ -970,10 +994,17 @@ export default {
       this.$emit("doneWithAppointment");
     },
     async sendAppointmentForBooking() {
-      if (this.isAdminAddStudent && this.needStudentInfo) {
-        await this.adminAdd();
+      if (this.isAdminAddStudent) {
+        if (this.checkAppointmentType("Private")) {
+          // set status that admin chose
+          this.appointment.status = this.newStatus.toLowerCase();
+        }
+        if (this.needStudentInfo) {
+          await this.adminAdd();
+        }
       }
       this.appointment.minApptTime = this.appointment.group.minApptTime;
+      console.log(this.appointment);
       await this.bookAppointment(
         this.isAdminAddStudent,
         this.appointment,
