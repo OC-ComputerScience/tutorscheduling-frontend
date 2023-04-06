@@ -20,7 +20,6 @@
           <v-spacer></v-spacer>
           <v-btn
             color="accent"
-            text
             @click="
               googleCalendarDialog = false;
               doAuthorization();
