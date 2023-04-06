@@ -1,18 +1,16 @@
 <template>
   <div>
     <v-container>
-      <v-toolbar>
-        <v-toolbar-title>{{ message }}</v-toolbar-title>
-        <v-spacer></v-spacer>
+      <v-card-title class="text-h4 font-weight-bold pt-4 pb-6 pl-0 accent--text"
+        >{{ title }}
         <InformationComponent
-          message="View requests from people in your group and mark them as In-Progress or Completed appropriately."
-        ></InformationComponent>
-      </v-toolbar>
-      <br />
-      <v-alert v-model="showAlert" dismissible :type="alertType">{{
-        alert
-      }}</v-alert>
-      <br />
+          :message="
+            'View requests from people in ' +
+            group.name +
+            ' and mark them as In-Progress or Completed appropriately.'
+          "
+        ></InformationComponent
+      ></v-card-title>
       <v-card>
         <v-card-title>
           <v-text-field
@@ -23,22 +21,31 @@
             hide-details
           ></v-text-field>
           <v-spacer></v-spacer>
-          <v-btn class="mr-4" @click="cancel()"> Back </v-btn>
+          <v-btn color="accent" class="mr-4" elevation="2">
+            Show Completed Requests
+          </v-btn>
         </v-card-title>
+        <v-dialog v-model="requestDialog" persistent max-width="800px">
+          <RequestDialogBody
+            :sent-location="selectedRequest"
+            :sent-bool="isRequestDialogEdit"
+            @closeRequestDialog="requestDialog = false"
+            @saveOrAddRequest="saveOrAddRequest"
+          ></RequestDialogBody>
+        </v-dialog>
         <v-data-table
           :headers="headers"
           :search="search"
           :items="requests"
           :items-per-page="50"
-        >
-          <template #[`item.actions`]="{ item }">
-            <v-icon small class="mr-2" @click="editItem(item)"
-              >mdi-pencil</v-icon
-            >
-            <!-- <v-icon small @click="deleteItem(item)"> mdi-delete </v-icon> -->
-          </template>
-        </v-data-table>
+          @click:row="rowClick"
+        ></v-data-table>
       </v-card>
+      <br />
+      <v-alert v-model="showAlert" dismissible :type="alertType">{{
+        alert
+      }}</v-alert>
+      <br />
 
       <v-dialog v-model="dialog" max-width="500px">
         <v-card>
@@ -152,7 +159,10 @@ export default {
       deleteMessage: "",
       deleteId: -1,
       expanded: [],
-      message: "Requests",
+      requestDialog: false,
+      isRequestDialogEdit: true,
+      selectedRequest: {},
+      title: " Requests",
       StatusSelect: ["Received", "In-Progress", "Completed"],
       dialog: false,
       dialogDelete: false,
@@ -185,6 +195,7 @@ export default {
   // },
   async created() {
     this.user = Utils.getStore("user");
+    this.title = this.user.selectedGroup + this.title;
     await this.getGroupByPersonRoleId();
     await this.getRequestsForGroup();
     if (this.$route.query !== undefined) {
@@ -247,16 +258,11 @@ export default {
           this.requests[i].createdAt.slice(11, 19)
         );
       }
-
-      this.requests.sort(function (a, b) {
-        if (a.createdAt < b.createdAt) {
-          return -1;
-        }
-        if (a.createdAt > b.createdAt) {
-          return 1;
-        }
-        return 0;
-      });
+    },
+    rowClick: function (item) {
+      this.isRequestDialogEdit = true;
+      this.selectedRequest = item;
+      this.requestDialog = true;
     },
     editItem(item) {
       // this.editedIndex = this.requests.findIndex(

@@ -1,115 +1,138 @@
 <template>
   <v-card>
-    <v-card-title class="primary white--text mb-6">{{
-      isEdit ? "Edit Topic" : `Send Request to ${selectedGroup}`
+    <v-card-title class="primary white--text mb-2 headline">{{
+      isEdit ? "Edit Topic" : `Send A Request to ${selectedGroup}`
     }}</v-card-title>
+    <v-card-subtitle class="primary white--text pb-2 mb-2">
+      {{ formatReadableDate(request.date) }} •
+      {{ calcTime(request.createdAt) }}
+    </v-card-subtitle>
     <v-card-text>
+      <v-select
+        v-model="request.problem"
+        :items="problems"
+        label="Why are you making this request?"
+        :readonly="isEdit"
+        required
+      >
+      </v-select>
       <v-text-field
-        id="name"
-        :value="topic.name"
+        v-model="request.courseNum"
         :counter="50"
-        label="Name"
+        label="Course Number"
+        hint="Enter n/a if non applicable"
+        persistent-hint
+        :readonly="isEdit"
+        required
       ></v-text-field>
 
+      <v-select
+        v-model="request.topicId"
+        :items="topics"
+        item-text="name"
+        item-value="id"
+        label="Topic"
+        :readonly="isEdit"
+        required
+      >
+      </v-select>
+
       <v-text-field
-        id="abbr"
-        :value="topic.abbr"
-        :counter="25"
-        label="Abbreviation"
+        v-model="request.description"
+        label="Description"
+        hint="What would you like to request?"
+        persistent-hint
+        :readonly="isEdit"
+        required
       ></v-text-field>
+
+      <v-select
+        v-if="isEdit"
+        v-model="request.status"
+        :items="StatusSelect"
+        label="Status"
+        required
+      >
+      </v-select>
     </v-card-text>
     <v-card-actions>
       <v-spacer></v-spacer>
-      <v-btn
-        v-if="isEdit"
-        color="error"
-        @click="
-          isDisabled
-            ? changeTopicStatus('active')
-            : (disableConfirmDialog = true)
-        "
-        >{{ isDisabled ? "Enable Topic" : "Disable Topic" }}</v-btn
-      >
-      <v-btn color="grey white--text" @click="$emit('closeTopicDialog')">
+      <v-btn color="grey white--text" @click="$emit('closeRequestDialog')">
         {{ isEdit ? "Discard Changes" : "Cancel" }}
       </v-btn>
-      <v-btn color="accent" @click="saveOrAddTopic()">{{
-        isEdit ? "Save Changes" : "Add Topic"
+      <v-btn color="accent" @click="saveOrAddRequest()">{{
+        isEdit ? "Save Changes" : "Send Request"
       }}</v-btn>
     </v-card-actions>
-
-    <v-dialog v-model="disableConfirmDialog" persistent max-width="750px">
-      <DeleteConfirmationComponent
-        type="topic"
-        :item="topic"
-        @handleReturningCancel="disableConfirmDialog = false"
-        @handleReturningSuccess="
-          isDisabled
-            ? changeTopicStatus('active')
-            : changeTopicStatus('disabled')
-        "
-      ></DeleteConfirmationComponent>
-    </v-dialog>
   </v-card>
 </template>
 
 <script>
-import DeleteConfirmationComponent from "../DeleteConfirmationComponent.vue";
+import Utils from "@/config/utils.js";
+import TopicServices from "@/services/topicServices.js";
+
 export default {
-  name: "TopicDialogBody",
-  components: {
-    DeleteConfirmationComponent,
-  },
+  name: "RequestDialogBody",
   props: {
     sentBool: { type: [Boolean], default: false },
-    sentTopic: {
+    groupId: { type: [Number], default: 0 },
+    sentRequest: {
       type: [Object],
       default() {
         return {
-          name: "",
-          abbr: "",
-          status: "",
-          createdAt: new Date(),
-          updatedAt: new Date(),
-          groupId: 1,
+          problem: "",
+          courseNum: "",
+          description: "",
+          status: "Received",
+          personId: 0,
+          topicId: 0,
+          groupId: 0,
         };
       },
     },
   },
   data() {
     return {
-      statuses: ["active", "disabled"],
-      topic: this.sentTopic,
+      problems: [
+        "No times work for me.",
+        "The topic I am looking for is not here.",
+        "I need to report an issue.",
+        "Other",
+      ],
+      topics: [],
+      request: this.sentRequest,
       isEdit: this.sentBool,
-      isDisabled: this.sentTopic.status === "disabled" ? true : false,
-      disableConfirmDialog: false,
     };
   },
   watch: {
-    sentTopic(newTopic) {
-      this.topic = newTopic;
-      this.isDisabled = this.topic.status === "disabled" ? true : false;
+    sentRequest(newRequest) {
+      this.request = newRequest;
     },
     sentBool(newVal) {
       this.isEdit = newVal;
     },
   },
-  created() {},
+  async created() {
+    this.user = Utils.getStore("user");
+    if (this.user.selectedRole.type === "Student") {
+      await this.getTopicsForGroup();
+    }
+  },
   methods: {
-    saveOrAddTopic() {
-      this.topic.name = document.getElementById("name").value;
-      this.topic.abbr = document.getElementById("abbr").value;
-
-      if (this.isEdit) {
-        this.topic.updatedAt = new Date();
-      }
-
-      this.$emit("saveOrAddTopic", this.topic, this.isEdit);
+    async getTopicsForGroup() {
+      await TopicServices.getAllForGroup(this.groupId)
+        .then((response) => {
+          this.topics = response.data;
+        })
+        .catch((error) => {
+          this.alertType = "error";
+          this.alert = error.response.data.message;
+          this.showAlert = true;
+          console.log("There was an error:", error.response);
+        });
     },
-    changeTopicStatus(status) {
-      this.topic.status = status;
-      this.isDisabled = !this.isDisabled;
-      this.$emit("changeTopicStatus", this.topic);
+    saveOrAddRequest() {
+      this.$emit("saveOrAddRequest", this.request, this.isEdit);
     },
   },
 };
