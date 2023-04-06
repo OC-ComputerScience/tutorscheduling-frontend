@@ -82,6 +82,7 @@ export default {
   methods: {
     hasRole(type) {
       return (
+        this.user.selectedRole !== null &&
         this.user.selectedRole.type !== null &&
         this.user.selectedRole.type === type
       );
