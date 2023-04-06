@@ -59,7 +59,7 @@ export default {
   name: "GoogleCalendarComponent",
   data() {
     return {
-      user: {},
+      user: Utils.getStore("user"),
       showAlert: false,
       alert: "",
       alertType: "success",
@@ -70,17 +70,17 @@ export default {
   },
   watch: {
     $route() {
+      this.user = Utils.getStore("user");
       this.checkForAuthorization();
     },
   },
   created() {
-    this.user = Utils.getStore("user");
-    // if approved and a tutor?? TODO
     this.checkForAuthorization();
   },
   methods: {
     hasRole(type) {
       return (
+        this.user !== null &&
         this.user.selectedRole !== null &&
         this.user.selectedRole.type !== null &&
         this.user.selectedRole.type === type
@@ -89,6 +89,7 @@ export default {
     checkForAuthorization() {
       var now = new Date().toISOString();
       if (
+        this.user !== null &&
         this.user.refresh_token !== null &&
         this.user.refresh_token !== undefined &&
         this.user.refresh_token !== ""
