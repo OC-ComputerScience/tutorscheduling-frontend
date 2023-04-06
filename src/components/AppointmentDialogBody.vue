@@ -1057,6 +1057,7 @@ export default {
       if (this.isNoShow && this.hasRole("Tutor")) {
         // want to save the no show feedback for every person in the appointment
         for (let i = 0; i < this.appointment.personappointment.length; i++) {
+          this.updatedPersonAppointment.feedbacknumber = null;
           this.updatedPersonAppointment.id =
             this.appointment.personappointment[i].id;
           this.updatedPersonAppointment.personId =
