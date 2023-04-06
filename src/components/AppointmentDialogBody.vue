@@ -184,8 +184,12 @@
 
       <v-textarea
         v-model="appointment.preSessionInfo"
-        :counter="130"
-        label="What do you need help with?"
+        :counter="500"
+        :label="
+          appointment.type === 'Private'
+            ? 'What do you need help with?'
+            : 'What this appointment hopes to provide:'
+        "
         :prepend-icon="
           canEditPreSession ? 'mdi-comment-edit-outline' : 'mdi-comment-outline'
         "
