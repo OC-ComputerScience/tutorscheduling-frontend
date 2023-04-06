@@ -6,7 +6,7 @@
         <InformationComponent
           :message="
             'View requests from people in ' +
-            group.name +
+            user.selectedGroup +
             ' and mark them as In-Progress or Completed appropriately.'
           "
         ></InformationComponent
@@ -21,14 +21,22 @@
             hide-details
           ></v-text-field>
           <v-spacer></v-spacer>
-          <v-btn color="accent" class="mr-4" elevation="2">
-            Show Completed Requests
+          <v-btn
+            color="accent"
+            class="mr-4"
+            elevation="2"
+            @click="
+              hideCompleted = !hideCompleted;
+              filterCompleted();
+            "
+          >
+            {{ hideCompleted ? "Show " : "Hide " }} Completed
           </v-btn>
         </v-card-title>
         <v-dialog v-model="requestDialog" persistent max-width="800px">
           <RequestDialogBody
-            :sent-location="selectedRequest"
-            :sent-bool="isRequestDialogEdit"
+            :sent-request="selectedRequest"
+            :sent-bool="true"
             @closeRequestDialog="requestDialog = false"
             @saveOrAddRequest="saveOrAddRequest"
           ></RequestDialogBody>
@@ -36,98 +44,30 @@
         <v-data-table
           :headers="headers"
           :search="search"
-          :items="requests"
+          :items="filteredRequests"
           :items-per-page="50"
           @click:row="rowClick"
         ></v-data-table>
       </v-card>
-      <br />
-      <v-alert v-model="showAlert" dismissible :type="alertType">{{
-        alert
-      }}</v-alert>
-      <br />
-
-      <v-dialog v-model="dialog" max-width="500px">
-        <v-card>
-          <v-card-title
-            >Request from {{ editedItem.fullName }} on
-            {{ editedItem.date }}</v-card-title
+      <v-snackbar v-model="showAlert" rounded="pill">
+        {{ alert }}
+        <template #action="{ attrs }">
+          <v-btn
+            :color="
+              alertType === 'success'
+                ? 'green'
+                : alertType === 'warning'
+                ? 'yellow'
+                : 'error'
+            "
+            text
+            v-bind="attrs"
+            @click="showAlert = false"
           >
-          <v-card-text>
-            <br />
-            <v-form ref="form" v-model="valid" lazy validation>
-              <v-text-field
-                v-model="editedItem.date"
-                label="Date"
-                readonly
-              ></v-text-field>
-              <v-text-field
-                v-model="editedItem.time"
-                label="Time"
-                readonly
-              ></v-text-field>
-              <v-text-field
-                v-model="editedItem.fullName"
-                label="Student"
-                readonly
-              ></v-text-field>
-              <v-text-field
-                v-model="editedItem.problem"
-                label="Problem"
-                readonly
-              ></v-text-field>
-
-              <v-text-field
-                v-if="
-                  editedItem.topic !== null && editedItem.topic !== undefined
-                "
-                v-model="editedItem.topic.name"
-                label="Topic"
-                readonly
-              ></v-text-field>
-
-              <v-text-field
-                v-model="editedItem.courseNum"
-                label="Course Number"
-                readonly
-              ></v-text-field>
-
-              <v-text-field
-                v-model="editedItem.description"
-                label="Description"
-                readonly
-              ></v-text-field>
-
-              <v-select
-                v-model="editedItem.status"
-                :items="StatusSelect"
-                label="Status"
-                required
-              >
-              </v-select>
-            </v-form>
-          </v-card-text>
-          <v-card-actions>
-            <v-spacer></v-spacer>
-            <v-btn color="accent" @click="save()">Save</v-btn>
-            <v-btn color="error" @click="dialog = false">Cancel</v-btn>
-          </v-card-actions>
-        </v-card>
-      </v-dialog>
-
-      <!-- <v-dialog v-model="dialogDelete" max-width="500px">
-        <v-card>
-          <v-card-title>Confirming Deletion:</v-card-title>
-          <v-card-text>
-            <h2>{{ deleteMessage }}</h2>
-          </v-card-text>
-          <v-card-actions>
-            <v-spacer></v-spacer>
-            <v-btn color="error" @click="dialogDelete = false">Cancel</v-btn>
-            <v-btn color="accent" @click="confirmedDelete()">OK</v-btn>
-          </v-card-actions>
-        </v-card>
-      </v-dialog> -->
+            Close
+          </v-btn>
+        </template>
+      </v-snackbar>
     </v-container>
   </div>
 </template>
@@ -137,12 +77,16 @@ import Utils from "@/config/utils.js";
 import PersonRoleServices from "@/services/personRoleServices.js";
 import RequestServices from "@/services/requestServices.js";
 import InformationComponent from "../../components/InformationComponent.vue";
+import RequestDialogBody from "../../components/RequestDialogBody.vue";
+import { TimeFunctionsMixin } from "../../mixins/TimeFunctionsMixin";
 
 export default {
   name: "AdminRequests",
   components: {
     InformationComponent,
+    RequestDialogBody,
   },
+  mixins: [TimeFunctionsMixin],
   props: {
     id: {
       type: [Number, String],
@@ -151,21 +95,14 @@ export default {
   },
   data() {
     return {
-      valid: false,
       search: "",
       showAlert: false,
       alert: "",
       alertType: "success",
-      deleteMessage: "",
-      deleteId: -1,
-      expanded: [],
+      hideCompleted: true,
       requestDialog: false,
-      isRequestDialogEdit: true,
       selectedRequest: {},
       title: " Requests",
-      StatusSelect: ["Received", "In-Progress", "Completed"],
-      dialog: false,
-      dialogDelete: false,
       user: {},
       headers: [
         { text: "Date", value: "date" },
@@ -173,31 +110,18 @@ export default {
         { text: "Student", value: "fullName" },
         { text: "Problem", value: "problem" },
         { text: "Status", value: "status" },
-        { text: "Actions", value: "actions", sortable: false },
       ],
       requests: [],
-      editedItem: {
-        status: "",
-      },
-      defaultItem: {
-        status: "",
-      },
+      filteredRequests: [],
     };
   },
   computed: {},
-  // watch: {
-  //   dialog(val) {
-  //     val || this.close();
-  //   },
-  //   dialogDelete(val) {
-  //     val || this.closeDelete();
-  //   },
-  // },
   async created() {
     this.user = Utils.getStore("user");
     this.title = this.user.selectedGroup + this.title;
     await this.getGroupByPersonRoleId();
     await this.getRequestsForGroup();
+    this.filterCompleted();
     if (this.$route.query !== undefined) {
       for (let i = 0; i < this.requests.length; i++) {
         if (this.requests[i].id === parseInt(this.$route.query.requestId)) {
@@ -233,6 +157,8 @@ export default {
           console.log("There was an error: ", error.response.data.message);
         });
 
+      console.log(this.requests);
+
       for (let i = 0; i < this.requests.length; i++) {
         if (
           this.requests[i].topic === null ||
@@ -253,60 +179,18 @@ export default {
         this.requests[
           i
         ].fullName = `${this.requests[i].person.fName} ${this.requests[i].person.lName}`;
-        this.requests[i].date = this.requests[i].createdAt.slice(0, 10);
-        this.requests[i].time = this.calcTime(
+        this.requests[i].date = this.formatReadableMonth(
+          this.requests[i].createdAt
+        );
+        this.requests[i].time = this.formatTime(
           this.requests[i].createdAt.slice(11, 19)
         );
       }
     },
     rowClick: function (item) {
-      this.isRequestDialogEdit = true;
       this.selectedRequest = item;
       this.requestDialog = true;
     },
-    editItem(item) {
-      // this.editedIndex = this.requests.findIndex(
-      //   (element) => element.id === item.id
-      // );
-      this.editedItem = item;
-      this.dialog = true;
-    },
-    // deleteItem(item) {
-    //   this.deleteMessage = `Are you sure you want to delete this request made by ${item.fullName}?`;
-    //   this.alert =
-    //     "You have successfully deleted " + item.fullName + "'s request.";
-    //   this.deleteId = item.id;
-    //   this.dialogDelete = true;
-    // },
-    // async confirmedDelete() {
-    //   await RequestServices.deleteRequest(this.deleteId)
-    //     .then(() => {
-    //       this.getRequestsForGroup();
-    //       this.closeDelete();
-    //       this.alertType = "success";
-    //       this.showAlert = true;
-    //     })
-    //     .catch((error) => {
-    //       this.alertType = "error";
-    //       this.alert = error.response.data.message;
-    //       this.showAlert = true;
-    //       console.log("There was an error:", error.response);
-    //     });
-    // },
-    // close() {
-    //   this.dialog = false;
-    //   this.$nextTick(() => {
-    //     this.editedItem = Object.assign({}, this.defaultItem);
-    //     this.editedIndex = -1;
-    //   });
-    // },
-    // closeDelete() {
-    //   this.dialogDelete = false;
-    //   this.$nextTick(() => {
-    //     this.editedItem = Object.assign({}, this.defaultItem);
-    //     this.editedIndex = -1;
-    //   });
-    // },
     async save() {
       let tempRequest = {
         id: this.editedItem.id,
@@ -336,24 +220,38 @@ export default {
       await this.getRequestsForGroup();
       this.dialog = false;
     },
-    calcTime(time) {
-      if (time == null) {
-        return null;
+    filterCompleted() {
+      if (this.hideCompleted) {
+        this.filteredRequests = this.requests.filter((request) => {
+          return request.status !== "Completed";
+        });
+      } else {
+        this.filteredRequests = this.requests;
       }
-      let temp = time.split(":");
-      let milHours = parseInt(temp[0]);
-      let minutes = temp[1];
-      let hours = milHours - 5; // subtract 5 to fix how datetimes are saved
-      hours = ((hours % 24) + 24) % 24; // fix it calculating negative numbers
-      if (hours == 0) {
-        hours = 12;
-      }
-      let dayTime = ~~(hours / 12) > 0 ? "PM" : "AM";
-      hours = hours % 12;
-      return "" + hours + ":" + minutes + " " + dayTime;
     },
-    cancel() {
-      this.$router.go(-1);
+    async saveOrAddRequest() {
+      // location.groupId = this.group.id;
+      // if (isEdit) {
+      //   await LocationServices.updateLocation(location.id, location)
+      //     .then(async () => {
+      //       this.locationDialog = false;
+      //       await this.getLocationsForGroup();
+      //     })
+      //     .catch((error) => {
+      //       this.title = error.response.data.message;
+      //       console.log("There was an error:", error.response);
+      //     });
+      // } else {
+      //   await LocationServices.addLocation(location)
+      //     .then(async () => {
+      //       this.locationDialog = false;
+      //       await this.getLocationsForGroup();
+      //     })
+      //     .catch((error) => {
+      //       this.title = error.response.data.message;
+      //       console.log(error);
+      //     });
+      // }
     },
   },
 };

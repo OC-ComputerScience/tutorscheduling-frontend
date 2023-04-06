@@ -28,6 +28,20 @@
       </v-dialog>
 
       <v-dialog
+        v-if="hasRole('Student')"
+        v-model="requestDialog"
+        persistent
+        max-width="800px"
+      >
+        <RequestDialogBody
+          :sent-bool="false"
+          :group-id="group.id"
+          @closeRequestDialog="requestDialog = false"
+          @saveOrAddRequest="saveOrAddRequest"
+        ></RequestDialogBody>
+      </v-dialog>
+
+      <v-dialog
         v-if="hasRole('Tutor')"
         v-model="googleCalendarDialog"
         persistent
@@ -84,12 +98,12 @@
               height="100"
               :color="hasRole('Student') ? '#F8C545' : '#63BAC0'"
               @click="
-                handleRedundantNavigation(
-                  hasRole('Student')
-                    ? 'studentAddRequest'
-                    : 'tutorAddAvailability',
-                  user.selectedRole.personRoleId
-                )
+                hasRole('Student')
+                  ? (requestDialog = true)
+                  : handleRedundantNavigation(
+                      'tutorAddAvailability',
+                      user.selectedRole.personRoleId
+                    )
               "
             >
               <v-card-title class="justify-center white--text">
@@ -171,6 +185,7 @@ import PersonRoleServices from "@/services/personRoleServices.js";
 import PersonRolePrivilegeServices from "@/services/personRolePrivilegeServices.js";
 import AppointmentDialogBody from "../components/AppointmentDialogBody.vue";
 import InformationComponent from "../components/InformationComponent.vue";
+import RequestDialogBody from "../components/RequestDialogBody.vue";
 import { CalendarMixin } from "../mixins/CalendarMixin";
 import { RedirectToPageMixin } from "../mixins/RedirectToPageMixin";
 import { TimeFunctionsMixin } from "../mixins/TimeFunctionsMixin";
@@ -180,6 +195,7 @@ export default {
   components: {
     AppointmentDialogBody,
     InformationComponent,
+    RequestDialogBody,
   },
   mixins: [CalendarMixin, RedirectToPageMixin, TimeFunctionsMixin],
   props: {
@@ -201,6 +217,7 @@ export default {
       disabled: false,
       appointmentDialog: false,
       googleCalendarDialog: false,
+      requestDialog: false,
       selectedAppointment: {},
       appointments: [],
       upcomingAppointments: [],
@@ -478,6 +495,30 @@ export default {
       this.selectedAppointment = item;
       this.selectedAppointment.showFeedbackDialog = true;
       this.appointmentDialog = true;
+    },
+    async saveOrAddRequest() {
+      // location.groupId = this.group.id;
+      // if (isEdit) {
+      //   await LocationServices.updateLocation(location.id, location)
+      //     .then(async () => {
+      //       this.locationDialog = false;
+      //       await this.getLocationsForGroup();
+      //     })
+      //     .catch((error) => {
+      //       this.title = error.response.data.message;
+      //       console.log("There was an error:", error.response);
+      //     });
+      // } else {
+      //   await LocationServices.addLocation(location)
+      //     .then(async () => {
+      //       this.locationDialog = false;
+      //       await this.getLocationsForGroup();
+      //     })
+      //     .catch((error) => {
+      //       this.title = error.response.data.message;
+      //       console.log(error);
+      //     });
+      // }
     },
   },
 };

@@ -1,18 +1,20 @@
 <template>
   <v-card>
     <v-card-title class="primary white--text mb-2 headline">{{
-      isEdit ? "Edit Topic" : `Send A Request to ${selectedGroup}`
+      isAdminView
+        ? `Request from ${request.fullName}`
+        : `Send A Request to ${user.selectedGroup}`
     }}</v-card-title>
-    <v-card-subtitle class="primary white--text pb-2 mb-2">
-      {{ formatReadableDate(request.date) }} •
-      {{ calcTime(request.createdAt) }}
+    <v-card-subtitle v-if="isAdminView" class="primary white--text pb-2 mb-2">
+      {{ formatReadableDate(request.createdAt) }} •
+      {{ request.time }}
     </v-card-subtitle>
     <v-card-text>
       <v-select
         v-model="request.problem"
         :items="problems"
         label="Why are you making this request?"
-        :readonly="isEdit"
+        :readonly="isAdminView"
         required
       >
       </v-select>
@@ -22,7 +24,7 @@
         label="Course Number"
         hint="Enter n/a if non applicable"
         persistent-hint
-        :readonly="isEdit"
+        :readonly="isAdminView"
         required
       ></v-text-field>
 
@@ -32,24 +34,30 @@
         item-text="name"
         item-value="id"
         label="Topic"
-        :readonly="isEdit"
+        :prepend-icon="
+          isAdminView ? 'mdi-book-outline' : 'mdi-book-edit-outline'
+        "
+        :readonly="isAdminView"
         required
       >
       </v-select>
 
-      <v-text-field
+      <v-textarea
         v-model="request.description"
-        label="Description"
-        hint="What would you like to request?"
+        label="What would you like to request?"
+        rows="2"
         persistent-hint
-        :readonly="isEdit"
+        :prepend-icon="
+          isAdminView ? 'mdi-comment-outline' : 'mdi-comment-edit-outline'
+        "
+        :readonly="isAdminView"
         required
-      ></v-text-field>
+      ></v-textarea>
 
       <v-select
-        v-if="isEdit"
+        v-if="isAdminView"
         v-model="request.status"
-        :items="StatusSelect"
+        :items="statuses"
         label="Status"
         required
       >
@@ -58,10 +66,10 @@
     <v-card-actions>
       <v-spacer></v-spacer>
       <v-btn color="grey white--text" @click="$emit('closeRequestDialog')">
-        {{ isEdit ? "Discard Changes" : "Cancel" }}
+        {{ isAdminView ? "Discard Changes" : "Cancel" }}
       </v-btn>
       <v-btn color="accent" @click="saveOrAddRequest()">{{
-        isEdit ? "Save Changes" : "Send Request"
+        isAdminView ? "Save Changes" : "Send Request"
       }}</v-btn>
     </v-card-actions>
   </v-card>
@@ -70,9 +78,11 @@
 <script>
 import Utils from "@/config/utils.js";
 import TopicServices from "@/services/topicServices.js";
+import { TimeFunctionsMixin } from "../mixins/TimeFunctionsMixin";
 
 export default {
   name: "RequestDialogBody",
+  mixins: [TimeFunctionsMixin],
   props: {
     sentBool: { type: [Boolean], default: false },
     groupId: { type: [Number], default: 0 },
@@ -99,21 +109,24 @@ export default {
         "I need to report an issue.",
         "Other",
       ],
+      statuses: ["Received", "In-Progress", "Completed"],
       topics: [],
       request: this.sentRequest,
-      isEdit: this.sentBool,
+      isAdminView: this.sentBool,
     };
   },
   watch: {
     sentRequest(newRequest) {
       this.request = newRequest;
+      console.log(this.request);
     },
     sentBool(newVal) {
-      this.isEdit = newVal;
+      this.isAdminView = newVal;
     },
   },
   async created() {
     this.user = Utils.getStore("user");
+    console.log(this.user);
     if (this.user.selectedRole.type === "Student") {
       await this.getTopicsForGroup();
     }
@@ -132,7 +145,7 @@ export default {
         });
     },
     saveOrAddRequest() {
-      this.$emit("saveOrAddRequest", this.request, this.isEdit);
+      this.$emit("saveOrAddRequest", this.request, this.isAdminView);
     },
   },
 };

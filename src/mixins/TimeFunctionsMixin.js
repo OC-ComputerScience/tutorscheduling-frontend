@@ -13,7 +13,7 @@ export const TimeFunctionsMixin = {
       if (hours == 0) {
         hours = 12;
       }
-      let dayTime = ~~(milHours / 12) > 0 ? "PM" : "AM";
+      let dayTime = ~~(milHours / 12) > 0 ? "P.M." : "A.M.";
       return "" + hours + ":" + minutes + " " + dayTime;
     },
     //Create time slots for users to select from
