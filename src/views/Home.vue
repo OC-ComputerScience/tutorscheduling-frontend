@@ -12,9 +12,25 @@
         }}</v-card-title>
       </v-card-title>
 
-      <v-alert v-model="showAlert" dismissible :type="alertType">{{
-        alert
-      }}</v-alert>
+      <v-snackbar v-model="showAlert" rounded="pill">
+        {{ alert }}
+        <template #action="{ attrs }">
+          <v-btn
+            :color="
+              alertType === 'success'
+                ? 'green'
+                : alertType === 'warning'
+                ? 'yellow'
+                : 'error'
+            "
+            text
+            v-bind="attrs"
+            @click="showAlert = false"
+          >
+            Close
+          </v-btn>
+        </template>
+      </v-snackbar>
 
       <v-dialog v-model="appointmentDialog" persistent max-width="800px">
         <AppointmentDialogBody
