@@ -127,13 +127,13 @@ export const TimeFunctionsMixin = {
       );
     },
     formatReadableMonth(date) {
-      return new Date(date).toLocaleDateString(undefined, {
+      return new Date(date).toLocaleDateString("en-US", {
         month: "long",
         day: "numeric",
       });
     },
     formatReadableDate(date) {
-      return new Date(date).toLocaleDateString(undefined, {
+      return new Date(date).toLocaleDateString("en-US", {
         weekday: "long",
         month: "long",
         day: "numeric",

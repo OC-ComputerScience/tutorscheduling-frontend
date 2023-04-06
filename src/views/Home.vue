@@ -12,9 +12,25 @@
         }}</v-card-title>
       </v-card-title>
 
-      <v-alert v-model="showAlert" dismissible :type="alertType">{{
-        alert
-      }}</v-alert>
+      <v-snackbar v-model="showAlert" rounded="pill">
+        {{ alert }}
+        <template #action="{ attrs }">
+          <v-btn
+            :color="
+              alertType === 'success'
+                ? 'green'
+                : alertType === 'warning'
+                ? 'yellow'
+                : 'error'
+            "
+            text
+            v-bind="attrs"
+            @click="showAlert = false"
+          >
+            Close
+          </v-btn>
+        </template>
+      </v-snackbar>
 
       <v-dialog v-model="appointmentDialog" persistent max-width="800px">
         <AppointmentDialogBody
@@ -212,11 +228,9 @@ export default {
       alert: "",
       alertType: "success",
       message: "",
-      url: "",
       approved: false,
       disabled: false,
       appointmentDialog: false,
-      googleCalendarDialog: false,
       requestDialog: false,
       selectedAppointment: {},
       appointments: [],
@@ -395,74 +409,6 @@ export default {
         }
       }
     },
-    checkForAuthorization() {
-      var now = new Date().toISOString();
-      if (
-        this.user.refresh_token !== null &&
-        this.user.refresh_token !== undefined &&
-        this.user.refresh_token !== ""
-      ) {
-        if (now > this.user.expiration_date) {
-          this.googleCalendarDialog = true;
-        }
-      } else {
-        this.googleCalendarDialog = true;
-      }
-    },
-    doAuthorization() {
-      if (process.env.VUE_APP_CLIENT_URL.includes("localhost")) {
-        this.url = "http://localhost/tutoring-api";
-      } else {
-        this.url = "/tutoring-api";
-      }
-      this.url += "/authorize/" + this.user.userID;
-
-      const client = global.google.accounts.oauth2.initCodeClient({
-        client_id: process.env.VUE_APP_CLIENT_ID,
-        access_type: "offline",
-        scope: "https://www.googleapis.com/auth/calendar",
-        ux_mode: "popup",
-        callback: async (response) => {
-          await fetch(this.url, {
-            method: "POST",
-            mode: "cors",
-            cache: "no-cache",
-            credentials: "same-origin",
-            headers: {
-              "Content-Type": "application/x-www-form-urlencoded",
-              "X-Requested-With": "XMLHttpRequest",
-              "Access-Control-Allow-Origin": "*",
-            },
-            body: "code=" + response.code,
-          })
-            .then((response) => response.json())
-            .then((response) => {
-              if (response.userInfo !== undefined) {
-                let user = Utils.getStore("user");
-                user.refresh_token = response.userInfo.refresh_token;
-                user.expiration_date = response.userInfo.expiration_date;
-                Utils.setStore("user", user);
-                this.alert = response.message;
-                this.alertType = "success";
-
-                this.showAlert = true;
-              } else {
-                this.alert = response.message;
-                this.alertType = "error";
-                this.showAlert = true;
-              }
-            })
-            .catch((error) => {
-              this.alert =
-                "There was an error authorizing your account. Please try again.";
-              this.alertType = "error";
-              this.showAlert = true;
-              console.log(error);
-            });
-        },
-      });
-      client.requestCode();
-    },
     async setApprovedDisabled() {
       await PersonRoleServices.getPersonRole(this.id)
         .then((response) => {
@@ -480,10 +426,6 @@ export default {
           this.showAlert = true;
           console.log("There was an error:", error.response);
         });
-
-      if (this.approved && this.hasRole("Tutor")) {
-        this.checkForAuthorization();
-      }
     },
     openUpcoming: async function (item, row) {
       row.select(true);
