@@ -27,38 +27,6 @@
         ></AppointmentDialogBody>
       </v-dialog>
 
-      <v-dialog
-        v-if="hasRole('Tutor')"
-        v-model="googleCalendarDialog"
-        persistent
-        max-width="800"
-      >
-        <v-card tile>
-          <v-card-title class="primary white--text mb-6">
-            <span class="text-h5">Hello, {{ user.fName }}!</span>
-          </v-card-title>
-          <v-card-text>
-            Tutor Scheduling updates your Google calendar with appointments. You
-            will now be asked to approve (or re-approve) that access via Google.
-            You will be presented with a Google login and a Tutor Scheduling
-            access request.
-          </v-card-text>
-          <v-card-actions>
-            <v-spacer></v-spacer>
-            <v-btn
-              color="accent"
-              text
-              @click="
-                googleCalendarDialog = false;
-                doAuthorization();
-              "
-            >
-              Continue
-            </v-btn>
-          </v-card-actions>
-        </v-card>
-      </v-dialog>
-
       <span v-if="approved">
         <v-row fill-height>
           <v-col>
@@ -196,11 +164,9 @@ export default {
       alert: "",
       alertType: "success",
       message: "",
-      url: "",
       approved: false,
       disabled: false,
       appointmentDialog: false,
-      googleCalendarDialog: false,
       selectedAppointment: {},
       appointments: [],
       upcomingAppointments: [],
@@ -378,74 +344,6 @@ export default {
         }
       }
     },
-    checkForAuthorization() {
-      var now = new Date().toISOString();
-      if (
-        this.user.refresh_token !== null &&
-        this.user.refresh_token !== undefined &&
-        this.user.refresh_token !== ""
-      ) {
-        if (now > this.user.expiration_date) {
-          this.googleCalendarDialog = true;
-        }
-      } else {
-        this.googleCalendarDialog = true;
-      }
-    },
-    doAuthorization() {
-      if (process.env.VUE_APP_CLIENT_URL.includes("localhost")) {
-        this.url = "http://localhost/tutoring-api";
-      } else {
-        this.url = "/tutoring-api";
-      }
-      this.url += "/authorize/" + this.user.userID;
-
-      const client = global.google.accounts.oauth2.initCodeClient({
-        client_id: process.env.VUE_APP_CLIENT_ID,
-        access_type: "offline",
-        scope: "https://www.googleapis.com/auth/calendar",
-        ux_mode: "popup",
-        callback: async (response) => {
-          await fetch(this.url, {
-            method: "POST",
-            mode: "cors",
-            cache: "no-cache",
-            credentials: "same-origin",
-            headers: {
-              "Content-Type": "application/x-www-form-urlencoded",
-              "X-Requested-With": "XMLHttpRequest",
-              "Access-Control-Allow-Origin": "*",
-            },
-            body: "code=" + response.code,
-          })
-            .then((response) => response.json())
-            .then((response) => {
-              if (response.userInfo !== undefined) {
-                let user = Utils.getStore("user");
-                user.refresh_token = response.userInfo.refresh_token;
-                user.expiration_date = response.userInfo.expiration_date;
-                Utils.setStore("user", user);
-                this.alert = response.message;
-                this.alertType = "success";
-
-                this.showAlert = true;
-              } else {
-                this.alert = response.message;
-                this.alertType = "error";
-                this.showAlert = true;
-              }
-            })
-            .catch((error) => {
-              this.alert =
-                "There was an error authorizing your account. Please try again.";
-              this.alertType = "error";
-              this.showAlert = true;
-              console.log(error);
-            });
-        },
-      });
-      client.requestCode();
-    },
     async setApprovedDisabled() {
       await PersonRoleServices.getPersonRole(this.id)
         .then((response) => {
@@ -463,10 +361,6 @@ export default {
           this.showAlert = true;
           console.log("There was an error:", error.response);
         });
-
-      if (this.approved && this.hasRole("Tutor")) {
-        this.checkForAuthorization();
-      }
     },
     openUpcoming: async function (item, row) {
       row.select(true);
