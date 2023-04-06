@@ -1052,23 +1052,45 @@ export default {
         });
       }
 
-      this.updatedPersonAppointment.id =
-        this.appointment.isMemberOfAppointment.id;
-      this.updatedPersonAppointment.personId =
-        this.appointment.isMemberOfAppointment.personId;
       this.updatedPersonAppointment.appointmentId = this.appointment.id;
-      this.updatedPersonAppointment.isTutor =
-        this.appointment.isMemberOfAppointment.isTutor;
 
-      await PersonAppointmentServices.updatePersonAppointment(
-        this.updatedPersonAppointment.id,
-        this.updatedPersonAppointment
-      ).catch((error) => {
-        this.alertType = "error";
-        this.alert = error.response.data.message;
-        this.showAlert = true;
-        console.log("There was an error:", error.response);
-      });
+      if (this.isNoShow && this.hasRole("Tutor")) {
+        // want to save the no show feedback for every person in the appointment
+        for (let i = 0; i < this.appointment.personappointment.length; i++) {
+          this.updatedPersonAppointment.id =
+            this.appointment.personappointment[i].id;
+          this.updatedPersonAppointment.personId =
+            this.appointment.personappointment[i].personId;
+          this.updatedPersonAppointment.isTutor =
+            this.appointment.personappointment[i].isTutor;
+          await PersonAppointmentServices.updatePersonAppointment(
+            this.updatedPersonAppointment.id,
+            this.updatedPersonAppointment
+          ).catch((error) => {
+            this.alertType = "error";
+            this.alert = error.response.data.message;
+            this.showAlert = true;
+            console.log("There was an error:", error.response);
+          });
+        }
+      } else {
+        this.updatedPersonAppointment.id =
+          this.appointment.isMemberOfAppointment.id;
+        this.updatedPersonAppointment.personId =
+          this.appointment.isMemberOfAppointment.personId;
+        this.updatedPersonAppointment.isTutor =
+          this.appointment.isMemberOfAppointment.isTutor;
+        await PersonAppointmentServices.updatePersonAppointment(
+          this.updatedPersonAppointment.id,
+          this.updatedPersonAppointment
+        ).catch((error) => {
+          this.alertType = "error";
+          this.alert = error.response.data.message;
+          this.showAlert = true;
+          console.log("There was an error:", error.response);
+        });
+      }
+
       this.showFeedbackDialog = false;
       this.$emit("doneWithAppointment");
     },
