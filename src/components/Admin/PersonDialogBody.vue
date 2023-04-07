@@ -55,10 +55,14 @@
         ]"
       ></v-text-field>
 
-      <v-checkbox v-model="person.textOptIn" label="Text Opt In"></v-checkbox>
+      <v-checkbox
+        id="textOptIn"
+        v-model="person.textOptIn"
+        label="Text Opt In"
+      ></v-checkbox>
     </v-card-text>
 
-    <v-row max-width="900px" class="mx-6 mb-4">
+    <v-row v-if="isEdit" max-width="900px" class="mx-6 mb-4">
       <v-col cols="12" max-width="900px">
         <v-row max-width="900px">
           <v-col cols="12" max-width="900px">
@@ -81,17 +85,13 @@
             </v-card>
           </v-col>
         </v-row>
-        <v-row max-width="900px">
+        <v-row v-if="tutor" max-width="900px">
           <v-col cols="6">
             <v-card class="mx-auto">
               <v-card-title>
                 Additional Privileges
                 <v-spacer></v-spacer>
-                <v-btn
-                  color="accent"
-                  elevation="2"
-                  @click="personPrivilegeDialog = true"
-                >
+                <v-btn color="accent" elevation="2" @click="addPersonPrivilege">
                   Add
                 </v-btn>
               </v-card-title>
@@ -100,18 +100,8 @@
                 :items="personroleprivileges"
                 :items-per-page="50"
                 hide-default-footer
+                @click:row="openPersonPrivilegeDialog"
               >
-                <template #[`item.actions`]="{ item }">
-                  <v-icon
-                    small
-                    @click="
-                      deleteType = 'privilege';
-                      directToCancel(item);
-                    "
-                  >
-                    mdi-delete
-                  </v-icon>
-                </template>
               </v-data-table>
             </v-card>
           </v-col>
@@ -154,8 +144,11 @@
       <PersonPrivilegeDialogBody
         :sent-person-name="person.fName"
         :sent-person-roles="personroles"
+        :sent-person-privilege="selectedPersonPrivilege"
+        :sent-bool="isPersonPrivilegeDialogEdit"
         @closePersonPrivilegeDialog="personPrivilegeDialog = false"
-        @addPersonRolePrivilege="addPersonRolePrivilege"
+        @saveOrAddPersonRolePrivilege="saveOrAddPersonRolePrivilege"
+        @deletePersonPrivilege="deletePersonPrivilege"
       ></PersonPrivilegeDialogBody>
     </v-dialog>
 
@@ -167,6 +160,7 @@
         :sent-group-topics="groupTopics"
         @closePersonTopicDialog="personTopicDialog = false"
         @saveOrAddPersonTopic="saveOrAddPersonTopic"
+        @deletePersonTopic="deletePersonTopic"
       ></PersonTopicDialogBody>
     </v-dialog>
 
@@ -236,8 +230,10 @@ export default {
       isPersonRoleDialogEdit: false,
       selectedPersonTopic: [],
       isPersonTopicDialogEdit: false,
+      selectedPersonPrivilege: [],
+      isPersonPrivilegeDialogEdit: false,
       person: this.sentPerson,
-      tutor: true,
+      tutor: false,
       group: this.sentGroup,
       groupRoles: [],
       groupTopics: [],
@@ -314,6 +310,7 @@ export default {
       this.personRoleDialog = true;
     },
     openPersonTopicDialog(item) {
+      console.log(item);
       this.selectedPersonTopic = item.persontopic[0];
       this.selectedPersonTopic.name = item.name;
       this.isPersonTopicDialogEdit = true;
@@ -328,6 +325,20 @@ export default {
       this.isPersonTopicDialogEdit = false;
       this.personTopicDialog = true;
     },
+    openPersonPrivilegeDialog(item) {
+      console.log(item);
+      this.selectedPersonPrivilege = item;
+      this.isPersonPrivilegeDialogEdit = true;
+      this.personPrivilegeDialog = true;
+    },
+    addPersonPrivilege() {
+      this.selectedPersonPrivilege = {
+        privilege: "",
+        personRoleId: 0,
+      };
+      this.isPersonPrivilegeDialogEdit = false;
+      this.personPrivilegeDialog = true;
+    },
     // filterGroupTopics() {
     //   this.filteredGroupTopics = this.groupTopics.filter(function (topic) {
     //     return !this.persontopics.includes(topic);
@@ -338,7 +349,8 @@ export default {
       this.person.lName = document.getElementById("lName").value;
       this.person.email = document.getElementById("email").value;
       this.person.phoneNum = document.getElementById("phoneNum").value;
-      this.person.textOptIn = document.getElementById("textOptIn").value;
+      this.person.textOptIn =
+        document.getElementById("textOptIn").checked === true ? 1 : 0;
 
       this.$emit("saveOrAddPerson", this.person, this.isEdit);
     },
@@ -502,16 +514,32 @@ export default {
           console.log("There was an error:", error.response);
         });
     },
-    async addPersonRolePrivilege(privilege) {
-      await PersonRolePrivilegeServices.addPrivilege(privilege)
-        .then(() => {
-          this.personPrivilegeDialog = false;
-          this.getPersonRoles();
-        })
-        .catch((error) => {
-          this.message = error.response.data.message;
-          console.log("There was an error:", error.response);
-        });
+    async saveOrAddPersonRolePrivilege(privilege, isEdit) {
+      console.log(privilege);
+      if (isEdit) {
+        await PersonRolePrivilegeServices.updatePrivilege(
+          privilege.id,
+          privilege
+        )
+          .then(() => {
+            this.personPrivilegeDialog = false;
+            this.getPersonRoles();
+          })
+          .catch((error) => {
+            this.message = error.response.data.message;
+            console.log("There was an error:", error.response);
+          });
+      } else {
+        await PersonRolePrivilegeServices.addPrivilege(privilege)
+          .then(() => {
+            this.personPrivilegeDialog = false;
+            this.getPersonRoles();
+          })
+          .catch((error) => {
+            this.message = error.response.data.message;
+            console.log("There was an error:", error.response);
+          });
+      }
     },
     async saveOrAddPersonTopic(personTopic, isEdit) {
       delete personTopic.updatedAt;
@@ -537,6 +565,28 @@ export default {
             console.log("There was an error:", error.response);
           });
       }
+    },
+    async deletePersonTopic(personTopic) {
+      await PersonTopicServices.deletePersonTopic(personTopic.id)
+        .then(() => {
+          this.personTopicDialog = false;
+          this.getPersonTopics();
+        })
+        .catch((error) => {
+          this.message = error.response.data.message;
+          console.log("There was an error:", error.response);
+        });
+    },
+    async deletePersonPrivilege(personPrivilege) {
+      await PersonRolePrivilegeServices.deletePrivilege(personPrivilege.id)
+        .then(() => {
+          this.personPrivilegeDialog = false;
+          this.getPersonRoles();
+        })
+        .catch((error) => {
+          this.message = error.response.data.message;
+          console.log("There was an error:", error.response);
+        });
     },
   },
 };

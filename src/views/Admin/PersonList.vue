@@ -147,7 +147,7 @@ export default {
         await PersonServices.updatePerson(person.id, person)
           .then(async () => {
             this.personDialog = false;
-            await this.getPersonForGroup();
+            await this.getPeopleForGroup();
           })
           .catch((error) => {
             this.title = error.response.data.message;

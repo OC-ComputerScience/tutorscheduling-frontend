@@ -9,9 +9,7 @@
       <v-text-field
         v-if="isEdit"
         id="topic"
-        v-model="selectedTopic"
-        item-text="name"
-        item-value="topicId"
+        :value="selectedTopic.name"
         disabled
         label="Topic"
       ></v-text-field>
@@ -23,7 +21,7 @@
         item-text="name"
         item-value="id"
         return-object
-        label="Topic"
+        label="Topics"
       ></v-select>
       <v-select
         id="skillLevel"
@@ -36,6 +34,13 @@
 
     <v-card-actions class="pb-4">
       <v-spacer></v-spacer>
+      <v-btn
+        v-if="isEdit"
+        color="error white--text"
+        @click="$emit('deletePersonTopic', personTopic)"
+      >
+        {{ "Delete Topic" }}
+      </v-btn>
       <v-btn color="grey white--text" @click="$emit('closePersonTopicDialog')">
         {{ isEdit ? "Discard Changes" : "Cancel" }}
       </v-btn>
@@ -93,12 +98,14 @@ export default {
       this.personName = newPersonName;
     },
     sentPersonTopic(newTopic) {
+      console.log(newTopic);
       this.personTopic = newTopic;
       this.personTopicSkillLevel = newTopic.skillLevel;
       this.selectedTopic = {
         id: this.sentPersonTopic.topicId,
         name: this.sentPersonTopic.name,
       };
+      console.log(this.selectedTopic);
       this.selectedSkillLevel = this.sentPersonTopic.skillLevel;
     },
     sentBool(newVal) {
@@ -119,7 +126,7 @@ export default {
       this.$emit("saveOrAddPersonTopic", this.personTopic, this.isEdit);
     },
     removeSelectedTopic() {
-      this.groupTopics = this.groupdTopics.filter(
+      this.groupTopics = this.groupTopics.filter(
         (g) => g.id !== this.personTopic.id
       );
     },
