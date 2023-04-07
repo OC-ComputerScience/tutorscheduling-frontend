@@ -131,8 +131,6 @@ export const TimeFunctionsMixin = {
       });
     },
     formatTimeFromString(time) {
-      console.log(time);
-      console.log(new Date(time));
       let modST = time.toString().substring(0, 2) % 12;
       let formattedTime = modST + ":" + time.toString().substring(3, 5);
 
