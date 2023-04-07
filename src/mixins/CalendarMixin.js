@@ -251,7 +251,7 @@ export const CalendarMixin = {
           tutorPhoneNum: appointment.tutors[0].person.phoneNum,
           tutorPersonRoleId: appointment.tutors[0].person.personrole[0].id,
           date: this.formatDate(appointment.date),
-          startTime: this.calcTime(appointment.startTime),
+          startTime: this.formatTimeFromString(appointment.startTime),
           locationName:
             appointment.location.type.includes("Online") &&
             appointment.URL !== null
@@ -282,7 +282,7 @@ export const CalendarMixin = {
           tutorPhoneNum: appointment.tutors[0].person.phoneNum,
           tutorPersonRoleId: appointment.tutors[0].person.personrole[0].id,
           date: this.formatDate(appointment.date),
-          startTime: this.calcTime(appointment.startTime),
+          startTime: this.formatTimeFromString(appointment.startTime),
           locationName:
             appointment.location.type.includes("Online") &&
             appointment.URL !== null
@@ -311,7 +311,7 @@ export const CalendarMixin = {
           tutorPhoneNum: "",
           tutorPersonRoleId: "",
           date: this.formatDate(appointment.date),
-          startTime: this.calcTime(appointment.startTime),
+          startTime: this.formatTimeFromString(appointment.startTime),
           locationName:
             appointment.location.type.includes("Online") &&
             appointment.URL !== null
@@ -343,7 +343,7 @@ export const CalendarMixin = {
           tutorPhoneNum: "",
           tutorPersonRoleId: "",
           date: this.formatDate(appointment.date),
-          startTime: this.calcTime(appointment.startTime),
+          startTime: this.formatTimeFromString(appointment.startTime),
           locationName:
             appointment.location.type.includes("Online") &&
             appointment.URL !== null
@@ -385,7 +385,7 @@ export const CalendarMixin = {
         toPhoneNum: "",
         toPersonRoleId: "",
         date: this.formatDate(appointment.date),
-        startTime: this.calcTime(appointment.startTime),
+        startTime: this.formatTimeFromString(appointment.startTime),
         topicName: appointment.topic.name,
         fromFirstName: fromUser.fName,
         fromLastName: fromUser.lName,
@@ -437,7 +437,7 @@ export const CalendarMixin = {
             studentPersonRoleId:
               appointment.students[0].person.personrole[0].id,
             date: this.formatDate(appointment.date),
-            startTime: this.calcTime(appointment.startTime),
+            startTime: this.formatTimeFromString(appointment.startTime),
             topicName: appointment.topic.name,
             tutorFirstName: fromUser.fName,
             tutorLastName: fromUser.lName,
@@ -453,7 +453,7 @@ export const CalendarMixin = {
           toPhoneNum: appointment.students[0].person.phoneNum,
           toPersonRoleId: appointment.students[0].person.personrole[0].id,
           date: this.formatDate(appointment.date),
-          startTime: this.calcTime(appointment.startTime),
+          startTime: this.formatTimeFromString(appointment.startTime),
           topicName: appointment.topic.name,
           fromFirstName: fromUser.fName,
           fromLastName: fromUser.lName,

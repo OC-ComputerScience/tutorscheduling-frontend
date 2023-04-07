@@ -336,8 +336,10 @@ export default {
         if (owned) {
           this.setUpCalendarEvent(appointment);
           appointment.tableDate = this.formatReadableMonth(appointment.date);
-          appointment.tableStart = this.formatTime(appointment.startTime);
-          appointment.tableEnd = this.formatTime(appointment.endTime);
+          appointment.tableStart = this.formatTimeFromString(
+            appointment.startTime
+          );
+          appointment.tableEnd = this.formatTimeFromString(appointment.endTime);
           appointment.personRolePrivileges = [];
           appointment.newStart = appointment.startTime;
           appointment.newEnd = appointment.endTime;

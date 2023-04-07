@@ -5,8 +5,8 @@
     </v-card-title>
     <v-card-subtitle :class="appointment.color + ' white--text pb-2 mb-2'">
       {{ formatReadableDate(appointment.date) }} •
-      {{ calcTime(appointment.startTime) }} -
-      {{ calcTime(appointment.endTime) }}
+      {{ formatTimeFromString(appointment.startTime) }} -
+      {{ formatTimeFromString(appointment.endTime) }}
     </v-card-subtitle>
     <v-card-text v-if="!showFeedbackDialog">
       <v-row>

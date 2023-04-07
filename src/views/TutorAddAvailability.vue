@@ -458,13 +458,13 @@ export default {
             isAvail = false;
             this.conflictAvailability.conflicting = {
               date: tempDate,
-              startTime: this.formatTime(tempAvailability.startTime),
-              endTime: this.formatTime(tempAvailability.endTime),
+              startTime: this.formatTimeFromString(tempAvailability.startTime),
+              endTime: this.formatTimeFromString(tempAvailability.endTime),
             };
             this.conflictAvailability.existing = {
               date: appointment.date,
-              startTime: this.formatTime(appointment.startTime),
-              endTime: this.formatTime(appointment.endTime),
+              startTime: this.formatTimeFromString(appointment.startTime),
+              endTime: this.formatTimeFromString(appointment.endTime),
             };
             return;
           }
@@ -608,10 +608,10 @@ export default {
             this.availabilities[index].date = this.formatReadableDate(
               element.date
             );
-            this.availabilities[index].startTime = this.formatTime(
+            this.availabilities[index].startTime = this.formatTimeFromString(
               element.startTime
             );
-            this.availabilities[index].endTime = this.formatTime(
+            this.availabilities[index].endTime = this.formatTimeFromString(
               element.endTime
             );
           }
