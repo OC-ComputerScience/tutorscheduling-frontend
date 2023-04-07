@@ -2,7 +2,7 @@
   <div>
     <v-container>
       <v-card-title class="text-h4 font-weight-bold pt-4 pb-6 pl-0 accent--text"
-        >{{ title }}
+        >{{ `${user.selectedGroup} Roles` }}
         <InformationComponent
           :message="'View, edit and add roles for ' + group.name + '.'"
         ></InformationComponent
@@ -59,7 +59,7 @@ export default {
   },
   data() {
     return {
-      title: " Roles",
+      message: "",
       roleDialog: false,
       isRoleDialogEdit: true,
       selectedRole: {},
@@ -74,7 +74,6 @@ export default {
     this.user = Utils.getStore("user");
     await this.getGroupByPersonRoleId();
     await this.getRolesForGroup();
-    this.title = this.group.name + this.title;
   },
   methods: {
     async getGroupByPersonRoleId() {
@@ -87,8 +86,8 @@ export default {
           console.log("There was an error:", error.response);
         });
     },
-    getRolesForGroup() {
-      RoleServices.getAllForGroup(this.group.id)
+    async getRolesForGroup() {
+      await RoleServices.getAllForGroup(this.group.id)
         .then((response) => {
           this.roles = response.data;
         })
@@ -121,7 +120,7 @@ export default {
             await this.getRolesForGroup();
           })
           .catch((error) => {
-            this.title = error.response.data.message;
+            this.message = error.response.data.message;
             console.log("There was an error:", error.response);
           });
       } else {
@@ -131,7 +130,7 @@ export default {
             await this.getRolesForGroup();
           })
           .catch((error) => {
-            this.title = error.response.data.message;
+            this.message = error.response.data.message;
             console.log(error);
           });
       }

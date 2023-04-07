@@ -2,7 +2,7 @@
   <div>
     <v-container>
       <v-card-title class="text-h4 font-weight-bold pt-4 pb-6 pl-0 accent--text"
-        >{{ title }}
+        >{{ `${user.selectedGroup} Requests` }}
         <InformationComponent
           :message="
             'View requests from people in ' +
@@ -103,7 +103,7 @@ export default {
       hideCompleted: true,
       requestDialog: false,
       selectedRequest: {},
-      title: " Requests",
+      message: "",
       user: {},
       headers: [
         { text: "Date", value: "date" },
@@ -119,7 +119,6 @@ export default {
   computed: {},
   async created() {
     this.user = Utils.getStore("user");
-    this.title = this.user.selectedGroup + this.title;
     await this.getGroupByPersonRoleId();
     await this.getRequestsForGroup();
     if (this.$route.query !== undefined) {
