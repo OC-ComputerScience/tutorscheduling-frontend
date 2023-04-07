@@ -25,9 +25,7 @@
           link
           :color="item.color"
           text
-          @click="
-            handleRedundantNavigation(item.name, selectedRole.personRoleId)
-          "
+          @click="menuAction(item.name)"
         >
           {{ item.text }}
         </v-btn>
@@ -127,7 +125,7 @@
                 depressed
                 rounded
                 text
-                @click="menuAction('apply')"
+                @click="openRegistration = true"
               >
                 Apply
               </v-btn>
@@ -173,9 +171,7 @@
           :key="item.text"
           exact
           :color="item.color"
-          @click="
-            handleRedundantNavigation(item.name, selectedRole.personRoleId)
-          "
+          @click="menuAction(item.name)"
         >
           <v-list-item-action>
             <v-icon v-if="item.icon" color="white">{{ item.icon }}</v-icon>
@@ -188,6 +184,46 @@
         </v-list-item>
       </v-list>
     </v-navigation-drawer>
+
+    <RegistrationComponent
+      v-if="user !== null && openRegistration"
+      @closeRegistrationComponent="openRegistration = false"
+    ></RegistrationComponent>
+
+    <v-dialog
+      v-if="hasRole('Student')"
+      v-model="requestDialog"
+      persistent
+      max-width="800px"
+    >
+      <RequestDialogBody
+        :sent-request="selectedRequest"
+        :person-role-id="user.selectedRole.personRoleId"
+        :sent-bool="false"
+        @closeRequestDialog="requestDialog = false"
+        @saveOrAddRequest="addRequest"
+      ></RequestDialogBody>
+    </v-dialog>
+
+    <v-snackbar v-model="showAlert" rounded="pill">
+      {{ alert }}
+      <template #action="{ attrs }">
+        <v-btn
+          :color="
+            alertType === 'success'
+              ? 'green'
+              : alertType === 'warning'
+              ? 'yellow'
+              : 'error'
+          "
+          text
+          v-bind="attrs"
+          @click="showAlert = false"
+        >
+          Close
+        </v-btn>
+      </template>
+    </v-snackbar>
   </div>
 </template>
 
@@ -195,10 +231,19 @@
 import Utils from "@/config/utils.js";
 import AuthServices from "@/services/authServices.js";
 import PersonRoleServices from "@/services/personRoleServices.js";
+import RequestServices from "@/services/requestServices.js";
+import RoleServices from "@/services/roleServices.js";
+import TwilioServices from "@/services/twilioServices";
+import RegistrationComponent from "../components/RegistrationComponent.vue";
+import RequestDialogBody from "../components/RequestDialogBody.vue";
 import { RedirectToPageMixin } from "../mixins/RedirectToPageMixin";
 
 export default {
   name: "MenuBarComponent",
+  components: {
+    RegistrationComponent,
+    RequestDialogBody,
+  },
   mixins: [RedirectToPageMixin],
   data: () => ({
     user: {},
@@ -208,6 +253,12 @@ export default {
     name: "",
     roles: [],
     groups: [],
+    selectedRequest: {},
+    openRegistration: false,
+    requestDialog: false,
+    showAlert: false,
+    alert: "",
+    alertType: "success",
     incompleteGroups: [],
     hasTopics: true,
     selectedGroup: "",
@@ -242,8 +293,8 @@ export default {
         roles: "HeadAdmin,Admin,Supervisor,Tutor,Student",
       },
       {
-        link: "adminRequests",
-        name: "adminRequests",
+        link: "requestList",
+        name: "requestList",
         color: "white",
         text: "Requests",
         icon: "mdi-alert",
@@ -270,7 +321,7 @@ export default {
         name: "topicList",
         color: "white",
         text: "Topics",
-        icon: "mdi-bookshelf",
+        icon: "mdi-book",
         roles: "HeadAdmin,Admin,Supervisor",
       },
       {
@@ -309,7 +360,7 @@ export default {
         name: "tutorAddAvailability",
         color: "white",
         text: "Availability",
-        icon: "mdi-clipboard-text-clock",
+        icon: "mdi-clock",
         roles: "Tutor",
       },
       {
@@ -363,9 +414,26 @@ export default {
         this.selectedRole.type !== null
       );
     },
+    hasRole(type) {
+      return (
+        this.user !== null &&
+        this.user.selectedRole !== null &&
+        this.user.selectedRole.type !== null &&
+        this.user.selectedRole.type === type
+      );
+    },
     menuAction(route) {
       if (!this.isSelectedRoleValid()) {
         this.handleRedundantNavigation("login", null);
+      } else if (route === "studentAddRequest") {
+        this.selectedRequest = {
+          problem: "",
+          courseNum: "",
+          description: "",
+          status: "Received",
+          personId: this.user.userID,
+        };
+        this.requestDialog = true;
       } else {
         this.handleRedundantNavigation(route, this.selectedRole.personRoleId);
       }
@@ -472,6 +540,63 @@ export default {
           );
         }
       }
+    },
+    async checkPrivilege(privilege, personRolePrivileges) {
+      let hasPriv = false;
+      for (let i = 0; i < personRolePrivileges.length; i++) {
+        let priv = personRolePrivileges[i];
+        if (priv.privilege === privilege) hasPriv = true;
+      }
+      return hasPriv;
+    },
+    async addRequest(request) {
+      let newRequest = {
+        courseNum: request.courseNum,
+        description: request.description,
+        status: request.status,
+        problem: request.problem,
+        groupId: request.groupId,
+        personId: request.personId,
+        topicId: request.topicId,
+      };
+      await RequestServices.addRequest(newRequest)
+        .then(async (response) => {
+          let admins = [];
+          await RoleServices.getAllForGroupByType(request.groupId, "Admin")
+            .then((response) => {
+              admins = response.data[0].personrole;
+            })
+            .catch((error) => {
+              console.log("There was an error:", error.response);
+            });
+          for (let i = 0; i < admins.length; i++) {
+            let tempA = admins[i];
+            tempA.requestId = response.data.id;
+            if (
+              await this.checkPrivilege(
+                "Receive notifications for requests",
+                tempA.personroleprivilege
+              )
+            ) {
+              let textInfo = {
+                fromFirstName: this.user.fName,
+                fromLastName: this.user.lName,
+                adminPersonRoleId: tempA.id,
+                requestId: response.data.id,
+                adminPhoneNum: tempA.person.phoneNum,
+                groupName: this.user.selectedGroup,
+              };
+              await TwilioServices.sendRequestMessage(textInfo);
+            }
+          }
+          this.requestDialog = false;
+        })
+        .catch((error) => {
+          console.log("There was an error:", error);
+          this.alertType = "error";
+          this.alert = error.response.data.message;
+          this.showAlert = true;
+        });
     },
   },
 };

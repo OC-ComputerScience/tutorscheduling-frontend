@@ -139,17 +139,19 @@
         </v-col>
         <v-col>
           <v-card elevation="0">
-            <v-textarea
-              :value="displayedDates"
+            <v-combobox
+              v-model="displayedDates"
+              multiple
+              chips
               label="Selected Dates"
               prepend-icon="mdi-calendar"
               clearable
               readonly
-              auto-grow
-              rows="1"
-              @click:clear="dates = []"
-            >
-            </v-textarea>
+              @click:clear="
+                dates = [];
+                displayedDates = [];
+              "
+            ></v-combobox>
             <v-row>
               <v-col>
                 <v-select
@@ -326,7 +328,7 @@ export default {
     upcoming: [],
     dates: [],
     appointmentTypes: ["Private", "Group"],
-    displayedDates: "",
+    displayedDates: [],
     doubleBookedDialog: false,
     secondTime: true,
     //used for generating time slots
@@ -368,20 +370,13 @@ export default {
   },
   methods: {
     updateDisplayedDates() {
-      this.displayedDates = "";
+      this.displayedDates = [];
       for (let i = 0; i < this.dates.length; i++) {
-        if (i > 0) {
-          if (i % 2 === 0) {
-            this.displayedDates += "\n";
-          } else {
-            this.displayedDates += "\t\t\t";
-          }
-        }
         let tempDate = new Date(this.dates[i]);
         tempDate.setHours(
           tempDate.getHours() + tempDate.getTimezoneOffset() / 60
         );
-        this.displayedDates += this.formatReadableDate(tempDate);
+        this.displayedDates.push(this.formatReadableDate(tempDate));
       }
     },
     updateTimes() {
@@ -463,13 +458,13 @@ export default {
             isAvail = false;
             this.conflictAvailability.conflicting = {
               date: tempDate,
-              startTime: this.formatTime(tempAvailability.startTime),
-              endTime: this.formatTime(tempAvailability.endTime),
+              startTime: this.formatTimeFromString(tempAvailability.startTime),
+              endTime: this.formatTimeFromString(tempAvailability.endTime),
             };
             this.conflictAvailability.existing = {
               date: appointment.date,
-              startTime: this.formatTime(appointment.startTime),
-              endTime: this.formatTime(appointment.endTime),
+              startTime: this.formatTimeFromString(appointment.startTime),
+              endTime: this.formatTimeFromString(appointment.endTime),
             };
             return;
           }
@@ -577,7 +572,7 @@ export default {
       }
 
       this.dates = [];
-      this.displayedDates = "";
+      this.displayedDates = [];
       this.displayedStart = "";
       this.displayedEnd = "";
       this.newStart = "00:00";
@@ -613,10 +608,10 @@ export default {
             this.availabilities[index].date = this.formatReadableDate(
               element.date
             );
-            this.availabilities[index].startTime = this.formatTime(
+            this.availabilities[index].startTime = this.formatTimeFromString(
               element.startTime
             );
-            this.availabilities[index].endTime = this.formatTime(
+            this.availabilities[index].endTime = this.formatTimeFromString(
               element.endTime
             );
           }

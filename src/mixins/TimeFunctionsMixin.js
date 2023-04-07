@@ -1,21 +1,5 @@
 export const TimeFunctionsMixin = {
   methods: {
-    //Formats time to be more user friendly
-    // TODO: make sure this works with midnight times
-    calcTime(time) {
-      if (time == null) {
-        return null;
-      }
-      let temp = time.split(":");
-      let milHours = parseInt(temp[0]);
-      let minutes = temp[1];
-      let hours = milHours % 12;
-      if (hours == 0) {
-        hours = 12;
-      }
-      let dayTime = ~~(milHours / 12) > 0 ? "PM" : "AM";
-      return "" + hours + ":" + minutes + " " + dayTime;
-    },
     //Create time slots for users to select from
     generateTimeSlots(startTime, endTime, minLength) {
       let timeInterval = minLength;
@@ -38,7 +22,7 @@ export const TimeFunctionsMixin = {
       for (let i = 0; i < generatedTimes.length; i++) {
         if (generatedTimes[i].length < 8)
           generatedTimes[i] = generatedTimes[i] + ":00";
-        newTimeText = this.calcTime(generatedTimes[i]);
+        newTimeText = this.formatTimeFromString(generatedTimes[i]);
         times.push({
           time: generatedTimes[i],
           timeText: newTimeText,
@@ -139,18 +123,25 @@ export const TimeFunctionsMixin = {
         day: "numeric",
       });
     },
-    formatTime(time) {
+    formatReadableTimeFromSQL(time) {
+      return new Date(time).toLocaleTimeString("en-US", {
+        hour: "numeric",
+        minute: "2-digit",
+        hour12: true,
+      });
+    },
+    formatTimeFromString(time) {
       let modST = time.toString().substring(0, 2) % 12;
       let formattedTime = modST + ":" + time.toString().substring(3, 5);
 
       if (time.toString().substring(0, 2) > 12) {
         formattedTime = formattedTime + " P.M.";
       } else if (modST == 0 && time.toString().substring(0, 2) == "12") {
-        formattedTime = "12:" + time.toString().substring(3, 5) + " P.M.";
+        formattedTime = "12:" + time.toString().substring(3, 5) + " PM";
       } else if (modST == 0) {
-        formattedTime = "12:" + time.toString().substring(3, 5) + " A.M.";
+        formattedTime = "12:" + time.toString().substring(3, 5) + " AM";
       } else {
-        formattedTime = formattedTime + " A.M.";
+        formattedTime = formattedTime + " AM";
       }
 
       return formattedTime;
