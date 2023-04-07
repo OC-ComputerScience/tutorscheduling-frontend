@@ -1,12 +1,12 @@
 <template>
   <div>
     <v-container>
-      <v-toolbar>
-        <v-toolbar-title>Welcome to OC's Tutor Scheduling!</v-toolbar-title>
-      </v-toolbar>
-      <br /><br />
+      <v-card-title
+        class="justify-center text-h4 font-weight-bold pt-4 pb-10 pl-0 accent--text"
+        >Welcome to OC's Tutor Scheduling!
+      </v-card-title>
       <v-row justify="center">
-        <div id="parent_id" display="flex"></div>
+        <div id="parent_id" class="justify-center" display="flex"></div>
       </v-row>
       <br /><br />
       <v-card>
@@ -74,6 +74,7 @@
 
       <RegistrationComponent
         v-if="openRegistration && user !== null && !dialog && fName !== ''"
+        @closeRegistrationComponent="openRegistration = false"
       ></RegistrationComponent>
 
       <GroupViewComponent v-if="openSelect"></GroupViewComponent>

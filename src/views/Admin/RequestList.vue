@@ -36,9 +36,10 @@
         <v-dialog v-model="requestDialog" persistent max-width="800px">
           <RequestDialogBody
             :sent-request="selectedRequest"
+            :person-role-id="id"
             :sent-bool="true"
             @closeRequestDialog="requestDialog = false"
-            @saveOrAddRequest="saveOrAddRequest"
+            @saveOrAddRequest="saveRequest"
           ></RequestDialogBody>
         </v-dialog>
         <v-data-table
@@ -121,7 +122,6 @@ export default {
     this.title = this.user.selectedGroup + this.title;
     await this.getGroupByPersonRoleId();
     await this.getRequestsForGroup();
-    this.filterCompleted();
     if (this.$route.query !== undefined) {
       for (let i = 0; i < this.requests.length; i++) {
         if (this.requests[i].id === parseInt(this.$route.query.requestId)) {
@@ -157,8 +157,6 @@ export default {
           console.log("There was an error: ", error.response.data.message);
         });
 
-      console.log(this.requests);
-
       for (let i = 0; i < this.requests.length; i++) {
         if (
           this.requests[i].topic === null ||
@@ -182,43 +180,21 @@ export default {
         this.requests[i].date = this.formatReadableMonth(
           this.requests[i].createdAt
         );
-        this.requests[i].time = this.formatTime(
-          this.requests[i].createdAt.slice(11, 19)
+
+        // TODO
+        this.requests[i].time = new Date(this.requests[i].createdAt);
+        console.log(this.requests[i].time.toUTCString());
+
+        this.requests[i].time = this.calcTime(
+          this.requests[i].time.toLocaleTimeString()
         );
       }
+
+      this.filterCompleted();
     },
     rowClick: function (item) {
       this.selectedRequest = item;
       this.requestDialog = true;
-    },
-    async save() {
-      let tempRequest = {
-        id: this.editedItem.id,
-        courseNum: this.editedItem.courseNum,
-        description: this.editedItem.description,
-        status: this.editedItem.status,
-        problem: this.editedItem.problem,
-        groupId: this.editedItem.groupId,
-        personId: this.editedItem.personId,
-        topicId: this.editedItem.topicId,
-      };
-      await RequestServices.updateRequest(tempRequest.id, tempRequest)
-        .then(() => {
-          this.alertType = "success";
-          this.alert =
-            "You have successfully updated " +
-            this.editedItem.fullName +
-            "'s request.";
-          this.showAlert = true;
-        })
-        .catch((error) => {
-          this.alertType = "error";
-          this.alert = error.response.data.message;
-          this.showAlert = true;
-          console.log("There was an error:", error.response);
-        });
-      await this.getRequestsForGroup();
-      this.dialog = false;
     },
     filterCompleted() {
       if (this.hideCompleted) {
@@ -229,29 +205,32 @@ export default {
         this.filteredRequests = this.requests;
       }
     },
-    async saveOrAddRequest() {
-      // location.groupId = this.group.id;
-      // if (isEdit) {
-      //   await LocationServices.updateLocation(location.id, location)
-      //     .then(async () => {
-      //       this.locationDialog = false;
-      //       await this.getLocationsForGroup();
-      //     })
-      //     .catch((error) => {
-      //       this.title = error.response.data.message;
-      //       console.log("There was an error:", error.response);
-      //     });
-      // } else {
-      //   await LocationServices.addLocation(location)
-      //     .then(async () => {
-      //       this.locationDialog = false;
-      //       await this.getLocationsForGroup();
-      //     })
-      //     .catch((error) => {
-      //       this.title = error.response.data.message;
-      //       console.log(error);
-      //     });
-      // }
+    async saveRequest(request) {
+      let tempRequest = {
+        id: request.id,
+        courseNum: request.courseNum,
+        description: request.description,
+        status: request.status,
+        problem: request.problem,
+        groupId: request.groupId,
+        personId: request.personId,
+        topicId: request.topicId,
+      };
+      await RequestServices.updateRequest(tempRequest.id, tempRequest)
+        .then(() => {
+          this.alertType = "success";
+          this.alert =
+            "You have successfully updated " + request.fullName + "'s request.";
+          this.showAlert = true;
+        })
+        .catch((error) => {
+          this.alertType = "error";
+          this.alert = error.response.data.message;
+          this.showAlert = true;
+          console.log("There was an error:", error.response);
+        });
+      await this.getRequestsForGroup();
+      this.requestDialog = false;
     },
   },
 };
