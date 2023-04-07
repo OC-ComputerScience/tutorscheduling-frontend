@@ -13,7 +13,7 @@ export const TimeFunctionsMixin = {
       if (hours == 0) {
         hours = 12;
       }
-      let dayTime = ~~(milHours / 12) > 0 ? "P.M." : "A.M.";
+      let dayTime = ~~(milHours / 12) > 0 ? "PM" : "AM";
       return "" + hours + ":" + minutes + " " + dayTime;
     },
     //Create time slots for users to select from
@@ -139,6 +139,13 @@ export const TimeFunctionsMixin = {
         day: "numeric",
       });
     },
+    formatReadableTimeFromSQL(time) {
+      return new Date(time).toLocaleTimeString("en-US", {
+        hour: "numeric",
+        minute: "2-digit",
+        hour12: true,
+      });
+    },
     formatTime(time) {
       let modST = time.toString().substring(0, 2) % 12;
       let formattedTime = modST + ":" + time.toString().substring(3, 5);
@@ -146,11 +153,11 @@ export const TimeFunctionsMixin = {
       if (time.toString().substring(0, 2) > 12) {
         formattedTime = formattedTime + " P.M.";
       } else if (modST == 0 && time.toString().substring(0, 2) == "12") {
-        formattedTime = "12:" + time.toString().substring(3, 5) + " P.M.";
+        formattedTime = "12:" + time.toString().substring(3, 5) + " PM";
       } else if (modST == 0) {
-        formattedTime = "12:" + time.toString().substring(3, 5) + " A.M.";
+        formattedTime = "12:" + time.toString().substring(3, 5) + " AM";
       } else {
-        formattedTime = formattedTime + " A.M.";
+        formattedTime = formattedTime + " AM";
       }
 
       return formattedTime;

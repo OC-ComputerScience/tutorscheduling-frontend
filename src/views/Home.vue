@@ -43,6 +43,21 @@
         ></AppointmentDialogBody>
       </v-dialog>
 
+      <v-dialog
+        v-if="hasRole('Student')"
+        v-model="requestDialog"
+        persistent
+        max-width="800px"
+      >
+        <RequestDialogBody
+          :sent-request="selectedRequest"
+          :person-role-id="user.selectedRole.personRoleId"
+          :sent-bool="false"
+          @closeRequestDialog="requestDialog = false"
+          @saveOrAddRequest="addRequest"
+        ></RequestDialogBody>
+      </v-dialog>
+
       <span v-if="approved">
         <v-row fill-height>
           <v-col>
@@ -69,11 +84,7 @@
               :color="hasRole('Student') ? '#F8C545' : '#63BAC0'"
               @click="
                 hasRole('Student')
-                  ? $router.push(
-                      '/home/' +
-                        user.selectedRole.personRoleId +
-                        '?studentAddRequest'
-                    )
+                  ? (requestDialog = true)
                   : handleRedundantNavigation(
                       'tutorAddAvailability',
                       user.selectedRole.personRoleId
@@ -155,10 +166,14 @@
 
 <script>
 import Utils from "@/config/utils.js";
+import RequestServices from "@/services/requestServices.js";
+import RoleServices from "@/services/roleServices.js";
+import TwilioServices from "@/services/twilioServices";
 import PersonRoleServices from "@/services/personRoleServices.js";
 import PersonRolePrivilegeServices from "@/services/personRolePrivilegeServices.js";
 import AppointmentDialogBody from "../components/AppointmentDialogBody.vue";
 import InformationComponent from "../components/InformationComponent.vue";
+import RequestDialogBody from "../components/RequestDialogBody.vue";
 import { CalendarMixin } from "../mixins/CalendarMixin";
 import { RedirectToPageMixin } from "../mixins/RedirectToPageMixin";
 import { TimeFunctionsMixin } from "../mixins/TimeFunctionsMixin";
@@ -168,6 +183,7 @@ export default {
   components: {
     AppointmentDialogBody,
     InformationComponent,
+    RequestDialogBody,
   },
   mixins: [CalendarMixin, RedirectToPageMixin, TimeFunctionsMixin],
   props: {
@@ -188,6 +204,14 @@ export default {
       disabled: false,
       appointmentDialog: false,
       selectedAppointment: {},
+      requestDialog: false,
+      selectedRequest: {
+        problem: "",
+        courseNum: "",
+        description: "",
+        status: "Received",
+        personId: "",
+      },
       appointments: [],
       upcomingAppointments: [],
       personRolePrivileges: [],
@@ -380,6 +404,63 @@ export default {
           this.alert = error.response.data.message;
           this.showAlert = true;
           console.log("There was an error:", error.response);
+        });
+    },
+    async checkPrivilege(privilege, personRolePrivileges) {
+      let hasPriv = false;
+      for (let i = 0; i < personRolePrivileges.length; i++) {
+        let priv = personRolePrivileges[i];
+        if (priv.privilege === privilege) hasPriv = true;
+      }
+      return hasPriv;
+    },
+    async addRequest(request) {
+      let newRequest = {
+        courseNum: request.courseNum,
+        description: request.description,
+        status: request.status,
+        problem: request.problem,
+        groupId: request.groupId,
+        personId: request.personId,
+        topicId: request.topicId,
+      };
+      await RequestServices.addRequest(newRequest)
+        .then(async (response) => {
+          let admins = [];
+          await RoleServices.getAllForGroupByType(request.groupId, "Admin")
+            .then((response) => {
+              admins = response.data[0].personrole;
+            })
+            .catch((error) => {
+              console.log("There was an error:", error.response);
+            });
+          for (let i = 0; i < admins.length; i++) {
+            let tempA = admins[i];
+            tempA.requestId = response.data.id;
+            if (
+              await this.checkPrivilege(
+                "Receive notifications for requests",
+                tempA.personroleprivilege
+              )
+            ) {
+              let textInfo = {
+                fromFirstName: this.user.fName,
+                fromLastName: this.user.lName,
+                adminPersonRoleId: tempA.id,
+                requestId: response.data.id,
+                adminPhoneNum: tempA.person.phoneNum,
+                groupName: this.user.selectedGroup,
+              };
+              await TwilioServices.sendRequestMessage(textInfo);
+            }
+          }
+          this.requestDialog = false;
+        })
+        .catch((error) => {
+          console.log("There was an error:", error);
+          this.alertType = "error";
+          this.alert = error.response.data.message;
+          this.showAlert = true;
         });
     },
     openUpcoming: async function (item, row) {

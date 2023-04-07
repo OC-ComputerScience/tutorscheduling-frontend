@@ -541,10 +541,10 @@ export default {
         }
       }
     },
-    async checkPrivilege(privilege, personroleprivileges) {
+    async checkPrivilege(privilege, personRolePrivileges) {
       let hasPriv = false;
-      for (let i = 0; i < personroleprivileges.length; i++) {
-        let priv = personroleprivileges[i];
+      for (let i = 0; i < personRolePrivileges.length; i++) {
+        let priv = personRolePrivileges[i];
         if (priv.privilege === privilege) hasPriv = true;
       }
       return hasPriv;

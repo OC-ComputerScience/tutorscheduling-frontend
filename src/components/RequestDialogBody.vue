@@ -205,7 +205,7 @@ export default {
     },
     setShowCourseNumber() {
       this.showCourseNumber = this.isAdminView
-        ? this.request.courseNum !== null
+        ? this.request.courseNum !== null && this.request.courseNum !== ""
         : this.request.problem === this.problems[0] ||
           this.request.problem === this.problems[1] ||
           this.request.problem === this.problems[3];
@@ -248,6 +248,7 @@ export default {
     },
     saveOrAddRequest() {
       this.request.groupId = this.group.id;
+      this.request.personId = this.user.userID;
       this.$emit("saveOrAddRequest", this.request);
     },
   },

@@ -125,8 +125,8 @@ export default {
     if (this.$route.query !== undefined) {
       for (let i = 0; i < this.requests.length; i++) {
         if (this.requests[i].id === parseInt(this.$route.query.requestId)) {
-          this.editedItem = this.requests[i];
-          this.dialog = true;
+          this.selectedRequest = this.requests[i];
+          this.requestDialog = true;
           return;
         }
       }
@@ -181,12 +181,8 @@ export default {
           this.requests[i].createdAt
         );
 
-        // TODO
-        this.requests[i].time = new Date(this.requests[i].createdAt);
-        console.log(this.requests[i].time.toUTCString());
-
-        this.requests[i].time = this.calcTime(
-          this.requests[i].time.toLocaleTimeString()
+        this.requests[i].time = this.formatReadableTimeFromSQL(
+          this.requests[i].createdAt
         );
       }
 
