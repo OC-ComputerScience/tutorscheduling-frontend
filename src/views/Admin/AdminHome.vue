@@ -41,7 +41,7 @@
                 class="mx-auto my-3 justify-center"
                 @click="
                   handleRedundantNavigation(
-                    'adminRequests',
+                    'requestList',
                     user.selectedRole.personRoleId
                   )
                 "

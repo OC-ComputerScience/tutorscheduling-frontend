@@ -2,7 +2,15 @@
   <v-card>
     <v-card-title
       v-if="isAdminView"
-      class="primary white--text mb-2 headline"
+      :class="
+        (request.status === 'Received'
+          ? 'error'
+          : request.status === 'In-Progress'
+          ? 'yellow'
+          : request.status === 'Completed'
+          ? 'darkblue'
+          : 'primary') + ' white--text mb-2 headline'
+      "
       >{{ `Request from ${request.fullName}` }}</v-card-title
     >
     <v-card-title
@@ -10,7 +18,18 @@
       class="primary white--text mb-4 headline"
       >{{ `Send A Request to ${user.selectedGroup}` }}</v-card-title
     >
-    <v-card-subtitle v-if="isAdminView" class="primary white--text pb-2 mb-2">
+    <v-card-subtitle
+      v-if="isAdminView"
+      :class="
+        (request.status === 'Received'
+          ? 'error'
+          : request.status === 'In-Progress'
+          ? 'yellow'
+          : request.status === 'Completed'
+          ? 'darkblue'
+          : 'primary') + ' white--text pb-2 mb-2'
+      "
+    >
       {{
         `Received on ${formatReadableDate(request.createdAt)} at ${
           request.time
@@ -97,36 +116,49 @@
         "
         :readonly="isAdminView"
       ></v-textarea>
-
-      <v-select
-        v-if="isAdminView"
-        v-model="request.status"
-        :items="statuses"
-        label="Status"
-        required
-      >
-        <template #prepend>
-          <v-icon
-            :color="
-              request.status === 'Completed'
-                ? 'blue'
-                : request.status === 'In-Progress'
-                ? 'yellow'
-                : 'error'
-            "
-            >{{ "mdi-radiobox-marked" }}</v-icon
-          >
-        </template>
-      </v-select>
     </v-card-text>
     <v-card-actions>
       <v-spacer></v-spacer>
       <v-btn color="grey white--text" @click="$emit('closeRequestDialog')">
-        {{ isAdminView ? "Discard Changes" : "Cancel" }}
+        {{ isAdminView ? "Close" : "Cancel" }}
+      </v-btn>
+      <v-btn
+        v-if="request.status !== 'Received'"
+        color="error white--text"
+        @click="
+          request.status = 'Received';
+          saveChanges = true;
+        "
+      >
+        Mark Received
+      </v-btn>
+      <v-btn
+        v-if="request.status !== 'In-Progress'"
+        color="yellow white--text"
+        @click="
+          request.status = 'In-Progress';
+          saveChanges = true;
+        "
+      >
+        Mark In-Progress
+      </v-btn>
+      <v-btn
+        v-if="request.status !== 'Completed'"
+        color="darkblue white--text"
+        @click="
+          request.status = 'Completed';
+          saveChanges = true;
+        "
+      >
+        Mark Completed
       </v-btn>
       <v-btn
         color="accent"
-        :disabled="request.problem === '' || request.description === ''"
+        :disabled="
+          isAdminView
+            ? !saveChanges
+            : request.problem === '' || request.description === ''
+        "
         @click="saveOrAddRequest()"
         >{{ isAdminView ? "Save Changes" : "Send Request" }}</v-btn
       >
@@ -178,6 +210,7 @@ export default {
       showCourseNumber: false,
       showDescription: false,
       showTopic: false,
+      saveChanges: false,
     };
   },
   watch: {
