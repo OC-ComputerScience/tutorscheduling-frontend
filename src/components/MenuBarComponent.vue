@@ -44,7 +44,6 @@
             v-for="group in user.access"
             :key="group.id"
             no-action
-            sub-group
             @click.stop.prevent
           >
             <template #activator>

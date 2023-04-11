@@ -1,8 +1,7 @@
 <template>
   <div>
     <v-dialog
-      v-if="hasRole('Tutor')"
-      v-model="googleCalendarDialog"
+      v-if="hasRole('Tutor') && googleCalendarDialog"
       persistent
       max-width="800"
     >

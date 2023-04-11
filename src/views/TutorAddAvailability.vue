@@ -48,54 +48,31 @@
             You already have an appointment during this time.
           </v-card-subtitle>
           <v-card-text>
-            <v-row>
-              <v-col>
-                <div
-                  class="justify-center d-flex text-subtitle-1 font-weight-bold black--text"
+            <v-card
+              v-for="conflictDate in conflictingDates"
+              :key="conflictDate.date"
+              class="mb-2"
+            >
+              <v-card-title class="pb-0">
+                {{
+                  `${conflictDate.date}, ${conflictDate.conflictingAvailability.time}`
+                }}
+              </v-card-title>
+              <v-list dense nav>
+                <v-list-item
+                  v-for="existing in conflictDate.existingAvailabilities"
+                  :key="existing.time"
+                  class="grey lighten-2"
                 >
-                  Existing Appointment
-                </div>
-                <div class="mt-2 align-center d-flex">
-                  <v-icon class="mr-2">mdi-calendar</v-icon>
-                  <b class="mr-2">Date: </b>
-                  {{ formatReadableDate(conflictAvailability.existing.date) }}
-                </div>
-                <div class="mt-2 align-center d-flex">
-                  <v-icon class="mr-2">mdi-clock-outline</v-icon>
-                  <b class="mr-2">Start Time: </b>
-                  {{ conflictAvailability.existing.startTime }}
-                </div>
-                <div class="mt-2 align-center d-flex">
-                  <v-icon class="mr-2">mdi-clock-outline</v-icon>
-                  <b class="mr-2">End Time: </b>
-                  {{ conflictAvailability.existing.endTime }}
-                </div>
-              </v-col>
-              <v-col>
-                <div
-                  class="justify-center d-flex text-subtitle-1 font-weight-bold black--text"
-                >
-                  Conflicting Appointment
-                </div>
-                <div class="mt-2 align-center d-flex">
-                  <v-icon class="mr-2">mdi-calendar</v-icon>
-                  <b class="mr-2">Date: </b>
-                  {{
-                    formatReadableDate(conflictAvailability.conflicting.date)
-                  }}
-                </div>
-                <div class="mt-2 align-center d-flex">
-                  <v-icon class="mr-2">mdi-clock-outline</v-icon>
-                  <b class="mr-2">Start Time: </b>
-                  {{ conflictAvailability.conflicting.startTime }}
-                </div>
-                <div class="mt-2 align-center d-flex">
-                  <v-icon class="mr-2">mdi-clock-outline</v-icon>
-                  <b class="mr-2"> End Time: </b>
-                  {{ conflictAvailability.conflicting.endTime }}
-                </div>
-              </v-col>
-            </v-row>
+                  <v-list-item-content>
+                    <v-list-item-title>{{ existing.name }} </v-list-item-title>
+                    <v-list-item-subtitle>
+                      {{ `${conflictDate.date}, ${existing.time}` }}
+                    </v-list-item-subtitle>
+                  </v-list-item-content>
+                </v-list-item>
+              </v-list>
+            </v-card>
             <div class="mt-4">
               If you selected multiple dates, appointments that don't conflict
               have already been made.
@@ -274,6 +251,12 @@
         >
         </v-data-table>
       </v-card>
+
+      <v-overlay :value="overlay">
+        <v-progress-circular indeterminate size="64">
+          Loading...
+        </v-progress-circular>
+      </v-overlay>
     </v-container>
   </div>
 </template>
@@ -288,6 +271,7 @@ import AppointmentServices from "@/services/appointmentServices.js";
 import PersonAppointmentServices from "@/services/personAppointmentServices.js";
 import InformationComponent from "../components/InformationComponent.vue";
 import Utils from "@/config/utils.js";
+import { CalendarMixin } from "../mixins/CalendarMixin";
 import { TimeFunctionsMixin } from "../mixins/TimeFunctionsMixin";
 
 export default {
@@ -295,7 +279,7 @@ export default {
   components: {
     InformationComponent,
   },
-  mixins: [TimeFunctionsMixin],
+  mixins: [CalendarMixin, TimeFunctionsMixin],
   props: {
     id: {
       type: [Number, String],
@@ -309,29 +293,17 @@ export default {
     nowDate: null,
     nowTime: null,
     type: "",
-    availability: {},
-    conflictAvailability: {
-      conflicting: {
-        date: "",
-        startTime: "",
-        endTime: "",
-      },
-      existing: {
-        date: "",
-        startTime: "",
-        endTime: "",
-      },
-    },
-    appointment: {},
-    personAppointment: {},
+    conflictingDates: [],
+    conflictingAvailabilities: [],
+    availabilitiesToSave: [],
     availabilities: [],
     upcoming: [],
     dates: [],
     appointmentTypes: ["Private", "Group"],
     displayedDates: [],
+    overlay: false,
     doubleBookedDialog: false,
     secondTime: true,
-    //used for generating time slots
     startTimes: [],
     endTimes: [],
     displayedStart: "",
@@ -347,10 +319,6 @@ export default {
     location: "",
     locations: [],
     personRolePrivileges: [],
-    sessionValues: [
-      { text: "Private", value: "Private" },
-      { text: "Group", value: "Group" },
-    ],
     preSessionInfo: "",
     headers: [
       { text: "Date", value: "date" },
@@ -369,6 +337,9 @@ export default {
     await this.getPrivilegesForPersonRole();
   },
   methods: {
+    showInterval() {
+      return false;
+    },
     updateDisplayedDates() {
       this.displayedDates = [];
       for (let i = 0; i < this.dates.length; i++) {
@@ -434,51 +405,58 @@ export default {
       // adding this to make sure you can't end an appointment at the start time
       this.endTimes.shift();
     },
-    async checkIfAvailable(tempAvailability) {
-      let isAvail = true;
-      for (let i = 0; i < this.upcoming.length && isAvail; i++) {
+    checkIfAvailable(tempAvailability) {
+      let isAvailable = true;
+      this.conflictingDates.push({
+        date: this.formatReadableDate(tempAvailability.date),
+        testDate: tempAvailability.date,
+        existingAvailabilities: [],
+        conflictingAvailability: {},
+      });
+      for (let i = 0; i < this.upcoming.length; i++) {
         let appointment = this.upcoming[i];
-        let tempDate = tempAvailability.date.substring(0, 10);
-        appointment.date = appointment.date.substring(0, 10);
         appointment.startTime = appointment.startTime.substring(0, 8);
         appointment.endTime = appointment.endTime.substring(0, 8);
-        if (tempDate === appointment.date) {
-          if (
-            (tempAvailability.startTime < appointment.startTime &&
-              tempAvailability.endTime > appointment.startTime &&
-              tempAvailability.endTime < appointment.endTime) || // new availability starts before and ends during existing
-            (tempAvailability.startTime >= appointment.startTime &&
-              tempAvailability.endTime <= appointment.endTime) || // new availability is in the middle of an existing
-            (tempAvailability.startTime < appointment.startTime &&
-              tempAvailability.endTime > appointment.endTime) || // new availability starts before and ends after existing
-            (tempAvailability.startTime > appointment.startTime &&
-              tempAvailability.endTime > appointment.endTime &&
-              tempAvailability.startTime < appointment.endTime) // new availability starts during and ends after existing
-          ) {
-            isAvail = false;
-            this.conflictAvailability.conflicting = {
-              date: tempDate,
-              startTime: this.formatTimeFromString(tempAvailability.startTime),
-              endTime: this.formatTimeFromString(tempAvailability.endTime),
-            };
-            this.conflictAvailability.existing = {
-              date: appointment.date,
-              startTime: this.formatTimeFromString(appointment.startTime),
-              endTime: this.formatTimeFromString(appointment.endTime),
-            };
-            return;
-          }
+        if (
+          tempAvailability.date === appointment.date &&
+          this.isOverlapping(tempAvailability, appointment)
+        ) {
+          this.setUpCalendarEvent(appointment);
+          isAvailable = false;
+          this.conflictingDates
+            .find(
+              (conflictDate) => conflictDate.testDate === tempAvailability.date
+            )
+            .existingAvailabilities.push({
+              name: appointment.name,
+              time:
+                this.formatTimeFromString(appointment.startTime) +
+                " - " +
+                this.formatTimeFromString(appointment.endTime),
+            });
         }
       }
-      return isAvail;
+      if (isAvailable) {
+        this.conflictingDates.pop();
+        this.availabilitiesToSave.push(tempAvailability);
+      } else {
+        this.conflictingDates.find(
+          (conflictDate) => conflictDate.testDate === tempAvailability.date
+        ).conflictingAvailability = {
+          time:
+            this.formatTimeFromString(tempAvailability.startTime) +
+            " - " +
+            this.formatTimeFromString(tempAvailability.endTime),
+        };
+      }
     },
     async addAvailability() {
+      this.overlay = true;
       if (
         this.group.id === null ||
         this.group.id === undefined ||
         this.group.id === ""
       ) {
-        console.log("group id wasn't set");
         await this.getGroupByPersonRoleId().catch((error) => {
           this.alertType = "error";
           this.alert = error.response.data.message;
@@ -486,91 +464,89 @@ export default {
           console.log("There was an error:", error.response);
         });
       }
+      this.conflictingDates = [];
+
       for (var i = 0; i < this.dates.length; i++) {
-        let tempApp = {};
-        let element = this.dates[i];
-        let date = new Date(element);
+        let date = new Date(this.dates[i]);
         date.setHours(date.getHours() + date.getTimezoneOffset() / 60);
-        this.availability.date = date.toISOString();
-        this.availability.startTime = this.newStart;
-        this.availability.endTime = this.newEnd;
-        this.availability.personId = this.user.userID;
+        let availability = {
+          date: date.toISOString(),
+          startTime: this.newStart,
+          endTime: this.newEnd,
+          personId: this.user.userID,
+        };
 
-        let checkAvailable = await this.checkIfAvailable(this.availability);
+        this.checkIfAvailable(availability);
+      }
 
-        if (checkAvailable) {
-          await AvailabilityServices.addAvailability(this.availability)
-            .then(async () => {
-              this.appointment.date = date;
-              this.appointment.startTime = this.newStart;
-              this.appointment.endTime = this.newEnd;
-              if (this.type.includes("Private")) {
-                this.appointment.type = "Private";
-                this.appointment.locationId = null;
-                this.appointment.topicId = null;
-                this.appointment.preSessionInfo = null;
-              } else {
-                this.appointment.type = "Group";
-                this.appointment.locationId = this.location;
-                this.appointment.topicId = this.topic;
-                this.appointment.preSessionInfo = this.preSessionInfo;
-              }
-              this.appointment.groupId = this.group.id;
-              this.appointment.status = "available";
-              await AppointmentServices.addAppointment(this.appointment)
-                .then(async (response) => {
-                  tempApp = response.data;
-                  this.personAppointment.isTutor = true;
-                  this.personAppointment.personId = this.user.userID;
-                  this.personAppointment.appointmentId = tempApp.id;
-                  await PersonAppointmentServices.addPersonAppointment(
-                    this.personAppointment
-                  )
-                    .then(async () => {
-                      if (
-                        this.appointment.type === "Group" ||
-                        this.appointment.type === "group"
-                      ) {
-                        // this adds the appointment to google
-                        await AppointmentServices.updateAppointment(
-                          tempApp.id,
-                          tempApp
-                        ).catch((error) => {
-                          this.alertType = "error";
-                          this.alert = error.response.data.message;
-                          this.showAlert = true;
-                          console.log("There was an error:", error.response);
-                        });
-                      }
-                    })
-                    .catch((error) => {
-                      this.alertType = "error";
-                      this.alert = error.response.data.message;
-                      this.showAlert = true;
-                      console.log("There was an error:", error.response);
-                    });
-                })
-                .catch((error) => {
-                  this.alertType = "error";
-                  this.alert = error.response.data.message;
-                  this.showAlert = true;
-                  console.log("There was an error:", error.response);
-                });
-            })
-            .catch((error) => {
-              this.alertType = "error";
-              this.alert = error.response.data.message;
-              this.showAlert = true;
-              console.log("There was an error:", error.response);
-            });
-          this.alertType = "success";
-          this.alert = "You have successfully added availabilities.";
+      if (this.conflictingDates.length > 0) {
+        this.doubleBookedDialog = true;
+      }
+
+      for (let i = 0; i < this.availabilitiesToSave.length; i++) {
+        let availability = this.availabilitiesToSave[i];
+        let appointment = {
+          date: availability.date,
+          startTime: this.newStart,
+          endTime: this.newEnd,
+          type: this.type,
+          locationId: this.type === "Private" ? null : this.location,
+          topicId: this.type === "Private" ? null : this.topic,
+          preSessionInfo: this.type === "Private" ? null : this.preSessionInfo,
+          groupId: this.group.id,
+          status: "available",
+        };
+
+        await AvailabilityServices.addAvailability(availability).catch(
+          (error) => {
+            this.alertType = "error";
+            this.alert = error.response.data.message;
+            this.showAlert = true;
+            console.log("There was an error:", error.response);
+          }
+        );
+
+        await AppointmentServices.addAppointment(appointment)
+          .then(async (response) => {
+            appointment.id = response.data.id;
+          })
+          .catch((error) => {
+            this.alertType = "error";
+            this.alert = error.response.data.message;
+            this.showAlert = true;
+            console.log("There was an error:", error.response);
+          });
+
+        let personAppointment = {
+          personId: this.user.userID,
+          appointmentId: appointment.id,
+          isTutor: true,
+        };
+
+        await PersonAppointmentServices.addPersonAppointment(
+          personAppointment
+        ).catch((error) => {
+          this.alertType = "error";
+          this.alert = error.response.data.message;
           this.showAlert = true;
-        } else {
-          this.doubleBookedDialog = true;
+          console.log("There was an error:", error.response);
+        });
+
+        if (appointment.type === "Group") {
+          // this adds the appointment to google
+          await AppointmentServices.updateAppointment(
+            appointment.id,
+            appointment
+          ).catch((error) => {
+            this.alertType = "error";
+            this.alert = error.response.data.message;
+            this.showAlert = true;
+            console.log("There was an error:", error.response);
+          });
         }
       }
 
+      this.availabilitiesToSave = [];
       this.dates = [];
       this.displayedDates = [];
       this.displayedStart = "";
@@ -584,11 +560,32 @@ export default {
       this.secondTime = true;
       await this.getAvailabilities();
       this.updateTimes();
+      this.overlay = false;
+
+      if (this.availabilitiesToSave.length > 0) {
+        this.alertType = "success";
+        this.alert = "You have successfully added availabilities.";
+        this.showAlert = true;
+      }
     },
     async getUpcoming() {
       await AppointmentServices.getUpcomingForPerson(this.user.userID)
         .then((response) => {
           this.upcoming = response.data;
+          for (let i = 0; i < this.upcoming.length; i++) {
+            let appointment = this.upcoming[i];
+            if (
+              appointment.personappointment !== null &&
+              appointment.personappointment !== undefined
+            ) {
+              appointment.students = appointment.personappointment.filter(
+                (pa) => pa.isTutor === false
+              );
+              appointment.tutors = appointment.personappointment.filter(
+                (pa) => pa.isTutor === true
+              );
+            }
+          }
         })
         .catch((error) => {
           this.alertType = "error";
