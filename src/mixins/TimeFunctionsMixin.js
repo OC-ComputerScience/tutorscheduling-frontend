@@ -135,7 +135,7 @@ export const TimeFunctionsMixin = {
       let formattedTime = modST + ":" + time.toString().substring(3, 5);
 
       if (time.toString().substring(0, 2) > 12) {
-        formattedTime = formattedTime + " P.M.";
+        formattedTime = formattedTime + " PM";
       } else if (modST == 0 && time.toString().substring(0, 2) == "12") {
         formattedTime = "12:" + time.toString().substring(3, 5) + " PM";
       } else if (modST == 0) {
@@ -192,6 +192,22 @@ export const TimeFunctionsMixin = {
     toHours(totalMinutes) {
       var hours = parseFloat(totalMinutes) / parseFloat(60);
       return hours;
+    },
+    // https://stackoverflow.com/questions/36011227/javascript-check-if-time-ranges-overlap
+    isOverlapping(a, b) {
+      const getMinutes = (s) => {
+        const p = s.split(":").map(Number);
+        return p[0] + p[1] / 60;
+      };
+      console.log(getMinutes(a.startTime));
+      console.log(getMinutes(a.endTime));
+      console.log(getMinutes(b.startTime));
+      console.log(getMinutes(b.endTime));
+
+      return (
+        getMinutes(a.endTime) > getMinutes(b.startTime) &&
+        getMinutes(a.startTime) < getMinutes(b.endTime)
+      );
     },
     toHoursAndMinutes(totalMinutes) {
       var minutes = parseInt(totalMinutes) % 60;

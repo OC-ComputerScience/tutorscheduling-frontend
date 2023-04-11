@@ -370,16 +370,12 @@
 
 <script>
 import AppointmentServices from "@/services/appointmentServices.js";
-//For info on people and their associated roles
 import PersonServices from "@/services/personServices.js";
 import PersonAppointmentServices from "@/services/personAppointmentServices.js";
 import PersonRoleServices from "@/services/personRoleServices.js";
 import RoleServices from "@/services/roleServices.js";
-// import PersonRolePrivilegeServices from "@/services/personRolePrivilegeServices.js";
-//For info to be shown with appointments
 import LocationServices from "@/services/locationServices.js";
 import TopicServices from "@/services/topicServices.js";
-//Plugin functions
 import Utils from "@/config/utils.js";
 import DeleteConfirmationComponent from "./DeleteConfirmationComponent.vue";
 import { CalendarMixin } from "../mixins/CalendarMixin";
