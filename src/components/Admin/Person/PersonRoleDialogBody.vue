@@ -66,7 +66,7 @@
 </template>
 
 <script>
-import DeleteConfirmationComponent from "../DeleteConfirmationComponent.vue";
+import DeleteConfirmationComponent from "../../DeleteConfirmationComponent.vue";
 export default {
   name: "PersonRoleDialogBody",
   components: { DeleteConfirmationComponent },

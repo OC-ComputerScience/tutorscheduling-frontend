@@ -3,7 +3,7 @@
     <v-card-title class="primary white--text mb-6">{{
       isEdit
         ? "Edit " + person.fName + " " + person.lName + " in " + group.name
-        : "Add New Person to " + group.name
+        : "Add New Admin to " + group.name
     }}</v-card-title>
     <v-card-text>
       <v-text-field
@@ -85,8 +85,8 @@
             </v-card>
           </v-col>
         </v-row>
-        <v-row v-if="tutor" max-width="900px">
-          <v-col cols="6">
+        <v-row max-width="900px">
+          <v-col :cols="tutor ? 6 : 12">
             <v-card class="mx-auto">
               <v-card-title>
                 Additional Privileges
@@ -105,7 +105,7 @@
               </v-data-table>
             </v-card>
           </v-col>
-          <v-col cols="6">
+          <v-col v-if="tutor" cols="6">
             <v-card class="mx-auto">
               <v-card-title>
                 Topics
@@ -220,6 +220,12 @@ export default {
         };
       },
     },
+    sentGroupRoles: {
+      type: [Array],
+      default() {
+        return [];
+      },
+    },
   },
   data() {
     return {
@@ -235,7 +241,7 @@ export default {
       person: this.sentPerson,
       tutor: false,
       group: this.sentGroup,
-      groupRoles: [],
+      groupRoles: this.sentGroupRoles,
       groupTopics: [],
       filteredGroupTopics: [],
       isEdit: this.sentBool,
@@ -274,9 +280,11 @@ export default {
     },
     async sentGroup(newGroup) {
       this.group = newGroup;
-      await this.getRolesForGroup();
       await this.getTopicsForGroup();
       // this.filterGroupTopics();
+    },
+    async sentGroupRoles(newRoles) {
+      this.groupRoles = newRoles;
     },
   },
   async created() {
@@ -286,9 +294,7 @@ export default {
         await this.getPersonTopics();
       }
     }
-    await this.getRolesForGroup();
     await this.getTopicsForGroup();
-    // this.filterGroupTopics();
   },
   methods: {
     openPersonRoleDialog(item) {
@@ -310,7 +316,6 @@ export default {
       this.personRoleDialog = true;
     },
     openPersonTopicDialog(item) {
-      console.log(item);
       this.selectedPersonTopic = item.persontopic[0];
       this.selectedPersonTopic.name = item.name;
       this.isPersonTopicDialogEdit = true;
@@ -326,7 +331,6 @@ export default {
       this.personTopicDialog = true;
     },
     openPersonPrivilegeDialog(item) {
-      console.log(item);
       this.selectedPersonPrivilege = item;
       this.isPersonPrivilegeDialogEdit = true;
       this.personPrivilegeDialog = true;
@@ -456,8 +460,7 @@ export default {
       if (role.status === "disabled") {
         role.groupId = this.group.id;
         await PersonRoleServices.disablePersonRole(role)
-          .then((response) => {
-            console.log(response);
+          .then(() => {
             this.personRoleDialog = false;
           })
           .catch((error) => {
@@ -515,7 +518,6 @@ export default {
         });
     },
     async saveOrAddPersonRolePrivilege(privilege, isEdit) {
-      console.log(privilege);
       if (isEdit) {
         await PersonRolePrivilegeServices.updatePrivilege(
           privilege.id,

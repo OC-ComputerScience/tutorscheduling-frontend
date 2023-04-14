@@ -98,14 +98,12 @@ export default {
       this.personName = newPersonName;
     },
     sentPersonTopic(newTopic) {
-      console.log(newTopic);
       this.personTopic = newTopic;
       this.personTopicSkillLevel = newTopic.skillLevel;
       this.selectedTopic = {
         id: this.sentPersonTopic.topicId,
         name: this.sentPersonTopic.name,
       };
-      console.log(this.selectedTopic);
       this.selectedSkillLevel = this.sentPersonTopic.skillLevel;
     },
     sentBool(newVal) {

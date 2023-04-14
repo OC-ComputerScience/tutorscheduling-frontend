@@ -19,7 +19,7 @@
           <v-spacer></v-spacer>
           <!-- ADD BACK IF SUPERADMIN CHECK -->
           <v-btn color="accent" class="mr-4" elevation="2" @click="addPerson">
-            Add
+            Add Admin
           </v-btn>
         </v-card-title>
         <v-dialog v-model="personDialog" persistent max-width="1200px">
@@ -27,6 +27,7 @@
             :sent-person="selectedPerson"
             :sent-bool="isPersonDialogEdit"
             :sent-group="group"
+            :sent-group-roles="groupRoles"
             @closePersonDialog="personDialog = false"
             @saveOrAddPerson="saveOrAddPerson"
           ></PersonDialogBody>
@@ -45,10 +46,11 @@
 
 <script>
 import Utils from "@/config/utils.js";
+import RoleServices from "@/services/roleServices.js";
 import PersonRoleServices from "@/services/personRoleServices.js";
 import PersonServices from "@/services/personServices.js";
 import InformationComponent from "../../components/InformationComponent.vue";
-import PersonDialogBody from "../../components/Admin/PersonDialogBody.vue";
+import PersonDialogBody from "../../components/Admin/Person/PersonDialogBody.vue";
 
 export default {
   name: "App",
@@ -69,6 +71,7 @@ export default {
       search: "",
       persons: [],
       group: {},
+      groupRoles: [],
       isSuperAdmin: false,
       headers: [
         { text: "Name", value: "fullName" },
@@ -80,6 +83,7 @@ export default {
     this.user = Utils.getStore("user");
     await this.getGroupByPersonRoleId();
     await this.getPeopleForGroup();
+    await this.getRolesForGroup();
     this.findIfSuperAdmin();
     this.title = this.group.name + this.title;
   },
@@ -92,6 +96,16 @@ export default {
         if (current[i] === "superadmin" || current[i] === "Superadmin")
           this.isSuperAdmin = true;
       }
+    },
+    async getRolesForGroup() {
+      await RoleServices.getAllForGroup(this.group.id)
+        .then((response) => {
+          this.groupRoles = response.data;
+        })
+        .catch((error) => {
+          this.message = error.response.data.message;
+          console.log("There was an error:", error.response);
+        });
     },
     async getGroupByPersonRoleId() {
       await PersonRoleServices.getGroupForPersonRole(this.id)
@@ -118,12 +132,6 @@ export default {
         });
     },
     rowClick: function (item) {
-      // row.select(true);
-      // this.$router.push({
-      //   name: "personView",
-      //   params: { id: this.id, personId: item.id },
-      // });
-
       this.isPersonDialogEdit = true;
       this.selectedPerson = item;
       this.personDialog = true;
@@ -155,12 +163,27 @@ export default {
           });
       } else {
         await PersonServices.addPerson(person)
-          .then(async () => {
-            this.personDialog = false;
-            await this.getPeopleForGroup();
+          .then(async (response) => {
+            let personRole = {
+              status: "approved",
+              agree: true,
+              dateSigned: new Date(),
+              roleId: this.groupRoles.filter((role) => role.type === "Admin")[0]
+                .id,
+              personId: response.data.id,
+            };
+            await PersonRoleServices.addPersonRole(personRole)
+              .then(async () => {
+                this.personDialog = false;
+                await this.getPeopleForGroup();
+              })
+              .catch((error) => {
+                this.message = error.response.data.message;
+                console.log("There was an error:", error.response);
+              });
           })
           .catch((error) => {
-            this.title = error.response.data.message;
+            this.title = error;
             console.log(error);
           });
       }
