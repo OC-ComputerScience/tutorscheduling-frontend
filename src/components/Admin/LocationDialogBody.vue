@@ -1,7 +1,7 @@
 <template>
   <v-card>
-    <v-card-title class="primary white--text mb-6">{{
-      isEdit ? "Edit Location" : "Add New Location"
+    <v-card-title class="primary white--text mb-6 headline">{{
+      isEdit ? `Edit Location - ${location.name}` : "Add A New Location"
     }}</v-card-title>
     <v-card-text>
       <v-text-field

@@ -2,7 +2,7 @@
   <div>
     <v-container>
       <v-card-title class="text-h4 font-weight-bold pt-4 pb-6 pl-0 accent--text"
-        >{{ title }}
+        >{{ `${user.selectedGroup} Locations` }}
         <InformationComponent
           :message="'View, edit and add locations for ' + group.name + '.'"
         ></InformationComponent
@@ -63,8 +63,8 @@ export default {
       locationDialog: false,
       isLocationDialogEdit: true,
       selectedLocation: {},
-      title: " Locations",
       search: "",
+      message: "",
       locations: [],
       user: {},
       group: {},
@@ -78,7 +78,6 @@ export default {
   },
   async created() {
     this.user = Utils.getStore("user");
-    this.title = this.user.selectedGroup + this.title;
     await this.getGroupByPersonRoleId();
     await this.getLocationsForGroup();
   },
@@ -110,7 +109,7 @@ export default {
           await this.getLocationsForGroup();
         })
         .catch((error) => {
-          this.title = error.response.data.message;
+          this.message = error.response.data.message;
           console.log("There was an error:", error.response);
         });
     },
@@ -157,7 +156,7 @@ export default {
             await this.getLocationsForGroup();
           })
           .catch((error) => {
-            this.title = error.response.data.message;
+            this.message = error.response.data.message;
             console.log("There was an error:", error.response);
           });
       } else {
@@ -167,7 +166,7 @@ export default {
             await this.getLocationsForGroup();
           })
           .catch((error) => {
-            this.title = error.response.data.message;
+            this.message = error.response.data.message;
             console.log(error);
           });
       }

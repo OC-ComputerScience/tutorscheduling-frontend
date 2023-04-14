@@ -1,260 +1,248 @@
 <template>
   <div>
     <v-container>
-      <v-toolbar>
-        <v-toolbar-title>{{ message }}</v-toolbar-title>
-        <v-spacer></v-spacer>
+      <v-card-title
+        class="text-h4 font-weight-bold pt-4 pb-6 pl-0 pr-0 accent--text"
+        >Add Availabilities for {{ group.name }}
         <InformationComponent
-          message="Select date(s), times, and type, and click Save to indicate when you can tutor."
+          :message="
+            'Add the times you will be available to tutor students for ' +
+            group.name +
+            '.'
+          "
         ></InformationComponent>
-      </v-toolbar>
-      <br />
-      <b v-if="!group.allowSplittingAppointments"
-        >Please create availabilities with specific appointments times, not big
-        blocks of time.</b
-      >
-      <br />
-      <v-alert v-model="showAlert" dismissible :type="alertType">{{
-        alert
-      }}</v-alert
-      ><br />
-      <v-dialog v-model="doubleBookedDialog" max-width="600px">
-        <v-card>
-          <v-card-title>
-            <span class="text-h5"
-              >You already have an appointment during this time:</span
-            >
-          </v-card-title>
-          <v-card-text>
-            <br />
-            <v-row>
-              <v-col>
-                <h3>Existing Appointment:</h3>
-                <br />
-                <p>Date: {{ conflictAvailability.existing.date }}</p>
-                <p>Start Time: {{ conflictAvailability.existing.startTime }}</p>
-                <p>End Time: {{ conflictAvailability.existing.endTime }}</p>
-              </v-col>
-              <v-col>
-                <h3>Conflicting Appointment:</h3>
-                <br />
-                <p>Date: {{ conflictAvailability.conflicting.date }}</p>
-                <p>
-                  Start Time:
-                  {{ conflictAvailability.conflicting.startTime }}
-                </p>
-                <p>End Time: {{ conflictAvailability.conflicting.endTime }}</p>
-              </v-col>
-            </v-row>
-          </v-card-text>
-          <v-card-actions>
-            <v-spacer></v-spacer>
-            <v-btn
-              color="blue darken-1"
-              text
-              @click="doubleBookedDialog = false"
-            >
-              Close
-            </v-btn>
-          </v-card-actions>
-        </v-card>
-      </v-dialog>
-      <v-dialog v-model="groupDialog" persistent max-width="600px">
-        <v-card>
-          <v-card-title>
-            <span class="text-h5">Information for Session</span>
-          </v-card-title>
-          <v-card-text>
-            <v-container>
-              <v-row>
-                <v-col cols="12" sm="6" md="4">
-                  <v-select
-                    v-model="location"
-                    :items="locations"
-                    item-text="name"
-                    item-value="id"
-                    label="Location"
-                    required
-                    dense
-                  >
-                  </v-select>
-                </v-col>
-                <v-col cols="12" sm="6" md="4">
-                  <v-select
-                    v-model="topic"
-                    :items="topics"
-                    item-text="name"
-                    item-value="id"
-                    label="Topic"
-                    required
-                    dense
-                  >
-                  </v-select>
-                </v-col>
-              </v-row>
-              <v-row>
-                <v-col>
-                  <v-textarea
-                    v-model="preSessionInfo"
-                    label="Pre-session info"
-                    hint="Information for the session"
-                    required
-                    outlined
-                  ></v-textarea>
-                </v-col>
-              </v-row>
-            </v-container>
-          </v-card-text>
-          <v-card-actions>
-            <v-spacer></v-spacer>
-            <v-btn color="blue darken-1" text @click="groupDialog = false">
-              Close
-            </v-btn>
-            <v-btn
-              color="blue darken-1"
-              text
-              :disabled="
-                location === '' ||
-                location === null ||
-                location === undefined ||
-                topic === '' ||
-                topic === null ||
-                topic === undefined
-              "
-              @click="
-                addAvailability();
-                groupDialog = false;
-              "
-            >
-              Save
-            </v-btn>
-          </v-card-actions>
-        </v-card>
-      </v-dialog>
-      <v-row>
-        <v-col cols="12" sm="6">
-          <v-date-picker
-            v-model="dates"
-            :min="nowDate"
-            show-adjacent-months
-            multiple
-            @input="updateTimes()"
-          ></v-date-picker>
-        </v-col>
-        <v-col cols="12" sm="6">
-          <v-menu
-            ref="menu"
-            v-model="menu"
-            :close-on-content-click="false"
-            :return-value.sync="dates"
-            transition="scale-transition"
-            offset-y
-            min-width="auto"
+      </v-card-title>
+      <div v-if="!group.allowSplittingAppointments">
+        <b
+          >Please create availabilities with specific appointments times, not
+          big blocks of time.</b
+        >
+        <br />
+        <br />
+      </div>
+      <v-snackbar v-model="showAlert" rounded="pill">
+        {{ alert }}
+        <template #action="{ attrs }">
+          <v-btn
+            :color="
+              alertType === 'success'
+                ? 'green'
+                : alertType === 'warning'
+                ? 'yellow'
+                : 'error'
+            "
+            text
+            v-bind="attrs"
+            @click="showAlert = false"
           >
-            <template #activator="{ on, attrs }">
-              <v-combobox
-                v-model="dates"
-                multiple
-                chips
-                small-chips
-                label="Dates you are available to tutor"
-                prepend-icon="mdi-calendar"
-                readonly
-                v-bind="attrs"
-                v-on="on"
-              ></v-combobox>
-            </template>
+            Close
+          </v-btn>
+        </template>
+      </v-snackbar>
+      <v-dialog v-model="doubleBookedDialog" max-width="600px">
+        <v-card min-width="350px">
+          <v-card-title class="error white--text mb-2">
+            Cannot Add Conflicting Availability
+          </v-card-title>
+          <v-card-subtitle class="error white--text pb-2 mb-2">
+            You already have an appointment during this time.
+          </v-card-subtitle>
+          <v-card-text>
+            <v-card
+              v-for="conflictDate in conflictingDates"
+              :key="conflictDate.date"
+              class="mb-2"
+            >
+              <v-card-title class="pb-0">
+                {{
+                  `${conflictDate.date}, ${conflictDate.conflictingAvailability.time}`
+                }}
+              </v-card-title>
+              <v-list dense nav>
+                <v-list-item
+                  v-for="existing in conflictDate.existingAvailabilities"
+                  :key="existing.time"
+                  class="grey lighten-2"
+                >
+                  <v-list-item-content>
+                    <v-list-item-title>{{ existing.name }} </v-list-item-title>
+                    <v-list-item-subtitle>
+                      {{ `${conflictDate.date}, ${existing.time}` }}
+                    </v-list-item-subtitle>
+                  </v-list-item-content>
+                </v-list-item>
+              </v-list>
+            </v-card>
+            <div class="mt-4">
+              If you selected multiple dates, appointments that don't conflict
+              have already been made.
+            </div>
+          </v-card-text>
+          <v-card-actions>
+            <v-spacer></v-spacer>
+            <v-btn color="grey white--text" @click="doubleBookedDialog = false">
+              Close
+            </v-btn>
+          </v-card-actions>
+        </v-card>
+      </v-dialog>
+
+      <v-row>
+        <v-col>
+          <v-card>
+            <v-card-title class="accent white--text mb-2"
+              >Select Dates for Tutoring
+              <v-spacer></v-spacer>
+              <InformationComponent
+                :message="'Click dates here.'"
+              ></InformationComponent>
+            </v-card-title>
             <v-date-picker
               v-model="dates"
               :min="nowDate"
+              :events="upcoming"
+              show-current
+              no-title
+              reactive
+              full-width
               show-adjacent-months
               multiple
-              no-title
-              scrollable
-              @input="updateTimes()"
+              @input="
+                updateTimes();
+                updateDisplayedDates();
+              "
+            ></v-date-picker>
+          </v-card>
+        </v-col>
+        <v-col>
+          <v-card elevation="0">
+            <v-combobox
+              v-model="displayedDates"
+              multiple
+              chips
+              label="Selected Dates"
+              prepend-icon="mdi-calendar"
+              clearable
+              readonly
+              @click:clear="
+                dates = [];
+                displayedDates = [];
+              "
+            ></v-combobox>
+            <v-row>
+              <v-col>
+                <v-select
+                  v-model="displayedStart"
+                  :items="startTimes"
+                  label="Start Time"
+                  item-text="timeText"
+                  item-value="time"
+                  menu-props="auto"
+                  prepend-icon="mdi-clock-edit-outline"
+                  @change="
+                    newStart = displayedStart;
+                    updateTimes();
+                    secondTime = false;
+                  "
+                >
+                </v-select>
+              </v-col>
+              <v-col>
+                <v-select
+                  v-model="displayedEnd"
+                  :items="endTimes"
+                  label="End Time"
+                  item-text="timeText"
+                  item-value="time"
+                  prepend-icon="mdi-clock-edit-outline"
+                  :disabled="secondTime"
+                  @change="
+                    newEnd = displayedEnd;
+                    updateTimes();
+                  "
+                >
+                </v-select>
+              </v-col>
+            </v-row>
+            <v-select
+              v-model="type"
+              :items="appointmentTypes"
+              label="Appointment Type"
+              prepend-icon="mdi-account-multiple-outline"
             >
+            </v-select>
+            <div v-if="type === 'Group'">
+              <v-select
+                v-model="location"
+                :items="locations"
+                item-text="name"
+                item-value="id"
+                label="Location"
+                prepend-icon="mdi-map-marker-outline"
+              >
+              </v-select>
+
+              <v-select
+                v-model="topic"
+                :items="topics"
+                item-text="name"
+                item-value="id"
+                label="Topic"
+                prepend-icon="mdi-book-edit-outline"
+              >
+              </v-select>
+
+              <v-textarea
+                v-model="preSessionInfo"
+                :counter="500"
+                label="What will you be helping with?"
+                prepend-icon="mdi-text-box-edit-outline"
+                auto-grow
+                rows="2"
+              ></v-textarea>
+            </div>
+
+            <v-card-actions>
               <v-spacer></v-spacer>
-              <v-btn text color="primary" @click="menu = false"> Cancel </v-btn>
-              <v-btn text color="primary" @click="$refs.menu.save(dates)">
-                OK
+              <v-btn
+                color="success"
+                :disabled="
+                  displayedEnd === '' ||
+                  displayedEnd === null ||
+                  displayedEnd === undefined ||
+                  displayedStart === '' ||
+                  displayedStart === null ||
+                  displayedStart === undefined ||
+                  type === '' ||
+                  type === null ||
+                  type === undefined ||
+                  dates.length === 0 ||
+                  (type === 'Group' &&
+                    (location === '' ||
+                      location === null ||
+                      location === undefined ||
+                      topic === '' ||
+                      topic === null ||
+                      topic === undefined))
+                "
+                @click="addAvailability()"
+              >
+                Add Availability
               </v-btn>
-            </v-date-picker>
-          </v-menu>
+              <v-spacer></v-spacer>
+            </v-card-actions>
+          </v-card>
         </v-col>
-        <v-col cols="11" sm="5">
-          <v-select
-            v-model="displayedStart"
-            :items="startTimes"
-            label="Start Time"
-            prepend-icon="mdi-clock-time-four-outline"
-            item-text="timeText"
-            item-value="time"
-            menu-props="auto"
-            required
-            dense
-            @change="
-              newStart = displayedStart;
-              updateTimes();
-              secondTime = false;
-            "
-          >
-          </v-select>
-        </v-col>
-        <v-col cols="11" sm="5">
-          <v-select
-            v-model="displayedEnd"
-            :items="endTimes"
-            label="End Time"
-            prepend-icon="mdi-clock-time-four-outline"
-            item-text="timeText"
-            item-value="time"
-            required
-            :disabled="secondTime"
-            dense
-            @change="
-              newEnd = displayedEnd;
-              updateTimes();
-            "
-          >
-          </v-select>
-        </v-col>
-        <v-container>
-          <v-select
-            v-model="groupSession"
-            :items="sessionValues"
-            item-text="text"
-            item-value="value"
-            label="Choose a session type"
-            required
-            dense
-          >
-          </v-select>
-          <v-btn
-            color="success"
-            class="mr-4"
-            :disabled="
-              displayedEnd === '' ||
-              displayedEnd === null ||
-              displayedEnd === undefined ||
-              displayedStart === '' ||
-              displayedStart === null ||
-              displayedStart === undefined ||
-              groupSession === '' ||
-              groupSession === null ||
-              groupSession === undefined ||
-              dates.length === 0
-            "
-            @click="groupHandler()"
-          >
-            Save
-          </v-btn>
-        </v-container>
       </v-row>
+
       <br />
       <v-card>
         <v-card-title>
           Your Availabilities for All Groups
           <v-spacer></v-spacer>
+          <InformationComponent
+            message="If you want to remove an availability, go to the Calendar page and cancel the appointment there."
+          ></InformationComponent>
         </v-card-title>
         <v-data-table
           :headers="headers"
@@ -263,6 +251,12 @@
         >
         </v-data-table>
       </v-card>
+
+      <v-overlay :value="overlay">
+        <v-progress-circular indeterminate size="64">
+          Loading...
+        </v-progress-circular>
+      </v-overlay>
     </v-container>
   </div>
 </template>
@@ -277,6 +271,7 @@ import AppointmentServices from "@/services/appointmentServices.js";
 import PersonAppointmentServices from "@/services/personAppointmentServices.js";
 import InformationComponent from "../components/InformationComponent.vue";
 import Utils from "@/config/utils.js";
+import { CalendarMixin } from "../mixins/CalendarMixin";
 import { TimeFunctionsMixin } from "../mixins/TimeFunctionsMixin";
 
 export default {
@@ -284,7 +279,7 @@ export default {
   components: {
     InformationComponent,
   },
-  mixins: [TimeFunctionsMixin],
+  mixins: [CalendarMixin, TimeFunctionsMixin],
   props: {
     id: {
       type: [Number, String],
@@ -292,36 +287,23 @@ export default {
     },
   },
   data: () => ({
-    message: "Add Availability",
     showAlert: false,
     alert: "",
     alertType: "success",
     nowDate: null,
     nowTime: null,
-    availability: {},
-    conflictAvailability: {
-      conflicting: {
-        date: "",
-        startTime: "",
-        endTime: "",
-      },
-      existing: {
-        date: "",
-        startTime: "",
-        endTime: "",
-      },
-    },
-    appointment: {},
-    personAppointment: {},
+    type: "",
+    conflictingDates: [],
+    conflictingAvailabilities: [],
+    availabilitiesToSave: [],
     availabilities: [],
     upcoming: [],
     dates: [],
-    dialog: false,
-    dialogDelete: false,
-    groupDialog: false,
+    appointmentTypes: ["Private", "Group"],
+    displayedDates: [],
+    overlay: false,
     doubleBookedDialog: false,
     secondTime: true,
-    //used for generating time slots
     startTimes: [],
     endTimes: [],
     displayedStart: "",
@@ -330,10 +312,6 @@ export default {
     newEnd: "",
     startTime: null,
     endTime: null,
-    menu: false,
-    groupSession: "",
-    editedItem: {},
-    person: {},
     user: {},
     group: {},
     topic: "",
@@ -341,29 +319,13 @@ export default {
     location: "",
     locations: [],
     personRolePrivileges: [],
-    sessionValues: [
-      { text: "Private", value: "Private" },
-      { text: "Group", value: "Group" },
-    ],
     preSessionInfo: "",
     headers: [
       { text: "Date", value: "date" },
       { text: "Start Time", value: "startTime" },
       { text: "End Time", value: "endTime" },
     ],
-    defaultItem: {
-      status: "",
-    },
   }),
-  computed: {},
-  watch: {
-    dialog(val) {
-      val || this.close();
-    },
-    dialogDelete(val) {
-      val || this.closeDelete();
-    },
-  },
   async created() {
     this.user = Utils.getStore("user");
     await this.getGroupByPersonRoleId();
@@ -371,9 +333,23 @@ export default {
     this.newEnd = "23:" + (59 - (this.group.timeInterval - 1)).toString();
     await this.getAvailabilities();
     this.updateTimes();
+    await this.getUpcoming();
     await this.getPrivilegesForPersonRole();
   },
   methods: {
+    showInterval() {
+      return false;
+    },
+    updateDisplayedDates() {
+      this.displayedDates = [];
+      for (let i = 0; i < this.dates.length; i++) {
+        let tempDate = new Date(this.dates[i]);
+        tempDate.setHours(
+          tempDate.getHours() + tempDate.getTimezoneOffset() / 60
+        );
+        this.displayedDates.push(this.formatReadableDate(tempDate));
+      }
+    },
     updateTimes() {
       let maxEndTime = "23:" + (59 - (this.group.timeInterval - 1)).toString();
       // setting the minimum date and time for the picker components
@@ -429,51 +405,58 @@ export default {
       // adding this to make sure you can't end an appointment at the start time
       this.endTimes.shift();
     },
-    async checkIfAvailable(tempAvail) {
-      await this.getUpcoming();
-      let isAvail = true;
-      for (let i = 0; i < this.upcoming.length && isAvail; i++) {
-        let appoint = this.upcoming[i];
-        appoint.date = appoint.date.substring(0, 10);
-        appoint.startTime = appoint.startTime.substring(0, 8);
-        appoint.endTime = appoint.endTime.substring(0, 8);
-        if (tempAvail.date === appoint.date) {
-          if (
-            (tempAvail.startTime < appoint.startTime &&
-              tempAvail.endTime > appoint.startTime &&
-              tempAvail.endTime < appoint.endTime) || // new availability starts before and ends during existing
-            (tempAvail.startTime >= appoint.startTime &&
-              tempAvail.endTime <= appoint.endTime) || // new availability is in the middle of an existing
-            (tempAvail.startTime < appoint.startTime &&
-              tempAvail.endTime > appoint.endTime) || // new availability starts before and ends after existing
-            (tempAvail.startTime > appoint.startTime &&
-              tempAvail.endTime > appoint.endTime &&
-              tempAvail.startTime < appoint.endTime) // new availability starts during and ends after existing
-          ) {
-            isAvail = false;
-            this.conflictAvailability.conflicting = {
-              date: tempAvail.date,
-              startTime: this.formatTime(tempAvail.startTime),
-              endTime: this.formatTime(tempAvail.endTime),
-            };
-            this.conflictAvailability.existing = {
-              date: appoint.date,
-              startTime: this.formatTime(appoint.startTime),
-              endTime: this.formatTime(appoint.endTime),
-            };
-            return;
-          }
+    checkIfAvailable(tempAvailability) {
+      let isAvailable = true;
+      this.conflictingDates.push({
+        date: this.formatReadableDate(tempAvailability.date),
+        testDate: tempAvailability.date,
+        existingAvailabilities: [],
+        conflictingAvailability: {},
+      });
+      for (let i = 0; i < this.upcoming.length; i++) {
+        let appointment = this.upcoming[i];
+        appointment.startTime = appointment.startTime.substring(0, 8);
+        appointment.endTime = appointment.endTime.substring(0, 8);
+        if (
+          tempAvailability.date === appointment.date &&
+          this.isOverlapping(tempAvailability, appointment)
+        ) {
+          this.setUpCalendarEvent(appointment);
+          isAvailable = false;
+          this.conflictingDates
+            .find(
+              (conflictDate) => conflictDate.testDate === tempAvailability.date
+            )
+            .existingAvailabilities.push({
+              name: appointment.name,
+              time:
+                this.formatTimeFromString(appointment.startTime) +
+                " - " +
+                this.formatTimeFromString(appointment.endTime),
+            });
         }
       }
-      return isAvail;
+      if (isAvailable) {
+        this.conflictingDates.pop();
+        this.availabilitiesToSave.push(tempAvailability);
+      } else {
+        this.conflictingDates.find(
+          (conflictDate) => conflictDate.testDate === tempAvailability.date
+        ).conflictingAvailability = {
+          time:
+            this.formatTimeFromString(tempAvailability.startTime) +
+            " - " +
+            this.formatTimeFromString(tempAvailability.endTime),
+        };
+      }
     },
     async addAvailability() {
+      this.overlay = true;
       if (
         this.group.id === null ||
         this.group.id === undefined ||
         this.group.id === ""
       ) {
-        console.log("group id wasn't set");
         await this.getGroupByPersonRoleId().catch((error) => {
           this.alertType = "error";
           this.alert = error.response.data.message;
@@ -481,109 +464,128 @@ export default {
           console.log("There was an error:", error.response);
         });
       }
+      this.conflictingDates = [];
+
       for (var i = 0; i < this.dates.length; i++) {
-        let tempApp = {};
-        let element = this.dates[i];
-        let date = new Date(element);
+        let date = new Date(this.dates[i]);
         date.setHours(date.getHours() + date.getTimezoneOffset() / 60);
-        this.availability.date = date;
-        this.availability.startTime = this.newStart;
-        this.availability.endTime = this.newEnd;
-        this.availability.personId = this.user.userID;
+        let availability = {
+          date: date.toISOString(),
+          startTime: this.newStart,
+          endTime: this.newEnd,
+          personId: this.user.userID,
+        };
 
-        let checkAvailable = await this.checkIfAvailable(this.availability);
+        this.checkIfAvailable(availability);
+      }
 
-        if (checkAvailable) {
-          await AvailabilityServices.addAvailability(this.availability)
-            .then(async () => {
-              this.appointment.date = date;
-              this.appointment.startTime = this.newStart;
-              this.appointment.endTime = this.newEnd;
-              if (this.groupSession.includes("Private")) {
-                this.appointment.type = "Private";
-                this.appointment.locationId = null;
-                this.appointment.topicId = null;
-                this.appointment.preSessionInfo = null;
-              } else {
-                this.appointment.type = "Group";
-                this.appointment.locationId = this.location;
-                this.appointment.topicId = this.topic;
-                this.appointment.preSessionInfo = this.preSessionInfo;
-              }
-              this.appointment.groupId = this.group.id;
-              this.appointment.status = "available";
-              await AppointmentServices.addAppointment(this.appointment)
-                .then(async (response) => {
-                  tempApp = response.data;
-                  this.personAppointment.isTutor = true;
-                  this.personAppointment.personId = this.user.userID;
-                  this.personAppointment.appointmentId = tempApp.id;
-                  await PersonAppointmentServices.addPersonAppointment(
-                    this.personAppointment
-                  )
-                    .then(async () => {
-                      if (
-                        this.appointment.type === "Group" ||
-                        this.appointment.type === "group"
-                      ) {
-                        // this adds the appointment to google
-                        await AppointmentServices.updateAppointment(
-                          tempApp.id,
-                          tempApp
-                        ).catch((error) => {
-                          this.alertType = "error";
-                          this.alert = error.response.data.message;
-                          this.showAlert = true;
-                          console.log("There was an error:", error.response);
-                        });
-                      }
-                    })
-                    .catch((error) => {
-                      this.alertType = "error";
-                      this.alert = error.response.data.message;
-                      this.showAlert = true;
-                      console.log("There was an error:", error.response);
-                    });
-                })
-                .catch((error) => {
-                  this.alertType = "error";
-                  this.alert = error.response.data.message;
-                  this.showAlert = true;
-                  console.log("There was an error:", error.response);
-                });
-            })
-            .catch((error) => {
-              this.alertType = "error";
-              this.alert = error.response.data.message;
-              this.showAlert = true;
-              console.log("There was an error:", error.response);
-            });
-        } else {
-          this.doubleBookedDialog = true;
+      if (this.conflictingDates.length > 0) {
+        this.doubleBookedDialog = true;
+      }
+
+      for (let i = 0; i < this.availabilitiesToSave.length; i++) {
+        let availability = this.availabilitiesToSave[i];
+        let appointment = {
+          date: availability.date,
+          startTime: this.newStart,
+          endTime: this.newEnd,
+          type: this.type,
+          locationId: this.type === "Private" ? null : this.location,
+          topicId: this.type === "Private" ? null : this.topic,
+          preSessionInfo: this.type === "Private" ? null : this.preSessionInfo,
+          groupId: this.group.id,
+          status: "available",
+        };
+
+        await AvailabilityServices.addAvailability(availability).catch(
+          (error) => {
+            this.alertType = "error";
+            this.alert = error.response.data.message;
+            this.showAlert = true;
+            console.log("There was an error:", error.response);
+          }
+        );
+
+        await AppointmentServices.addAppointment(appointment)
+          .then(async (response) => {
+            appointment.id = response.data.id;
+          })
+          .catch((error) => {
+            this.alertType = "error";
+            this.alert = error.response.data.message;
+            this.showAlert = true;
+            console.log("There was an error:", error.response);
+          });
+
+        let personAppointment = {
+          personId: this.user.userID,
+          appointmentId: appointment.id,
+          isTutor: true,
+        };
+
+        await PersonAppointmentServices.addPersonAppointment(
+          personAppointment
+        ).catch((error) => {
+          this.alertType = "error";
+          this.alert = error.response.data.message;
+          this.showAlert = true;
+          console.log("There was an error:", error.response);
+        });
+
+        if (appointment.type === "Group") {
+          // this adds the appointment to google
+          await AppointmentServices.updateAppointment(
+            appointment.id,
+            appointment
+          ).catch((error) => {
+            this.alertType = "error";
+            this.alert = error.response.data.message;
+            this.showAlert = true;
+            console.log("There was an error:", error.response);
+          });
         }
       }
 
+      this.availabilitiesToSave = [];
       this.dates = [];
+      this.displayedDates = [];
       this.displayedStart = "";
       this.displayedEnd = "";
       this.newStart = "00:00";
       this.newEnd = "23:" + (59 - (this.group.timeInterval - 1)).toString();
-      this.groupSession = "";
+      this.type = "";
       this.topic = "";
       this.location = "";
       this.preSessionInfo = "";
       this.secondTime = true;
       await this.getAvailabilities();
       this.updateTimes();
+      this.overlay = false;
 
-      this.alertType = "success";
-      this.alert = "You have successfully added availabilities.";
-      this.showAlert = true;
+      if (this.availabilitiesToSave.length > 0) {
+        this.alertType = "success";
+        this.alert = "You have successfully added availabilities.";
+        this.showAlert = true;
+      }
     },
     async getUpcoming() {
       await AppointmentServices.getUpcomingForPerson(this.user.userID)
         .then((response) => {
           this.upcoming = response.data;
+          for (let i = 0; i < this.upcoming.length; i++) {
+            let appointment = this.upcoming[i];
+            if (
+              appointment.personappointment !== null &&
+              appointment.personappointment !== undefined
+            ) {
+              appointment.students = appointment.personappointment.filter(
+                (pa) => pa.isTutor === false
+              );
+              appointment.tutors = appointment.personappointment.filter(
+                (pa) => pa.isTutor === true
+              );
+            }
+          }
         })
         .catch((error) => {
           this.alertType = "error";
@@ -600,11 +602,13 @@ export default {
           for (let index = 0; index < this.availabilities.length; ++index) {
             //format date, start time, and end time
             let element = this.availabilities[index];
-            this.availabilities[index].date = this.formatDate(element.date);
-            this.availabilities[index].startTime = this.formatTime(
+            this.availabilities[index].date = this.formatReadableDate(
+              element.date
+            );
+            this.availabilities[index].startTime = this.formatTimeFromString(
               element.startTime
             );
-            this.availabilities[index].endTime = this.formatTime(
+            this.availabilities[index].endTime = this.formatTimeFromString(
               element.endTime
             );
           }
@@ -667,12 +671,6 @@ export default {
         if (priv.privilege === privilege) hasPriv = true;
       });
       return hasPriv;
-    },
-    // popup functions
-    groupHandler() {
-      if (this.groupSession.includes("Group")) {
-        this.groupDialog = true;
-      } else this.addAvailability();
     },
   },
 };

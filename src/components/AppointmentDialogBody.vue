@@ -5,8 +5,8 @@
     </v-card-title>
     <v-card-subtitle :class="appointment.color + ' white--text pb-2 mb-2'">
       {{ formatReadableDate(appointment.date) }} •
-      {{ calcTime(appointment.startTime) }} -
-      {{ calcTime(appointment.endTime) }}
+      {{ formatTimeFromString(appointment.startTime) }} -
+      {{ formatTimeFromString(appointment.endTime) }}
     </v-card-subtitle>
     <v-card-text v-if="!showFeedbackDialog">
       <v-row>
@@ -76,6 +76,34 @@
         <b>Google Meet Link: </b>
         <a :href="appointment.URL">{{ appointment.URL }}</a>
       </div>
+
+      <v-select
+        v-if="isAdminAddStudent && checkAppointmentType('Private')"
+        v-model="newStatus"
+        :items="statuses"
+        label="Status"
+        @change="checkButtons()"
+      >
+        <template #prepend>
+          <v-icon
+            :color="
+              newStatus === 'Booked'
+                ? 'blue'
+                : newStatus === 'Pending'
+                ? 'yellow'
+                : 'grey'
+            "
+            >{{
+              newStatus === "Booked"
+                ? "mdi-radiobox-marked"
+                : newStatus === "Pending"
+                ? "mdi-radiobox-marked"
+                : "mdi-radiobox-blank"
+            }}</v-icon
+          >
+        </template>
+      </v-select>
+
       <v-select
         v-model="appointment.locationId"
         :items="locations"
@@ -156,12 +184,14 @@
 
       <v-textarea
         v-model="appointment.preSessionInfo"
-        :counter="130"
-        label="What do you need help with?"
+        :counter="500"
+        :label="
+          appointment.type === 'Private'
+            ? 'What do you need help with?'
+            : 'What this appointment hopes to provide:'
+        "
         :prepend-icon="
-          canEditPreSession
-            ? 'mdi-text-box-edit-outline'
-            : 'mdi-text-box-outline'
+          canEditPreSession ? 'mdi-comment-edit-outline' : 'mdi-comment-outline'
         "
         auto-grow
         rows="2"
@@ -217,6 +247,22 @@
       <v-spacer></v-spacer>
 
       <v-btn
+        v-if="showEnableCancelButton"
+        color="error white--text"
+        @click="showDeleteConfirmation = true"
+      >
+        Cancel Appointment
+      </v-btn>
+
+      <v-btn
+        v-if="showEnableConfirmRejectButtons"
+        color="error white--text"
+        @click="showDeleteConfirmation = true"
+      >
+        Reject Appointment
+      </v-btn>
+
+      <v-btn
         v-if="isAdminAddStudent && !allowAdminAddStudent"
         color="darkblue white--text"
         :disabled="!validateEmail()"
@@ -233,32 +279,8 @@
         Sign Up Student
       </v-btn>
 
-      <v-btn
-        v-if="showEnableCancelButton"
-        color="error white--text"
-        @click="showDeleteConfirmation = true"
-      >
-        Cancel Appointment
-      </v-btn>
-
-      <v-btn
-        v-if="showEnableConfirmRejectButtons"
-        color="error white--text"
-        @click="showDeleteConfirmation = true"
-      >
-        Reject Appointment
-      </v-btn>
-
       <v-btn color="grey white--text" @click="$emit('closeAppointmentDialog')">
-        {{ saveChanges ? "Discard Changes" : "Close" }}
-      </v-btn>
-
-      <v-btn
-        v-if="showEnableConfirmRejectButtons"
-        color="accent"
-        @click="sendAppointmentForConfirmation()"
-      >
-        Confirm Appointment
+        {{ saveChanges && !isAdminAddStudent ? "Discard Changes" : "Close" }}
       </v-btn>
 
       <v-btn
@@ -271,6 +293,14 @@
         "
       >
         Save Changes
+      </v-btn>
+
+      <v-btn
+        v-if="showEnableConfirmRejectButtons"
+        color="accent"
+        @click="sendAppointmentForConfirmation()"
+      >
+        Confirm Appointment
       </v-btn>
 
       <v-btn
@@ -340,16 +370,12 @@
 
 <script>
 import AppointmentServices from "@/services/appointmentServices.js";
-//For info on people and their associated roles
 import PersonServices from "@/services/personServices.js";
 import PersonAppointmentServices from "@/services/personAppointmentServices.js";
 import PersonRoleServices from "@/services/personRoleServices.js";
 import RoleServices from "@/services/roleServices.js";
-// import PersonRolePrivilegeServices from "@/services/personRolePrivilegeServices.js";
-//For info to be shown with appointments
 import LocationServices from "@/services/locationServices.js";
 import TopicServices from "@/services/topicServices.js";
-//Plugin functions
 import Utils from "@/config/utils.js";
 import DeleteConfirmationComponent from "./DeleteConfirmationComponent.vue";
 import { CalendarMixin } from "../mixins/CalendarMixin";
@@ -430,6 +456,8 @@ export default {
         },
       },
       locations: [],
+      statuses: ["Booked", "Pending"],
+      newStatus: "Available",
       currentTopics: [],
       appointment: this.sentAppointment,
       startTimes: [],
@@ -516,7 +544,7 @@ export default {
         id: "",
         fName: "",
         lName: "",
-        email: this.addedStudent.email,
+        email: "",
         personRoleId: "",
       };
       this.updatedPersonAppointment = {
@@ -530,6 +558,7 @@ export default {
       this.tutorString = "";
       this.studentString = "";
       this.emailStatus = "";
+      this.newStatus = "Available";
       this.allowAdminAddStudent = false;
       this.isAdminAddStudent = false;
       this.isNoShow = false;
@@ -672,12 +701,11 @@ export default {
       // 4. tutor - group available but not already in group appointment
       // 4. not past (applies to all cases)
       this.showBookButton =
-        (((this.hasRole("Student") ||
+        ((((this.hasRole("Student") &&
+          !this.appointment.isMemberOfAppointment) ||
           this.hasRole("Admin") ||
           this.hasPrivilege("Sign up students for appointments")) &&
-          this.checkAppointmentStatus("available") &&
-          (this.checkAppointmentStatus("Private") ||
-            !this.appointment.isMemberOfAppointment)) ||
+          this.checkAppointmentStatus("available")) ||
           (this.hasRole("Tutor") &&
             !this.appointment.isMemberOfAppointment &&
             this.checkAppointmentType("Group") &&
@@ -692,13 +720,18 @@ export default {
       // 4. not past (applies to all cases)
       this.enableBookButton =
         (this.hasRole("Student") ||
-          (this.hasRole("Tutor") && this.checkAppointmentType("Group")) ||
+          (this.hasRole("Tutor") &&
+            this.checkAppointmentType("Group") &&
+            !this.appointment.isTutor) ||
           ((this.hasRole("Admin") ||
             this.hasPrivilege("Sign up students for appointments")) &&
             this.isAdminAddStudent &&
             this.addedStudent.fName !== "" &&
             this.addedStudent.lName !== "" &&
-            this.allowAdminAddStudent)) &&
+            this.allowAdminAddStudent &&
+            (this.checkAppointmentType("Group") ||
+              (this.checkAppointmentType("Private") &&
+                this.newStatus !== "available")))) &&
         this.checkAppointmentStatus("available") &&
         (this.checkAppointmentType("Group") ||
           (this.checkAppointmentType("Private") &&
@@ -712,7 +745,7 @@ export default {
       // 1. tutor and pending private
       // 2. not past (applies to all cases)
       this.showEnableConfirmRejectButtons =
-        this.hasRole("Tutor") &&
+        this.appointment.isTutor &&
         this.checkAppointmentStatus("pending") &&
         this.checkAppointmentType("Private") &&
         !this.appointment.isDatePast;
@@ -722,7 +755,8 @@ export default {
       this.showSaveButton =
         ((this.appointment.isTutor && this.checkAppointmentType("Group")) ||
           !this.checkAppointmentStatus("available")) &&
-        (this.canEditLocation || this.canEditTopic || this.canEditPreSession);
+        (this.canEditLocation || this.canEditTopic || this.canEditPreSession) &&
+        !this.isAdminAddStudent;
     },
     setShowEnableSignUpButton() {
       // 1. privilege tutor or admin and available appointment
@@ -857,12 +891,15 @@ export default {
         this.emailStatus =
           "You cannot sign up a tutor for their own appointment.";
       } else if (this.adminCheckPersonInAppointment(this.addedStudent.id)) {
-        this.emailStatus = `${this.addedStudent.fName} 
+        this.emailStatus = `${this.addedStudent.fName}
             ${this.addedStudent.lName} is already signed up for this appointment.`;
       } else if (this.addedStudent.id !== "") {
         this.allowAdminAddStudent = true;
         this.needStudentInfo = false;
-        if (this.addedStudent.personRoleId === null) {
+        if (
+          this.addedStudent.personRoleId === "" ||
+          this.addedStudent.personRoleId === null
+        ) {
           let studentRoleId = await RoleServices.getAllForGroupByType(
             this.appointment.groupId,
             "Student"
@@ -877,10 +914,10 @@ export default {
             agree: false,
           };
           await PersonRoleServices.addPersonRole(personRole);
-          this.emailStatus = `${this.addedStudent.fName} 
+          this.emailStatus = `${this.addedStudent.fName}
             ${this.addedStudent.lName} has been added as a student!`;
         } else {
-          this.emailStatus = `${this.addedStudent.fName} 
+          this.emailStatus = `${this.addedStudent.fName}
             ${this.addedStudent.lName} is a student in ${this.appointment.group.name}!`;
         }
       } else {
@@ -931,9 +968,6 @@ export default {
     },
     async directToCancel() {
       this.showDeleteConfirmation = false;
-      // if (this.appointment.status === "pending" && this.hasRole("Tutor")) {
-      //   await this.confirmAppointment(false, this.user, this.appointment);
-      // } else {
       let fromUser = {
         fName: this.user.fName,
         lName: this.user.lName,
@@ -949,7 +983,6 @@ export default {
         this.showAlert = true;
         console.log("There was an error:", error.response);
       });
-      // }
       this.$emit("doneWithAppointment");
     },
     async sendAppointmentForConfirmation() {
@@ -957,10 +990,17 @@ export default {
       this.$emit("doneWithAppointment");
     },
     async sendAppointmentForBooking() {
-      if (this.isAdminAddStudent && this.needStudentInfo) {
-        await this.adminAdd();
+      if (this.isAdminAddStudent) {
+        if (this.checkAppointmentType("Private")) {
+          // set status that admin chose
+          this.appointment.status = this.newStatus.toLowerCase();
+        }
+        if (this.needStudentInfo) {
+          await this.adminAdd();
+        }
       }
       this.appointment.minApptTime = this.appointment.group.minApptTime;
+      console.log(this.appointment);
       await this.bookAppointment(
         this.isAdminAddStudent,
         this.appointment,
@@ -988,6 +1028,14 @@ export default {
       )
         .then((response) => {
           this.currentTopics = response.data;
+          // there are cases where the change in tutors may have created an appointment that the main tutor is not assigned to
+          if (
+            this.currentTopics.find(
+              (topic) => topic.id === this.appointment.topicId
+            ) === undefined
+          ) {
+            this.currentTopics.push(this.appointment.topic);
+          }
         })
         .catch((error) => {
           this.alertType = "error";
@@ -1035,23 +1083,46 @@ export default {
         });
       }
 
-      this.updatedPersonAppointment.id =
-        this.appointment.isMemberOfAppointment.id;
-      this.updatedPersonAppointment.personId =
-        this.appointment.isMemberOfAppointment.personId;
       this.updatedPersonAppointment.appointmentId = this.appointment.id;
-      this.updatedPersonAppointment.isTutor =
-        this.appointment.isMemberOfAppointment.isTutor;
 
-      await PersonAppointmentServices.updatePersonAppointment(
-        this.updatedPersonAppointment.id,
-        this.updatedPersonAppointment
-      ).catch((error) => {
-        this.alertType = "error";
-        this.alert = error.response.data.message;
-        this.showAlert = true;
-        console.log("There was an error:", error.response);
-      });
+      if (this.isNoShow && this.hasRole("Tutor")) {
+        // want to save the no show feedback for every person in the appointment
+        for (let i = 0; i < this.appointment.personappointment.length; i++) {
+          this.updatedPersonAppointment.feedbacknumber = null;
+          this.updatedPersonAppointment.id =
+            this.appointment.personappointment[i].id;
+          this.updatedPersonAppointment.personId =
+            this.appointment.personappointment[i].personId;
+          this.updatedPersonAppointment.isTutor =
+            this.appointment.personappointment[i].isTutor;
+          await PersonAppointmentServices.updatePersonAppointment(
+            this.updatedPersonAppointment.id,
+            this.updatedPersonAppointment
+          ).catch((error) => {
+            this.alertType = "error";
+            this.alert = error.response.data.message;
+            this.showAlert = true;
+            console.log("There was an error:", error.response);
+          });
+        }
+      } else {
+        this.updatedPersonAppointment.id =
+          this.appointment.isMemberOfAppointment.id;
+        this.updatedPersonAppointment.personId =
+          this.appointment.isMemberOfAppointment.personId;
+        this.updatedPersonAppointment.isTutor =
+          this.appointment.isMemberOfAppointment.isTutor;
+        await PersonAppointmentServices.updatePersonAppointment(
+          this.updatedPersonAppointment.id,
+          this.updatedPersonAppointment
+        ).catch((error) => {
+          this.alertType = "error";
+          this.alert = error.response.data.message;
+          this.showAlert = true;
+          console.log("There was an error:", error.response);
+        });
+      }
+
       this.showFeedbackDialog = false;
       this.$emit("doneWithAppointment");
     },

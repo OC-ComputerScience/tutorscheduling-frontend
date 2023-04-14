@@ -1,7 +1,6 @@
 import Vue from "vue";
 import Router from "vue-router";
 
-import Apply from "./views/Apply.vue";
 import Calendar from "./views/Calendar.vue";
 import Contract from "./views/Contract.vue";
 import Help from "./views/Help.vue";
@@ -14,7 +13,7 @@ import PageNotFound from "./views/PageNotFound.vue";
 import AdminApprove from "./views/Admin/AdminApprove.vue";
 import AdminHome from "./views/Admin/AdminHome.vue";
 import AdminReports from "./views/Admin/AdminReports.vue";
-import AdminRequests from "./views/Admin/AdminRequests.vue";
+import RequestList from "./views/Admin/RequestList.vue";
 
 //Group
 import GroupList from "./views/Admin/Group/GroupList.vue";
@@ -34,10 +33,6 @@ import RoleList from "./views/Admin/RoleList.vue";
 // Topic
 import TopicList from "./views/Admin/TopicList.vue";
 
-// Student Screens
-
-import StudentAddRequest from "./views/StudentAddRequest.vue";
-
 // Tutor Screens
 
 import TutorAddAvailability from "./views/TutorAddAvailability.vue";
@@ -50,12 +45,6 @@ const router = new Router({
   linkExactActiveClass: "active",
   base: process.env.NODE_ENV === "development" ? "/" : "/",
   routes: [
-    {
-      path: "/apply/:id",
-      name: "apply",
-      component: Apply,
-      props: true,
-    },
     {
       path: "/calendar/:id",
       name: "calendar",
@@ -159,15 +148,9 @@ const router = new Router({
       props: true,
     },
     {
-      path: "/adminRequests/:id",
-      name: "adminRequests",
-      component: AdminRequests,
-      props: true,
-    },
-    {
-      path: "/studentAddRequest/:id",
-      name: "studentAddRequest",
-      component: StudentAddRequest,
+      path: "/requestList/:id",
+      name: "requestList",
+      component: RequestList,
       props: true,
     },
     {

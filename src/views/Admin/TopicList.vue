@@ -2,7 +2,7 @@
   <div>
     <v-container>
       <v-card-title class="text-h4 font-weight-bold pt-4 pb-6 pl-0 accent--text"
-        >{{ title }}
+        >{{ `${user.selectedGroup} Topics` }}
         <InformationComponent
           :message="'View, edit and add topics for ' + group.name + '.'"
         ></InformationComponent
@@ -72,14 +72,13 @@ export default {
         { text: "Abbreviation", value: "abbr" },
         { text: "Status", value: "status" },
       ],
-      title: " Topics",
+      message: "",
     };
   },
   async created() {
     this.user = Utils.getStore("user");
     await this.getGroupByPersonRoleId();
     await this.getTopicsForGroup();
-    this.title = this.group.name + this.title;
   },
   methods: {
     async getGroupByPersonRoleId() {
@@ -88,7 +87,7 @@ export default {
           this.group = response.data[0].role.group;
         })
         .catch((error) => {
-          this.title = error.response.data.message;
+          this.message = error.response.data.message;
           console.log("There was an error:", error.response);
         });
     },
@@ -98,7 +97,7 @@ export default {
           this.topics = response.data;
         })
         .catch((error) => {
-          this.title = error.response.data.message;
+          this.message = error.response.data.message;
           console.log("There was an error:", error.response);
         });
     },
@@ -109,7 +108,7 @@ export default {
           await this.getTopicsForGroup();
         })
         .catch((error) => {
-          this.title = error.response.data.message;
+          this.message = error.response.data.message;
           console.log("There was an error:", error.response);
         });
     },
@@ -126,7 +125,7 @@ export default {
     //         await this.getTopicsForGroup();
     //       })
     //       .catch((error) => {
-    //         this.title = error.response.data.message;
+    //         this.message = error.response.data.message;
     //         console.log("There was an error:", error.response);
     //       });
     //   }
@@ -157,7 +156,7 @@ export default {
             await this.getTopicsForGroup();
           })
           .catch((error) => {
-            this.title = error.response.data.message;
+            this.message = error.response.data.message;
             console.log("There was an error:", error.response);
           });
       } else {
@@ -167,7 +166,7 @@ export default {
             await this.getTopicsForGroup();
           })
           .catch((error) => {
-            this.title = error.response.data.message;
+            this.message = error.response.data.message;
             console.log(error);
           });
       }

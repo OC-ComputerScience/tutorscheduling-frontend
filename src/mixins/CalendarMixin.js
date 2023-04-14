@@ -160,10 +160,6 @@ export const CalendarMixin = {
     },
     // Split appointments into more availability slots when part of slot is booked
     async splitAppointment(isAdminAdd, appointment, fromUser, student) {
-      if (appointment.status !== "available") {
-        return;
-      }
-
       //If the start of the booked slot isn't the start of the slot, generate an open slot
       if (
         appointment.startTime < appointment.newStart &&
@@ -175,8 +171,7 @@ export const CalendarMixin = {
           startTime: appointment.startTime,
           endTime: appointment.newStart,
           type: appointment.type,
-          status: appointment.status,
-          preSessionInfo: "",
+          status: "available",
           groupId: appointment.groupId,
         };
         await AppointmentServices.addAppointment(temp).then(
@@ -202,7 +197,7 @@ export const CalendarMixin = {
           startTime: appointment.newEnd,
           endTime: appointment.endTime,
           type: appointment.type,
-          status: appointment.status,
+          status: "available",
           preSessionInfo: "",
           groupId: appointment.groupId,
           //locationId: appointment.locationId,
@@ -234,6 +229,7 @@ export const CalendarMixin = {
         startTime: appointment.newStart,
         endTime: appointment.newEnd,
         type: appointment.type,
+        status: appointment.status,
         preSessionInfo: appointment.preSessionInfo,
         groupId: appointment.groupId,
         locationId: appointment.locationId,
@@ -245,7 +241,6 @@ export const CalendarMixin = {
       if (isAdminAdd) {
         pap.personId = student.id;
         await PersonAppointmentServices.addPersonAppointment(pap);
-        temp.status = "booked";
         await AppointmentServices.updateAppointment(appointment.id, temp);
         // get updated appointment information
         appointment = await this.getUpdatedAppointment(appointment.id);
@@ -256,7 +251,7 @@ export const CalendarMixin = {
           tutorPhoneNum: appointment.tutors[0].person.phoneNum,
           tutorPersonRoleId: appointment.tutors[0].person.personrole[0].id,
           date: this.formatDate(appointment.date),
-          startTime: this.calcTime(appointment.startTime),
+          startTime: this.formatTimeFromString(appointment.startTime),
           locationName:
             appointment.location.type.includes("Online") &&
             appointment.URL !== null
@@ -268,7 +263,11 @@ export const CalendarMixin = {
           studentFirstName: student.fName,
           studentLastName: student.lName,
         };
-        await TwilioServices.sendMessageFromAdmin(textInfo);
+        if (appointment.status === "booked") {
+          await TwilioServices.sendMessageFromAdmin(textInfo);
+        } else if (appointment.status === "pending") {
+          await TwilioServices.sendPendingMessage(textInfo);
+        }
       } // handle if student added appointment
       else {
         pap.personId = fromUser.userID ? fromUser.userID : fromUser.id;
@@ -283,7 +282,7 @@ export const CalendarMixin = {
           tutorPhoneNum: appointment.tutors[0].person.phoneNum,
           tutorPersonRoleId: appointment.tutors[0].person.personrole[0].id,
           date: this.formatDate(appointment.date),
-          startTime: this.calcTime(appointment.startTime),
+          startTime: this.formatTimeFromString(appointment.startTime),
           locationName:
             appointment.location.type.includes("Online") &&
             appointment.URL !== null
@@ -312,7 +311,7 @@ export const CalendarMixin = {
           tutorPhoneNum: "",
           tutorPersonRoleId: "",
           date: this.formatDate(appointment.date),
-          startTime: this.calcTime(appointment.startTime),
+          startTime: this.formatTimeFromString(appointment.startTime),
           locationName:
             appointment.location.type.includes("Online") &&
             appointment.URL !== null
@@ -344,7 +343,7 @@ export const CalendarMixin = {
           tutorPhoneNum: "",
           tutorPersonRoleId: "",
           date: this.formatDate(appointment.date),
-          startTime: this.calcTime(appointment.startTime),
+          startTime: this.formatTimeFromString(appointment.startTime),
           locationName:
             appointment.location.type.includes("Online") &&
             appointment.URL !== null
@@ -386,7 +385,7 @@ export const CalendarMixin = {
         toPhoneNum: "",
         toPersonRoleId: "",
         date: this.formatDate(appointment.date),
-        startTime: this.calcTime(appointment.startTime),
+        startTime: this.formatTimeFromString(appointment.startTime),
         topicName: appointment.topic.name,
         fromFirstName: fromUser.fName,
         fromLastName: fromUser.lName,
@@ -438,7 +437,7 @@ export const CalendarMixin = {
             studentPersonRoleId:
               appointment.students[0].person.personrole[0].id,
             date: this.formatDate(appointment.date),
-            startTime: this.calcTime(appointment.startTime),
+            startTime: this.formatTimeFromString(appointment.startTime),
             topicName: appointment.topic.name,
             tutorFirstName: fromUser.fName,
             tutorLastName: fromUser.lName,
@@ -454,7 +453,7 @@ export const CalendarMixin = {
           toPhoneNum: appointment.students[0].person.phoneNum,
           toPersonRoleId: appointment.students[0].person.personrole[0].id,
           date: this.formatDate(appointment.date),
-          startTime: this.calcTime(appointment.startTime),
+          startTime: this.formatTimeFromString(appointment.startTime),
           topicName: appointment.topic.name,
           fromFirstName: fromUser.fName,
           fromLastName: fromUser.lName,
