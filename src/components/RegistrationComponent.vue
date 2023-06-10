@@ -3,7 +3,7 @@
     <v-dialog
       v-if="user !== null"
       v-model="roleDialog"
-      :persistent="!hasAnyRoles ? true : false"
+      persistent
       max-width="800"
     >
       <v-card tile>
@@ -44,8 +44,13 @@
         <v-card-actions>
           <v-spacer></v-spacer>
           <v-btn
+            color="grey white--text"
+            @click="$emit('closeRegistrationComponent')"
+          >
+            Cancel
+          </v-btn>
+          <v-btn
             color="accent"
-            text
             @click="
               roleDialog = false;
               groupDialog = true;
@@ -61,7 +66,7 @@
     <v-dialog
       v-if="user !== null"
       v-model="groupDialog"
-      :persistent="!hasAnyRoles ? true : false"
+      persistent
       max-width="1000"
     >
       <v-card tile>
@@ -114,7 +119,6 @@
         <v-card-actions>
           <v-btn
             color="accent"
-            text
             @click="
               roleDialog = true;
               groupDialog = false;
@@ -125,8 +129,13 @@
           </v-btn>
           <v-spacer></v-spacer>
           <v-btn
+            color="grey white--text"
+            @click="$emit('closeRegistrationComponent')"
+          >
+            Cancel
+          </v-btn>
+          <v-btn
             color="accent"
-            text
             :disabled="groupSelect === ''"
             @click="savePersonRoles()"
           >

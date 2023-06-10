@@ -39,7 +39,7 @@ jobs:
         uses: garygrossgarten/github-action-scp@release
         with:
           local: dist/
-          remote: c:/Apache24/htdocs
+          remote: c:/Apache24/htdocs/tutorscheduling
           recursive: true
           host: "tutorschedulingdev.oc.edu"
           username: "david.north"

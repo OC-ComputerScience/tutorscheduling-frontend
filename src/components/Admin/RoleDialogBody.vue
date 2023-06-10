@@ -1,7 +1,7 @@
 <template>
   <v-card>
-    <v-card-title class="primary white--text mb-6">{{
-      isEdit ? "Edit Role" : "Add New Role"
+    <v-card-title class="primary white--text mb-6 headline">{{
+      isEdit ? `Edit Role - ${role.type}` : "Add A New Role"
     }}</v-card-title>
     <v-card-text>
       <v-text-field

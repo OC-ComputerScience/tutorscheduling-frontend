@@ -12,9 +12,25 @@
         }}</v-card-title>
       </v-card-title>
 
-      <v-alert v-model="showAlert" dismissible :type="alertType">{{
-        alert
-      }}</v-alert>
+      <v-snackbar v-model="showAlert" rounded="pill">
+        {{ alert }}
+        <template #action="{ attrs }">
+          <v-btn
+            :color="
+              alertType === 'success'
+                ? 'green'
+                : alertType === 'warning'
+                ? 'yellow'
+                : 'error'
+            "
+            text
+            v-bind="attrs"
+            @click="showAlert = false"
+          >
+            Close
+          </v-btn>
+        </template>
+      </v-snackbar>
 
       <v-dialog v-model="appointmentDialog" persistent max-width="800px">
         <AppointmentDialogBody
@@ -28,35 +44,18 @@
       </v-dialog>
 
       <v-dialog
-        v-if="hasRole('Tutor')"
-        v-model="googleCalendarDialog"
+        v-if="hasRole('Student')"
+        v-model="requestDialog"
         persistent
-        max-width="800"
+        max-width="800px"
       >
-        <v-card tile>
-          <v-card-title class="primary white--text mb-6">
-            <span class="text-h5">Hello, {{ user.fName }}!</span>
-          </v-card-title>
-          <v-card-text>
-            Tutor Scheduling updates your Google calendar with appointments. You
-            will now be asked to approve (or re-approve) that access via Google.
-            You will be presented with a Google login and a Tutor Scheduling
-            access request.
-          </v-card-text>
-          <v-card-actions>
-            <v-spacer></v-spacer>
-            <v-btn
-              color="accent"
-              text
-              @click="
-                googleCalendarDialog = false;
-                doAuthorization();
-              "
-            >
-              Continue
-            </v-btn>
-          </v-card-actions>
-        </v-card>
+        <RequestDialogBody
+          :sent-request="selectedRequest"
+          :person-role-id="user.selectedRole.personRoleId"
+          :sent-bool="false"
+          @closeRequestDialog="requestDialog = false"
+          @saveOrAddRequest="addRequest"
+        ></RequestDialogBody>
       </v-dialog>
 
       <span v-if="approved">
@@ -84,12 +83,12 @@
               height="100"
               :color="hasRole('Student') ? '#F8C545' : '#63BAC0'"
               @click="
-                handleRedundantNavigation(
-                  hasRole('Student')
-                    ? 'studentAddRequest'
-                    : 'tutorAddAvailability',
-                  user.selectedRole.personRoleId
-                )
+                hasRole('Student')
+                  ? (requestDialog = true)
+                  : handleRedundantNavigation(
+                      'tutorAddAvailability',
+                      user.selectedRole.personRoleId
+                    )
               "
             >
               <v-card-title class="justify-center white--text">
@@ -167,10 +166,14 @@
 
 <script>
 import Utils from "@/config/utils.js";
+import RequestServices from "@/services/requestServices.js";
+import RoleServices from "@/services/roleServices.js";
+import TwilioServices from "@/services/twilioServices";
 import PersonRoleServices from "@/services/personRoleServices.js";
 import PersonRolePrivilegeServices from "@/services/personRolePrivilegeServices.js";
 import AppointmentDialogBody from "../components/AppointmentDialogBody.vue";
 import InformationComponent from "../components/InformationComponent.vue";
+import RequestDialogBody from "../components/RequestDialogBody.vue";
 import { CalendarMixin } from "../mixins/CalendarMixin";
 import { RedirectToPageMixin } from "../mixins/RedirectToPageMixin";
 import { TimeFunctionsMixin } from "../mixins/TimeFunctionsMixin";
@@ -180,6 +183,7 @@ export default {
   components: {
     AppointmentDialogBody,
     InformationComponent,
+    RequestDialogBody,
   },
   mixins: [CalendarMixin, RedirectToPageMixin, TimeFunctionsMixin],
   props: {
@@ -196,12 +200,18 @@ export default {
       alert: "",
       alertType: "success",
       message: "",
-      url: "",
       approved: false,
       disabled: false,
       appointmentDialog: false,
-      googleCalendarDialog: false,
       selectedAppointment: {},
+      requestDialog: false,
+      selectedRequest: {
+        problem: "",
+        courseNum: "",
+        description: "",
+        status: "Received",
+        personId: "",
+      },
       appointments: [],
       upcomingAppointments: [],
       personRolePrivileges: [],
@@ -326,8 +336,10 @@ export default {
         if (owned) {
           this.setUpCalendarEvent(appointment);
           appointment.tableDate = this.formatReadableMonth(appointment.date);
-          appointment.tableStart = this.formatTime(appointment.startTime);
-          appointment.tableEnd = this.formatTime(appointment.endTime);
+          appointment.tableStart = this.formatTimeFromString(
+            appointment.startTime
+          );
+          appointment.tableEnd = this.formatTimeFromString(appointment.endTime);
           appointment.personRolePrivileges = [];
           appointment.newStart = appointment.startTime;
           appointment.newEnd = appointment.endTime;
@@ -378,74 +390,6 @@ export default {
         }
       }
     },
-    checkForAuthorization() {
-      var now = new Date().toISOString();
-      if (
-        this.user.refresh_token !== null &&
-        this.user.refresh_token !== undefined &&
-        this.user.refresh_token !== ""
-      ) {
-        if (now > this.user.expiration_date) {
-          this.googleCalendarDialog = true;
-        }
-      } else {
-        this.googleCalendarDialog = true;
-      }
-    },
-    doAuthorization() {
-      if (process.env.VUE_APP_CLIENT_URL.includes("localhost")) {
-        this.url = "http://localhost/tutoring-api";
-      } else {
-        this.url = "/tutoring-api";
-      }
-      this.url += "/authorize/" + this.user.userID;
-
-      const client = global.google.accounts.oauth2.initCodeClient({
-        client_id: process.env.VUE_APP_CLIENT_ID,
-        access_type: "offline",
-        scope: "https://www.googleapis.com/auth/calendar",
-        ux_mode: "popup",
-        callback: async (response) => {
-          await fetch(this.url, {
-            method: "POST",
-            mode: "cors",
-            cache: "no-cache",
-            credentials: "same-origin",
-            headers: {
-              "Content-Type": "application/x-www-form-urlencoded",
-              "X-Requested-With": "XMLHttpRequest",
-              "Access-Control-Allow-Origin": "*",
-            },
-            body: "code=" + response.code,
-          })
-            .then((response) => response.json())
-            .then((response) => {
-              if (response.userInfo !== undefined) {
-                let user = Utils.getStore("user");
-                user.refresh_token = response.userInfo.refresh_token;
-                user.expiration_date = response.userInfo.expiration_date;
-                Utils.setStore("user", user);
-                this.alert = response.message;
-                this.alertType = "success";
-
-                this.showAlert = true;
-              } else {
-                this.alert = response.message;
-                this.alertType = "error";
-                this.showAlert = true;
-              }
-            })
-            .catch((error) => {
-              this.alert =
-                "There was an error authorizing your account. Please try again.";
-              this.alertType = "error";
-              this.showAlert = true;
-              console.log(error);
-            });
-        },
-      });
-      client.requestCode();
-    },
     async setApprovedDisabled() {
       await PersonRoleServices.getPersonRole(this.id)
         .then((response) => {
@@ -463,10 +407,63 @@ export default {
           this.showAlert = true;
           console.log("There was an error:", error.response);
         });
-
-      if (this.approved && this.hasRole("Tutor")) {
-        this.checkForAuthorization();
+    },
+    async checkPrivilege(privilege, personRolePrivileges) {
+      let hasPriv = false;
+      for (let i = 0; i < personRolePrivileges.length; i++) {
+        let priv = personRolePrivileges[i];
+        if (priv.privilege === privilege) hasPriv = true;
       }
+      return hasPriv;
+    },
+    async addRequest(request) {
+      let newRequest = {
+        courseNum: request.courseNum,
+        description: request.description,
+        status: request.status,
+        problem: request.problem,
+        groupId: request.groupId,
+        personId: request.personId,
+        topicId: request.topicId,
+      };
+      await RequestServices.addRequest(newRequest)
+        .then(async (response) => {
+          let admins = [];
+          await RoleServices.getAllForGroupByType(request.groupId, "Admin")
+            .then((response) => {
+              admins = response.data[0].personrole;
+            })
+            .catch((error) => {
+              console.log("There was an error:", error.response);
+            });
+          for (let i = 0; i < admins.length; i++) {
+            let tempA = admins[i];
+            tempA.requestId = response.data.id;
+            if (
+              await this.checkPrivilege(
+                "Receive notifications for requests",
+                tempA.personroleprivilege
+              )
+            ) {
+              let textInfo = {
+                fromFirstName: this.user.fName,
+                fromLastName: this.user.lName,
+                adminPersonRoleId: tempA.id,
+                requestId: response.data.id,
+                adminPhoneNum: tempA.person.phoneNum,
+                groupName: this.user.selectedGroup,
+              };
+              await TwilioServices.sendRequestMessage(textInfo);
+            }
+          }
+          this.requestDialog = false;
+        })
+        .catch((error) => {
+          console.log("There was an error:", error);
+          this.alertType = "error";
+          this.alert = error.response.data.message;
+          this.showAlert = true;
+        });
     },
     openUpcoming: async function (item, row) {
       row.select(true);

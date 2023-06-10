@@ -460,10 +460,12 @@ export default {
             //format date, start time, and end time
             let element = this.appointments[index];
             this.appointments[index].date = this.formatDate(element.date);
-            this.appointments[index].startTime = this.formatTime(
+            this.appointments[index].startTime = this.formatTimeFromString(
               element.startTime
             );
-            this.appointments[index].endTime = this.formatTime(element.endTime);
+            this.appointments[index].endTime = this.formatTimeFromString(
+              element.endTime
+            );
           }
 
           var date = new Date();
