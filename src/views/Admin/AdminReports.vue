@@ -225,10 +225,14 @@ export default {
         //make status field look nicer
         if (appoint.status === "booked") appoint.statusName = "Booked";
         else if (appoint.status === "complete") appoint.statusName = "Complete";
-        else
+        else if (
+          this.status.find((status) => status.name.includes(appoint.status)) !=
+          null
+        )
           appoint.statusName = this.status.find((status) =>
             status.name.includes(appoint.status)
           ).title;
+        else appoint.statusName = "None";
 
         if (
           appoint.topic !== undefined &&
@@ -481,7 +485,7 @@ export default {
         })
         .catch((error) => {
           this.alertType = "error";
-          this.alert = "Error in date format";
+          this.alert = "Error in data";
           this.showAlert = true;
           console.log("There was an error:", error);
         });
