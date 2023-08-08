@@ -157,15 +157,11 @@ export default {
         "Are you sure you want to disable the " +
         this.item.type.toLowerCase() +
         " role for " +
-        this.item.person.fName +
-        " " +
-        this.item.person.lName +
+        this.item.personName +
         "?";
       this.cancelBody =
         "Disabling this role will cancel all future appointments for " +
-        this.item.person.fName +
-        " " +
-        this.item.person.lName;
+        this.item.personName;
       if (this.item.type === "Tutor") {
         this.cancelBody += ", delete their topics, delete their privileges";
       }

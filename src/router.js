@@ -25,9 +25,7 @@ import GroupView from "./views/Admin/Group/GroupView.vue";
 import LocationList from "./views/Admin/LocationList.vue";
 
 // Person
-import PersonList from "./views/Admin/Person/PersonList.vue";
-import PersonAdd from "./views/Admin/Person/PersonAdd.vue";
-import PersonView from "./views/Admin/Person/PersonView.vue";
+import PersonList from "./views/Admin/PersonList.vue";
 
 // Role
 import RoleList from "./views/Admin/RoleList.vue";
@@ -114,21 +112,9 @@ const router = new Router({
       props: true,
     },
     {
-      path: "/personAdd/:id",
-      name: "personAdd",
-      component: PersonAdd,
-      props: true,
-    },
-    {
       path: "/personList/:id",
       name: "personList",
       component: PersonList,
-      props: true,
-    },
-    {
-      path: "/personView/:id/:personId",
-      name: "personView",
-      component: PersonView,
       props: true,
     },
     {

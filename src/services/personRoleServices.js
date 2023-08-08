@@ -23,6 +23,9 @@ export default {
   updatePersonRole(personRoleId, personrole) {
     return apiClient.put("personrole/" + personRoleId, personrole);
   },
+  disablePersonRole(personrole) {
+    return apiClient.post("personrole/disable", personrole);
+  },
   deletePersonRole(personRoleId) {
     return apiClient.delete("personrole/" + personRoleId);
   },

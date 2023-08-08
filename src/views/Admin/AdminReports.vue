@@ -153,7 +153,7 @@ export default {
         { id: 0, name: "available", title: "Available" },
         { id: 1, name: "studentCancel,tutorCancel", title: "Canceled" },
         { id: 2, name: "booked,complete", title: "Complete" },
-        { id: 3, name: "no-show", title: "No Show" },
+        { id: 3, name: "noShow", title: "No Show" },
         { id: 4, name: "pending", title: "Pending" },
         { id: 5, name: "studentCancel", title: "Student Cancel" },
         { id: 6, name: "tutorCancel", title: "Tutor Cancel" },
@@ -225,10 +225,14 @@ export default {
         //make status field look nicer
         if (appoint.status === "booked") appoint.statusName = "Booked";
         else if (appoint.status === "complete") appoint.statusName = "Complete";
-        else
-          appoint.statusName = this.status.find(
-            (status) => status.name === appoint.status
+        else if (
+          this.status.find((status) => status.name.includes(appoint.status)) !=
+          null
+        )
+          appoint.statusName = this.status.find((status) =>
+            status.name.includes(appoint.status)
           ).title;
+        else appoint.statusName = "None";
 
         if (
           appoint.topic !== undefined &&
@@ -481,9 +485,9 @@ export default {
         })
         .catch((error) => {
           this.alertType = "error";
-          this.alert = error.response.data.message;
+          this.alert = "Error in data";
           this.showAlert = true;
-          console.log("There was an error:", error.response);
+          console.log("There was an error:", error);
         });
     },
     async getTopicsForGroup() {
