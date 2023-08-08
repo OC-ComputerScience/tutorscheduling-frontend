@@ -153,7 +153,7 @@ export default {
         { id: 0, name: "available", title: "Available" },
         { id: 1, name: "studentCancel,tutorCancel", title: "Canceled" },
         { id: 2, name: "booked,complete", title: "Complete" },
-        { id: 3, name: "no-show", title: "No Show" },
+        { id: 3, name: "noShow", title: "No Show" },
         { id: 4, name: "pending", title: "Pending" },
         { id: 5, name: "studentCancel", title: "Student Cancel" },
         { id: 6, name: "tutorCancel", title: "Tutor Cancel" },
