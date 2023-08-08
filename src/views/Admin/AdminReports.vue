@@ -481,9 +481,9 @@ export default {
         })
         .catch((error) => {
           this.alertType = "error";
-          this.alert = error.response.data.message;
+          this.alert = "Error in date format";
           this.showAlert = true;
-          console.log("There was an error:", error.response);
+          console.log("There was an error:", error);
         });
     },
     async getTopicsForGroup() {
