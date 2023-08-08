@@ -226,8 +226,8 @@ export default {
         if (appoint.status === "booked") appoint.statusName = "Booked";
         else if (appoint.status === "complete") appoint.statusName = "Complete";
         else
-          appoint.statusName = this.status.find(
-            (status) => status.name === appoint.status
+          appoint.statusName = this.status.find((status) =>
+            status.name.includes(appoint.status)
           ).title;
 
         if (
