@@ -463,7 +463,7 @@ export default {
           for (let index = 0; index < this.appointments.length; ++index) {
             //format date, start time, and end time
             let element = this.appointments[index];
-            this.appointments[index].date = this.formatDate(element.date);
+            this.appointments[index].date = element.date.substring(0, 10);
             this.appointments[index].startTime = this.formatTimeFromString(
               element.startTime
             );
@@ -534,11 +534,16 @@ export default {
     },
     filter() {
       // filter appointments by date
+      console.log(this.selectedAppointments[0].date);
+
+      console.log(this.dates[0]);
+      console.log(this.dates[1]);
+
       if (this.dates.length > 0) {
         this.selectedAppointments = this.selectedAppointments.filter(
           (appointment) =>
-            appointment.date >= this.formatDate(this.dates[0]) &&
-            appointment.date <= this.formatDate(this.dates[1])
+            appointment.date >= this.dates[0] &&
+            appointment.date <= this.dates[1]
         );
       }
       // filter by topic
