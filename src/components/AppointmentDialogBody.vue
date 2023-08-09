@@ -1055,6 +1055,9 @@ export default {
         }
       } else {
         this.updatedPersonAppointment.feedbacktext = "";
+        if (this.updatedPersonAppointment.feedbacknumber == null) {
+          this.updatedPersonAppointment.feedbacknumber = 0;
+        }
       }
     },
     async saveFeedback() {
