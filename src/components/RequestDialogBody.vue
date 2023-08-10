@@ -281,7 +281,7 @@ export default {
     },
     saveOrAddRequest() {
       this.request.groupId = this.group.id;
-      this.request.personId = this.user.userID;
+      if (!this.isAdminView) this.request.personId = this.user.userID;
       this.$emit("saveOrAddRequest", this.request);
     },
   },
