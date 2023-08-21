@@ -136,7 +136,7 @@
           </v-card-title>
           <v-data-table
             :headers="upcomingHeaders"
-            :items="zfx"
+            :items="feedbackAppointments"
             @click:row="openFeedback"
             ><template #[`item.status`]="{ item }"
               ><v-tooltip right>
