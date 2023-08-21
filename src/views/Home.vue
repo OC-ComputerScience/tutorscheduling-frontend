@@ -136,7 +136,7 @@
           </v-card-title>
           <v-data-table
             :headers="upcomingHeaders"
-            :items="feedbackAppointments"
+            :items="zfx"
             @click:row="openFeedback"
             ><template #[`item.status`]="{ item }"
               ><v-tooltip right>
@@ -382,7 +382,9 @@ export default {
             } else if (
               this.hasRole("Tutor") &&
               appointment.isTutor.feedbacktext === null &&
-              (appointment.status === "booked" || appointment.type === "Group")
+              (appointment.status === "booked" ||
+                appointment.status === "pending" ||
+                appointment.type === "Group")
             ) {
               this.feedbackAppointments.push(appointment);
             }
