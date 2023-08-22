@@ -216,7 +216,7 @@
         full-icon="mdi-star"
         hover
         half-increments
-        :readonly="isNoShow"
+        :readonly="isNoShow || isNoAccept"
         label="Rating"
         length="5"
         x-large
@@ -227,7 +227,9 @@
         :counter="500"
         label="How did your session go?"
         :prepend-icon="
-          isNoShow ? 'mdi-text-box-outline' : 'mdi-text-box-edit-outline'
+          isNoShow || isNoAccept
+            ? 'mdi-text-box-outline'
+            : 'mdi-text-box-edit-outline'
         "
         auto-grow
         rows="2"
@@ -571,6 +573,7 @@ export default {
       this.allowAdminAddStudent = false;
       this.isAdminAddStudent = false;
       this.isNoShow = false;
+      this.isNoAccept = false;
       this.needStudentInfo = false;
       this.saveChanges = false;
       this.showFeedbackDialog =
@@ -1098,7 +1101,7 @@ export default {
           : this.isNoAccept
           ? "noAccept"
           : "complete";
-        console.log(updatedAppointment);
+
         await AppointmentServices.updateAppointment(
           updatedAppointment.id,
           updatedAppointment
