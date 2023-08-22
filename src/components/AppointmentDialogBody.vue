@@ -231,14 +231,21 @@
         "
         auto-grow
         rows="2"
-        :readonly="isNoShow"
+        :readonly="isNoShow || isNoAccept"
       ></v-textarea>
 
       <v-checkbox
-        v-if="hasRole('Tutor')"
+        v-if="hasRole('Tutor') && appointment.status != 'pending'"
         v-model="isNoShow"
         dense
         label="Did you experience a no-show?"
+        @change="updateFeedbackText()"
+      ></v-checkbox>
+      <v-checkbox
+        v-if="hasRole('Tutor') && appointment.status == 'pending'"
+        v-model="isNoAccept"
+        dense
+        label="Did you experience a no Acceptance?"
         @change="updateFeedbackText()"
       ></v-checkbox>
     </v-card-text>
@@ -347,7 +354,8 @@
           !(
             (updatedPersonAppointment.feedbacknumber > 0 &&
               updatedPersonAppointment.feedbacktext !== '') ||
-            isNoShow
+            isNoShow ||
+            isNoAccept
           )
         "
         color="accent"
@@ -476,6 +484,7 @@ export default {
       isAdminAddStudent: false,
       isMemberOfAppointment: false,
       isNoShow: false,
+      isNoAccept: false,
       needStudentInfo: false,
       saveChanges: false,
       showBookButton: false,
@@ -795,6 +804,7 @@ export default {
           (this.hasRole("Tutor") &&
             this.appointment.isTutor &&
             (this.checkAppointmentStatus("booked") ||
+              this.checkAppointmentStatus("pending") ||
               this.checkAppointmentType("Group")) &&
             this.appointment.isTutor.feedbacktext === null)) &&
         this.appointment.isDatePast;
@@ -1053,6 +1063,14 @@ export default {
           this.updatedPersonAppointment.feedbacktext =
             "No students showed up to our appointment.";
         }
+      } else if (this.isNoAccept) {
+        this.updatedPersonAppointment.feedbacknumber = 0;
+        if (this.appointment.students.length === 1) {
+          this.updatedPersonAppointment.feedbacktext = `${this.appointment.students[0].person.fName} ${this.appointment.students[0].person.lName} did not accept Appointment.`;
+        } else {
+          this.updatedPersonAppointment.feedbacktext =
+            "Students did not Accept the appointment.";
+        }
       } else {
         this.updatedPersonAppointment.feedbacktext = "";
         if (this.updatedPersonAppointment.feedbacknumber == null) {
@@ -1067,7 +1085,7 @@ export default {
           date: this.appointment.date,
           startTime: this.appointment.startTime,
           endTime: this.appointment.endTime,
-          status: this.isNoShow ? "noShow" : "complete",
+          status: this.appointment.status,
           type: this.appointment.type,
           preSessionInfo: this.appointment.preSessionInfo,
           groupId: this.appointment.groupId,
@@ -1075,6 +1093,12 @@ export default {
           topicId: this.appointment.topicId,
           googleEventId: this.appointment.googleEventId,
         };
+        updatedAppointment.status = this.isNoShow
+          ? "noShow"
+          : this.isNoAccept
+          ? "noAccept"
+          : "complete";
+        console.log(updatedAppointment);
         await AppointmentServices.updateAppointment(
           updatedAppointment.id,
           updatedAppointment
@@ -1088,7 +1112,7 @@ export default {
 
       this.updatedPersonAppointment.appointmentId = this.appointment.id;
 
-      if (this.isNoShow && this.hasRole("Tutor")) {
+      if ((this.isNoShow || this.isNoAccept) && this.hasRole("Tutor")) {
         // want to save the no show feedback for every person in the appointment
         for (let i = 0; i < this.appointment.personappointment.length; i++) {
           this.updatedPersonAppointment.feedbacknumber = null;
