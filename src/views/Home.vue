@@ -382,7 +382,9 @@ export default {
             } else if (
               this.hasRole("Tutor") &&
               appointment.isTutor.feedbacktext === null &&
-              (appointment.status === "booked" || appointment.type === "Group")
+              (appointment.status === "booked" ||
+                appointment.status === "pending" ||
+                appointment.type === "Group")
             ) {
               this.feedbackAppointments.push(appointment);
             }
