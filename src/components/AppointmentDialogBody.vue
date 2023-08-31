@@ -247,7 +247,7 @@
         v-if="hasRole('Tutor') && appointment.status == 'pending'"
         v-model="isNoAccept"
         dense
-        label="Did you experience a no Acceptance?"
+        label="Did not Accept and not meet the student?"
         @change="updateFeedbackText()"
       ></v-checkbox>
     </v-card-text>
@@ -1072,7 +1072,7 @@ export default {
           this.updatedPersonAppointment.feedbacktext = `${this.appointment.students[0].person.fName} ${this.appointment.students[0].person.lName} did not accept Appointment.`;
         } else {
           this.updatedPersonAppointment.feedbacktext =
-            "Students did not Accept the appointment.";
+            "Tutor did not Accept the appointment.";
         }
       } else {
         this.updatedPersonAppointment.feedbacktext = "";
