@@ -2,6 +2,7 @@
   <div>
     <v-dialog
       v-if="hasRole('Tutor') && googleCalendarDialog"
+      v-model="dialog"
       persistent
       max-width="800"
     >
@@ -65,6 +66,7 @@ export default {
       message: "",
       url: "",
       googleCalendarDialog: false,
+      dialog: "true",
     };
   },
   watch: {
@@ -93,7 +95,10 @@ export default {
         this.user.refresh_token !== undefined &&
         this.user.refresh_token !== ""
       ) {
-        if (now > this.user.expiration_date) {
+        if (
+          this.user.expiration_date == null ||
+          now > this.user.expiration_date
+        ) {
           this.googleCalendarDialog = true;
         }
       } else {
