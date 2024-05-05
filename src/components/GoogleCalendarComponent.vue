@@ -1,11 +1,6 @@
 <template>
   <div>
-    <v-dialog
-      v-if="hasRole('Tutor') && googleCalendarDialog"
-      v-model="dialog"
-      persistent
-      max-width="800"
-    >
+    <v-dialog v-model="googleCalendarDialog" persistent max-width="800">
       <v-card>
         <v-card-title class="primary white--text mb-6"
           >Please Provide Google Calendar Authorization
@@ -66,7 +61,6 @@ export default {
       message: "",
       url: "",
       googleCalendarDialog: false,
-      dialog: "true",
     };
   },
   watch: {
@@ -95,14 +89,11 @@ export default {
         this.user.refresh_token !== undefined &&
         this.user.refresh_token !== ""
       ) {
-        if (
-          this.user.expiration_date == null ||
-          now > this.user.expiration_date
-        ) {
-          this.googleCalendarDialog = true;
+        if (now > this.user.expiration_date) {
+          this.googleCalendarDialog = this.hasRole("Tutor");
         }
       } else {
-        this.googleCalendarDialog = true;
+        this.googleCalendarDialog = this.hasRole("Tutor");
       }
     },
     doAuthorization() {
