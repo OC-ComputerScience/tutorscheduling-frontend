@@ -151,15 +151,33 @@ export const CalendarMixin = {
         }
       }
     },
-    async bookAppointment(isAdminAdd, appointment, fromUser, student) {
+    async bookAppointment(
+      isAdminAdd,
+      appointment,
+      fromUser,
+      student,
+      tutorSetLocation
+    ) {
       if (appointment.type === "Private") {
-        await this.splitAppointment(isAdminAdd, appointment, fromUser, student);
+        await this.splitAppointment(
+          isAdminAdd,
+          appointment,
+          fromUser,
+          student,
+          tutorSetLocation
+        );
       } else if (appointment.type === "Group") {
         await this.bookGroupSession(isAdminAdd, appointment, fromUser, student);
       }
     },
     // Split appointments into more availability slots when part of slot is booked
-    async splitAppointment(isAdminAdd, appointment, fromUser, student) {
+    async splitAppointment(
+      isAdminAdd,
+      appointment,
+      fromUser,
+      student,
+      tutorSetLocation
+    ) {
       //If the start of the booked slot isn't the start of the slot, generate an open slot
       if (
         appointment.startTime < appointment.newStart &&
@@ -173,6 +191,7 @@ export const CalendarMixin = {
           type: appointment.type,
           status: "available",
           groupId: appointment.groupId,
+          locationId: tutorSetLocation ? appointment.locationId : null,
         };
         await AppointmentServices.addAppointment(temp).then(
           async (response) => {
@@ -200,6 +219,7 @@ export const CalendarMixin = {
           status: "available",
           preSessionInfo: "",
           groupId: appointment.groupId,
+          locationId: tutorSetLocation ? appointment.locationId : null,
           //locationId: appointment.locationId,
           //topicId: appointment.topicId,
         };
