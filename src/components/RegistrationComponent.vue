@@ -248,9 +248,8 @@ export default {
         const role = this.roles[i];
         if (role.type === this.roleSelect) {
           this.personrole = {
-            status:
-              role.type.toLowerCase() === "student" ? "approved" : "applied",
-            agree: role.type.toLowerCase() === "student" ? true : false,
+            status: "applied",
+            agree: false,
             dateSigned: Date(),
             personId: this.user.userID,
             roleId: role.id,

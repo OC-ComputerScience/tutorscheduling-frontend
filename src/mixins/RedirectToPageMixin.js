@@ -90,8 +90,7 @@ export const RedirectToPageMixin = {
           let group = this.contractRoles[i];
           for (let j = 0; j < group.role.length; j++) {
             let role = group.role[j];
-            //if (role.type === "Student" || role.type === "Tutor") {
-            if (role.type === "Tutor") {
+            if (role.type === "Student" || role.type === "Tutor") {
               this.handleRedundantNavigation("contract", role.personrole[0].id);
               return;
             }
