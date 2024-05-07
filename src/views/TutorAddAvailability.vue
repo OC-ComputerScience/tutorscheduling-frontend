@@ -171,17 +171,17 @@
               prepend-icon="mdi-account-multiple-outline"
             >
             </v-select>
-            <div v-if="type === 'Group'">
-              <v-select
-                v-model="location"
-                :items="locations"
-                item-text="name"
-                item-value="id"
-                label="Location"
-                prepend-icon="mdi-map-marker-outline"
-              >
-              </v-select>
 
+            <v-select
+              v-model="location"
+              :items="locations"
+              item-text="name"
+              item-value="id"
+              label="Location"
+              prepend-icon="mdi-map-marker-outline"
+            >
+            </v-select>
+            <div v-if="type === 'Group'">
               <v-select
                 v-model="topic"
                 :items="topics"
@@ -316,7 +316,7 @@ export default {
     group: {},
     topic: "",
     topics: [],
-    location: "",
+    location: null,
     locations: [],
     personRolePrivileges: [],
     preSessionInfo: "",
@@ -490,7 +490,7 @@ export default {
           startTime: this.newStart,
           endTime: this.newEnd,
           type: this.type,
-          locationId: this.type === "Private" ? null : this.location,
+          locationId: this.location,
           topicId: this.type === "Private" ? null : this.topic,
           preSessionInfo: this.type === "Private" ? null : this.preSessionInfo,
           groupId: this.group.id,

@@ -111,7 +111,7 @@
         item-value="id"
         label="Location"
         :prepend-icon="
-          canEditTopic
+          canEditLocation
             ? 'mdi-map-marker-outline'
             : 'mdi-map-marker-check-outline'
         "
@@ -497,6 +497,7 @@ export default {
       showEnableConfirmRejectButtons: false,
       showEnableFeedbackButton: false,
       showEnableSignUpButton: false,
+      tutorSetLocation: false,
     };
   },
   watch: {
@@ -580,6 +581,8 @@ export default {
         this.appointment.showFeedbackDialog !== undefined
           ? this.appointment.showFeedbackDialog
           : false;
+      this.tutorSetLocation =
+        this.appointment.locationId !== null ? true : false;
       this.updateTimes();
       this.setupPersonStrings();
       this.setCanSplitTime();
@@ -629,6 +632,7 @@ export default {
             this.checkAppointmentStatus("booked")) ||
             this.checkAppointmentType("Group"))) ||
           (this.hasRole("Student") &&
+            this.appointment.locationId == null &&
             this.checkAppointmentType("Private") &&
             (this.checkAppointmentStatus("available") ||
               (this.appointment.isStudent &&
@@ -1013,12 +1017,13 @@ export default {
         }
       }
       this.appointment.minApptTime = this.appointment.group.minApptTime;
-      console.log(this.appointment);
+
       await this.bookAppointment(
         this.isAdminAddStudent,
         this.appointment,
         this.user,
-        this.addedStudent
+        this.addedStudent,
+        this.tutorSetLocation
       );
       this.$emit("doneWithAppointment");
     },
