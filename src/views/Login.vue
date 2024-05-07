@@ -14,10 +14,10 @@
         <v-card-text>
           <p>
             Oklahoma Christian University wants to aid students in being
-            successful, including offering multiple different tutoring services.
+            successful, including offering several tutoring services.
             <br />
           </p>
-          <h3>For on-campus students:</h3>
+          <h3>For all OC students:</h3>
           <ul>
             <li>
               The <b>Student Success Center</b> offers individual and group
@@ -28,15 +28,6 @@
               essays and writing assignments.
             </li>
           </ul>
-          <br />
-          <h3>
-            For off-campus students in our online, nursing and education
-            work-based programs:
-          </h3>
-          <p>
-            The <b>New College</b> offers virtual individual and group tutoring
-            sessions programs.
-          </p>
         </v-card-text>
       </v-card>
 
