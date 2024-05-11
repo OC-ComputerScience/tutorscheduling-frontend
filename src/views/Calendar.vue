@@ -382,6 +382,9 @@ export default {
             temp[i].name = temp[i].fName + " " + temp[i].lName;
             this.tutorSelect.push(temp[i]);
           }
+          this.tutorSelect.sort((a, b) => {
+            return a.name.localeCompare(b.name);
+          });
         })
         .catch((error) => {
           this.alertType = "error";
