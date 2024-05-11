@@ -108,12 +108,13 @@ export default {
       showAlert: false,
       person: {},
       group: {},
-      enableUpdate: false,
+      enableUpdate: true,
       fullName: "",
       message: "",
       topics: [],
       personroles: [],
       personroleprivileges: [],
+      newPhoneNumber: "",
       topicHeaders: [
         { text: "Topic", value: "name" },
         { text: "Skill Level", value: "persontopic[0].skillLevel" },
@@ -145,18 +146,25 @@ export default {
           this.person = response.data;
           this.fullName = this.person.fName + " " + this.person.lName;
           this.message = this.fullName + "'s Information";
-          console.log(this.person);
         })
         .catch((error) => {
           this.message = error.response.data.message;
           console.log("There was an error:", error.response);
         });
     },
-    setPhoneNumber(phoneNumber) {
-      this.person.phoneNum = phoneNumber;
-      this.enableUpdate = true;
+    checkPhoneNumber(phoneNumber) {
+      if (phoneNumber.length != 10) return false;
+      else if (/^\d+$/.test(phoneNumber)) return true;
+      else return false;
     },
+    setPhoneNumber(phoneNumber) {
+      this.newPhoneNumber = phoneNumber;
+      if (this.checkPhoneNumber(phoneNumber)) this.enableUpdate = true;
+      else this.enableUpdate = false;
+    },
+
     async saveChanges() {
+      this.person.phoneNum = this.newPhoneNumber;
       await PersonServices.updatePerson(this.person.id, this.person)
         .then(() => {
           this.alert =

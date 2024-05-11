@@ -3,19 +3,19 @@
     <div class="text-caption">Phone Number</div>
 
     <v-row>
-      <v-col cols="10" sm="5" md="2">
+      <v-col cols="3">
         <v-text-field
           v-model="phoneNum1"
           hint="405"
+          :rules="[rules.required, rules.numbersOnly, rules.counter3]"
           maxlength="3"
           persistent-hint
           outlined
           dense
-          required
-          @change="setNewPhoneNumber()"
+          @input="setNewPhoneNumber()"
         ></v-text-field>
       </v-col>
-      <v-col cols="10" sm="5" md="2">
+      <v-col cols="3">
         <v-text-field
           v-model="phoneNum2"
           hint="425"
@@ -23,11 +23,11 @@
           persistent-hint
           outlined
           dense
-          required
-          @change="setNewPhoneNumber()"
+          :rules="[rules.required, rules.numbersOnly, rules.counter3]"
+          @input="setNewPhoneNumber()"
         ></v-text-field>
       </v-col>
-      <v-col cols="10" sm="5" md="2">
+      <v-col cols="3">
         <v-text-field
           v-model="phoneNum3"
           hint="5555"
@@ -35,9 +35,8 @@
           persistent-hint
           outlined
           dense
-          required
-          @keyup.enter="setNewPhoneNumber()"
-          @change="setNewPhoneNumber()"
+          :rules="[rules.required, rules.numbersOnly, rules.counter4]"
+          @input="setNewPhoneNumber()"
         ></v-text-field>
       </v-col>
     </v-row>
@@ -59,6 +58,12 @@ export default {
       phoneNum2: "",
       phoneNum3: "",
       newPhoneNumber: "",
+      rules: {
+        required: (value) => !!value || "Required.",
+        counter3: (value) => value.length == 3 || "Must be ###",
+        counter4: (value) => value.length == 4 || "Must be ####",
+        numbersOnly: (value) => /^\d+$/.test(value) || "Number only",
+      },
     };
   },
   watch: {
@@ -85,6 +90,7 @@ export default {
     },
     setNewPhoneNumber() {
       this.newPhoneNumber = this.phoneNum1 + this.phoneNum2 + this.phoneNum3;
+
       this.$emit("editedPhoneNumber", this.newPhoneNumber);
     },
   },
