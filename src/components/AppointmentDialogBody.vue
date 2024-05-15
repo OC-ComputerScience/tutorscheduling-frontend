@@ -789,6 +789,7 @@ export default {
       // 3. admin?
       // 4. privilege tutor?
       // 5. not past (applies to all cases)
+
       this.showEnableCancelButton =
         ((this.hasRole("Student") &&
           this.appointment.isStudent &&
@@ -796,7 +797,8 @@ export default {
             !this.checkAppointmentStatus("available"))) ||
           (this.hasRole("Tutor") &&
             this.appointment.isTutor &&
-            !this.checkAppointmentStatus("pending"))) &&
+            !this.checkAppointmentStatus("pending")) ||
+          this.hasRole("Admin")) &&
         !this.appointment.isDatePast &&
         !this.checkAppointmentStatus("Cancel");
     },
