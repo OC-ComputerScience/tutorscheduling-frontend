@@ -121,6 +121,7 @@ export const TimeFunctionsMixin = {
         weekday: "long",
         month: "long",
         day: "numeric",
+        year: "numeric",
       });
     },
     formatReadableTimeFromSQL(time) {
