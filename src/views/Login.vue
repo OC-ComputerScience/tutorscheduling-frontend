@@ -21,11 +21,13 @@
           <ul>
             <li>
               The <b>Student Success Center</b> offers individual and group
-              tutoring sessions for any course.
+              in-person or online tutoring sessions for any course for all
+              students.
             </li>
             <li>
-              The <b>Writing Center</b> offers individual writing assistance for
-              essays and writing assignments.
+              The <b>Writing Center</b> offers individual in-person or online
+              writing assistance for essays and writing assignments for all
+              students.
             </li>
           </ul>
         </v-card-text>
