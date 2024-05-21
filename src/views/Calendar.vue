@@ -90,7 +90,18 @@
             outlined
             @change="getAppointments()"
           ></v-select>
-
+          <v-select
+            v-model="selectedLocation"
+            :items="locations"
+            item-text="name"
+            item-value="id"
+            label="Location"
+            hide-details
+            class="ma-2"
+            dense
+            outlined
+            @change="getAppointments()"
+          ></v-select>
           <v-select
             v-model="selectedTutor"
             :items="tutorSelect"
@@ -208,6 +219,7 @@ import PersonRoleServices from "@/services/personRoleServices.js";
 import PersonRolePrivilegeServices from "@/services/personRolePrivilegeServices.js";
 //For info to be shown with appointments
 import TopicServices from "@/services/topicServices.js";
+import LocationServices from "@/services/locationServices.js";
 //Plugin functions
 import Utils from "@/config/utils.js";
 import AppointmentDialogBody from "../components/AppointmentDialogBody.vue";
@@ -242,9 +254,11 @@ export default {
     group: {},
     personRolePrivileges: [],
     topics: [],
+    locations: [],
     tutorSelect: [],
     selectedTopic: -1,
     selectedTutor: -1,
+    selectedLocation: -1,
     keyVisible: false,
     appointmentDialog: false,
     selectedElement: null,
@@ -292,6 +306,7 @@ export default {
     await this.getGroupByPersonRoleId();
     await this.getTopicsForGroup();
     await this.getTutorsForGroup();
+    await this.getLocationsForGroup();
     await this.initialize();
   },
   methods: {
@@ -341,6 +356,23 @@ export default {
           console.log("There was an error:", error.response);
         });
     },
+
+    async getLocationsForGroup() {
+      await LocationServices.getAllForGroup(this.group.id)
+        .then((response) => {
+          let temp = response.data;
+          this.locations.push({ name: "All", id: -1 });
+          for (let i = 0; i < temp.length; i++) {
+            this.locations.push(temp[i]);
+          }
+        })
+        .catch((error) => {
+          this.alertType = "error";
+          this.alert = error.response.data.message;
+          this.showAlert = true;
+          console.log("There was an error:", error.response);
+        });
+    },
     async getTutorsForGroup() {
       await PersonServices.getApprovedTutorsForGroup(this.group.id)
         .then((response) => {
@@ -350,6 +382,9 @@ export default {
             temp[i].name = temp[i].fName + " " + temp[i].lName;
             this.tutorSelect.push(temp[i]);
           }
+          this.tutorSelect.sort((a, b) => {
+            return a.name.localeCompare(b.name);
+          });
         })
         .catch((error) => {
           this.alertType = "error";
@@ -382,6 +417,14 @@ export default {
           }
         }
       }
+      return check;
+    },
+    checkLocation(appointment) {
+      let check = false;
+      if (this.selectedLocation === null) return true;
+      if (this.selectedLocation === appointment.locationId) return true;
+      if (appointment.locationId == null) return true;
+
       return check;
     },
     checkTutor(appointment) {
@@ -447,6 +490,10 @@ export default {
         }
         //filter by topic
         if (this.selectedTopic != -1 && !this.checkTopic(appointment)) {
+          filtered = false;
+        }
+        //filter by Location
+        if (this.selectedLocation != -1 && !this.checkLocation(appointment)) {
           filtered = false;
         }
         //filter by tutor

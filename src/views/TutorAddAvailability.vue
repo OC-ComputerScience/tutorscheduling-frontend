@@ -171,17 +171,17 @@
               prepend-icon="mdi-account-multiple-outline"
             >
             </v-select>
-            <div v-if="type === 'Group'">
-              <v-select
-                v-model="location"
-                :items="locations"
-                item-text="name"
-                item-value="id"
-                label="Location"
-                prepend-icon="mdi-map-marker-outline"
-              >
-              </v-select>
 
+            <v-select
+              v-model="location"
+              :items="locations"
+              item-text="name"
+              item-value="id"
+              label="Location"
+              prepend-icon="mdi-map-marker-outline"
+            >
+            </v-select>
+            <div v-if="type === 'Group'">
               <v-select
                 v-model="topic"
                 :items="topics"
@@ -239,7 +239,14 @@
       <v-card>
         <v-card-title>
           Your Availabilities for All Groups
+          <v-checkbox
+            class="ml-4"
+            v-model="viewAllAvailabilities"
+            label="Include Past Availabilities"
+            @change="getAvailabilities()"
+          ></v-checkbox>
           <v-spacer></v-spacer>
+
           <InformationComponent
             message="If you want to remove an availability, go to the Calendar page and cancel the appointment there."
           ></InformationComponent>
@@ -287,6 +294,7 @@ export default {
     },
   },
   data: () => ({
+    viewAllAvailabilities: false,
     showAlert: false,
     alert: "",
     alertType: "success",
@@ -316,7 +324,7 @@ export default {
     group: {},
     topic: "",
     topics: [],
-    location: "",
+    location: null,
     locations: [],
     personRolePrivileges: [],
     preSessionInfo: "",
@@ -490,7 +498,7 @@ export default {
           startTime: this.newStart,
           endTime: this.newEnd,
           type: this.type,
-          locationId: this.type === "Private" ? null : this.location,
+          locationId: this.location,
           topicId: this.type === "Private" ? null : this.topic,
           preSessionInfo: this.type === "Private" ? null : this.preSessionInfo,
           groupId: this.group.id,
@@ -595,30 +603,57 @@ export default {
         });
     },
     async getAvailabilities() {
-      await AvailabilityServices.getUpcomingForPerson(this.user.userID)
-        .then((response) => {
-          this.availabilities = response.data;
+      if (!this.viewAllAvailabilities) {
+        await AvailabilityServices.getUpcomingForPerson(this.user.userID)
+          .then((response) => {
+            this.availabilities = response.data;
 
-          for (let index = 0; index < this.availabilities.length; ++index) {
-            //format date, start time, and end time
-            let element = this.availabilities[index];
-            this.availabilities[index].date = this.formatReadableDate(
-              element.date
-            );
-            this.availabilities[index].startTime = this.formatTimeFromString(
-              element.startTime
-            );
-            this.availabilities[index].endTime = this.formatTimeFromString(
-              element.endTime
-            );
-          }
-        })
-        .catch((error) => {
-          this.alertType = "error";
-          this.alert = error.response.data.message;
-          this.showAlert = true;
-          console.log("There was an error:", error.response);
-        });
+            for (let index = 0; index < this.availabilities.length; ++index) {
+              //format date, start time, and end time
+              let element = this.availabilities[index];
+              this.availabilities[index].date = this.formatReadableDate(
+                element.date
+              );
+              this.availabilities[index].startTime = this.formatTimeFromString(
+                element.startTime
+              );
+              this.availabilities[index].endTime = this.formatTimeFromString(
+                element.endTime
+              );
+            }
+          })
+          .catch((error) => {
+            this.alertType = "error";
+            this.alert = error.response.data.message;
+            this.showAlert = true;
+            console.log("`There was an error:", error.response);
+          });
+      } else {
+        await AvailabilityServices.getPersonAvailability(this.user.userID)
+          .then((response) => {
+            this.availabilities = response.data;
+
+            for (let index = 0; index < this.availabilities.length; ++index) {
+              //format date, start time, and end time
+              let element = this.availabilities[index];
+              this.availabilities[index].date = this.formatReadableDate(
+                element.date
+              );
+              this.availabilities[index].startTime = this.formatTimeFromString(
+                element.startTime
+              );
+              this.availabilities[index].endTime = this.formatTimeFromString(
+                element.endTime
+              );
+            }
+          })
+          .catch((error) => {
+            this.alertType = "error";
+            this.alert = error.response.data.message;
+            this.showAlert = true;
+            console.log("`There was an error:", error.response);
+          });
+      }
     },
     async getGroupByPersonRoleId() {
       await PersonRoleServices.getGroupForPersonRole(this.id)

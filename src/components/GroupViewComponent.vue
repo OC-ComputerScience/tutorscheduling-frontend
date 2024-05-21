@@ -126,7 +126,6 @@ export default {
       await GroupServices.getActiveGroupsForPerson(this.user.userID)
         .then((response) => {
           this.groups = response.data;
-          console.log(this.groups);
         })
         .catch((error) => {
           console.log("There was an error:", error.response);

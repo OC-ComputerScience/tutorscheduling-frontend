@@ -14,29 +14,22 @@
         <v-card-text>
           <p>
             Oklahoma Christian University wants to aid students in being
-            successful, including offering multiple different tutoring services.
+            successful, including offering several tutoring services.
             <br />
           </p>
-          <h3>For on-campus students:</h3>
+          <h3>For all OC students:</h3>
           <ul>
             <li>
               The <b>Student Success Center</b> offers individual and group
-              tutoring sessions for any course.
+              in-person or online tutoring sessions for any course for all
+              students.
             </li>
             <li>
-              The <b>Writing Center</b> offers individual writing assistance for
-              essays and writing assignments.
+              The <b>Writing Center</b> offers individual in-person or online
+              writing assistance for essays and writing assignments for all
+              students.
             </li>
           </ul>
-          <br />
-          <h3>
-            For off-campus students in our online, nursing and education
-            work-based programs:
-          </h3>
-          <p>
-            The <b>New College</b> offers virtual individual and group tutoring
-            sessions programs.
-          </p>
         </v-card-text>
       </v-card>
 
@@ -55,12 +48,17 @@
               :phone-num="''"
               @editedPhoneNumber="setPhoneNumber"
             ></PhoneNumberComponent>
+            <v-checkbox
+              v-model="noPhoneNum"
+              label="I don't have a US phone number"
+            ></v-checkbox>
           </v-card-text>
           <v-card-actions>
             <v-spacer></v-spacer>
             <v-btn
               color="accent"
               text
+              :disabled="!checkPhoneNum()"
               @click="
                 dialog = false;
                 savePhoneNum();
@@ -103,6 +101,7 @@ export default {
     return {
       dialog: false,
       openRegistration: false,
+      noPhoneNum: false,
       phoneNum: "",
       person: {},
       fName: "",
@@ -163,12 +162,21 @@ export default {
     setPhoneNumber(phoneNumber) {
       this.phoneNum = phoneNumber;
     },
+    checkPhoneNum() {
+      if (this.noPhoneNum) {
+        this.phoneNum = "0000000000";
+      }
+      if (this.phoneNum.length != 10) return false;
+      else if (/^\d+$/.test(this.phoneNum)) return true;
+      else return false;
+    },
     async savePhoneNum() {
       // use this to also update name if it's the first time a student is logging in
       await this.getPerson();
       this.person.phoneNum = this.phoneNum;
       this.person.fName = this.fName;
       this.person.lName = this.lName;
+      this.person.textOptIn = !this.noPhoneNum;
       // save phone number and name locally and to database
       this.user.phoneNum = this.phoneNum;
       this.user.fName = this.fName;

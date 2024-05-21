@@ -111,7 +111,7 @@
         item-value="id"
         label="Location"
         :prepend-icon="
-          canEditTopic
+          canEditLocation
             ? 'mdi-map-marker-outline'
             : 'mdi-map-marker-check-outline'
         "
@@ -247,7 +247,7 @@
         v-if="hasRole('Tutor') && appointment.status == 'pending'"
         v-model="isNoAccept"
         dense
-        label="Did you experience a no Acceptance?"
+        label="Did not Accept and not meet the student?"
         @change="updateFeedbackText()"
       ></v-checkbox>
     </v-card-text>
@@ -497,6 +497,7 @@ export default {
       showEnableConfirmRejectButtons: false,
       showEnableFeedbackButton: false,
       showEnableSignUpButton: false,
+      tutorSetLocation: false,
     };
   },
   watch: {
@@ -580,6 +581,8 @@ export default {
         this.appointment.showFeedbackDialog !== undefined
           ? this.appointment.showFeedbackDialog
           : false;
+      this.tutorSetLocation =
+        this.appointment.locationId !== null ? true : false;
       this.updateTimes();
       this.setupPersonStrings();
       this.setCanSplitTime();
@@ -629,6 +632,7 @@ export default {
             this.checkAppointmentStatus("booked")) ||
             this.checkAppointmentType("Group"))) ||
           (this.hasRole("Student") &&
+            this.appointment.locationId == null &&
             this.checkAppointmentType("Private") &&
             (this.checkAppointmentStatus("available") ||
               (this.appointment.isStudent &&
@@ -785,6 +789,7 @@ export default {
       // 3. admin?
       // 4. privilege tutor?
       // 5. not past (applies to all cases)
+
       this.showEnableCancelButton =
         ((this.hasRole("Student") &&
           this.appointment.isStudent &&
@@ -792,7 +797,8 @@ export default {
             !this.checkAppointmentStatus("available"))) ||
           (this.hasRole("Tutor") &&
             this.appointment.isTutor &&
-            !this.checkAppointmentStatus("pending"))) &&
+            !this.checkAppointmentStatus("pending")) ||
+          this.hasRole("Admin")) &&
         !this.appointment.isDatePast &&
         !this.checkAppointmentStatus("Cancel");
     },
@@ -1013,12 +1019,13 @@ export default {
         }
       }
       this.appointment.minApptTime = this.appointment.group.minApptTime;
-      console.log(this.appointment);
+
       await this.bookAppointment(
         this.isAdminAddStudent,
         this.appointment,
         this.user,
-        this.addedStudent
+        this.addedStudent,
+        this.tutorSetLocation
       );
       this.$emit("doneWithAppointment");
     },
@@ -1072,7 +1079,7 @@ export default {
           this.updatedPersonAppointment.feedbacktext = `${this.appointment.students[0].person.fName} ${this.appointment.students[0].person.lName} did not accept Appointment.`;
         } else {
           this.updatedPersonAppointment.feedbacktext =
-            "Students did not Accept the appointment.";
+            "Tutor did not Accept the appointment.";
         }
       } else {
         this.updatedPersonAppointment.feedbacktext = "";
