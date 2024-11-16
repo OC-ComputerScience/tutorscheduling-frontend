@@ -375,6 +375,12 @@
         @handleReturningSuccess="directToCancel()"
       ></DeleteConfirmationComponent>
     </v-dialog>
+
+    <v-dialog v-model="showAlreadyBooked" persistent max-width="750px">
+      <AlreadyBookedComponent
+        @handleReturningAlreadyBooked="directToClose()"
+      ></AlreadyBookedComponent>
+    </v-dialog>
   </v-card>
 </template>
 
@@ -388,6 +394,7 @@ import LocationServices from "@/services/locationServices.js";
 import TopicServices from "@/services/topicServices.js";
 import Utils from "@/config/utils.js";
 import DeleteConfirmationComponent from "./DeleteConfirmationComponent.vue";
+import AlreadyBookedComponent from "./AlreadyBookedComponent.vue";
 import { CalendarMixin } from "../mixins/CalendarMixin";
 import { TimeFunctionsMixin } from "../mixins/TimeFunctionsMixin";
 
@@ -395,6 +402,7 @@ export default {
   name: "AppointmentDialogBody",
   components: {
     DeleteConfirmationComponent,
+    AlreadyBookedComponent,
   },
   mixins: [CalendarMixin, TimeFunctionsMixin],
   props: {
@@ -497,6 +505,7 @@ export default {
       showEnableConfirmRejectButtons: false,
       showEnableFeedbackButton: false,
       showEnableSignUpButton: false,
+      showAlreadyBooked: false,
       tutorSetLocation: false,
     };
   },
@@ -1004,11 +1013,31 @@ export default {
       });
       this.$emit("doneWithAppointment");
     },
+    directToClose() {
+      this.showAlreadyBooked = false;
+      this.$emit("doneWithAppointment");
+    },
     async sendAppointmentForConfirmation() {
       await this.confirmAppointment(true, this.user, this.appointment);
       this.$emit("doneWithAppointment");
     },
     async sendAppointmentForBooking() {
+      //test if this appointment is already booked
+      let currentAppointment = {};
+      await AppointmentServices.getAppointment(this.appointment.id).then(
+        (response) => {
+          currentAppointment = response.data;
+        }
+      );
+      if (
+        currentAppointment.type == "Private" &&
+        currentAppointment.status != "available"
+      ) {
+        //alread booked since the status is not available
+        this.showAlreadyBooked = true;
+        return;
+      }
+
       if (this.isAdminAddStudent) {
         if (this.checkAppointmentType("Private")) {
           // set status that admin chose
