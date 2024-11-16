@@ -5,4 +5,8 @@ module.exports = {
   },
   publicPath: process.env.NODE_ENV === "development" ? "/" : "/",
   transpileDependencies: ["vuetify"],
+  // vue.config.js
+
+  lintOnSave: false,
 };
+
