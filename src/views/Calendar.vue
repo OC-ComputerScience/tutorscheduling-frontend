@@ -11,13 +11,15 @@
         <InformationComponent
           message="Select an appointment to view information, book the appointment,
             make changes, etc.
-            You can filter the appointments by a desired Topic or Tutor."
-        ></InformationComponent
-        ><v-spacer></v-spacer>
+            You can filter the appointments by a desired Topic or Tutor. If you can't find a topic or time that works for you, then you can make a request using the Request menu option"
+        ></InformationComponent>
+
+        <v-spacer></v-spacer>
         <v-card-title class="text-right pt-0 pb-0 pl-0 pr-0 accent--text">{{
           role.type
         }}</v-card-title>
       </v-card-title>
+
       <v-alert v-model="showAlert" dismissible :type="alertType">{{
         alert
       }}</v-alert>
