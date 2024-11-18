@@ -126,7 +126,7 @@
                 text
                 @click="openRegistration = true"
               >
-                Apply
+                Sign Up
               </v-btn>
               <v-divider
                 v-if="!selectedRole.type.includes('Admin')"

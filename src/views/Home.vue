@@ -73,11 +73,11 @@
               "
             >
               <v-card-title class="justify-center white--text">
-                View Calendar
+                Sign Up for an Appointment
               </v-card-title>
             </v-card>
           </v-col>
-          <v-col>
+          <v-col v-if="!hasRole('Student')">
             <v-card
               class="d-flex justify-center ml-4 mr-4 mb-6"
               height="100"

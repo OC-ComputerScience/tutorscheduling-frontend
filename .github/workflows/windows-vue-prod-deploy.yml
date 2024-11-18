@@ -8,7 +8,7 @@ on:
 
 jobs:
   windows-deploy:
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
     env:
       DB_HOST: ${{ secrets.PROD_DB_HOST }}
       DB_PW: ${{ secrets.PROD_DB_PW}}
@@ -25,12 +25,12 @@ jobs:
       GOOGLE_AUDIENCE: ${{secrets.GOOGLE_AUDIENCE}}
       CLIENT_SECRET: ${{secrets.CLIENT_SECRET}}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           ref: main
-      - uses: actions/setup-node@v3
+      - uses: actions/setup-node@v4
         with:
-          node-version: 16
+          node-version: 18
 
       - run: npm install
       - run: npm run build
