@@ -1001,6 +1001,7 @@ export default {
         lName: this.user.lName,
         userID: this.user.userID,
         type: this.user.selectedRole.type,
+        tutorSetLocation: this.tutorSetLocation,
       };
       await AppointmentServices.cancelAppointment(
         this.appointment.id,

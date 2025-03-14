@@ -220,8 +220,6 @@ export const CalendarMixin = {
           preSessionInfo: "",
           groupId: appointment.groupId,
           locationId: tutorSetLocation ? appointment.locationId : null,
-          //locationId: appointment.locationId,
-          //topicId: appointment.topicId,
         };
         await AppointmentServices.addAppointment(temp).then(
           async (response) => {
@@ -252,7 +250,7 @@ export const CalendarMixin = {
         status: appointment.status,
         preSessionInfo: appointment.preSessionInfo,
         groupId: appointment.groupId,
-        locationId: appointment.locationId,
+        locationId: tutorSetLocation ? appointment.locationId : null,
         topicId: appointment.topicId,
         googleEventId: appointment.googleEventId,
       };
