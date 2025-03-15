@@ -1056,8 +1056,16 @@ export default {
         this.user,
         this.addedStudent,
         this.tutorSetLocation
-      );
-      this.$emit("doneWithAppointment");
+      )
+        .then(() => {
+          this.$emit("doneWithAppointment");
+        })
+        .catch((error) => {
+          this.alertType = "error";
+          this.alert = error.response.data.message;
+          this.showAlert = true;
+          console.log("There was an error:", error.response);
+        });
     },
     async getLocationsForGroup() {
       await LocationServices.getActiveForGroup(this.appointment.groupId)
