@@ -498,7 +498,10 @@ export default {
           startTime: this.newStart,
           endTime: this.newEnd,
           type: this.type,
-          locationId: this.location,
+          locationId:
+            this.location != "" && this.location != null ? this.location : null,
+          tutorSetLocation:
+            this.location != "" && this.location != null ? true : false,
           topicId: this.type === "Private" ? null : this.topic,
           preSessionInfo: this.type === "Private" ? null : this.preSessionInfo,
           groupId: this.group.id,
