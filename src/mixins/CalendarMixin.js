@@ -151,23 +151,43 @@ export const CalendarMixin = {
         }
       }
     },
-    async bookAppointment(
-      isAdminAdd,
-      appointment,
-      fromUser,
-      student,
-      tutorSetLocation
-    ) {
-      if (appointment.type === "Private") {
-        await this.splitAppointment(
-          isAdminAdd,
-          appointment,
-          fromUser,
-          student,
-          tutorSetLocation
-        );
-      } else if (appointment.type === "Group") {
-        await this.bookGroupSession(isAdminAdd, appointment, fromUser, student);
+    async bookAppointment(isAdminAdd, appointment, fromUser, student, tutorSetLocation) {
+      try {
+        // First check if the appointment is still available
+        const currentAppointment = await AppointmentServices.getAppointment(appointment.id);
+        if (currentAppointment.data.status !== "available") {
+          throw new Error("This appointment is no longer available.");
+        }
+
+        // Only check for overlapping appointments if this is a private appointment
+        if (appointment.type === "Private") {
+          const overlappingAppointments = await AppointmentServices.checkOverlappingAppointments({
+            tutorId: appointment.tutors[0].personId,
+            date: appointment.date,
+            startTime: appointment.newStart || appointment.startTime,
+            endTime: appointment.newEnd || appointment.endTime,
+            excludeAppointmentId: appointment.id
+          });
+          
+          if (overlappingAppointments && overlappingAppointments.length > 0) {
+            throw new Error("This time slot is no longer available as it overlaps with another booking.");
+          }
+
+          await this.splitAppointment(isAdminAdd, appointment, fromUser, student, tutorSetLocation);
+        } else if (appointment.type === "Group") {
+          // For group appointments, check if this student is already in the appointment
+          const isStudentAlreadyBooked = appointment.students.some(
+            existingStudent => existingStudent.personId === (student?.id || fromUser.userID)
+          );
+          
+          if (isStudentAlreadyBooked) {
+            throw new Error("You are already booked for this group session.");
+          }
+          
+          await this.bookGroupSession(isAdminAdd, appointment, fromUser, student);
+        }
+      } catch (error) {
+        throw error;
       }
     },
     // Split appointments into more availability slots when part of slot is booked
@@ -220,8 +240,6 @@ export const CalendarMixin = {
           preSessionInfo: "",
           groupId: appointment.groupId,
           locationId: tutorSetLocation ? appointment.locationId : null,
-          //locationId: appointment.locationId,
-          //topicId: appointment.topicId,
         };
         await AppointmentServices.addAppointment(temp).then(
           async (response) => {
@@ -252,7 +270,7 @@ export const CalendarMixin = {
         status: appointment.status,
         preSessionInfo: appointment.preSessionInfo,
         groupId: appointment.groupId,
-        locationId: appointment.locationId,
+        locationId:  appointment.locationId ,
         topicId: appointment.topicId,
         googleEventId: appointment.googleEventId,
       };
@@ -396,6 +414,7 @@ export const CalendarMixin = {
         groupId: appointment.groupId,
         topicId: appointment.topicId,
         locationId: appointment.locationId,
+        tutorSetLocation: appointment.tutorSetLocation,
         googleEventId: appointment.googleEventId,
       };
       let textInfo = {
@@ -440,6 +459,7 @@ export const CalendarMixin = {
         groupId: appointment.groupId,
         topicId: appointment.topicId,
         locationId: appointment.locationId,
+        tutorSetLocation: appointment.tutorSetLocation,
         googleEventId: appointment.googleEventId,
       };
       if (confirm) {

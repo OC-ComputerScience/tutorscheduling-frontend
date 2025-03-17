@@ -77,4 +77,7 @@ export default {
   deleteAppointment(appointmentId) {
     return apiClient.delete("appointment/" + appointmentId);
   },
+  checkOverlappingAppointments(params) {
+    return apiClient.post("/appointment/check-overlapping", params);
+  },
 };
