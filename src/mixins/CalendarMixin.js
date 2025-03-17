@@ -270,7 +270,7 @@ export const CalendarMixin = {
         status: appointment.status,
         preSessionInfo: appointment.preSessionInfo,
         groupId: appointment.groupId,
-        locationId: tutorSetLocation ? appointment.locationId : null,
+        locationId:  appointment.locationId ,
         topicId: appointment.topicId,
         googleEventId: appointment.googleEventId,
       };
@@ -414,6 +414,7 @@ export const CalendarMixin = {
         groupId: appointment.groupId,
         topicId: appointment.topicId,
         locationId: appointment.locationId,
+        tutorSetLocation: appointment.tutorSetLocation,
         googleEventId: appointment.googleEventId,
       };
       let textInfo = {
@@ -458,6 +459,7 @@ export const CalendarMixin = {
         groupId: appointment.groupId,
         topicId: appointment.topicId,
         locationId: appointment.locationId,
+        tutorSetLocation: appointment.tutorSetLocation,
         googleEventId: appointment.googleEventId,
       };
       if (confirm) {

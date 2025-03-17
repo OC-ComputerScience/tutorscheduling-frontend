@@ -590,8 +590,7 @@ export default {
         this.appointment.showFeedbackDialog !== undefined
           ? this.appointment.showFeedbackDialog
           : false;
-      this.tutorSetLocation =
-        this.appointment.locationId !== null ? true : false;
+      this.tutorSetLocation = this.appointment.tutorSetLocation;
       this.updateTimes();
       this.setupPersonStrings();
       this.setCanSplitTime();
@@ -1023,49 +1022,62 @@ export default {
       this.$emit("doneWithAppointment");
     },
     async sendAppointmentForBooking() {
-      //test if this appointment is already booked
-      let currentAppointment = {};
-      await AppointmentServices.getAppointment(this.appointment.id).then(
-        (response) => {
-          currentAppointment = response.data;
-        }
-      );
-      if (
-        currentAppointment.type == "Private" &&
-        currentAppointment.status != "available"
-      ) {
-        //alread booked since the status is not available
-        this.showAlreadyBooked = true;
-        return;
-      }
+      try {
+        //test if this appointment is already booked
+        let currentAppointment = {};
+        await AppointmentServices.getAppointment(this.appointment.id)
+          .then((response) => {
+            if (response && response.data) {
+              currentAppointment = response.data;
+            } else {
+              throw new Error("Could not retrieve appointment information");
+            }
+          })
+          .catch((error) => {
+            this.alertType = "error";
+            this.alert =
+              error.response?.data?.message ||
+              "Error checking appointment availability";
+            this.showAlert = true;
+            console.log("There was an error:", error.response);
+            throw error;
+          });
 
-      if (this.isAdminAddStudent) {
-        if (this.checkAppointmentType("Private")) {
-          // set status that admin chose
-          this.appointment.status = this.newStatus.toLowerCase();
+        if (
+          currentAppointment.type === "Private" &&
+          currentAppointment.status !== "available"
+        ) {
+          //already booked since the status is not available
+          this.showAlreadyBooked = true;
+          return;
         }
-        if (this.needStudentInfo) {
-          await this.adminAdd();
-        }
-      }
-      this.appointment.minApptTime = this.appointment.group.minApptTime;
 
-      await this.bookAppointment(
-        this.isAdminAddStudent,
-        this.appointment,
-        this.user,
-        this.addedStudent,
-        this.tutorSetLocation
-      )
-        .then(() => {
-          this.$emit("doneWithAppointment");
-        })
-        .catch((error) => {
-          this.alertType = "error";
-          this.alert = error.response.data.message;
-          this.showAlert = true;
-          console.log("There was an error:", error.response);
-        });
+        if (this.isAdminAddStudent) {
+          if (this.checkAppointmentType("Private")) {
+            // set status that admin chose
+            this.appointment.status = this.newStatus.toLowerCase();
+          }
+          if (this.needStudentInfo) {
+            await this.adminAdd();
+          }
+        }
+        this.appointment.minApptTime = this.appointment.group.minApptTime;
+
+        await this.bookAppointment(
+          this.isAdminAddStudent,
+          this.appointment,
+          this.user,
+          this.addedStudent,
+          this.tutorSetLocation
+        );
+        this.$emit("doneWithAppointment");
+      } catch (error) {
+        this.alertType = "error";
+        this.alert =
+          error.response?.data?.message || "Error booking appointment";
+        this.showAlert = true;
+        console.log("There was an error:", error);
+      }
     },
     async getLocationsForGroup() {
       await LocationServices.getActiveForGroup(this.appointment.groupId)
