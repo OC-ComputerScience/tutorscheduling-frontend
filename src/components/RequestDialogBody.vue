@@ -123,7 +123,7 @@
         {{ isAdminView ? "Close" : "Cancel" }}
       </v-btn>
       <v-btn
-        v-if="request.status !== 'Received'"
+        v-if="isAdminView && request.status !== 'Received'"
         color="error white--text"
         @click="
           request.status = 'Received';
@@ -133,7 +133,7 @@
         Mark Received
       </v-btn>
       <v-btn
-        v-if="request.status !== 'In-Progress'"
+        v-if="isAdminView && request.status !== 'In-Progress'"
         color="yellow white--text"
         @click="
           request.status = 'In-Progress';
@@ -143,7 +143,7 @@
         Mark In-Progress
       </v-btn>
       <v-btn
-        v-if="request.status !== 'Completed'"
+        v-if="isAdminView && request.status !== 'Completed'"
         color="darkblue white--text"
         @click="
           request.status = 'Completed';
