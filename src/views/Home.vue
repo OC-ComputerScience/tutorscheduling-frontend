@@ -100,6 +100,7 @@
           </v-col>
         </v-row>
         <v-card>
+           <ChangeGroupViewComponent title="Appointments"></ChangeGroupViewComponent>
           <v-card-title>
             Upcoming Appointments for {{ user.selectedGroup }} as a
             {{ user.selectedRole.type }}
@@ -174,6 +175,7 @@ import PersonRolePrivilegeServices from "@/services/personRolePrivilegeServices.
 import AppointmentDialogBody from "../components/AppointmentDialogBody.vue";
 import InformationComponent from "../components/InformationComponent.vue";
 import RequestDialogBody from "../components/RequestDialogBody.vue";
+import ChangeGroupViewComponent from "../components/ChangeGroupViewComponent.vue";
 import { CalendarMixin } from "../mixins/CalendarMixin";
 import { RedirectToPageMixin } from "../mixins/RedirectToPageMixin";
 import { TimeFunctionsMixin } from "../mixins/TimeFunctionsMixin";
@@ -184,6 +186,7 @@ export default {
     AppointmentDialogBody,
     InformationComponent,
     RequestDialogBody,
+    ChangeGroupViewComponent,
   },
   mixins: [CalendarMixin, RedirectToPageMixin, TimeFunctionsMixin],
   props: {
