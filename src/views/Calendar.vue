@@ -19,7 +19,7 @@
           role.type
         }}</v-card-title>
       </v-card-title>
-
+  <ChangeGroupViewComponent title="Tutors"></ChangeGroupViewComponent>
       <v-alert v-model="showAlert" dismissible :type="alertType">{{
         alert
       }}</v-alert>
@@ -226,6 +226,7 @@ import LocationServices from "@/services/locationServices.js";
 import Utils from "@/config/utils.js";
 import AppointmentDialogBody from "../components/AppointmentDialogBody.vue";
 import InformationComponent from "../components/InformationComponent.vue";
+import ChangeGroupViewComponent from "../components/ChangeGroupViewComponent.vue";
 import { CalendarMixin } from "../mixins/CalendarMixin";
 import { TimeFunctionsMixin } from "../mixins/TimeFunctionsMixin";
 
@@ -234,6 +235,7 @@ export default {
   components: {
     AppointmentDialogBody,
     InformationComponent,
+    ChangeGroupViewComponent
   },
   mixins: [CalendarMixin, TimeFunctionsMixin],
   props: {
