@@ -45,7 +45,8 @@
             Cannot Add Conflicting Availability
           </v-card-title>
           <v-card-subtitle class="error white--text pb-2 mb-2">
-            You already have an appointment during this time.
+            You already have an appointment during this time in this group, or
+            a booked or pending session in another group.
           </v-card-subtitle>
           <v-card-text>
             <v-card
@@ -334,17 +335,28 @@ export default {
       { text: "End Time", value: "endTime" },
     ],
   }),
+  watch: {
+    id() {
+      this.reloadForGroup();
+    },
+  },
   async created() {
-    this.user = Utils.getStore("user");
-    await this.getGroupByPersonRoleId();
-    // below generates the latest time a day can have an appointment based on the group's time interval
-    this.newEnd = "23:" + (59 - (this.group.timeInterval - 1)).toString();
-    await this.getAvailabilities();
-    this.updateTimes();
-    await this.getUpcoming();
-    await this.getPrivilegesForPersonRole();
+    await this.reloadForGroup();
   },
   methods: {
+    async reloadForGroup() {
+      this.user = Utils.getStore("user");
+      this.topic = "";
+      this.location = null;
+      this.topics = [];
+      this.locations = [];
+      await this.getGroupByPersonRoleId();
+      this.newEnd = "23:" + (59 - (this.group.timeInterval - 1)).toString();
+      await this.getAvailabilities();
+      this.updateTimes();
+      await this.getUpcoming();
+      await this.getPrivilegesForPersonRole();
+    },
     showInterval() {
       return false;
     },
@@ -426,23 +438,35 @@ export default {
         appointment.startTime = appointment.startTime.substring(0, 8);
         appointment.endTime = appointment.endTime.substring(0, 8);
         if (
-          tempAvailability.date === appointment.date &&
-          this.isOverlapping(tempAvailability, appointment)
+          !this.sameCalendarDate(tempAvailability.date, appointment.date) ||
+          !this.isOverlapping(tempAvailability, appointment)
         ) {
-          this.setUpCalendarEvent(appointment);
-          isAvailable = false;
-          this.conflictingDates
-            .find(
-              (conflictDate) => conflictDate.testDate === tempAvailability.date
-            )
-            .existingAvailabilities.push({
-              name: appointment.name,
-              time:
-                this.formatTimeFromString(appointment.startTime) +
-                " - " +
-                this.formatTimeFromString(appointment.endTime),
-            });
+          continue;
         }
+
+        const sameGroup =
+          appointment.groupId === this.group.id ||
+          appointment.groupId === Number(this.group.id);
+        const openInOtherGroup =
+          !sameGroup && this.isOpenAvailabilitySlot(appointment);
+
+        if (openInOtherGroup) {
+          continue;
+        }
+
+        this.setUpCalendarEvent(appointment);
+        isAvailable = false;
+        this.conflictingDates
+          .find(
+            (conflictDate) => conflictDate.testDate === tempAvailability.date
+          )
+          .existingAvailabilities.push({
+            name: appointment.name,
+            time:
+              this.formatTimeFromString(appointment.startTime) +
+              " - " +
+              this.formatTimeFromString(appointment.endTime),
+          });
       }
       if (isAvailable) {
         this.conflictingDates.pop();
@@ -473,6 +497,7 @@ export default {
         });
       }
       this.conflictingDates = [];
+      await this.getUpcoming();
 
       for (var i = 0; i < this.dates.length; i++) {
         let date = new Date(this.dates[i]);
@@ -487,9 +512,7 @@ export default {
         this.checkIfAvailable(availability);
       }
 
-      if (this.conflictingDates.length > 0) {
-        this.doubleBookedDialog = true;
-      }
+      this.doubleBookedDialog = this.conflictingDates.length > 0;
 
       for (let i = 0; i < this.availabilitiesToSave.length; i++) {
         let availability = this.availabilitiesToSave[i];

@@ -9,6 +9,9 @@
       {{ formatTimeFromString(appointment.endTime) }}
     </v-card-subtitle>
     <v-card-text v-if="!showFeedbackDialog">
+      <v-alert v-model="showAlert" dismissible :type="alertType">{{
+        alert
+      }}</v-alert>
       <v-row>
         <v-col>
           <div class="mt-2">
@@ -105,6 +108,7 @@
       </v-select>
 
       <v-select
+        :key="'location-' + activeGroupId"
         v-model="appointment.locationId"
         :items="locations"
         item-text="name"
@@ -122,6 +126,7 @@
       </v-select>
 
       <v-select
+        :key="'topic-' + activeGroupId"
         v-model="appointment.topicId"
         :items="currentTopics"
         item-text="name"
@@ -446,6 +451,21 @@ export default {
         };
       },
     },
+    calendarGroup: {
+      type: Object,
+      default: null,
+    },
+  },
+  computed: {
+    activeGroupId() {
+      if (this.calendarGroup && this.calendarGroup.id) {
+        return this.calendarGroup.id;
+      }
+      if (this.appointment && this.appointment.group && this.appointment.group.id) {
+        return this.appointment.group.id;
+      }
+      return this.appointment ? this.appointment.groupId : 0;
+    },
   },
   data() {
     return {
@@ -507,6 +527,9 @@ export default {
       showEnableSignUpButton: false,
       showAlreadyBooked: false,
       tutorSetLocation: false,
+      showAlert: false,
+      alert: "",
+      alertType: "error",
     };
   },
   watch: {
@@ -591,15 +614,15 @@ export default {
           ? this.appointment.showFeedbackDialog
           : false;
       this.tutorSetLocation = this.appointment.tutorSetLocation;
+      if (this.calendarGroup && this.calendarGroup.id) {
+        this.appointment.group = this.calendarGroup;
+      }
       this.updateTimes();
       this.setupPersonStrings();
       this.setCanSplitTime();
-      this.setCanEditLocation();
-      this.setCanEditTopic();
       this.setCanEditFirstTime();
       this.setCanEditPreSession();
       this.setShowBookButton();
-      this.setEnableBookButton();
       this.setShowEnableConfirmRejectButtons();
       this.setShowEnableSignUpButton();
       this.setShowSaveButton();
@@ -607,6 +630,9 @@ export default {
       this.setShowEnableFeedbackButton();
       await this.getLocationsForGroup();
       await this.getTopicsForTutor();
+      this.setCanEditLocation();
+      this.setCanEditTopic();
+      this.setEnableBookButton();
     },
     setupPersonStrings() {
       this.tutorString += `${this.appointment.tutors[0].person.fName} ${this.appointment.tutors[0].person.lName}`;
@@ -1072,17 +1098,43 @@ export default {
         );
         this.$emit("doneWithAppointment");
       } catch (error) {
+        console.log("There was an error:", error);
+        try {
+          const booked = await AppointmentServices.getAppointment(
+            this.appointment.id
+          );
+          if (booked.data && booked.data.status !== "available") {
+            this.$emit("doneWithAppointment");
+            return;
+          }
+        } catch (statusError) {
+          console.log("Could not recheck appointment status:", statusError);
+        }
         this.alertType = "error";
         this.alert =
-          error.response?.data?.message || "Error booking appointment";
+          error.response?.data?.message ||
+          error.message ||
+          "Error booking appointment";
         this.showAlert = true;
-        console.log("There was an error:", error);
       }
     },
+    sameGroupId(value) {
+      return Number(value) === Number(this.activeGroupId);
+    },
     async getLocationsForGroup() {
-      await LocationServices.getActiveForGroup(this.appointment.groupId)
+      const groupId = this.activeGroupId;
+      await LocationServices.getActiveForGroup(groupId)
         .then((response) => {
-          this.locations = response.data;
+          this.locations = (response.data || []).filter((location) =>
+            this.sameGroupId(location.groupId)
+          );
+          const locationInGroup = this.locations.find(
+            (location) => Number(location.id) === Number(this.appointment.locationId)
+          );
+          if (!locationInGroup) {
+            this.appointment.locationId = null;
+            this.appointment.location = null;
+          }
         })
         .catch((error) => {
           this.alertType = "error";
@@ -1092,19 +1144,37 @@ export default {
         });
     },
     async getTopicsForTutor() {
+      if (
+        !this.appointment.tutors ||
+        this.appointment.tutors.length === 0 ||
+        !this.appointment.tutors[0]
+      ) {
+        this.currentTopics = [];
+        return;
+      }
+      const groupId = this.activeGroupId;
       await TopicServices.getTopicByGroupForPerson(
-        this.appointment.groupId,
+        groupId,
         this.appointment.tutors[0].personId
       )
         .then((response) => {
-          this.currentTopics = response.data;
-          // there are cases where the change in tutors may have created an appointment that the main tutor is not assigned to
-          if (
-            this.currentTopics.find(
-              (topic) => topic.id === this.appointment.topicId
-            ) === undefined
-          ) {
-            this.currentTopics.push(this.appointment.topic);
+          this.currentTopics = (response.data || []).filter((topic) => {
+            return topic && this.sameGroupId(topic.groupId);
+          });
+          const topicInGroup = this.currentTopics.find(
+            (topic) => Number(topic.id) === Number(this.appointment.topicId)
+          );
+          if (!topicInGroup) {
+            if (
+              this.appointment.topic &&
+              this.appointment.topic.id &&
+              this.sameGroupId(this.appointment.topic.groupId)
+            ) {
+              this.currentTopics.push(this.appointment.topic);
+            } else {
+              this.appointment.topicId = null;
+              this.appointment.topic = { name: "" };
+            }
           }
         })
         .catch((error) => {

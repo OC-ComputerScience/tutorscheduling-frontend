@@ -10,17 +10,20 @@ export const CalendarMixin = {
       let appointment = {};
       await AppointmentServices.getAppointmentInfo(appointmentId).then(
         async (response) => {
-          appointment = response.data[0];
+          appointment = Array.isArray(response.data)
+            ? response.data[0]
+            : response.data;
 
           if (
+            appointment &&
             appointment.personappointment !== null &&
             appointment.personappointment !== undefined
           ) {
             appointment.students = appointment.personappointment.filter(
-              (pa) => pa.isTutor === false
+              (pa) => pa.isTutor === false || pa.isTutor === 0
             );
             appointment.tutors = appointment.personappointment.filter(
-              (pa) => pa.isTutor === true
+              (pa) => pa.isTutor === true || pa.isTutor === 1
             );
           }
         }
@@ -116,7 +119,15 @@ export const CalendarMixin = {
         }
       }
 
-      let topicName = appointment.topic ? appointment.topic.name : "Open";
+      let topicName = "Open";
+      if (
+        appointment.topic &&
+        appointment.topic.name &&
+        (appointment.topic.groupId === undefined ||
+          Number(appointment.topic.groupId) === Number(appointment.groupId))
+      ) {
+        topicName = appointment.topic.name;
+      }
 
       //Note the format of each event, what data is associated with it
       if (appointment.type === "Group") {
@@ -161,15 +172,18 @@ export const CalendarMixin = {
 
         // Only check for overlapping appointments if this is a private appointment
         if (appointment.type === "Private") {
-          const overlappingAppointments = await AppointmentServices.checkOverlappingAppointments({
+          const overlappingAppointments =
+            await AppointmentServices.checkOverlappingAppointments({
             tutorId: appointment.tutors[0].personId,
             date: appointment.date,
             startTime: appointment.newStart || appointment.startTime,
             endTime: appointment.newEnd || appointment.endTime,
             excludeAppointmentId: appointment.id
           });
+          const overlapping =
+            overlappingAppointments.data || overlappingAppointments;
           
-          if (overlappingAppointments && overlappingAppointments.length > 0) {
+          if (overlapping && overlapping.length > 0) {
             throw new Error("This time slot is no longer available as it overlaps with another booking.");
           }
 
@@ -182,6 +196,24 @@ export const CalendarMixin = {
           
           if (isStudentAlreadyBooked) {
             throw new Error("You are already booked for this group session.");
+          }
+
+          for (let i = 0; i < appointment.tutors.length; i++) {
+            const overlappingAppointments =
+              await AppointmentServices.checkOverlappingAppointments({
+                tutorId: appointment.tutors[i].personId,
+                date: appointment.date,
+                startTime: appointment.startTime,
+                endTime: appointment.endTime,
+                excludeAppointmentId: appointment.id,
+              });
+            const overlapping =
+              overlappingAppointments.data || overlappingAppointments;
+            if (overlapping && overlapping.length > 0) {
+              throw new Error(
+                "This time slot is no longer available as it overlaps with another booking."
+              );
+            }
           }
           
           await this.bookGroupSession(isAdminAdd, appointment, fromUser, student);
@@ -280,57 +312,86 @@ export const CalendarMixin = {
         pap.personId = student.id;
         await PersonAppointmentServices.addPersonAppointment(pap);
         await AppointmentServices.updateAppointment(appointment.id, temp);
-        // get updated appointment information
-        appointment = await this.getUpdatedAppointment(appointment.id);
-
-        let textInfo = {
+        await this.notifyBookedAppointment({
           appointmentId: appointment.id,
-          appointmentType: appointment.type,
-          tutorPhoneNum: appointment.tutors[0].person.phoneNum,
-          tutorPersonRoleId: appointment.tutors[0].person.personrole[0].id,
-          date: this.formatDate(appointment.date),
-          startTime: this.formatTimeFromString(appointment.startTime),
-          locationName:
-            appointment.location.type.includes("Online") &&
-            appointment.URL !== null
-              ? appointment.URL
-              : appointment.location.name,
-          topicName: appointment.topic.name,
-          adminFirstName: fromUser.fName,
-          adminLastName: fromUser.lName,
-          studentFirstName: student.fName,
-          studentLastName: student.lName,
-        };
-        if (appointment.status === "booked") {
-          await TwilioServices.sendMessageFromAdmin(textInfo);
-        } else if (appointment.status === "pending") {
-          await TwilioServices.sendPendingMessage(textInfo);
-        }
+          fromUser,
+          student,
+          isAdminAdd: true,
+        });
       } // handle if student added appointment
       else {
         pap.personId = fromUser.userID ? fromUser.userID : fromUser.id;
         await PersonAppointmentServices.addPersonAppointment(pap);
         temp.status = "pending";
         await AppointmentServices.updateAppointment(appointment.id, temp);
-        // get updated appointment information
-        appointment = await this.getUpdatedAppointment(appointment.id);
-
-        let textInfo = {
+        await this.notifyBookedAppointment({
           appointmentId: appointment.id,
-          tutorPhoneNum: appointment.tutors[0].person.phoneNum,
-          tutorPersonRoleId: appointment.tutors[0].person.personrole[0].id,
+          fromUser,
+          isAdminAdd: false,
+        });
+      }
+    },
+    appointmentTextLocationName(appointment) {
+      if (!appointment || !appointment.location) {
+        return "";
+      }
+      if (
+        appointment.location.type &&
+        appointment.location.type.includes("Online") &&
+        appointment.URL
+      ) {
+        return appointment.URL;
+      }
+      return appointment.location.name || "";
+    },
+    appointmentTutorRoleId(appointment) {
+      const tutor =
+        appointment && appointment.tutors && appointment.tutors[0];
+      const personRole =
+        tutor &&
+        tutor.person &&
+        tutor.person.personrole &&
+        tutor.person.personrole[0];
+      return personRole ? personRole.id : "";
+    },
+    async notifyBookedAppointment({
+      appointmentId,
+      fromUser,
+      student,
+      isAdminAdd,
+    }) {
+      try {
+        const appointment = await this.getUpdatedAppointment(appointmentId);
+        if (!appointment || !appointment.id) {
+          return;
+        }
+        const tutor = appointment.tutors && appointment.tutors[0];
+        const textInfo = {
+          appointmentId: appointment.id,
+          appointmentType: appointment.type,
+          tutorPhoneNum:
+            tutor && tutor.person ? tutor.person.phoneNum : "",
+          tutorPersonRoleId: this.appointmentTutorRoleId(appointment),
           date: this.formatDate(appointment.date),
           startTime: this.formatTimeFromString(appointment.startTime),
-          locationName:
-            appointment.location.type.includes("Online") &&
-            appointment.URL !== null
-              ? appointment.URL
-              : appointment.location.name,
-          topicName: appointment.topic.name,
-          studentFirstName: fromUser.fName,
-          studentLastName: fromUser.lName,
+          locationName: this.appointmentTextLocationName(appointment),
+          topicName: appointment.topic ? appointment.topic.name : "",
+          adminFirstName: fromUser.fName,
+          adminLastName: fromUser.lName,
+          studentFirstName: isAdminAdd ? student.fName : fromUser.fName,
+          studentLastName: isAdminAdd ? student.lName : fromUser.lName,
         };
-        await TwilioServices.sendPendingMessage(textInfo);
+        if (isAdminAdd) {
+          if (appointment.status === "booked") {
+            await TwilioServices.sendMessageFromAdmin(textInfo);
+          } else if (appointment.status === "pending") {
+            await TwilioServices.sendPendingMessage(textInfo);
+          }
+        } else {
+          await TwilioServices.sendPendingMessage(textInfo);
+        }
+      } catch (error) {
+        console.log("Could not send booking notification:", error);
       }
     },
     async bookGroupSession(isAdminAdd, appointment, fromUser, student) {
