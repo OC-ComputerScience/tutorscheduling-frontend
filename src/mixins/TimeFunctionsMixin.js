@@ -210,6 +210,34 @@ export const TimeFunctionsMixin = {
         getMinutes(a.startTime) < getMinutes(b.endTime)
       );
     },
+    sameCalendarDate(dateA, dateB) {
+      const toKey = (value) => {
+        if (value === undefined || value === null) {
+          return "";
+        }
+        const parsed = new Date(value);
+        if (Number.isNaN(parsed.getTime())) {
+          return value.toString().substring(0, 10);
+        }
+        return parsed.toLocaleDateString("en-CA");
+      };
+      return toKey(dateA) === toKey(dateB);
+    },
+    isOpenAvailabilitySlot(appointment) {
+      if (appointment.status !== "available") {
+        return false;
+      }
+      const students =
+        appointment.students ||
+        (appointment.personappointment || []).filter((pa) => !pa.isTutor);
+      if (appointment.type === "Private") {
+        return true;
+      }
+      if (appointment.type === "Group") {
+        return students.length === 0;
+      }
+      return false;
+    },
     toHoursAndMinutes(totalMinutes) {
       var minutes = parseInt(totalMinutes) % 60;
       minutes = (minutes < 10 ? "0" : "") + minutes;

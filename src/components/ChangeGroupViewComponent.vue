@@ -38,20 +38,40 @@ export default {
       user: {},
     };
   },
+  watch: {
+    "$route.params.id": async function () {
+      this.user = Utils.getStore("user");
+      this.selectedGroup = this.user.selectedGroup;
+      await this.getPersonGroups();
+    },
+  },
   async created() {
     this.user = Utils.getStore("user");
     await this.getPersonGroups();
     this.selectedGroup = this.user.selectedGroup;
-
   },
   methods: {
     directToRole(group) {
       this.selectedGroup = group.name;
       this.roles = group.role;
-      this.saveGroupRoleSelection(this.roles[0]);
-      const currentRoute = this.$router.currentRoute;
-      this.$router.go();
-      
+      const currentType =
+        (this.user.selectedRole && this.user.selectedRole.type) ||
+        (this.roles[0] && this.roles[0].type);
+      const matchingRole =
+        this.roles.find((role) => role.type === currentType) || this.roles[0];
+      this.saveGroupRoleSelection(matchingRole);
+      const personRoleId = this.user.selectedRole.personRoleId;
+      this.$router
+        .push({
+          name: this.$router.currentRoute.name,
+          params: {
+            ...this.$router.currentRoute.params,
+            id: personRoleId,
+          },
+        })
+        .catch(() => {
+          this.$router.go();
+        });
     },
       
     async getPersonGroups() {

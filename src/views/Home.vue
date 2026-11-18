@@ -34,7 +34,9 @@
 
       <v-dialog v-model="appointmentDialog" persistent max-width="800px">
         <AppointmentDialogBody
+          :key="selectedAppointment.id + '-' + group.id"
           :sent-appointment="selectedAppointment"
+          :calendar-group="group"
           @closeAppointmentDialog="appointmentDialog = false"
           @doneWithAppointment="
             appointmentDialog = false;
@@ -231,7 +233,12 @@ export default {
   },
   watch: {
     id: async function () {
+      this.user = Utils.getStore("user");
+      await this.getGroupByPersonRoleId();
       await this.setApprovedDisabled();
+      if (this.approved) {
+        await this.getAppointments();
+      }
     },
   },
   async created() {
@@ -322,7 +329,7 @@ export default {
 
         owned = true;
 
-        if (appointment.groupId != this.group.id) {
+        if (Number(appointment.groupId) !== Number(this.group.id)) {
           owned = false;
         }
 
