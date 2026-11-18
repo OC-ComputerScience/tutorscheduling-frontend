@@ -85,6 +85,8 @@
         <v-select
           v-model="group.allowSplittingAppointments"
           :items="splittingAppts"
+          item-text="text"
+          item-value="value"
           label="Allow Splitting Appointments"
           required
           @change="enableUpdate = true"
@@ -152,7 +154,10 @@ export default {
       intervals: [15, 30],
       minApptTimes: [30, 45],
       pastMinutes: [0, 10, 15],
-      splittingAppts: [true, false],
+      splittingAppts: [
+        { text: "Yes", value: true },
+        { text: "No", value: false },
+      ],
       group: {},
       user: {},
       message: "",
@@ -196,6 +201,10 @@ export default {
       await PersonRoleServices.getGroupForPersonRole(this.id)
         .then(async (response) => {
           this.group = response.data[0].role.group;
+          this.group.allowSplittingAppointments =
+            this.group.allowSplittingAppointments === true ||
+            this.group.allowSplittingAppointments === 1 ||
+            this.group.allowSplittingAppointments === "1";
         })
         .catch((error) => {
           this.message = error.response.data.message;

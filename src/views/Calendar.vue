@@ -139,7 +139,9 @@
 
         <v-dialog v-model="appointmentDialog" persistent max-width="800px">
           <AppointmentDialogBody
+            :key="selectedAppointment.id + '-' + group.id"
             :sent-appointment="selectedAppointment"
+            :calendar-group="group"
             @closeAppointmentDialog="appointmentDialog = false"
             @doneWithAppointment="initialize()"
           ></AppointmentDialogBody>
@@ -303,17 +305,32 @@ export default {
       },
     ],
   }),
+  watch: {
+    id() {
+      this.reloadCalendar();
+    },
+  },
   async created() {
-    this.user = Utils.getStore("user");
-    this.role = this.user.selectedRole;
-    await this.getPrivilegesForPersonRole();
-    await this.getGroupByPersonRoleId();
-    await this.getTopicsForGroup();
-    await this.getTutorsForGroup();
-    await this.getLocationsForGroup();
-    await this.initialize();
+    await this.reloadCalendar();
   },
   methods: {
+    async reloadCalendar() {
+      this.appointmentDialog = false;
+      this.topics = [];
+      this.locations = [];
+      this.tutorSelect = [];
+      this.selectedTopic = -1;
+      this.selectedTutor = -1;
+      this.selectedLocation = -1;
+      this.user = Utils.getStore("user");
+      this.role = this.user.selectedRole;
+      await this.getPrivilegesForPersonRole();
+      await this.getGroupByPersonRoleId();
+      await this.getTopicsForGroup();
+      await this.getTutorsForGroup();
+      await this.getLocationsForGroup();
+      await this.initialize();
+    },
     async initialize() {
       this.appointmentDialog = false;
       this.overlay = true;
@@ -489,7 +506,7 @@ export default {
         //filter events to only add appropriate events
         filtered = true;
         //only add appointments from the current group
-        if (appointment.groupId != this.group.id) {
+        if (Number(appointment.groupId) !== Number(this.group.id)) {
           filtered = false;
         }
         //filter by topic
